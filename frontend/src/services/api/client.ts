@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { API_BASE_URL, API_TIMEOUT } from '@/utils/constants';
 import type { ApiError, ApiResponse } from '@/types';
 

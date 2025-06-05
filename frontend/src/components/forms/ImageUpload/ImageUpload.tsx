@@ -1,7 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/utils/cn';
 import { validateImageFile, createImagePreview, revokeImagePreview } from '@/utils/helpers';
 import { VALIDATION_MESSAGES } from '@/utils/constants';
+import { convertHEICToJPEG, isHEICSupported, createHEICFallbackPreview } from '@/utils/imageConverter';
+import { CameraCapture } from '../CameraCapture';
+import { isMediaStreamSupported } from '@/utils/camera';
 
 interface ImageUploadProps {
   onUpload: (file: File, preview: string) => void;
@@ -18,9 +21,12 @@ export const ImageUpload = ({
 }: ImageUploadProps): JSX.Element => {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [supportsMediaStream, setSupportsMediaStream] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     const validation = validateImageFile(file);
     
     if (!validation.isValid) {
@@ -28,9 +34,33 @@ export const ImageUpload = ({
       return;
     }
 
-    const previewUrl = createImagePreview(file);
-    setPreview(previewUrl);
-    onUpload(file, previewUrl);
+    try {
+      let processedFile = file;
+      let previewUrl: string;
+      
+      // Check if it's a HEIC file and needs conversion
+      const isHEIC = file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic');
+      
+      if (isHEIC && !isHEICSupported()) {
+        // Try to convert HEIC to JPEG
+        processedFile = await convertHEICToJPEG(file);
+        
+        // If conversion failed (still HEIC), use fallback preview
+        if (processedFile.type === 'image/heic' || processedFile.name.toLowerCase().endsWith('.heic')) {
+          previewUrl = createHEICFallbackPreview(processedFile);
+        } else {
+          previewUrl = createImagePreview(processedFile);
+        }
+      } else {
+        previewUrl = createImagePreview(processedFile);
+      }
+      
+      setPreview(previewUrl);
+      onUpload(processedFile, previewUrl);
+    } catch (error) {
+      console.error('Error handling image:', error);
+      onError('이미지 처리 중 오류가 발생했습니다.');
+    }
   }, [onUpload, onError]);
 
   const handleDragOver = (e: React.DragEvent): void => {
@@ -75,12 +105,38 @@ export const ImageUpload = ({
     }
   };
 
+  const handleCameraClick = (e: React.MouseEvent): void => {
+    e.stopPropagation();
+    if (supportsMediaStream) {
+      setShowCamera(true);
+    } else {
+      // Fallback to file input with camera capture
+      cameraInputRef.current?.click();
+    }
+  };
+
+  // Check MediaStream support on mount
+  useEffect(() => {
+    setSupportsMediaStream(isMediaStreamSupported());
+  }, []);
+
   return (
     <div className={cn('w-full', className)}>
       <input
         ref={fileInputRef}
         type="file"
+        accept="image/jpeg,image/jpg,image/png,image/heic,image/heif"
+        onChange={handleFileSelect}
+        className="hidden"
+        disabled={disabled}
+      />
+      
+      {/* Hidden camera input for fallback */}
+      <input
+        ref={cameraInputRef}
+        type="file"
         accept="image/*"
+        capture="user"
         onChange={handleFileSelect}
         className="hidden"
         disabled={disabled}
@@ -149,19 +205,7 @@ export const ImageUpload = ({
             </button>
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                // For camera capture on mobile
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.capture = 'user';
-                input.onchange = (event) => {
-                  const file = (event.target as HTMLInputElement).files?.[0];
-                  if (file) handleFile(file);
-                };
-                input.click();
-              }}
+              onClick={handleCameraClick}
               className="flex-1 px-4 py-2 bg-white text-primary border border-primary rounded-lg font-medium hover:bg-gray-50 transition-colors"
               disabled={disabled}
             >
@@ -175,6 +219,15 @@ export const ImageUpload = ({
             src={preview}
             alt="업로드된 이미지"
             className="w-full h-auto max-h-96 object-contain"
+            onError={(e) => {
+              // Fallback for failed image loads
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const fallbackDiv = document.createElement('div');
+              fallbackDiv.className = 'flex items-center justify-center h-96 bg-gray-100';
+              fallbackDiv.innerHTML = '<p class="text-gray-500">HEIC 파일 미리보기</p>';
+              target.parentElement?.appendChild(fallbackDiv);
+            }}
           />
           <button
             type="button"
@@ -207,6 +260,17 @@ export const ImageUpload = ({
             </svg>
           </button>
         </div>
+      )}
+
+      {/* Camera Capture Modal */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={(file) => {
+            setShowCamera(false);
+            handleFile(file);
+          }}
+          onClose={() => setShowCamera(false)}
+        />
       )}
     </div>
   );

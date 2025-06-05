@@ -20,17 +20,24 @@ const PageLoader = (): JSX.Element => (
   </div>
 );
 
-// Error boundary fallback
-const ErrorPage = (): JSX.Element => (
+
+// Error boundary for routes
+const RouteErrorBoundary = (): JSX.Element => (
   <div className="flex items-center justify-center min-h-screen px-4">
     <div className="text-center max-w-md">
-      <h1 className="text-h2 font-bold text-gray-900 mb-4">페이지를 찾을 수 없습니다</h1>
-      <p className="text-gray-600 mb-8">요청하신 페이지가 존재하지 않거나 이동되었습니다.</p>
+      <h1 className="text-h2 font-bold text-gray-900 mb-4">오류가 발생했습니다</h1>
+      <p className="text-gray-600 mb-8">페이지를 불러오는 중 문제가 발생했습니다.</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors mr-4"
+      >
+        새로고침
+      </button>
       <a
         href={ROUTES.HOME}
-        className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+        className="inline-block px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
       >
-        홈으로 돌아가기
+        홈으로
       </a>
     </div>
   </div>
@@ -45,7 +52,7 @@ const router = createBrowserRouter([
         <IntroPage />
       </Suspense>
     ),
-    errorElement: <ErrorPage />,
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: ROUTES.UPLOAD,
@@ -54,6 +61,7 @@ const router = createBrowserRouter([
         <UploadPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: ROUTES.ANALYZING,
@@ -62,6 +70,7 @@ const router = createBrowserRouter([
         <AnalyzingPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: ROUTES.RESULT,
@@ -70,6 +79,7 @@ const router = createBrowserRouter([
         <ResultPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: ROUTES.RECOMMENDATION,
@@ -78,6 +88,7 @@ const router = createBrowserRouter([
         <RecommendationPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: ROUTES.COMPLETION,
@@ -86,6 +97,7 @@ const router = createBrowserRouter([
         <CompletionPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '*',

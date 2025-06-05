@@ -24,7 +24,13 @@ export const validateImageFile = (file: File): { isValid: boolean; error?: strin
     return { isValid: false, error: 'FILE_TOO_LARGE' };
   }
 
-  if (!ACCEPTED_IMAGE_FORMATS.includes(file.type)) {
+  // Check file type and extension for HEIC support
+  const isValidType = ACCEPTED_IMAGE_FORMATS.includes(file.type);
+  const fileExtension = file.name.toLowerCase().split('.').pop();
+  const isHEIC = fileExtension === 'heic' || fileExtension === 'heif';
+  
+  // Accept HEIC files even if the MIME type is not recognized
+  if (!isValidType && !isHEIC) {
     return { isValid: false, error: 'FILE_INVALID_TYPE' };
   }
 
@@ -45,6 +51,16 @@ export const compressImage = async (
   maxHeight = 1024,
   quality = 0.8,
 ): Promise<File> => {
+  // Skip compression for HEIC files if they're not supported
+  const fileExtension = file.name.toLowerCase().split('.').pop();
+  const isHEIC = fileExtension === 'heic' || fileExtension === 'heif';
+  
+  if (isHEIC && file.type === 'image/heic') {
+    // Return the original HEIC file if it's not converted yet
+    // The conversion should happen before compression
+    return file;
+  }
+  
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -109,7 +125,18 @@ export const compressImage = async (
  * @returns Preview URL
  */
 export const createImagePreview = (file: File): string => {
-  return URL.createObjectURL(file);
+  try {
+    return URL.createObjectURL(file);
+  } catch (error) {
+    console.error('Failed to create object URL:', error);
+    // Return a fallback for unsupported formats
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    if (fileExtension === 'heic' || fileExtension === 'heif') {
+      // Return a placeholder for HEIC files
+      return `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#f3f4f6"/><text x="100" y="100" text-anchor="middle" fill="#6b7280">HEIC</text></svg>')}`;
+    }
+    throw error;
+  }
 };
 
 /**
