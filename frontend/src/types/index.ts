@@ -37,12 +37,11 @@ export interface UserSession {
 }
 
 export interface UserPreferences {
-  material: 'summer' | 'winter' | 'allseason';
-  transparency: 'opaque' | 'slight' | 'any';
-  priceRange: 'under-10k' | '10k-20k' | 'premium';
-  fitStyle: 'tight' | 'layer' | 'loose';
-  colorPreference: string[];
-  additionalNotes?: string;
+  style: string[];
+  priceRange: string;
+  material: string[];
+  occasion: string[];
+  additionalNotes: string;
 }
 
 // Form Types

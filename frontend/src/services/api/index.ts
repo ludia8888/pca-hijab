@@ -1,7 +1,9 @@
 export * from './client';
 export * from './personalColor';
+export * from './recommendation';
 
 // Convenience exports for easier use
 import { PersonalColorAPI } from './personalColor';
-export { PersonalColorAPI };
+import { RecommendationAPI } from './recommendation';
+export { PersonalColorAPI, RecommendationAPI };
 export const analyzeImage = (file: File, debug = false) => PersonalColorAPI.analyzeImage(file, debug);
