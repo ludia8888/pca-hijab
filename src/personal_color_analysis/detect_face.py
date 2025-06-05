@@ -5,13 +5,22 @@ import numpy as np
 import dlib
 import cv2
 import matplotlib.pyplot as plt
+import os
 
 class DetectFace:
     def __init__(self, image):
         # initialize dlib's face detector (HOG-based)
         # and then create the facial landmark predictor
         self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor('../res/shape_predictor_68_face_landmarks.dat')
+        # Find the shape_predictor file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(current_dir))
+        predictor_path = os.path.join(project_root, 'res', 'shape_predictor_68_face_landmarks.dat')
+        
+        if not os.path.exists(predictor_path):
+            raise FileNotFoundError(f"Shape predictor file not found at: {predictor_path}")
+        
+        self.predictor = dlib.shape_predictor(predictor_path)
 
         #face detection part
         self.img = cv2.imread(image)
@@ -32,7 +41,7 @@ class DetectFace:
 
     # return type : np.array
     def detect_face_part(self):
-        face_parts = [[],[],[],[],[],[],[]]
+        face_parts = [[],[],[],[],[],[],[],[]]  # 8 empty lists for 8 face parts
         # detect faces in the grayscale image
         rect = self.detector(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY), 1)[0]
 

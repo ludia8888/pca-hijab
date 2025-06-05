@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퍼스널 컬러 분석 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #666;
+            background-color: #f9f9f9;
+        }
+        #fileInput {
+            display: none;
+        }
+        #preview {
+            max-width: 300px;
+            margin: 20px auto;
+            display: none;
+        }
+        #preview img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            display: none;
+        }
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+        }
+        .color-box {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 퍼스널 컬러 분석</h1>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p>클릭하여 이미지를 선택하세요</p>
+            <p style="color: #666; font-size: 14px;">JPG, PNG 형식 지원</p>
+        </div>
+        
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+        
+        <div id="preview">
+            <img id="previewImage" src="" alt="Preview">
+        </div>
+        
+        <button id="analyzeBtn" onclick="analyzeImage()" disabled>분석하기</button>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <p>분석 중입니다... 잠시만 기다려주세요.</p>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('analyzeBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/analyze?debug=true', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResult(data);
+                } else {
+                    const error = await response.json();
+                    displayError(error.detail || '분석 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                displayError('서버 연결에 실패했습니다. API 서버가 실행 중인지 확인하세요.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            
+            const colorToRgb = (color) => `rgb(${color.rgb[0]}, ${color.rgb[1]}, ${color.rgb[2]})`;
+            
+            resultDiv.innerHTML = `
+                <h2>분석 결과</h2>
+                <div class="result-item">
+                    <h3>🌈 퍼스널 컬러: ${data.personal_color} (${data.personal_color_en})</h3>
+                    <p>당신은 <strong>${data.tone}</strong> 타입입니다!</p>
+                </div>
+                
+                <div class="result-item">
+                    <h3>📊 상세 분석</h3>
+                    <p>피부 Lab b값: ${data.details.skin_lab_b}</p>
+                    <p>피부 HSV s값: ${data.details.skin_hsv_s.toFixed(2)}%</p>
+                </div>
+                
+                <div class="result-item">
+                    <h3>🎨 추출된 색상</h3>
+                    <p>
+                        <span class="color-box" style="background-color: ${colorToRgb(data.facial_colors.cheek)}"></span>
+                        피부색
+                    </p>
+                    <p>
+                        <span class="color-box" style="background-color: ${colorToRgb(data.facial_colors.eyebrow)}"></span>
+                        눈썹색
+                    </p>
+                    <p>
+                        <span class="color-box" style="background-color: ${colorToRgb(data.facial_colors.eye)}"></span>
+                        눈동자색
+                    </p>
+                </div>
+            `;
+            
+            resultDiv.style.display = 'block';
+        }
+
+        function displayError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="error">${message}</div>`;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

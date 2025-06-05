@@ -1,1 +1,4 @@
 res/train
+__pycache__/
+*.pyc
+api.log

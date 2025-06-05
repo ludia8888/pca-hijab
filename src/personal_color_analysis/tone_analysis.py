@@ -47,11 +47,11 @@ def is_spr(hsv_s, a):
     body_part = ['skin', 'eyebrow', 'eye']
     for i in range(3):
         spr_dist += abs(hsv_s[i] - spr_s_std[i]) * a[i]
-        print(body_part[i],"의 spring 기준값과의 거리")
-        print(abs(hsv_s[i] - spr_s_std[i]) * a[i])
+        #print(body_part[i],"의 spring 기준값과의 거리")
+        #print(abs(hsv_s[i] - spr_s_std[i]) * a[i])
         fal_dist += abs(hsv_s[i] - fal_s_std[i]) * a[i]
-        print(body_part[i],"의 fall 기준값과의 거리")
-        print(abs(hsv_s[i] - fal_s_std[i]) * a[i])
+        #print(body_part[i],"의 fall 기준값과의 거리")
+        #print(abs(hsv_s[i] - fal_s_std[i]) * a[i])
 
     if(spr_dist <= fal_dist):
         return 1 #spring
@@ -68,6 +68,7 @@ def is_smr(hsv_s, a):
     #skin, eyebrow, eye
     smr_s_std = [12.5, 21.7195, 24.77064]
     wnt_s_std = [16.73913, 24.8276, 31.3726]
+    a = a.copy()  # Create a copy to avoid modifying the original
     a[1] = 0.5 # eyebrow 영향력 적기 때문에 가중치 줄임
 
     smr_dist = 0
@@ -76,11 +77,11 @@ def is_smr(hsv_s, a):
     body_part = ['skin', 'eyebrow', 'eye']
     for i in range(3):
         smr_dist += abs(hsv_s[i] - smr_s_std[i]) * a[i]
-        print(body_part[i],"의 summer 기준값과의 거리")
-        print(abs(hsv_s[i] - smr_s_std[i]) * a[i])
+        #print(body_part[i],"의 summer 기준값과의 거리")
+        #print(abs(hsv_s[i] - smr_s_std[i]) * a[i])
         wnt_dist += abs(hsv_s[i] - wnt_s_std[i]) * a[i]
-        print(body_part[i],"의 winter 기준값과의 거리")
-        print(abs(hsv_s[i] - wnt_s_std[i]) * a[i])
+        #print(body_part[i],"의 winter 기준값과의 거리")
+        #print(abs(hsv_s[i] - wnt_s_std[i]) * a[i])
 
     if(smr_dist <= wnt_dist):
         return 1 #summer
