@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 export const API_TIMEOUT = 30000; // 30 seconds
 
 // File Upload
@@ -73,12 +73,17 @@ export const SEASON_DESCRIPTIONS = {
     en: 'Autumn Warm',
     description: '깊고 풍부한 따뜻한 색감이 어울리는 타입',
   },
+  fall: {
+    ko: '가을 웜톤',
+    en: 'Autumn Warm',
+    description: '깊고 풍부한 따뜻한 색감이 어울리는 타입',
+  },
   winter: {
     ko: '겨울 쿨톤',
     en: 'Winter Cool',
     description: '선명하고 대비가 강한 시원한 색감이 어울리는 타입',
   },
-};
+} as const;
 
 // Form Steps
 export const RECOMMENDATION_STEPS = [

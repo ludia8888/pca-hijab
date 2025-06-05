@@ -8,8 +8,8 @@ interface AppState {
   instagramId: string | null;
   
   // Analysis data
-  uploadedImage: string | null;
-  uploadedFile: File | null;
+  uploadedImage: string | null; // Preview URL for display
+  uploadedFile: File | null; // Actual file for API
   analysisResult: PersonalColorResult | null;
   
   // Recommendation data
@@ -109,6 +109,7 @@ export const useAppStore = create<AppState & AppActions>()(
         partialize: (state) => ({
           sessionId: state.sessionId,
           instagramId: state.instagramId,
+          uploadedImage: state.uploadedImage,
           analysisResult: state.analysisResult,
           recommendationPreferences: state.recommendationPreferences,
         }),

@@ -1,8 +1,340 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PageLayout } from '@/components/layout';
+import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
+import { useAppStore } from '@/store';
+import { shareOrCopy } from '@/utils/helpers';
+import { SEASON_COLORS } from '@/utils/colorData';
+
+// ===================== 컬러칩을 4개씩 묶는 유틸 함수 =====================
+/**
+ * 배열을 지정한 크기(chunkSize)만큼 잘라 2차원 배열로 반환합니다.
+ * @param arr 원본 배열
+ * @param chunkSize 한 묶음의 크기 (여기서는 4)
+ * @returns 2차원 배열 (각 행에 4개씩)
+ */
+function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
+  // 예외 처리: chunkSize가 1보다 작으면 전체 배열을 한 묶음으로 반환
+  if (chunkSize < 1) return [arr];
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    result.push(arr.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
 const ResultPage = (): JSX.Element => {
+  const navigate = useNavigate();
+  const { analysisResult, instagramId, uploadedImage } = useAppStore();
+
+  // Redirect if no analysis result
+  useEffect(() => {
+    if (!analysisResult || !instagramId) {
+      console.log('No analysis result or instagram ID:', { analysisResult, instagramId });
+      // Only redirect in production, show mock in development
+      if (process.env.NODE_ENV !== 'development') {
+        navigate(ROUTES.HOME);
+      }
+    }
+  }, [analysisResult, instagramId, navigate]);
+
+  // Use mock data for development if no analysis result
+  const mockResult = {
+    personal_color: '봄 웜톤',
+    personal_color_en: 'spring' as const,
+    tone: '웜톤',
+    tone_en: 'warm' as const,
+    details: {
+      is_warm: 1,
+      skin_lab_b: 15.2,
+      eyebrow_lab_b: 12.5,
+      eye_lab_b: 8.3,
+      skin_hsv_s: 0.3,
+      eyebrow_hsv_s: 0.4,
+      eye_hsv_s: 0.2,
+    },
+    facial_colors: {
+      cheek: {
+        rgb: [255, 200, 180] as [number, number, number],
+        lab: [80, 15, 20] as [number, number, number],
+        hsv: [15, 0.3, 1] as [number, number, number],
+      },
+      eyebrow: {
+        rgb: [120, 80, 60] as [number, number, number],
+        lab: [40, 10, 15] as [number, number, number],
+        hsv: [20, 0.5, 0.5] as [number, number, number],
+      },
+      eye: {
+        rgb: [80, 60, 50] as [number, number, number],
+        lab: [30, 5, 10] as [number, number, number],
+        hsv: [20, 0.4, 0.3] as [number, number, number],
+      },
+    },
+    confidence: 0.85,
+  };
+
+  const result = analysisResult || (process.env.NODE_ENV === 'development' ? mockResult : null);
+  
+  if (!result) {
+    return <div>로딩중...</div>;
+  }
+
+  // Safely get season info with fallback
+  const seasonInfo = SEASON_DESCRIPTIONS[result.personal_color_en] || {
+    ko: result.personal_color || '분석 중',
+    en: result.personal_color_en || 'analyzing',
+    description: '당신만의 특별한 색감을 찾았어요',
+  };
+  
+  console.log('ResultPage render:', { 
+    analysisResult, 
+    mockResult: process.env.NODE_ENV === 'development' ? mockResult : null,
+    result,
+    usingMock: result === mockResult 
+  }); // Debug log
+  
+  // Get season-specific colors
+  const seasonKey = result.personal_color_en as keyof typeof SEASON_COLORS;
+  const seasonColors = SEASON_COLORS[seasonKey] || SEASON_COLORS.spring;
+  const bestColors = seasonColors.bestColors;
+  const worstColors = seasonColors.worstColors;
+
+  const handleShare = async (): Promise<void> => {
+    try {
+      await shareOrCopy({
+        title: '히잡 퍼스널 컬러 진단 결과',
+        text: `나의 퍼스널 컬러는 ${seasonInfo.ko}입니다!`,
+        url: window.location.href,
+      });
+    } catch (error) {
+      console.error('Share failed:', error);
+    }
+  };
+
+  const handleSaveImage = (): void => {
+    // TODO: Implement result image generation and download
+    console.log('Save image');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <h1 className="text-h1">Result Page - Coming Soon</h1>
-    </div>
+    <PageLayout>
+      {/* Custom gradient background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 opacity-50" />
+      </div>
+
+      <div className="max-w-2xl mx-auto w-full pb-20">
+        {/* Hero Section with Photo - Compact */}
+        <div className="relative mb-4">
+          {uploadedImage ? (
+            <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl">
+              <img 
+                src={uploadedImage} 
+                alt="분석된 사진"
+                className="w-full h-full object-cover"
+              />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              
+              {/* Result overlay with Share buttons */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-xs">
+                        ✨ AI 분석 완료
+                      </div>
+                    </div>
+                    <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                      {seasonInfo?.ko || result.personal_color}
+                    </h1>
+                    <p className="text-sm opacity-90">
+                      {seasonInfo?.description || '당신만의 특별한 색감을 찾았어요'}
+                    </p>
+                  </div>
+                  {/* Share buttons integrated into hero */}
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={handleShare}
+                      className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all"
+                      aria-label="공유"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <path
+                          d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L7.08259 9.34056C6.54303 8.52293 5.5793 8 4.5 8C2.84315 8 1.5 9.34315 1.5 11C1.5 12.6569 2.84315 14 4.5 14C5.5793 14 6.54303 13.4771 7.08259 12.6594L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C16.9207 14 15.957 14.5229 15.4174 15.3406L7.47727 11.3706C7.49234 11.2492 7.5 11.1255 7.5 11C7.5 10.8745 7.49234 10.7508 7.47727 10.6294L15.4174 6.65944C15.957 7.47707 16.9207 8 18 8Z"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={handleSaveImage}
+                      className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all"
+                      aria-label="저장"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <path
+                          d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15M7 10L12 15M12 15L17 10M12 15V3"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Fallback when no image
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white text-center">
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                {seasonInfo?.ko || result.personal_color}
+              </h1>
+              <p className="text-sm opacity-90">
+                {seasonInfo?.description || '당신만의 특별한 색감을 찾았어요'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* AI Confidence */}
+        {result.confidence && (
+          <div className="flex items-center gap-2 text-xs text-gray-600 mb-3">
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            AI 정확도 {Math.round(result.confidence * 100)}%
+          </div>
+        )}
+
+        {/* Color Palettes - Horizontal Layout */}
+        <div className="space-y-3 mb-4">
+          {/* Best Colors */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-3">
+              <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
+                <span className="text-base">🎨</span> 당신의 컬러 팔레트
+              </h3>
+              {/*
+                1. bestColors를 4개씩 묶어서 여러 줄로 렌더링
+                2. 각 컬러칩 내부 하단에 색상명 + 그라데이션 오버레이
+              */}
+              <div className="flex flex-col gap-2">
+                {chunkArray([...bestColors], 4).map((row, rowIdx) => (
+                  <div key={rowIdx} className="flex gap-2">
+                    {row.map((color, colIdx) => {
+                      // color의 타입을 명확히 지정
+                      const c = color as { name: string; hex: string; description: string };
+                      return (
+                        <div key={colIdx} className="flex-1 min-w-0">
+                          <div
+                            className="relative aspect-square rounded-lg shadow-sm overflow-hidden"
+                            style={{ backgroundColor: c.hex }}
+                          >
+                            {/* 그라데이션 오버레이 + 색상명 */}
+                            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/40 to-transparent flex flex-col items-center">
+                              <p className="text-white text-[10px] font-medium text-center">
+                                {c.name}
+                              </p>
+                            </div>
+                          </div>
+                          {/* 색상 설명 */}
+                          <p className="text-[9px] text-gray-600 text-center mt-1 leading-tight">{c.description}</p>
+                        </div>
+                      );
+                    })}
+                    {/* 4개 미만일 때 빈 칸 채우기 */}
+                    {row.length < 4 && Array.from({ length: 4 - row.length }).map((_, i) => (
+                      <div key={i} className="flex-1 min-w-0" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Avoid Colors */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-3">
+              <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
+                <span className="text-base">⚠️</span> 피하면 좋은 컬러
+              </h3>
+              {/*
+                1. worstColors도 4개씩 묶어서 여러 줄로 렌더링
+                2. 각 컬러칩 내부 하단에 색상명 + 그라데이션 오버레이
+              */}
+              <div className="flex flex-col gap-2">
+                {chunkArray([...worstColors], 4).map((row, rowIdx) => (
+                  <div key={rowIdx} className="flex gap-2">
+                    {row.map((color, colIdx) => {
+                      // color의 타입을 명확히 지정
+                      const c = color as { name: string; hex: string; description: string };
+                      return (
+                        <div key={colIdx} className="flex-1 min-w-0">
+                          <div
+                            className="relative aspect-square rounded-lg shadow-sm overflow-hidden opacity-60"
+                            style={{ backgroundColor: c.hex }}
+                          >
+                            {/* 그라데이션 오버레이 + 색상명 */}
+                            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/40 to-transparent flex flex-col items-center">
+                              <p className="text-white text-[10px] font-medium text-center">
+                                {c.name}
+                              </p>
+                            </div>
+                          </div>
+                          {/* 색상 설명 */}
+                          <p className="text-[9px] text-gray-600 text-center mt-1 leading-tight">{c.description}</p>
+                        </div>
+                      );
+                    })}
+                    {/* 4개 미만일 때 빈 칸 채우기 */}
+                    {row.length < 4 && Array.from({ length: 4 - row.length }).map((_, i) => (
+                      <div key={i} className="flex-1 min-w-0" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section - Elegant Design */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur-xl opacity-20" />
+          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold mb-1">맞춤 히잡을 찾아보세요</h3>
+                <p className="text-white/80 text-sm">
+                  당신의 {seasonInfo?.ko}에 어울리는 히잡 추천
+                </p>
+              </div>
+              <div className="text-4xl">🧕</div>
+            </div>
+            <button
+              onClick={() => navigate(ROUTES.RECOMMENDATION)}
+              className="w-full bg-white text-purple-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              히잡 색상 추천받기
+            </button>
+          </div>
+        </div>
+        
+        {/* Secondary Action */}
+        <div className="text-center mt-4">
+          <button
+            onClick={() => navigate(ROUTES.HOME)}
+            className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+          >
+            다시 진단하기
+          </button>
+        </div>
+      </div>
+    </PageLayout>
   );
 };
 

@@ -1,7 +1,7 @@
 // Personal Color Analysis Types
 export interface PersonalColorResult {
   personal_color: string;
-  personal_color_en: 'spring' | 'summer' | 'autumn' | 'winter';
+  personal_color_en: 'spring' | 'summer' | 'autumn' | 'fall' | 'winter';
   tone: string;
   tone_en: 'warm' | 'cool';
   details: {
