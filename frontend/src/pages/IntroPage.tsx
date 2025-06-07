@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
-import { validateInstagramId, generateSessionId } from '@/utils/helpers';
+import { generateSessionId } from '@/utils/helpers';
+import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { Button, Input } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';

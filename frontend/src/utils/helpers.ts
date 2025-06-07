@@ -1,41 +1,4 @@
-import { ACCEPTED_IMAGE_FORMATS, MAX_FILE_SIZE } from './constants';
-
-/**
- * Validates Instagram ID format
- * @param id - Instagram ID to validate
- * @returns boolean indicating if ID is valid
- */
-export const validateInstagramId = (id: string): boolean => {
-  const regex = /^[a-zA-Z0-9._]+$/;
-  return regex.test(id) && id.length >= 1 && id.length <= 30;
-};
-
-/**
- * Validates image file
- * @param file - File to validate
- * @returns Object with isValid and error message
- */
-export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
-  if (!file) {
-    return { isValid: false, error: 'FILE_REQUIRED' };
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return { isValid: false, error: 'FILE_TOO_LARGE' };
-  }
-
-  // Check file type and extension for HEIC support
-  const isValidType = ACCEPTED_IMAGE_FORMATS.includes(file.type);
-  const fileExtension = file.name.toLowerCase().split('.').pop();
-  const isHEIC = fileExtension === 'heic' || fileExtension === 'heif';
-  
-  // Accept HEIC files even if the MIME type is not recognized
-  if (!isValidType && !isHEIC) {
-    return { isValid: false, error: 'FILE_INVALID_TYPE' };
-  }
-
-  return { isValid: true };
-};
+// Removed unused imports - constants are used in validators.ts now
 
 /**
  * Compresses and resizes image
