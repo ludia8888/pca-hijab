@@ -39,3 +39,15 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
+
+// MediaStream API mocks
+global.navigator.mediaDevices = {
+  getUserMedia: vi.fn().mockRejectedValue(new Error('Not available in test environment')),
+  enumerateDevices: vi.fn().mockResolvedValue([]),
+  getDisplayMedia: vi.fn().mockRejectedValue(new Error('Not available in test environment')),
+  getSupportedConstraints: vi.fn().mockReturnValue({}),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn().mockReturnValue(false),
+  ondevicechange: null,
+} as unknown as MediaDevices;
