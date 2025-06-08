@@ -15,7 +15,7 @@ const PageLoader = (): JSX.Element => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center">
       <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-      <p className="text-gray-600">로딩 중...</p>
+      <p className="text-gray-600">Loading...</p>
     </div>
   </div>
 );
@@ -25,19 +25,19 @@ const PageLoader = (): JSX.Element => (
 const RouteErrorBoundary = (): JSX.Element => (
   <div className="flex items-center justify-center min-h-screen px-4">
     <div className="text-center max-w-md">
-      <h1 className="text-h2 font-bold text-gray-900 mb-4">오류가 발생했습니다</h1>
-      <p className="text-gray-600 mb-8">페이지를 불러오는 중 문제가 발생했습니다.</p>
+      <h1 className="text-h2 font-bold text-gray-900 mb-4">An error occurred</h1>
+      <p className="text-gray-600 mb-8">There was a problem loading the page.</p>
       <button
         onClick={() => window.location.reload()}
         className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors mr-4"
       >
-        새로고침
+        Refresh
       </button>
       <a
         href={ROUTES.HOME}
         className="inline-block px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
       >
-        홈으로
+        Go Home
       </a>
     </div>
   </div>

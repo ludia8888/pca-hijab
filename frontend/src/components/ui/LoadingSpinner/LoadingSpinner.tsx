@@ -35,9 +35,9 @@ export const LoadingSpinner = ({
           colorStyles[color],
         )}
         role="status"
-        aria-label={label || '로딩 중'}
+        aria-label={label || 'Loading'}
       >
-        <span className="sr-only">{label || '로딩 중'}</span>
+        <span className="sr-only">{label || 'Loading'}</span>
       </div>
       {label && (
         <p className="mt-4 text-body text-gray-600">{label}</p>

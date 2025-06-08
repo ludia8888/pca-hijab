@@ -95,7 +95,7 @@ const ResultPage = (): JSX.Element => {
   // Safely get season info with fallback
   const seasonKey = getSeasonKey(result.personal_color_en);
   const seasonInfo = SEASON_DESCRIPTIONS[seasonKey] || {
-    ko: result.personal_color || '분석 중',
+    ko: result.personal_color || 'Analyzing',
     en: result.personal_color_en || 'analyzing',
     description: 'We found your unique color palette',
   };

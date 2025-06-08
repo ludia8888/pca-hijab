@@ -43,7 +43,7 @@ export const generateResultCard = async (
   const seasonInfo = SEASON_DESCRIPTIONS[seasonKey] || {
     ko: result.personal_color,
     en: result.personal_color_en,
-    description: '당신만의 특별한 색감'
+    description: 'Your unique color palette'
   };
 
   // Get colors
@@ -61,12 +61,12 @@ export const generateResultCard = async (
   ctx.fillStyle = '#111827';
   ctx.font = 'bold 48px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('나의 퍼스널 컬러', width / 2, 200);
+  ctx.fillText('My Personal Color', width / 2, 200);
 
   // Season type (large)
   ctx.font = 'bold 96px Arial';
   ctx.fillStyle = '#8b5cf6';
-  ctx.fillText(seasonInfo.ko, width / 2, 350);
+  ctx.fillText(seasonInfo.en, width / 2, 350);
 
   // Description
   ctx.font = '36px Arial';
@@ -76,7 +76,7 @@ export const generateResultCard = async (
   // Color palette title
   ctx.font = 'bold 36px Arial';
   ctx.fillStyle = '#111827';
-  ctx.fillText('🎨 나에게 어울리는 컬러', width / 2, 600);
+  ctx.fillText('🎨 My Best Colors', width / 2, 600);
 
   // Draw color swatches (2 rows, 3 columns)
   const swatchSize = 240;
@@ -112,7 +112,7 @@ export const generateResultCard = async (
   // Service name
   ctx.fillStyle = '#6b7280';
   ctx.font = 'bold 36px Arial';
-  ctx.fillText('히잡 퍼스널 컬러 AI', width / 2, height - 120);
+  ctx.fillText('Hijab Personal Color AI', width / 2, height - 120);
 
   // Convert canvas to blob
   return new Promise((resolve, reject) => {

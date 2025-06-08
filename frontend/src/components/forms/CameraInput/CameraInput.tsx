@@ -25,17 +25,17 @@ export const CameraInput = ({
   };
 
   const openCamera = (): void => {
-    // 모바일 기기인지 확인
+    // Check if mobile device
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     );
     
     if (isMobile) {
-      // 모바일에서는 capture 속성이 있는 input을 사용
+      // On mobile, use input with capture attribute
       cameraInputRef.current?.click();
     } else {
-      // 데스크톱에서는 미디어 스트림 API 사용 시도
-      alert('모바일 기기에서 카메라 촬영 기능을 사용해주세요.');
+      // On desktop, attempt to use media stream API
+      alert('Please use the camera feature on a mobile device.');
     }
   };
 
@@ -56,7 +56,7 @@ export const CameraInput = ({
         className={className}
         disabled={disabled}
       >
-        카메라로 촬영
+        Take Photo
       </button>
     </>
   );
