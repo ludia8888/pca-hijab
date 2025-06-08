@@ -27,7 +27,7 @@ export const Header = ({
   };
 
   return (
-    <header className={cn('bg-white shadow-sm safe-top', className)}>
+    <header className={cn('sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm safe-top border-b border-gray-100', className)}>
       <div className="max-w-2xl mx-auto px-4">
         <div className="flex items-center justify-between h-14 tablet:h-16">
           {/* Left section */}
