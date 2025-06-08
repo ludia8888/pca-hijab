@@ -2,6 +2,19 @@ import type { PersonalColorResult } from '@/types';
 import { SEASON_DESCRIPTIONS } from './constants';
 import { SEASON_COLORS } from './colorData';
 
+// Helper function to convert API response to season key
+function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
+  const seasonMap: Record<string, keyof typeof SEASON_DESCRIPTIONS> = {
+    'Spring Warm': 'spring',
+    'Summer Cool': 'summer',
+    'Autumn Warm': 'autumn',
+    'Fall Warm': 'fall',
+    'Winter Cool': 'winter'
+  };
+  
+  return seasonMap[personalColorEn] || 'spring';
+}
+
 /**
  * Generates a result card image for sharing
  * @param result - Personal color analysis result
@@ -27,14 +40,15 @@ export const generateResultCard = async (
   canvas.height = height;
 
   // Get season info
-  const seasonInfo = SEASON_DESCRIPTIONS[result.personal_color_en] || {
+  const seasonKey = getSeasonKey(result.personal_color_en);
+  const seasonInfo = SEASON_DESCRIPTIONS[seasonKey] || {
     ko: result.personal_color,
     en: result.personal_color_en,
     description: '당신만의 특별한 색감'
   };
 
   // Get colors
-  const seasonColors = SEASON_COLORS[result.personal_color_en] || SEASON_COLORS.spring;
+  const seasonColors = SEASON_COLORS[seasonKey] || SEASON_COLORS.spring;
   const bestColors = seasonColors.bestColors.slice(0, 6); // Top 6 colors
 
   // Background gradient
@@ -71,7 +85,7 @@ export const generateResultCard = async (
   const startX = (width - (3 * swatchSize + 2 * spacing)) / 2;
   const startY = 700;
 
-  bestColors.forEach((color, index) => {
+  bestColors.forEach((color: { name: string; hex: string; description: string }, index: number) => {
     const row = Math.floor(index / 3);
     const col = index % 3;
     const x = startX + col * (swatchSize + spacing);

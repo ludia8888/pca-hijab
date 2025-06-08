@@ -3,7 +3,7 @@ import { cn } from '@/utils/cn';
 import { createImagePreview, revokeImagePreview } from '@/utils/helpers';
 import { validateImageFile } from '@/utils/validators';
 import { VALIDATION_MESSAGES } from '@/utils/constants';
-import { convertHEICToJPEG, isHEICSupported, createHEICFallbackPreview } from '@/utils/imageConverter';
+import { convertHEICToJPEG, isHEICSupported } from '@/utils/imageConverter';
 import { CameraCapture } from '../CameraCapture';
 import { isMediaStreamSupported } from '@/utils/camera';
 

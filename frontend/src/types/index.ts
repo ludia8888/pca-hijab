@@ -1,10 +1,14 @@
 // Personal Color Analysis Types
 export interface PersonalColorResult {
   personal_color: string;
-  personal_color_en: 'spring' | 'summer' | 'autumn' | 'fall' | 'winter';
-  tone: string;
-  tone_en: 'warm' | 'cool';
-  details: {
+  personal_color_en: string;  // API returns full strings like "Spring Warm"
+  confidence?: number;
+  best_colors?: string[];
+  worst_colors?: string[];
+  // Optional fields that may come from more detailed analysis
+  tone?: string;
+  tone_en?: 'warm' | 'cool';
+  details?: {
     is_warm: number;
     skin_lab_b: number;
     eyebrow_lab_b: number;
@@ -13,8 +17,7 @@ export interface PersonalColorResult {
     eyebrow_hsv_s: number;
     eye_hsv_s: number;
   };
-  facial_colors: FacialColors;
-  confidence?: number;
+  facial_colors?: FacialColors;
 }
 
 export interface FacialColors {

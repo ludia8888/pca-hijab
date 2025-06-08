@@ -7,6 +7,19 @@ import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
 
+// Helper function to convert API response to season key
+function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
+  const seasonMap: Record<string, keyof typeof SEASON_DESCRIPTIONS> = {
+    'Spring Warm': 'spring',
+    'Summer Cool': 'summer',
+    'Autumn Warm': 'autumn',
+    'Fall Warm': 'fall',
+    'Winter Cool': 'winter'
+  };
+  
+  return seasonMap[personalColorEn] || 'spring';
+}
+
 // ===================== 컬러칩을 4개씩 묶는 유틸 함수 =====================
 /**
  * 배열을 지정한 크기(chunkSize)만큼 잘라 2차원 배열로 반환합니다.
@@ -81,7 +94,8 @@ const ResultPage = (): JSX.Element => {
   }
 
   // Safely get season info with fallback
-  const seasonInfo = SEASON_DESCRIPTIONS[result.personal_color_en] || {
+  const seasonKey = getSeasonKey(result.personal_color_en);
+  const seasonInfo = SEASON_DESCRIPTIONS[seasonKey] || {
     ko: result.personal_color || '분석 중',
     en: result.personal_color_en || 'analyzing',
     description: '당신만의 특별한 색감을 찾았어요',
@@ -95,7 +109,6 @@ const ResultPage = (): JSX.Element => {
   }); // Debug log
   
   // Get season-specific colors
-  const seasonKey = result.personal_color_en as keyof typeof SEASON_COLORS;
   const seasonColors = SEASON_COLORS[seasonKey] || SEASON_COLORS.spring;
   const bestColors = seasonColors.bestColors;
   const worstColors = seasonColors.worstColors;
