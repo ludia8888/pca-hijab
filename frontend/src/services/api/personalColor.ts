@@ -12,20 +12,33 @@ export class PersonalColorAPI {
     file: File,
     debug = false,
   ): Promise<PersonalColorResult> {
+    console.log('Analyzing image:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: new Date(file.lastModified).toISOString()
+    });
+    
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<PersonalColorResult>(
-      `/analyze${debug ? '?debug=true' : ''}`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+    try {
+      const response = await apiClient.post<PersonalColorResult>(
+        `/analyze${debug ? '?debug=true' : ''}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         },
-      },
-    );
+      );
 
-    return response.data;
+      console.log('Analysis response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API call failed:', error);
+      throw error;
+    }
   }
 
   /**

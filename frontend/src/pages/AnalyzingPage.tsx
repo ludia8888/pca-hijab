@@ -65,8 +65,22 @@ const AnalyzingPage = (): JSX.Element => {
       }, ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000);
     } catch (err) {
       console.error('Analysis error:', err);
-      const errorMessage = err instanceof Error ? err.message : '분석 중 오류가 발생했습니다.';
-      setError(`오류: ${errorMessage}. 다시 시도해주세요.`);
+      let errorMessage = '분석 중 오류가 발생했습니다.';
+      
+      if (err instanceof Error) {
+        // Check for specific error types
+        if (err.message.includes('HEIC')) {
+          errorMessage = 'HEIC 파일 형식은 지원되지 않습니다. JPG 또는 PNG 파일을 사용해주세요.';
+        } else if (err.message.includes('network') || err.message.includes('Network')) {
+          errorMessage = '네트워크 연결을 확인해주세요.';
+        } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
+          errorMessage = '분석 시간이 초과되었습니다. 다시 시도해주세요.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(`오류: ${errorMessage}`);
     }
   };
 

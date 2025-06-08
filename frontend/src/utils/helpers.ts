@@ -14,13 +14,9 @@ export const compressImage = async (
   maxHeight = 1024,
   quality = 0.8,
 ): Promise<File> => {
-  // Skip compression for HEIC files if they're not supported
-  const fileExtension = file.name.toLowerCase().split('.').pop();
-  const isHEIC = fileExtension === 'heic' || fileExtension === 'heif';
-  
-  if (isHEIC && file.type === 'image/heic') {
-    // Return the original HEIC file if it's not converted yet
-    // The conversion should happen before compression
+  // Skip compression for HEIC files (they should be converted first)
+  if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+    console.warn('HEIC file passed to compress function - should be converted first');
     return file;
   }
   

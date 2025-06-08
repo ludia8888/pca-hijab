@@ -1,3 +1,5 @@
+import heic2any from 'heic2any';
+
 /**
  * Checks if HEIC is supported by the browser
  */
@@ -12,81 +14,49 @@ export const isHEICSupported = (): boolean => {
 };
 
 /**
- * Converts HEIC image to JPEG using canvas
+ * Converts HEIC image to JPEG using heic2any library
  * Falls back to the original file if conversion fails
  */
 export const convertHEICToJPEG = async (file: File): Promise<File> => {
-  return new Promise((resolve) => {
-    // If it's not a HEIC file, return as is
-    if (file.type !== 'image/heic' && !file.name.toLowerCase().endsWith('.heic')) {
-      resolve(file);
-      return;
-    }
+  // If it's not a HEIC file, return as is
+  if (file.type !== 'image/heic' && !file.name.toLowerCase().endsWith('.heic')) {
+    return file;
+  }
 
-    // If HEIC is supported, return as is
-    if (isHEICSupported()) {
-      resolve(file);
-      return;
-    }
+  // If HEIC is supported natively, return as is
+  if (isHEICSupported()) {
+    return file;
+  }
 
-    // Try to convert using FileReader and Canvas
-    const reader = new FileReader();
+  try {
+    console.log('Converting HEIC file:', file.name);
     
-    reader.onload = (event) => {
-      const img = new Image();
-      
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            resolve(file); // Fallback to original
-            return;
-          }
-          
-          ctx.drawImage(img, 0, 0);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const convertedFile = new File(
-                [blob], 
-                file.name.replace(/\.heic$/i, '.jpg'),
-                { type: 'image/jpeg', lastModified: Date.now() }
-              );
-              resolve(convertedFile);
-            } else {
-              resolve(file); // Fallback to original
-            }
-          }, 'image/jpeg', 0.9);
-        } catch (error) {
-          console.error('HEIC conversion error:', error);
-          resolve(file); // Fallback to original
-        }
-      };
-      
-      img.onerror = () => {
-        // If image fails to load, return original file
-        resolve(file);
-      };
-      
-      img.src = event.target?.result as string;
-    };
+    // Convert HEIC to JPEG using heic2any
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.9
+    });
     
-    reader.onerror = () => {
-      resolve(file); // Fallback to original
-    };
+    // heic2any might return an array of blobs for multi-page HEIC files
+    const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
     
-    // Try to read the file
-    try {
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Failed to read HEIC file:', error);
-      resolve(file); // Fallback to original
-    }
-  });
+    // Create a new File object from the converted blob
+    const convertedFile = new File(
+      [blob],
+      file.name.replace(/\.heic$/i, '.jpg'),
+      { type: 'image/jpeg', lastModified: Date.now() }
+    );
+    
+    console.log('HEIC conversion successful:', convertedFile.name);
+    return convertedFile;
+  } catch (error) {
+    console.error('HEIC conversion error:', error);
+    
+    // If conversion fails, throw an error instead of returning the original file
+    // This way the user knows the file cannot be processed
+    throw new Error('HEIC 파일 변환에 실패했습니다. 다른 형식의 이미지를 사용해주세요.');
+  }
 };
 
 /**

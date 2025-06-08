@@ -16,7 +16,7 @@ export const validateInstagramId = (id: string): boolean => {
 
 // 이미지 파일 유효성 검사 (helpers.ts와 호환되는 인터페이스)
 export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   
   // 파일 존재 여부

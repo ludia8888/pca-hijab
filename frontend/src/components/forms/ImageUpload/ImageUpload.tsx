@@ -43,14 +43,15 @@ export const ImageUpload = ({
       const isHEIC = file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic');
       
       if (isHEIC && !isHEICSupported()) {
-        // Try to convert HEIC to JPEG
-        processedFile = await convertHEICToJPEG(file);
-        
-        // If conversion failed (still HEIC), use fallback preview
-        if (processedFile.type === 'image/heic' || processedFile.name.toLowerCase().endsWith('.heic')) {
-          previewUrl = createHEICFallbackPreview(processedFile);
-        } else {
+        try {
+          // Try to convert HEIC to JPEG
+          processedFile = await convertHEICToJPEG(file);
           previewUrl = createImagePreview(processedFile);
+        } catch (conversionError) {
+          // If conversion fails, show error to user
+          console.error('HEIC conversion failed:', conversionError);
+          onError(conversionError instanceof Error ? conversionError.message : 'HEIC 파일 변환에 실패했습니다.');
+          return;
         }
       } else {
         previewUrl = createImagePreview(processedFile);
