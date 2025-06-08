@@ -7,29 +7,48 @@ import type { PersonalColorResult } from '@/types';
 
 describe('RecommendationAPI', () => {
   const mockPersonalColorResult: PersonalColorResult = {
-    status: 'success',
-    data: {
-      season: 'fall',
-      tone: {
-        name: '가을 웜톤',
-        characteristics: ['따뜻한 톤']
+    personal_color: '가을 웜톤',
+    personal_color_en: 'fall',
+    tone: '따뜻한 톤',
+    tone_en: 'warm',
+    details: {
+      is_warm: 1,
+      skin_lab_b: 10.5,
+      eyebrow_lab_b: 8.2,
+      eye_lab_b: 7.8,
+      skin_hsv_s: 20.5,
+      eyebrow_hsv_s: 15.3,
+      eye_hsv_s: 12.7
+    },
+    facial_colors: {
+      cheek: {
+        rgb: [255, 200, 180],
+        lab: [80, 10, 15],
+        hsv: [20, 30, 100]
       },
-      bestColors: [
-        { hex: '#8B4513', name: '새들 브라운', description: '깊은 브라운' }
-      ],
-      avoidColors: [],
-      confidence: 0.92
-    }
+      eyebrow: {
+        rgb: [90, 70, 60],
+        lab: [30, 5, 10],
+        hsv: [20, 33, 35]
+      },
+      eye: {
+        rgb: [80, 60, 50],
+        lab: [25, 5, 8],
+        hsv: [20, 38, 31]
+      }
+    },
+    confidence: 0.92
   };
 
   const mockRecommendationData: RecommendationRequest = {
     instagramId: 'test_user',
     personalColorResult: mockPersonalColorResult,
     preferences: {
-      styles: ['casual'],
-      colors: ['brown'],
-      budget: 'mid',
-      occasions: ['daily']
+      style: ['casual'],
+      priceRange: 'mid',
+      material: ['cotton'],
+      occasion: ['daily'],
+      additionalNotes: ''
     }
   };
 

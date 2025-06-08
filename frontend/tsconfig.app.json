@@ -46,5 +46,6 @@
       "@types/*": ["src/types/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "types": ["vitest/globals"]
 }

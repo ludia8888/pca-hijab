@@ -5,6 +5,7 @@ import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
+import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
 
 // ===================== 컬러칩을 4개씩 묶는 유틸 함수 =====================
 /**
@@ -111,9 +112,15 @@ const ResultPage = (): JSX.Element => {
     }
   };
 
-  const handleSaveImage = (): void => {
-    // TODO: Implement result image generation and download
-    console.log('Save image');
+  const handleSaveImage = async (): Promise<void> => {
+    try {
+      const blob = await generateResultCard(result, instagramId || 'user');
+      const filename = `personal_color_${result.personal_color_en}_${Date.now()}.jpg`;
+      downloadResultCard(blob, filename);
+    } catch (error) {
+      console.error('Failed to save image:', error);
+      alert('이미지 저장에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (

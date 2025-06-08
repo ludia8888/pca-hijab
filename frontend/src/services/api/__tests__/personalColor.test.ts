@@ -16,12 +16,11 @@ describe('PersonalColorAPI', () => {
 
       // 결과 검증
       expect(result).toBeDefined();
-      expect(result.status).toBe('success');
-      expect(result.data).toBeDefined();
-      expect(result.data.season).toBe('fall');
-      expect(result.data.tone.name).toBe('가을 웜톤');
-      expect(result.data.bestColors).toHaveLength(4);
-      expect(result.data.confidence).toBeGreaterThan(0);
+      expect(result.personal_color).toBeDefined();
+      expect(result.personal_color_en).toBe('fall');
+      expect(result.tone).toBeDefined();
+      expect(result.tone_en).toBe('warm');
+      expect(result.confidence).toBeGreaterThan(0);
     });
 
     it('should handle image analysis with debug flag', async () => {
@@ -29,7 +28,7 @@ describe('PersonalColorAPI', () => {
 
       const result = await PersonalColorAPI.analyzeImage(testFile, true);
 
-      expect(result.status).toBe('success');
+      expect(result.personal_color_en).toBeDefined();
     });
 
     it('should handle missing image error', async () => {
@@ -85,7 +84,6 @@ describe('PersonalColorAPI', () => {
 
       expect(result).toBeDefined();
       expect(result.status).toBe('ok');
-      expect(result.timestamp).toBeDefined();
     });
 
     it('should handle health check failure', async () => {

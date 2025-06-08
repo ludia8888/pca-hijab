@@ -34,8 +34,6 @@ describe('Button', () => {
       
       const button = screen.getByRole('button');
       expect(button).toHaveClass('bg-primary');
-      // Check computed styles instead
-      const styles = window.getComputedStyle(button);
       expect(button.className).toMatch(/bg-primary/);
       expect(button.className).toMatch(/shadow-primary/);
     });

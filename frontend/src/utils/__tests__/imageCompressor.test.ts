@@ -96,7 +96,11 @@ describe('compressImage', () => {
     
     // Setup mock to trigger callbacks
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     // Mock canvas toBlob to return a compressed blob
@@ -112,7 +116,7 @@ describe('compressImage', () => {
 
     // Trigger image onload
     if (mockImage.onload) {
-      mockImage.onload();
+      mockImage.onload.call(mockImage as any, {} as Event);
     }
 
     const result = await promise;
@@ -127,7 +131,11 @@ describe('compressImage', () => {
     const originalFile = new File(['test'], 'wide.jpg', { type: 'image/jpeg' });
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     mockCanvas.toBlob.mockImplementation((callback: BlobCallback) => {
@@ -144,7 +152,7 @@ describe('compressImage', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     if (mockImage.onload) {
-      mockImage.onload();
+      mockImage.onload.call(mockImage as any, {} as Event);
     }
 
     await promise;
@@ -158,7 +166,11 @@ describe('compressImage', () => {
     const originalFile = new File(['test'], 'tall.jpg', { type: 'image/jpeg' });
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     mockCanvas.toBlob.mockImplementation((callback: BlobCallback) => {
@@ -175,7 +187,7 @@ describe('compressImage', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     if (mockImage.onload) {
-      mockImage.onload();
+      mockImage.onload.call(mockImage as any, {} as Event);
     }
 
     await promise;
@@ -190,7 +202,11 @@ describe('compressImage', () => {
     const customQuality = 0.5;
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     mockCanvas.toBlob.mockImplementation((callback: BlobCallback) => {
@@ -203,7 +219,7 @@ describe('compressImage', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     if (mockImage.onload) {
-      mockImage.onload();
+      mockImage.onload.call(mockImage as any, {} as Event);
     }
 
     await promise;
@@ -220,7 +236,11 @@ describe('compressImage', () => {
     const originalFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     // Make getContext return null
@@ -231,7 +251,7 @@ describe('compressImage', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     if (mockImage.onload) {
-      mockImage.onload();
+      mockImage.onload.call(mockImage as any, {} as Event);
     }
 
     await expect(promise).rejects.toThrow('Failed to get canvas context');
@@ -241,7 +261,11 @@ describe('compressImage', () => {
     const originalFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     // Make toBlob return null
@@ -254,7 +278,7 @@ describe('compressImage', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     if (mockImage.onload) {
-      mockImage.onload();
+      mockImage.onload.call(mockImage as any, {} as Event);
     }
 
     await expect(promise).rejects.toThrow('Failed to compress image');
@@ -264,7 +288,11 @@ describe('compressImage', () => {
     const originalFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onload({ target: { result: 'data:image/jpeg;base64,test' } }), 0);
+      setTimeout(() => {
+        if (this.onload) {
+          this.onload.call(this as any, { target: { result: 'data:image/jpeg;base64,test' } } as any);
+        }
+      }, 0);
     });
 
     const promise = compressImage(originalFile);
@@ -273,7 +301,7 @@ describe('compressImage', () => {
 
     // Trigger image error instead of onload
     if (mockImage.onerror) {
-      mockImage.onerror(new Error('Image load failed'));
+      (mockImage.onerror as any)(new Error('Image load failed'));
     }
 
     await expect(promise).rejects.toThrow('Image load failed');
@@ -283,7 +311,11 @@ describe('compressImage', () => {
     const originalFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
     mockFileReader.readAsDataURL.mockImplementation(function(this: MockFileReader) {
-      setTimeout(() => this.onerror(new Error('Read failed')), 0);
+      setTimeout(() => {
+        if (this.onerror) {
+          (this.onerror as any)(new Error('Read failed'));
+        }
+      }, 0);
     });
 
     const promise = compressImage(originalFile);

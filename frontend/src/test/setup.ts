@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, afterAll } from 'vitest';
+import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { server } from '../mocks/server';
 
 // MSW 서버 설정
@@ -41,13 +41,17 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // MediaStream API mocks
-global.navigator.mediaDevices = {
-  getUserMedia: vi.fn().mockRejectedValue(new Error('Not available in test environment')),
-  enumerateDevices: vi.fn().mockResolvedValue([]),
-  getDisplayMedia: vi.fn().mockRejectedValue(new Error('Not available in test environment')),
-  getSupportedConstraints: vi.fn().mockReturnValue({}),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  dispatchEvent: vi.fn().mockReturnValue(false),
-  ondevicechange: null,
-} as unknown as MediaDevices;
+Object.defineProperty(navigator, 'mediaDevices', {
+  writable: true,
+  configurable: true,
+  value: {
+    getUserMedia: vi.fn().mockRejectedValue(new Error('Not available in test environment')),
+    enumerateDevices: vi.fn().mockResolvedValue([]),
+    getDisplayMedia: vi.fn().mockRejectedValue(new Error('Not available in test environment')),
+    getSupportedConstraints: vi.fn().mockReturnValue({}),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn().mockReturnValue(false),
+    ondevicechange: null,
+  } as unknown as MediaDevices
+});

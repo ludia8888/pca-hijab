@@ -24,6 +24,7 @@ interface AppState {
   // Session
   sessionId: string | null;
   initSession: () => void;
+  setSessionData: (sessionId: string, instagramId: string) => void;
   
   // Reset
   resetApp: () => void;
@@ -62,6 +63,9 @@ export const useAppStore = create<AppState>()(
         initSession: () => {
           const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           set({ sessionId });
+        },
+        setSessionData: (sessionId, instagramId) => {
+          set({ sessionId, instagramId });
         },
         
         // Reset

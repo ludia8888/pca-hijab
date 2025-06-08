@@ -2,6 +2,11 @@
 
 AI를 활용하여 사용자의 퍼스널 컬러를 진단하고, 개인에게 맞는 히잡 색상을 추천하는 모바일 최적화 웹 서비스입니다.
 
+## 🚀 배포 URL
+- **Frontend**: https://pca-hijab.vercel.app (예정)
+- **Backend API**: https://pca-hijab-backend.onrender.com (예정)
+- **AI API**: 로컬 환경에서만 실행 (ShowMeTheColor)
+
 ## 🎯 프로젝트 개요
 
 ### 주요 기능
@@ -37,7 +42,7 @@ cd frontend
 # 의존성 설치
 npm install
 
-# 개발 서버 실행 (http://localhost:3000)
+# 개발 서버 실행 (http://localhost:5173)
 npm run dev
 
 # 프로덕션 빌드
@@ -49,8 +54,9 @@ npm run preview
 
 ### 백엔드 설치 및 실행
 
+#### 1. AI API (ShowMeTheColor)
 ```bash
-# 백엔드 디렉토리로 이동
+# AI API 디렉토리로 이동
 cd ShowMeTheColor
 
 # 가상환경 생성 및 활성화
@@ -63,6 +69,26 @@ pip install -r requirements.txt
 # 서버 실행 (http://localhost:8000)
 cd src
 python api.py
+```
+
+#### 2. Backend API (Express)
+```bash
+# Backend 디렉토리로 이동
+cd backend
+
+# 의존성 설치
+npm install
+
+# 환경 변수 설정
+cp .env.example .env
+# .env 파일 편집
+
+# 개발 서버 실행 (http://localhost:5001)
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+npm start
 ```
 
 ## 📱 주요 화면 및 플로우
@@ -149,14 +175,12 @@ pca-hijab/
 ### Frontend (.env)
 ```env
 # API 설정
-VITE_API_BASE_URL=http://localhost:8000
+VITE_AI_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:5001/api
 
-# 이미지 설정
-VITE_IMAGE_COMPRESSION_QUALITY=0.8
-VITE_MAX_IMAGE_SIZE=5242880  # 5MB
-
-# 개발 설정
-VITE_ENABLE_MOCK=false
+# 프로덕션 환경에서는:
+# VITE_AI_API_URL=http://localhost:8000
+# VITE_API_BASE_URL=https://pca-hijab-backend.onrender.com/api
 ```
 
 ### Backend
@@ -181,6 +205,9 @@ VITE_ENABLE_MOCK=false
 - [x] 모바일 카메라 및 HEIC 지원
 - [x] 결과 공유 및 저장 기능
 - [x] 맞춤 추천 입력 폼
+- [x] Backend API 구축 (세션 및 추천 요청 저장)
+- [x] 결과 이미지 생성 및 다운로드 기능
+- [x] Vercel/Render 배포 설정
 
 ### 🚧 개발 예정
 

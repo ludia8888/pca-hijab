@@ -5,10 +5,13 @@ import { Button, Card } from '@/components/ui';
 import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
+import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { instagramId, analysisResult, reset } = useAppStore();
+  const instagramId = useAppStore((state) => state.instagramId);
+  const analysisResult = useAppStore((state) => state.analysisResult);
+  const reset = useAppStore((state) => state.reset);
 
   // Redirect if no required data
   useEffect(() => {
@@ -29,9 +32,17 @@ const CompletionPage = (): JSX.Element => {
     }
   };
 
-  const handleSaveResult = (): void => {
-    // TODO: Implement result card generation
-    console.log('Save result card');
+  const handleSaveResult = async (): Promise<void> => {
+    if (!analysisResult || !instagramId) return;
+    
+    try {
+      const blob = await generateResultCard(analysisResult, instagramId);
+      const filename = `hijab_recommendation_${Date.now()}.jpg`;
+      downloadResultCard(blob, filename);
+    } catch (error) {
+      console.error('Failed to save result card:', error);
+      alert('이미지 저장에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const handleGoHome = (): void => {

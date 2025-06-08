@@ -80,10 +80,10 @@ export const handlers = [
 
   // POST /api/recommend
   http.post('/api/recommend', async ({ request }) => {
-    const data = await request.json();
+    const data = await request.json() as any;
     
     // 필수 필드 검증
-    if (!data.sessionId || !data.instagramId || !data.preferences) {
+    if (!data?.sessionId || !data?.instagramId || !data?.preferences) {
       return HttpResponse.json(
         {
           status: 'error',

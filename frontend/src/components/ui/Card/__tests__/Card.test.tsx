@@ -5,7 +5,7 @@ import { Card } from '../Card';
 
 // Helper function to render Card with testid
 const renderCard = (props?: any, children = 'Content') => {
-  const { container } = render(
+  render(
     <Card data-testid="test-card" {...props}>
       {children}
     </Card>

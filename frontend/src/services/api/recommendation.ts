@@ -5,6 +5,7 @@ export interface RecommendationRequest {
   instagramId: string;
   personalColorResult: PersonalColorResult;
   preferences: UserPreferences;
+  sessionId?: string;
 }
 
 export interface RecommendationResponse {
@@ -23,9 +24,16 @@ export class RecommendationAPI {
     data: RecommendationRequest
   ): Promise<RecommendationResponse> {
     try {
+      // Get sessionId from store if not provided
+      const sessionId = data.sessionId || (window as any).__APP_STORE__?.getState()?.sessionId;
+      
       const response = await apiClient.post<RecommendationResponse>(
         '/recommendations',
-        data
+        {
+          ...data,
+          sessionId,
+          userPreferences: data.preferences
+        }
       );
       return response.data;
     } catch (error) {
