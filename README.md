@@ -1,21 +1,22 @@
-# 🧕 PCA-HIJAB: AI 기반 퍼스널 컬러 진단 및 히잡 추천 서비스
+# 🧕 PCA-HIJAB: AI-Powered Personal Color Analysis & Hijab Recommendation Service
 
-AI를 활용하여 사용자의 퍼스널 컬러를 진단하고, 개인에게 맞는 히잡 색상을 추천하는 모바일 최적화 웹 서비스입니다.
+A mobile-optimized web service that uses AI to diagnose personal color types and recommend hijab colors tailored to individual users.
 
-## 🚀 배포 URL
-- **Frontend**: https://pca-hijab.vercel.app (준비 완료)
-- **Backend API**: https://pca-hijab-backend.onrender.com (준비 완료)
-- **AI API**: 로컬 환경에서만 실행 (ShowMeTheColor)
+## 🚀 Deployment URLs
+- **Frontend**: https://pca-hijab.vercel.app (Ready)
+- **Backend API**: https://pca-hijab-backend.onrender.com (Ready)
+- **AI API**: Local environment only (ShowMeTheColor)
 
-## 🎯 프로젝트 개요
+## 🎯 Project Overview
 
-### 주요 기능
-- **AI 퍼스널 컬러 진단**: 사용자의 얼굴 사진을 분석하여 봄/여름/가을/겨울 타입 진단
-- **맞춤 색상 추천**: 진단 결과에 따른 어울리는 색상과 피해야 할 색상 제시
-- **히잡 추천 시스템**: 개인 선호도를 반영한 맞춤형 히잡 추천
-- **모바일 최적화**: 모바일 환경에 최적화된 UI/UX
+### Key Features
+- **AI Personal Color Analysis**: Analyzes facial photos to diagnose Spring/Summer/Autumn/Winter types
+- **Custom Color Recommendations**: Suggests suitable colors and colors to avoid based on analysis
+- **Hijab Recommendation System**: Personalized hijab recommendations based on preferences
+- **Mobile Optimization**: UI/UX optimized for mobile devices
+- **Privacy-First Design**: Photos are analyzed instantly and deleted immediately - no storage
 
-### 기술 스택
+### Tech Stack
 
 #### Frontend
 - **Framework**: React 18 + TypeScript
@@ -34,163 +35,171 @@ AI를 활용하여 사용자의 퍼스널 컬러를 진단하고, 개인에게 �
 - **Database**: PostgreSQL with in-memory fallback
 - **Deployment**: Render (Backend), Vercel (Frontend)
 
-## 🚀 시작하기
+## 🚀 Getting Started
 
-### 필수 요구사항
-- Node.js 18.0.0 이상
-- npm 또는 yarn
-- Python 3.8+ (백엔드 서버용)
+### Prerequisites
+- Node.js 18.0.0 or higher
+- npm or yarn
+- Python 3.8+ (for backend server)
 
-### 프론트엔드 설치 및 실행
+### Frontend Installation & Setup
 
 ```bash
-# 저장소 클론
+# Clone repository
 git clone https://github.com/ludia8888/pca-hijab.git
 cd pca-hijab
 
-# 프론트엔드 디렉토리로 이동
+# Navigate to frontend directory
 cd frontend
 
-# 의존성 설치
+# Install dependencies
 npm install
 
-# 개발 서버 실행 (http://localhost:5173)
+# Run development server (http://localhost:5173)
 npm run dev
 
-# 프로덕션 빌드
+# Production build
 npm run build
 
-# 빌드 결과물 미리보기
+# Preview build
 npm run preview
 ```
 
-### 백엔드 설치 및 실행
+### Backend Installation & Setup
 
 #### 1. AI API (ShowMeTheColor)
 ```bash
-# AI API 디렉토리로 이동
+# Navigate to AI API directory
 cd ShowMeTheColor
 
-# 가상환경 생성 및 활성화
+# Create and activate virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 의존성 설치
+# Install dependencies
 pip install -r requirements.txt
 
-# 서버 실행 (http://localhost:8000)
+# Run server (http://localhost:8000)
 cd src
 python api.py
 ```
 
 #### 2. Backend API (Express)
 ```bash
-# Backend 디렉토리로 이동
+# Navigate to Backend directory
 cd backend
 
-# 의존성 설치
+# Install dependencies
 npm install
 
-# 환경 변수 설정
+# Set up environment variables
 cp .env.example .env
-# .env 파일 편집
+# Edit .env file
 
-# 개발 서버 실행 (http://localhost:5001)
+# Run development server (http://localhost:5001)
 npm run dev
 
-# 프로덕션 빌드
+# Production build
 npm run build
 npm start
 ```
 
-## 📱 주요 화면 및 플로우
+## 📱 Main Screens & User Flow
 
-### 1. 인트로 화면 (`/`)
-- 서비스 소개 및 인스타그램 ID 입력
-- 개인정보 수집 동의
+### 1. Intro Screen (`/`)
+- Service introduction and Instagram ID input
+- Privacy consent with clear photo deletion policy
 
-### 2. 사진 업로드 (`/upload`)
-- 갤러리 선택 또는 카메라 촬영
-- HEIC 포맷 지원
-- 이미지 자동 압축
+### 2. Photo Upload (`/upload`)
+- Gallery selection or camera capture
+- HEIC format support
+- Automatic image compression
+- Privacy notice about instant analysis and deletion
 
-### 3. AI 분석 (`/analyzing`)
-- 실시간 진행 상태 표시
-- 5단계 분석 애니메이션
+### 3. AI Analysis (`/analyzing`)
+- Real-time progress display
+- 5-step analysis animation (~11 seconds)
 
-### 4. 결과 화면 (`/result`)
-- 퍼스널 컬러 타입 (봄/여름/가을/겨울)
-- 추천 색상 팔레트 (4x1 그리드)
-- 피해야 할 색상
-- 결과 공유 기능
+### 4. Result Screen (`/result`)
+- Personal color type (Spring/Summer/Autumn/Winter)
+- Recommended color palette (4x1 grid)
+- Colors to avoid
+- Share results feature
+- AI confidence score
 
-### 5. 히잡 추천 (`/recommendation`)
-- 선호 스타일 선택
-- 가격대 설정
-- 소재 및 착용 상황 선택
-- 추가 요청사항
+### 5. Hijab Recommendation (`/recommendation`)
+- Style preference selection
+- Price range setting
+- Material and occasion selection
+- Additional requests
 
-### 6. 완료 화면 (`/completion`)
-- DM 발송 안내
-- 결과 저장 및 공유
+### 6. Completion Screen (`/completion`)
+- DM delivery notice
+- Save and share results
 
-## 🔧 개발 명령어
+## 🔧 Development Commands
 
 ```bash
-# 개발 서버 실행
+# Run development server
 npm run dev
 
-# TypeScript 타입 체크
+# TypeScript type checking
 npm run typecheck
 
-# ESLint 실행
+# Run ESLint
 npm run lint
 
-# 코드 포맷팅
+# Code formatting
 npm run format
 
-# 프로덕션 빌드
+# Production build
 npm run build
 
-# 빌드 결과 미리보기
+# Preview build
 npm run preview
+
+# Run tests
+npm test
+
+# Test coverage
+npm run test:coverage
 ```
 
-## 🏗 프로젝트 구조
+## 🏗 Project Structure
 
 ```
 pca-hijab/
-├── frontend/                 # React 프론트엔드
+├── frontend/                 # React frontend
 │   ├── src/
-│   │   ├── components/      # 재사용 컴포넌트
-│   │   │   ├── ui/         # 기본 UI 컴포넌트
-│   │   │   ├── layout/     # 레이아웃 컴포넌트
-│   │   │   └── forms/      # 폼 관련 컴포넌트
-│   │   ├── pages/          # 페이지 컴포넌트
-│   │   ├── services/       # API 서비스
-│   │   ├── store/          # Zustand 전역 상태
-│   │   ├── utils/          # 유틸리티 함수
-│   │   └── types/          # TypeScript 타입 정의
-│   └── public/             # 정적 파일
+│   │   ├── components/      # Reusable components
+│   │   │   ├── ui/         # Basic UI components
+│   │   │   ├── layout/     # Layout components
+│   │   │   └── forms/      # Form components
+│   │   ├── pages/          # Page components
+│   │   ├── services/       # API services
+│   │   ├── store/          # Zustand global state
+│   │   ├── utils/          # Utility functions
+│   │   └── types/          # TypeScript type definitions
+│   └── public/             # Static files
 │
-├── ShowMeTheColor/         # Python 백엔드
+├── ShowMeTheColor/         # Python backend
 │   ├── src/
-│   │   ├── api.py         # FastAPI 서버
-│   │   └── personal_color_analysis/  # AI 분석 모듈
-│   └── res/               # 리소스 파일
+│   │   ├── api.py         # FastAPI server
+│   │   └── personal_color_analysis/  # AI analysis module
+│   └── res/               # Resource files
 │
-└── docs/                   # 프로젝트 문서
+└── docs/                   # Project documentation
 ```
 
-## 🔒 환경 변수 설정
+## 🔒 Environment Variables
 
 ### Frontend (.env)
 ```env
-# API 설정
+# API Configuration
 VITE_AI_API_URL=http://localhost:8000
 VITE_API_BASE_URL=http://localhost:5001/api
 
-# 프로덕션 환경에서는:
+# For production:
 # VITE_AI_API_URL=http://localhost:8000
 # VITE_API_BASE_URL=https://pca-hijab-backend.onrender.com/api
 ```
@@ -211,85 +220,88 @@ CLIENT_URL=http://localhost:5173
 JWT_SECRET=your-jwt-secret-key
 ```
 
-ShowMeTheColor API 환경 변수는 `ShowMeTheColor/README.md`를 참조하세요.
+For ShowMeTheColor API environment variables, refer to `ShowMeTheColor/README.md`.
 
-## 📊 API 엔드포인트
+## 📊 API Endpoints
 
-### 퍼스널 컬러 분석
-- `POST /api/analyze` - 이미지 업로드 및 분석
-- `GET /api/health` - 서버 상태 확인
+### Personal Color Analysis
+- `POST /api/analyze` - Upload and analyze image
+- `GET /api/health` - Server health check
 
-### 세션 관리
-- `POST /api/sessions` - 새 세션 생성
-- `GET /api/sessions/:id` - 세션 정보 조회
+### Session Management
+- `POST /api/sessions` - Create new session
+- `GET /api/sessions/:id` - Get session info
 
-### 추천 시스템
-- `POST /api/recommendations` - 히잡 추천 요청
-- `GET /api/recommendations/:id` - 추천 정보 조회
-- `PUT /api/recommendations/:id/status` - 추천 상태 업데이트
+### Recommendation System
+- `POST /api/recommendations` - Request hijab recommendations
+- `GET /api/recommendations/:id` - Get recommendation info
+- `PUT /api/recommendations/:id/status` - Update recommendation status
 
-## 🚦 개발 현황
+## 🚦 Development Status
 
-### ✅ 완료된 기능
-- [x] 프로젝트 초기 설정 및 디자인 시스템
-- [x] 전체 페이지 플로우 구현
-- [x] AI API 연동 및 분석 기능
-- [x] 모바일 카메라 및 HEIC 지원
-- [x] 결과 공유 및 저장 기능
-- [x] 맞춤 추천 입력 폼
-- [x] Backend API 구축 (Express.js + TypeScript)
-- [x] PostgreSQL 데이터베이스 지원 (in-memory fallback)
-- [x] 세션 관리 시스템
-- [x] 추천 요청 저장 및 상태 관리
-- [x] 결과 이미지 생성 (Canvas API)
-- [x] 인스타그램 스토리 형식 결과 카드
-- [x] Vercel/Render 배포 설정
-- [x] 포괄적인 테스트 커버리지
+### ✅ Completed Features
+- [x] Project setup and design system
+- [x] Complete page flow implementation
+- [x] AI API integration and analysis features
+- [x] Mobile camera and HEIC support
+- [x] Result sharing and saving functionality
+- [x] Personalized recommendation input form
+- [x] Backend API (Express.js + TypeScript)
+- [x] PostgreSQL database support (with in-memory fallback)
+- [x] Session management system
+- [x] Recommendation request storage and status management
+- [x] Result image generation (Canvas API)
+- [x] Instagram story format result cards
+- [x] Vercel/Render deployment configuration
+- [x] Comprehensive test coverage
+- [x] Privacy-focused UX with clear data deletion messaging
+- [x] Full English UI translation
+- [x] Optimized analysis animation (11 seconds)
 
-### 🚧 향후 개발 계획
+### 🚧 Future Development Plans
 
-#### 1. 실제 히잡 제품 추천 시스템
-현재는 추천 요청을 수동으로 처리합니다. 자동화 필요:
-- [ ] 히잡 제품 데이터베이스 구축
-- [ ] AI 기반 제품 매칭 알고리즘
-- [ ] 관리자용 대시보드 (추천 요청 확인 및 DM 발송 관리)
-- [ ] Instagram API 연동 (자동 DM 발송)
+#### 1. Automated Hijab Product Recommendation System
+Currently, recommendation requests are processed manually. Automation needed:
+- [ ] Build hijab product database
+- [ ] AI-based product matching algorithm
+- [ ] Admin dashboard (view requests and manage DM delivery)
+- [ ] Instagram API integration (automatic DM sending)
 
-#### 3. PWA (Progressive Web App) 설정
-모바일 앱처럼 동작하도록:
-- [ ] Service Worker 구현
-- [ ] 오프라인 시 기본 페이지 제공
-- [ ] 홈 화면 추가 기능
-- [ ] Push 알림 (DM 발송 완료 알림)
+#### 2. PWA (Progressive Web App) Setup
+Make it work like a mobile app:
+- [ ] Service Worker implementation
+- [ ] Offline page support
+- [ ] Add to home screen feature
+- [ ] Push notifications (DM delivery notifications)
 
-#### 4. 분석 결과 캐싱
-동일한 이미지 재분석 방지:
-- [ ] IndexedDB를 이용한 로컬 캐싱
-- [ ] 이미지 해시 기반 중복 체크
-- [ ] Redis를 이용한 서버 사이드 캐싱
-- [ ] 캐시 만료 정책 구현
+#### 3. Analysis Result Caching
+Prevent re-analysis of same images:
+- [ ] Local caching with IndexedDB
+- [ ] Image hash-based duplicate detection
+- [ ] Server-side caching with Redis
+- [ ] Cache expiration policies
 
-#### 5. A/B 테스트 인프라
-사용자 행동 분석 및 최적화:
-- [ ] Google Analytics 4 또는 Mixpanel 연동
-- [ ] 사용자 행동 이벤트 트래킹
-- [ ] Feature Flag 시스템 구현
-- [ ] 전환율 측정 (완료율, 추천 요청률)
+#### 4. A/B Testing Infrastructure
+User behavior analysis and optimization:
+- [ ] Google Analytics 4 or Mixpanel integration
+- [ ] User behavior event tracking
+- [ ] Feature Flag system
+- [ ] Conversion rate measurement (completion rate, recommendation request rate)
 
-## 🧪 테스트
+## 🧪 Testing
 
 ```bash
-# 단위 테스트 실행
+# Run unit tests
 npm run test
 
-# 테스트 커버리지
+# Test coverage
 npm run test:coverage
 
-# E2E 테스트
+# E2E tests
 npm run test:e2e
 ```
 
-## 🤝 기여하기
+## 🤝 Contributing
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -297,26 +309,26 @@ npm run test:e2e
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-### 커밋 메시지 컨벤션
-- `feat:` 새로운 기능 추가
-- `fix:` 버그 수정
-- `docs:` 문서 수정
-- `style:` 코드 포맷팅, 세미콜론 누락 등
-- `refactor:` 코드 리팩토링
-- `test:` 테스트 추가
-- `chore:` 빌드 업무 수정, 패키지 매니저 수정 등
+### Commit Message Convention
+- `feat:` Add new feature
+- `fix:` Bug fix
+- `docs:` Documentation changes
+- `style:` Code formatting, missing semicolons, etc.
+- `refactor:` Code refactoring
+- `test:` Add tests
+- `chore:` Build tasks, package manager changes, etc.
 
-## 📝 라이선스
+## 📝 License
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
+This project is distributed under the MIT License. See `LICENSE` file for details.
 
-## 📞 문의
+## 📞 Contact
 
-- 이메일: support@hijabcolor.com
-- 이슈 트래커: [GitHub Issues](https://github.com/ludia8888/pca-hijab/issues)
+- Email: support@hijabcolor.com
+- Issue Tracker: [GitHub Issues](https://github.com/ludia8888/pca-hijab/issues)
 
-## 🙏 감사의 말
+## 🙏 Acknowledgments
 
-- AI 퍼스널 컬러 분석 엔진 제공: ShowMeTheColor 팀
-- UI/UX 디자인 영감: 현대적인 모바일 디자인 트렌드
-- 오픈소스 커뮤니티의 훌륭한 라이브러리들
+- AI personal color analysis engine: ShowMeTheColor team
+- UI/UX design inspiration: Modern mobile design trends
+- Amazing libraries from the open source community
