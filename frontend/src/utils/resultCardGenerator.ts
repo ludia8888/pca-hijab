@@ -71,35 +71,6 @@ function drawTextWithShadow(
   ctx.shadowOffsetY = 0;
 }
 
-// Helper to wrap text
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number
-): number {
-  const words = text.split(' ');
-  let line = '';
-  let currentY = y;
-
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line, x, currentY);
-      line = words[n] + ' ';
-      currentY += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, currentY);
-  return currentY + lineHeight;
-}
 
 /**
  * Generates a beautiful result card image for sharing
@@ -111,7 +82,7 @@ export const generateResultCard = async (
   result: PersonalColorResult,
   instagramId: string
 ): Promise<Blob> => {
-  console.log('generateResultCard called with:', { result, instagramId });
+  console.log('generateResultCard v2.0 - Beautiful Korean Design', { result, instagramId });
   
   // Load fonts first
   try {
@@ -330,7 +301,7 @@ export const generateResultCard = async (
   // Service branding
   drawTextWithShadow(ctx, 'Hijab Personal Color AI', width / 2, footerY + 40, 'bold 28px Playfair Display', '#666666');
   
-  // Date
+  // Date and version
   const date = new Date().toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 
@@ -339,7 +310,9 @@ export const generateResultCard = async (
   ctx.font = '16px Noto Sans';
   ctx.fillStyle = '#999999';
   ctx.textAlign = 'center';
-  ctx.fillText(date, width / 2, height - 40);
+  ctx.fillText(date, width / 2, height - 60);
+  ctx.font = '12px Noto Sans';
+  ctx.fillText('v2.0', width / 2, height - 40);
 
   // Convert canvas to blob
   return new Promise((resolve, reject) => {

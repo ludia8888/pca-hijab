@@ -145,7 +145,7 @@ async function generateColorDetailCard(
   ctx.fillText('Your Color Palette', canvas.width / 2, 150);
   
   // Best colors grid
-  drawDetailedColorGrid(ctx, seasonColors.bestColors, 250, canvas.width);
+  drawDetailedColorGrid(ctx, [...seasonColors.bestColors], 250, canvas.width);
   
   // Colors to avoid
   const avoidY = 1200;
@@ -153,7 +153,7 @@ async function generateColorDetailCard(
   ctx.fillStyle = '#666666';
   ctx.fillText('Colors to Avoid', canvas.width / 2, avoidY);
   
-  drawAvoidColors(ctx, seasonColors.worstColors, avoidY + 60, canvas.width);
+  drawAvoidColors(ctx, [...seasonColors.worstColors], avoidY + 60, canvas.width);
   
   // Footer
   drawFooter(ctx, instagramId, canvas.width, canvas.height);
@@ -640,7 +640,7 @@ function drawJewelrySection(
     'rose-gold': '#E8B4B8'
   };
   
-  ctx.fillStyle = metalColors[accessoryData.metal];
+  ctx.fillStyle = metalColors[accessoryData.metal as keyof typeof metalColors];
   ctx.beginPath();
   ctx.arc(width / 2, y + 80, 40, 0, Math.PI * 2);
   ctx.fill();

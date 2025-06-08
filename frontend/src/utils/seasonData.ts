@@ -1,6 +1,4 @@
 // Season-specific data for comprehensive personal color results
-import { SEASON_COLORS } from './colorData';
-
 export type SeasonType = 'spring' | 'summer' | 'autumn' | 'winter';
 
 interface SeasonData {

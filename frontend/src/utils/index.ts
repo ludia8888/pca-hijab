@@ -7,6 +7,11 @@ export * from './imageConverter';
 export * from './camera';
 export * from './resultCardGenerator';
 export * from './resultCardGeneratorSimple';
-export * from './seasonData';
+export { 
+  SEASON_DATA, 
+  SEASON_GRADIENTS,
+  // Explicitly re-export SeasonType from seasonData
+  type SeasonType as SeasonDataType 
+} from './seasonData';
 export * from './fontLoader';
 export * from './resultCardEnhanced';
