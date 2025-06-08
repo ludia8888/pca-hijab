@@ -11,7 +11,6 @@ import mediapipe as mp
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from personal_color_analysis import personal_color
 
 app = FastAPI(
     title="Personal Color Analysis API",
@@ -80,18 +79,7 @@ async def analyze_personal_color(
         with open(temp_path, "wb") as f:
             f.write(contents)
         
-        # Try original analysis first
-        try:
-            result = personal_color.analysis(temp_path)
-            
-            if result is None:
-                raise Exception("Analysis failed")
-            
-            # Extract season
-            season = result.get('season', 'unknown')
-            
-        except Exception as e:
-            # Fallback to MediaPipe face detection
+        # Use MediaPipe face detection
             image = cv2.imread(temp_path)
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             
