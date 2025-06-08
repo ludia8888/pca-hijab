@@ -11,7 +11,7 @@ router.post('/', validateInstagramId, async (req, res, next) => {
     const { instagramId } = req.body;
     
     // Create session
-    const session = db.createSession(instagramId);
+    const session = await db.createSession(instagramId);
     
     res.status(201).json({
       success: true,
@@ -31,7 +31,7 @@ router.get('/:sessionId', async (req, res, next) => {
   try {
     const { sessionId } = req.params;
     
-    const session = db.getSession(sessionId);
+    const session = await db.getSession(sessionId);
     
     if (!session) {
       throw new AppError(404, 'Session not found');

@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: pca-hijab-backend
+    runtime: node
+    repo: https://github.com/ludia8888/pca-hijab
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    rootDir: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://pca-hijab.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pca-hijab-db
+          property: connectionString
+    plan: free
+
+databases:
+  - name: pca-hijab-db
+    plan: free

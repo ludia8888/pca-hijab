@@ -11,13 +11,13 @@ router.post('/', validateRecommendationData, async (req, res, next) => {
     const { sessionId, instagramId, personalColorResult, userPreferences } = req.body;
     
     // Verify session exists
-    const session = db.getSession(sessionId);
+    const session = await db.getSession(sessionId);
     if (!session) {
       throw new AppError(400, 'Invalid session ID');
     }
     
     // Create recommendation
-    const recommendation = db.createRecommendation({
+    const recommendation = await db.createRecommendation({
       sessionId,
       instagramId,
       personalColorResult,
@@ -50,7 +50,7 @@ router.get('/:recommendationId', async (req, res, next) => {
   try {
     const { recommendationId } = req.params;
     
-    const recommendation = db.getRecommendation(recommendationId);
+    const recommendation = await db.getRecommendation(recommendationId);
     
     if (!recommendation) {
       throw new AppError(404, 'Recommendation not found');
@@ -76,8 +76,8 @@ router.get('/', async (req, res, next) => {
     const { status } = req.query;
     
     const recommendations = status 
-      ? db.getRecommendationsByStatus(status as any)
-      : db.getAllRecommendations();
+      ? await db.getRecommendationsByStatus(status as any)
+      : await db.getAllRecommendations();
     
     res.json({
       success: true,
@@ -99,7 +99,7 @@ router.patch('/:recommendationId/status', async (req, res, next) => {
       throw new AppError(400, 'Invalid status value');
     }
     
-    const recommendation = db.updateRecommendationStatus(recommendationId, status);
+    const recommendation = await db.updateRecommendationStatus(recommendationId, status);
     
     if (!recommendation) {
       throw new AppError(404, 'Recommendation not found');
