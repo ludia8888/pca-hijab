@@ -49,7 +49,7 @@ const UploadPage = (): JSX.Element => {
       // Navigate to analysis page
       navigate(ROUTES.ANALYZING);
     } catch {
-      setError('이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setError('An error occurred while processing the image. Please try again.');
     } finally {
       setIsCompressing(false);
       setLoading(false);
@@ -60,7 +60,7 @@ const UploadPage = (): JSX.Element => {
     <PageLayout 
       header={
         <Header 
-          title="사진 업로드" 
+          title="Upload Photo" 
           showBack 
           onBack={() => navigate(ROUTES.HOME)}
         />
@@ -72,31 +72,31 @@ const UploadPage = (): JSX.Element => {
         {/* Instructions */}
         <Card>
           <h2 className="text-h3 font-bold text-gray-900 mb-4">
-            얼굴 사진을 업로드해주세요
+            Please upload your face photo
           </h2>
           
           <div className="space-y-3 text-body-sm text-gray-600">
-            <h3 className="font-semibold text-gray-700">📸 촬영 가이드</h3>
+            <h3 className="font-semibold text-gray-700">📸 Photo Guidelines</h3>
             <ul className="space-y-2 ml-6">
               <li className="flex items-start">
                 <span className="text-success mr-2">✓</span>
-                <span>정면을 바라본 사진</span>
+                <span>Front-facing photo</span>
               </li>
               <li className="flex items-start">
                 <span className="text-success mr-2">✓</span>
-                <span>밝은 자연광 또는 흰색 조명 아래에서 촬영</span>
+                <span>Taken in bright natural light or white lighting</span>
               </li>
               <li className="flex items-start">
                 <span className="text-success mr-2">✓</span>
-                <span>화장을 하지 않거나 가벼운 화장 상태</span>
+                <span>No makeup or light makeup</span>
               </li>
               <li className="flex items-start">
                 <span className="text-error mr-2">✗</span>
-                <span>필터 사용, 색조 보정된 사진</span>
+                <span>Photos with filters or color correction</span>
               </li>
               <li className="flex items-start">
                 <span className="text-error mr-2">✗</span>
-                <span>그림자가 많거나 역광인 사진</span>
+                <span>Photos with shadows or backlighting</span>
               </li>
             </ul>
           </div>
@@ -125,7 +125,7 @@ const UploadPage = (): JSX.Element => {
                   onClick={() => setError(null)}
                   className="text-sm text-error underline mt-1"
                 >
-                  닫기
+                  Close
                 </button>
               </div>
             </div>
@@ -150,15 +150,15 @@ const UploadPage = (): JSX.Element => {
             loading={isCompressing}
             className="animate-fade-in"
           >
-            {isCompressing ? '이미지 처리 중...' : '분석 시작하기'}
+            {isCompressing ? 'Processing image...' : 'Start Analysis'}
           </Button>
         )}
 
         {/* Privacy Notice */}
         <p className="text-caption text-gray-500 text-center mt-4">
-          업로드하신 사진은 분석 목적으로만 사용되며,
+          Your uploaded photo is used only for analysis
           <br />
-          분석 완료 후 즉시 삭제됩니다.
+          and will be deleted immediately after completion.
         </p>
       </div>
     </PageLayout>

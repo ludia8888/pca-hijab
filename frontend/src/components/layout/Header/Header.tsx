@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export const Header = ({
-  title = '히잡 컬러 진단 AI',
+  title = 'Hijab Color AI',
   showBack = false,
   onBack,
   actions,
@@ -36,7 +36,7 @@ export const Header = ({
               <button
                 onClick={handleBack}
                 className="mr-3 p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label="뒤로가기"
+                aria-label="Go back"
               >
                 <svg
                   width="24"

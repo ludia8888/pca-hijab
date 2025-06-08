@@ -27,7 +27,7 @@ const IntroPage = (): JSX.Element => {
 
     const valid = validateInstagramId(cleanedValue);
     setIsValid(valid);
-    setError(valid ? '' : '올바른 인스타그램 ID 형식이 아닙니다');
+    setError(valid ? '' : 'Please enter a valid Instagram ID');
   };
 
   const handleSubmit = (e: React.FormEvent): void => {
@@ -46,13 +46,13 @@ const IntroPage = (): JSX.Element => {
           {/* Hero Section */}
           <div className="text-center mb-8">
             <h2 className="text-h2 tablet:text-h1 font-bold text-gray-900 mb-4">
-              AI가 당신 얼굴에 어울리는
+              Find Your Perfect
               <br />
-              히잡 색을 찾아드립니다
+              Hijab Colors with AI
             </h2>
             <p className="text-body text-gray-600 leading-relaxed">
-              퍼스널 컬러 진단을 통해 당신에게 가장 잘 어울리는 히잡 색상을 추천받아보세요.
-              인스타그램 DM으로 맞춤 추천을 보내드립니다.
+              Discover hijab colors that complement your natural beauty through personal color analysis.
+              We'll send personalized recommendations to your Instagram DM.
             </p>
           </div>
 
@@ -61,27 +61,27 @@ const IntroPage = (): JSX.Element => {
             <div className="flex items-start space-x-3">
               <span className="text-2xl">🎨</span>
               <div>
-                <h3 className="font-semibold text-gray-900">AI 퍼스널 컬러 진단</h3>
+                <h3 className="font-semibold text-gray-900">AI Personal Color Analysis</h3>
                 <p className="text-body-sm text-gray-600">
-                  얼굴 분석을 통한 정확한 퍼스널 컬러 진단
+                  Accurate personal color diagnosis through facial analysis
                 </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <span className="text-2xl">🧕</span>
               <div>
-                <h3 className="font-semibold text-gray-900">맞춤 히잡 추천</h3>
+                <h3 className="font-semibold text-gray-900">Personalized Hijab Recommendations</h3>
                 <p className="text-body-sm text-gray-600">
-                  진단 결과 기반 실제 구매 가능한 제품 추천
+                  Real products recommended based on your analysis results
                 </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <span className="text-2xl">📱</span>
               <div>
-                <h3 className="font-semibold text-gray-900">편리한 DM 발송</h3>
+                <h3 className="font-semibold text-gray-900">Convenient DM Delivery</h3>
                 <p className="text-body-sm text-gray-600">
-                  추천 결과를 인스타그램 DM으로 간편하게 전달
+                  Receive your recommendations directly via Instagram DM
                 </p>
               </div>
             </div>
@@ -90,7 +90,7 @@ const IntroPage = (): JSX.Element => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="인스타그램 ID를 입력해주세요"
+              label="Enter your Instagram ID"
               type="text"
               value={instagramId}
               onChange={(e) => handleIdChange(e.target.value)}
@@ -107,15 +107,15 @@ const IntroPage = (): JSX.Element => {
               fullWidth
               size="lg"
             >
-              진단 시작하기
+              Start Analysis
             </Button>
           </form>
 
           {/* Privacy Notice */}
           <p className="mt-6 text-caption text-gray-500 text-center">
-            입력하신 인스타그램 ID는 추천 결과 전달 목적으로만 사용되며,
+            Your Instagram ID is used only for delivering recommendations
             <br />
-            서비스 이용 완료 후 안전하게 삭제됩니다.
+            and will be safely deleted after service completion.
           </p>
       </div>
     </PageLayout>

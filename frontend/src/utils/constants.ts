@@ -14,37 +14,37 @@ export const ANALYSIS_STEPS = [
   {
     id: 'skin-analysis',
     icon: '🎨',
-    message: '피부의 노란기를 분석 중입니다...',
+    message: 'Analyzing skin undertones...',
     progress: 20,
-    duration: 5000,
+    duration: 2500,
   },
   {
     id: 'saturation-calculation',
     icon: '🌈',
-    message: '당신에게 어울리는 채도를 계산 중입니다...',
+    message: 'Calculating your ideal saturation levels...',
     progress: 45,
-    duration: 5000,
+    duration: 2500,
   },
   {
     id: 'tone-analysis',
     icon: '✨',
-    message: '명도 대비를 통해 전체 톤을 분석하고 있어요...',
+    message: 'Analyzing overall tone through contrast...',
     progress: 70,
-    duration: 5000,
+    duration: 2500,
   },
   {
     id: 'palette-generation',
     icon: '🎨',
-    message: '최적의 컬러 팔레트를 생성하고 있어요...',
+    message: 'Generating your optimal color palette...',
     progress: 90,
-    duration: 5000,
+    duration: 2500,
   },
   {
     id: 'completion',
     icon: '✅',
-    message: '곧 결과를 확인할 수 있어요!',
+    message: 'Your results are ready!',
     progress: 100,
-    duration: 2000,
+    duration: 1000,
   },
 ];
 
@@ -63,43 +63,43 @@ export const SEASON_DESCRIPTIONS = {
   spring: {
     ko: '봄 웜톤',
     en: 'Spring Warm',
-    description: '맑고 생기 있는 따뜻한 색감이 어울리는 타입',
+    description: 'Clear and vibrant warm colors suit you best',
   },
   summer: {
     ko: '여름 쿨톤',
     en: 'Summer Cool',
-    description: '부드럽고 차분한 시원한 색감이 어울리는 타입',
+    description: 'Soft and muted cool colors suit you best',
   },
   autumn: {
     ko: '가을 웜톤',
     en: 'Autumn Warm',
-    description: '깊고 풍부한 따뜻한 색감이 어울리는 타입',
+    description: 'Deep and rich warm colors suit you best',
   },
   winter: {
     ko: '겨울 쿨톤',
     en: 'Winter Cool',
-    description: '선명하고 대비가 강한 시원한 색감이 어울리는 타입',
+    description: 'Bold and contrasting cool colors suit you best',
   },
 } as const;
 
 // Form Steps
 export const RECOMMENDATION_STEPS = [
-  { id: 'material', title: '희망하는 히잡 소재를 선택해주세요' },
-  { id: 'transparency', title: '원하시는 비침 정도를 선택해주세요' },
-  { id: 'price', title: '희망 가격대를 선택해주세요' },
-  { id: 'fit', title: '선호하는 착용감을 선택해주세요' },
-  { id: 'color', title: '좋아하는 색상 스타일을 선택해주세요' },
-  { id: 'notes', title: '추가로 원하시는 사항이 있으신가요?' },
+  { id: 'material', title: 'Select your preferred hijab material' },
+  { id: 'transparency', title: 'Choose your desired transparency level' },
+  { id: 'price', title: 'Select your price range' },
+  { id: 'fit', title: 'Choose your preferred fit style' },
+  { id: 'color', title: 'Select your favorite color styles' },
+  { id: 'notes', title: 'Any additional preferences?' },
 ];
 
 // Validation Messages
 export const VALIDATION_MESSAGES = {
-  INSTAGRAM_ID_REQUIRED: '인스타그램 ID를 입력해주세요',
-  INSTAGRAM_ID_INVALID: '올바른 인스타그램 ID 형식이 아닙니다',
-  FILE_REQUIRED: '사진을 업로드해주세요',
-  FILE_TOO_LARGE: '파일 크기는 10MB 이하여야 합니다',
-  FILE_INVALID_TYPE: 'JPG, PNG, HEIC 형식의 이미지만 업로드 가능합니다',
-  FACE_NOT_DETECTED: '얼굴을 찾을 수 없습니다. 정면 사진을 업로드해주세요',
-  NETWORK_ERROR: '네트워크 연결을 확인해주세요',
-  SERVER_ERROR: '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요',
+  INSTAGRAM_ID_REQUIRED: 'Please enter your Instagram ID',
+  INSTAGRAM_ID_INVALID: 'Please enter a valid Instagram ID',
+  FILE_REQUIRED: 'Please upload a photo',
+  FILE_TOO_LARGE: 'File size must be less than 10MB',
+  FILE_INVALID_TYPE: 'Only JPG, PNG, and HEIC formats are supported',
+  FACE_NOT_DETECTED: 'Face not detected. Please upload a front-facing photo',
+  NETWORK_ERROR: 'Please check your network connection',
+  SERVER_ERROR: 'A temporary error occurred. Please try again later',
 };

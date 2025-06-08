@@ -183,13 +183,13 @@ export const ImageUpload = ({
           </svg>
 
           <p className="text-body font-medium text-gray-700 mb-2">
-            {isDragging ? '여기에 놓으세요' : '클릭하여 사진 선택'}
+            {isDragging ? 'Drop here' : 'Click to select photo'}
           </p>
           <p className="text-body-sm text-gray-500">
-            또는 파일을 여기로 드래그하세요
+            Or drag and drop your file here
           </p>
           <p className="text-caption text-gray-400 mt-2">
-            JPG, PNG, HEIC (최대 10MB)
+            JPG, PNG, HEIC (max 10MB)
           </p>
 
           {/* Mobile-specific buttons */}
@@ -203,7 +203,7 @@ export const ImageUpload = ({
               className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
               disabled={disabled}
             >
-              갤러리에서 선택
+              Select from Gallery
             </button>
             <button
               type="button"
@@ -211,7 +211,7 @@ export const ImageUpload = ({
               className="flex-1 px-4 py-2 bg-white text-primary border border-primary rounded-lg font-medium hover:bg-gray-50 transition-colors"
               disabled={disabled}
             >
-              카메라로 촬영
+              Take Photo
             </button>
           </div>
         </div>
@@ -219,7 +219,7 @@ export const ImageUpload = ({
         <div className="relative rounded-xl overflow-hidden bg-gray-100">
           <img
             src={preview}
-            alt="업로드된 이미지"
+            alt="Uploaded image"
             className="w-full h-auto max-h-96 object-contain"
             onError={(e) => {
               // Fallback for failed image loads
@@ -227,7 +227,7 @@ export const ImageUpload = ({
               target.style.display = 'none';
               const fallbackDiv = document.createElement('div');
               fallbackDiv.className = 'flex items-center justify-center h-96 bg-gray-100';
-              fallbackDiv.innerHTML = '<p class="text-gray-500">HEIC 파일 미리보기</p>';
+              fallbackDiv.innerHTML = '<p class="text-gray-500">HEIC file preview</p>';
               target.parentElement?.appendChild(fallbackDiv);
             }}
           />

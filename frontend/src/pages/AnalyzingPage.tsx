@@ -159,17 +159,17 @@ const AnalyzingPage = (): JSX.Element => {
         {/* Tips section */}
         <div className="mt-12 max-w-md w-full">
           <h3 className="text-h5 font-semibold text-gray-900 mb-4 text-center">
-            💡 퍼스널 컬러란?
+            💡 What is Personal Color?
           </h3>
           <div className="space-y-3 text-body-sm text-gray-600">
             <p>
-              • 개인의 피부톤, 머리색, 눈동자 색과 조화를 이루는 색상군
+              • A color group that harmonizes with your skin tone, hair color, and eye color
             </p>
             <p>
-              • 봄/여름/가을/겨울 4계절로 분류되며 각각 고유한 특징 보유
+              • Classified into Spring/Summer/Autumn/Winter with unique characteristics
             </p>
             <p>
-              • 자신의 퍼스널 컬러를 알면 더욱 생기있고 화사한 인상 연출 가능
+              • Knowing your personal color helps create a more vibrant and radiant look
             </p>
           </div>
         </div>

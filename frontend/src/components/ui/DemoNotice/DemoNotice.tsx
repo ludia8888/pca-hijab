@@ -11,8 +11,8 @@ export const DemoNotice = () => {
         <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm text-yellow-800">
-            <strong>데모 모드:</strong> 현재 AI 분석 서비스가 준비 중입니다. 
-            임시로 샘플 결과를 보여드리고 있습니다.
+            <strong>Demo Mode:</strong> AI analysis service is currently being prepared. 
+            We're showing sample results temporarily.
           </p>
         </div>
       </div>

@@ -168,7 +168,7 @@ const ResultPage = (): JSX.Element => {
                       {seasonInfo?.ko || result.personal_color}
                     </h1>
                     <p className="text-sm opacity-90">
-                      {seasonInfo?.description || '당신만의 특별한 색감을 찾았어요'}
+                      {seasonInfo?.description || 'We found your unique color palette'}
                     </p>
                   </div>
                   {/* Share buttons integrated into hero */}
@@ -216,7 +216,7 @@ const ResultPage = (): JSX.Element => {
                 {seasonInfo?.ko || result.personal_color}
               </h1>
               <p className="text-sm opacity-90">
-                {seasonInfo?.description || '당신만의 특별한 색감을 찾았어요'}
+                {seasonInfo?.description || 'We found your unique color palette'}
               </p>
             </div>
           )}
@@ -327,9 +327,9 @@ const ResultPage = (): JSX.Element => {
           <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold mb-1">맞춤 히잡을 찾아보세요</h3>
+                <h3 className="text-xl font-bold mb-1">Find Your Perfect Hijab</h3>
                 <p className="text-white/80 text-sm">
-                  당신의 {seasonInfo?.ko}에 어울리는 히잡 추천
+                  Hijab recommendations for your {seasonInfo?.en}
                 </p>
               </div>
               <div className="text-4xl">🧕</div>
@@ -338,7 +338,7 @@ const ResultPage = (): JSX.Element => {
               onClick={() => navigate(ROUTES.RECOMMENDATION)}
               className="w-full bg-white text-purple-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              히잡 색상 추천받기
+              Get Hijab Recommendations
             </button>
           </div>
         </div>
@@ -349,7 +349,7 @@ const ResultPage = (): JSX.Element => {
             onClick={() => navigate(ROUTES.HOME)}
             className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
           >
-            다시 진단하기
+            Try Again
           </button>
         </div>
       </div>

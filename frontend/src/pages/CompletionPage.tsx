@@ -23,8 +23,8 @@ const CompletionPage = (): JSX.Element => {
   const handleShare = async (): Promise<void> => {
     try {
       await shareOrCopy({
-        title: '히잡 퍼스널 컬러 진단',
-        text: `나도 AI로 퍼스널 컬러 진단하고 맞춤 히잡 추천받기!`,
+        title: 'Hijab Personal Color Analysis',
+        text: `Get AI personal color analysis and personalized hijab recommendations!`,
         url: window.location.origin,
       });
     } catch (error) {
@@ -41,7 +41,7 @@ const CompletionPage = (): JSX.Element => {
       downloadResultCard(blob, filename);
     } catch (error) {
       console.error('Failed to save result card:', error);
-      alert('이미지 저장에 실패했습니다. 다시 시도해주세요.');
+      alert('Failed to save image. Please try again.');
     }
   };
 
