@@ -121,7 +121,7 @@ async def analyze_personal_color(
         elif warmth <= 0.05 and brightness > 0.6 and saturation < 0.4:
             season = 'summer'  # Cool and soft
         elif warmth > 0.1 and brightness < 0.65 and saturation > 0.35:
-            season = 'fall'    # Warm and deep
+            season = 'autumn'    # Warm and deep
         else:
             season = 'winter'  # Cool and clear
         
@@ -141,7 +141,7 @@ async def analyze_personal_color(
                 'worst_colors': ['#FF4500', '#FF6347', '#DC143C', '#8B4513'],
                 'description': '부드럽고 차분한 시원한 색감이 어울리는 타입'
             },
-            'fall': {
+            'autumn': {
                 'personal_color': '가을 웜톤',
                 'personal_color_en': 'Autumn Warm',
                 'best_colors': ['#CD853F', '#D2691E', '#B8860B', '#8B4513'],

@@ -92,12 +92,12 @@ async def analyze_personal_color(
         elif warmth <= 0.1 and brightness > 0.6:
             season = 'summer'
         elif warmth > 0.1 and brightness <= 0.6:
-            season = 'fall'
+            season = 'autumn'
         else:
             season = 'winter'
         
         # Add some randomness for demo purposes
-        seasons = ['spring', 'summer', 'fall', 'winter']
+        seasons = ['spring', 'summer', 'autumn', 'winter']
         if random.random() < 0.3:  # 30% chance to pick random season
             season = random.choice(seasons)
         
@@ -115,7 +115,7 @@ async def analyze_personal_color(
                 'best_colors': ['#E6E6FA', '#FFE4E1', '#F0E68C', '#DDA0DD'],
                 'worst_colors': ['#FF4500', '#FF6347', '#DC143C', '#8B4513']
             },
-            'fall': {
+            'autumn': {
                 'personal_color': '가을 웜톤',
                 'personal_color_en': 'Autumn Warm',
                 'best_colors': ['#CD853F', '#D2691E', '#B8860B', '#8B4513'],

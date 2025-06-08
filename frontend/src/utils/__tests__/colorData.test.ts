@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { SEASON_COLORS, type SeasonType } from '../colorData';
 
 describe('SEASON_COLORS', () => {
-  const seasons: SeasonType[] = ['spring', 'summer', 'autumn', 'fall', 'winter'];
+  const seasons: SeasonType[] = ['spring', 'summer', 'autumn', 'winter'];
   
   // 기본 구조 검증
   it('should have data for all seasons', () => {
-    const expectedSeasons = ['spring', 'summer', 'autumn', 'fall', 'winter'];
+    const expectedSeasons = ['spring', 'summer', 'autumn', 'winter'];
     const actualSeasons = Object.keys(SEASON_COLORS);
     
     expectedSeasons.forEach(season => {
@@ -67,10 +67,6 @@ describe('SEASON_COLORS', () => {
     });
   });
 
-  // fall과 autumn이 같은 데이터를 가져야 함
-  it('should have identical data for fall and autumn', () => {
-    expect(SEASON_COLORS.fall).toEqual(SEASON_COLORS.autumn);
-  });
 
   // 색상 대비 검증 (웜톤/쿨톤)
   describe('color temperature consistency', () => {

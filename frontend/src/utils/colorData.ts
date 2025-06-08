@@ -42,20 +42,6 @@ export const SEASON_COLORS = {
       { name: '밝은 분홍색', hex: '#FFB6C1', description: '부자연스러워 보임' },
     ],
   },
-  fall: {
-    bestColors: [
-      { name: '올리브 그린', hex: '#708238', description: '자연스럽고 깊이 있는 인상' },
-      { name: '머스타드 옐로우', hex: '#FFDB58', description: '따뜻하고 부드러운 느낌' },
-      { name: '테라코타', hex: '#E2725B', description: '건강하고 생기 있는 분위기' },
-      { name: '초콜릿 브라운', hex: '#7B3F00', description: '고급스럽고 안정적인 이미지' },
-    ],
-    worstColors: [
-      { name: '검정색', hex: '#000000', description: '너무 무거워 보임' },
-      { name: '차가운 파란색', hex: '#4169E1', description: '피부가 칙칙해 보임' },
-      { name: '차가운 회색', hex: '#778899', description: '생기가 없어 보임' },
-      { name: '밝은 분홍색', hex: '#FFB6C1', description: '부자연스러워 보임' },
-    ],
-  },
   winter: {
     bestColors: [
       { name: '진한 파란색', hex: '#000080', description: '깊고 선명한 인상' },

@@ -49,7 +49,7 @@ def analysis(imgpath):
         if(tone_analysis.is_spr(hsv_s, hsv_weight)):
             tone = '봄웜톤(spring)'
         else:
-            tone = '가을웜톤(fall)'
+            tone = '가을웜톤(autumn)'
     else:
         if(tone_analysis.is_smr(hsv_s, hsv_weight)):
             tone = '여름쿨톤(summer)'

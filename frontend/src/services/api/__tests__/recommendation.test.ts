@@ -8,7 +8,7 @@ import type { PersonalColorResult } from '@/types';
 describe('RecommendationAPI', () => {
   const mockPersonalColorResult: PersonalColorResult = {
     personal_color: '가을 웜톤',
-    personal_color_en: 'fall',
+    personal_color_en: 'autumn',
     tone: '따뜻한 톤',
     tone_en: 'warm',
     details: {

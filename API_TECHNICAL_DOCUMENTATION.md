@@ -235,9 +235,9 @@ def is_warm(lab_b_values, weights):
     
 def is_spr(hsv_s_values, weights):
     """
-    Spring/Fall classification for warm tones
+    Spring/Autumn classification for warm tones
     - Spring standard: [18.59, 30.30, 25.81]
-    - Fall standard: [27.14, 39.75, 37.50]
+    - Autumn standard: [27.14, 39.75, 37.50]
     """
     
 def is_smr(hsv_s_values, weights):
@@ -1233,7 +1233,7 @@ if DEBUG_MODE:
 - **Cool Tone**: Lower Lab b values (blue undertone)
 - **Spring**: Warm + Clear (lower saturation)
 - **Summer**: Cool + Soft (lower saturation)
-- **Fall**: Warm + Deep (higher saturation)
+- **Autumn**: Warm + Deep (higher saturation)
 - **Winter**: Cool + Clear (higher saturation)
 
 ### B. Color Space Reference

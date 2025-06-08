@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 const mockAnalysisResponse = {
   status: 'success',
   data: {
-    season: 'fall',
+    season: 'autumn',
     tone: {
       name: '가을 웜톤',
       characteristics: [

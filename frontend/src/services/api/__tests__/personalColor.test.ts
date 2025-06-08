@@ -17,7 +17,7 @@ describe('PersonalColorAPI', () => {
       // 결과 검증
       expect(result).toBeDefined();
       expect(result.personal_color).toBeDefined();
-      expect(result.personal_color_en).toBe('fall');
+      expect(result.personal_color_en).toBe('autumn');
       expect(result.tone).toBeDefined();
       expect(result.tone_en).toBe('warm');
       expect(result.confidence).toBeGreaterThan(0);

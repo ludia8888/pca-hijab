@@ -6,7 +6,7 @@ export interface Session {
 
 export interface PersonalColorResult {
   personal_color: string;
-  personal_color_en: 'spring' | 'summer' | 'autumn' | 'fall' | 'winter';
+  personal_color_en: 'spring' | 'summer' | 'autumn' | 'winter';
   tone: string;
   tone_en: 'warm' | 'cool';
   details: {

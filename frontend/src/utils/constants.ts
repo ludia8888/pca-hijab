@@ -75,11 +75,6 @@ export const SEASON_DESCRIPTIONS = {
     en: 'Autumn Warm',
     description: '깊고 풍부한 따뜻한 색감이 어울리는 타입',
   },
-  fall: {
-    ko: '가을 웜톤',
-    en: 'Autumn Warm',
-    description: '깊고 풍부한 따뜻한 색감이 어울리는 타입',
-  },
   winter: {
     ko: '겨울 쿨톤',
     en: 'Winter Cool',

@@ -118,7 +118,7 @@ async def analyze_personal_color(
             elif warmth <= 0.1 and brightness > 0.6:
                 season = 'summer'
             elif warmth > 0.1 and brightness <= 0.6:
-                season = 'fall'
+                season = 'autumn'
             else:
                 season = 'winter'
         
@@ -129,7 +129,7 @@ async def analyze_personal_color(
         season_map = {
             '봄': 'spring',
             '여름': 'summer',
-            '가을': 'fall',
+            '가을': 'autumn',
             '겨울': 'winter'
         }
         
@@ -149,7 +149,7 @@ async def analyze_personal_color(
                 'best_colors': ['#E6E6FA', '#FFE4E1', '#F0E68C', '#DDA0DD'],
                 'worst_colors': ['#FF4500', '#FF6347', '#DC143C', '#8B4513']
             },
-            'fall': {
+            'autumn': {
                 'personal_color': '가을 웜톤',
                 'personal_color_en': 'Autumn Warm',
                 'best_colors': ['#CD853F', '#D2691E', '#B8860B', '#8B4513'],
