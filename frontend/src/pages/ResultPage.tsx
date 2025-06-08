@@ -226,7 +226,7 @@ const ResultPage = (): JSX.Element => {
         {result.confidence && (
           <div className="flex items-center gap-2 text-xs text-gray-600 mb-3">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            AI Confidence {Math.round(result.confidence * 100)}%
+            AI Confidence {result.confidence <= 1 ? Math.round(result.confidence * 100) : Math.round(result.confidence)}%
           </div>
         )}
 
