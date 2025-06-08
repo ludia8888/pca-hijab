@@ -1,7 +1,7 @@
 import { Session, Recommendation } from '../types';
+import { db as postgresDb, PostgresDatabase } from './postgres';
 
-// In-memory storage for MVP
-// TODO: Replace with PostgreSQL in production
+// In-memory storage as fallback for development
 class InMemoryDatabase {
   private sessions: Map<string, Session> = new Map();
   private recommendations: Map<string, Recommendation> = new Map();
@@ -63,4 +63,24 @@ class InMemoryDatabase {
   }
 }
 
-export const db = new InMemoryDatabase();
+// Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory
+const usePostgres = !!process.env.DATABASE_URL;
+
+export const db = usePostgres ? postgresDb : new InMemoryDatabase();
+
+// Initialize database on startup
+if (usePostgres) {
+  postgresDb.testConnection().then(connected => {
+    if (connected) {
+      console.log('Using PostgreSQL database');
+      // Initialize schema only in development
+      if (process.env.NODE_ENV !== 'production') {
+        postgresDb.initialize().catch(console.error);
+      }
+    } else {
+      console.warn('PostgreSQL connection failed, falling back to in-memory database');
+    }
+  });
+} else {
+  console.log('Using in-memory database (DATABASE_URL not set)');
+}

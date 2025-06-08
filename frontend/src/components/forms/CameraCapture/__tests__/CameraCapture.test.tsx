@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CameraCapture } from '../CameraCapture';
 
@@ -140,16 +140,31 @@ describe('CameraCapture', () => {
     it('should capture photo when capture button clicked', async () => {
       const user = userEvent.setup();
       
-      render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
+      // Mock successful camera initialization
+      mockGetUserMedia.mockResolvedValueOnce(mockMediaStream);
       
-      // Wait for camera to initialize
+      let renderResult;
+      await act(async () => {
+        renderResult = render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
+      });
+      
+      // Wait for camera to initialize and capture button to appear
       await waitFor(() => {
         expect(mockGetUserMedia).toHaveBeenCalled();
       });
       
+      // Since the camera permission was granted, wait for capture button
+      await waitFor(() => {
+        const captureButton = screen.queryByRole('button', { name: '촬영' });
+        expect(captureButton).toBeInTheDocument();
+      }, { timeout: 3000 });
+      
       // Find and click capture button
       const captureButton = screen.getByRole('button', { name: '촬영' });
-      await user.click(captureButton);
+      
+      await act(async () => {
+        await user.click(captureButton);
+      });
       
       await waitFor(() => {
         expect(mockOnCapture).toHaveBeenCalledWith(
@@ -163,7 +178,11 @@ describe('CameraCapture', () => {
     });
 
     it('should show capture controls when camera is ready', async () => {
-      render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
+      mockGetUserMedia.mockResolvedValueOnce(mockMediaStream);
+      
+      await act(async () => {
+        render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
+      });
       
       await waitFor(() => {
         expect(screen.getByRole('button', { name: '촬영' })).toBeInTheDocument();

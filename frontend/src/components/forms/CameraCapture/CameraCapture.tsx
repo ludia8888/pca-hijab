@@ -32,7 +32,10 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        // Use promise-based play to handle async properly
+        await videoRef.current.play().catch((error) => {
+          console.warn('Video play was interrupted:', error);
+        });
       }
 
       setIsLoading(false);
