@@ -143,9 +143,8 @@ describe('CameraCapture', () => {
       // Mock successful camera initialization
       mockGetUserMedia.mockResolvedValueOnce(mockMediaStream);
       
-      let renderResult;
       await act(async () => {
-        renderResult = render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
+        render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       });
       
       // Wait for camera to initialize and capture button to appear
