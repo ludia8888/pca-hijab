@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python packages
 WORKDIR /build
-COPY requirements.txt .
+COPY ShowMeTheColor/requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install cmake && \
     pip install dlib==19.24.2 --verbose && \
@@ -39,7 +39,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application
 WORKDIR /app
-COPY . .
+COPY ShowMeTheColor/ .
 
 # Set environment
 ENV PYTHONPATH=/app/src:$PYTHONPATH
