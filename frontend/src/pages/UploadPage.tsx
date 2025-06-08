@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
 import { useAppStore } from '@/store';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, DemoNotice } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
 
@@ -67,6 +67,8 @@ const UploadPage = (): JSX.Element => {
       }
     >
       <div className="max-w-2xl mx-auto w-full space-y-6">
+        <DemoNotice />
+        
         {/* Instructions */}
         <Card>
           <h2 className="text-h3 font-bold text-gray-900 mb-4">
