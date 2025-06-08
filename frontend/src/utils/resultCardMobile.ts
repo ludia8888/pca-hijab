@@ -1,7 +1,7 @@
 import type { PersonalColorResult } from '@/types';
 import { SEASON_DESCRIPTIONS } from './constants';
 import { SEASON_COLORS } from './colorData';
-import { SEASON_DATA, SEASON_GRADIENTS, type SeasonType } from './seasonData';
+import { SEASON_DATA, type SeasonType } from './seasonData';
 import { setupCanvasPolyfill } from './canvasPolyfill';
 
 // Setup polyfill
@@ -267,7 +267,7 @@ function drawKeywordTags(
   const spacing = 12;
   
   // Calculate positions
-  const positions = [];
+  const positions: Array<{ keyword: string; width: number; x: number }> = [];
   let currentX = 0;
   
   ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
