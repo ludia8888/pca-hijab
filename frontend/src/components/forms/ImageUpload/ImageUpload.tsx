@@ -50,7 +50,7 @@ export const ImageUpload = ({
         } catch (conversionError) {
           // If conversion fails, show error to user
           console.error('HEIC conversion failed:', conversionError);
-          onError(conversionError instanceof Error ? conversionError.message : 'HEIC 파일 변환에 실패했습니다.');
+          onError(conversionError instanceof Error ? conversionError.message : 'Failed to convert HEIC file.');
           return;
         }
       } else {
@@ -61,7 +61,7 @@ export const ImageUpload = ({
       onUpload(processedFile, previewUrl);
     } catch (error) {
       console.error('Error handling image:', error);
-      onError('이미지 처리 중 오류가 발생했습니다.');
+      onError('An error occurred while processing the image.');
     }
   }, [onUpload, onError]);
 
@@ -235,7 +235,7 @@ export const ImageUpload = ({
             type="button"
             onClick={handleRemove}
             className="absolute top-4 right-4 p-2 bg-white/90 rounded-lg shadow-md hover:bg-white transition-colors"
-            aria-label="이미지 제거"
+            aria-label="Remove image"
           >
             <svg
               width="20"

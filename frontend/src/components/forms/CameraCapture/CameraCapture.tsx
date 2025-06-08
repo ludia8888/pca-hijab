@@ -41,7 +41,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
       setIsLoading(false);
     } catch (err) {
       console.error('Camera access error:', err);
-      setError('카메라 접근 권한이 필요합니다.');
+      setError('Camera access permission is required.');
       setIsLoading(false);
     }
   }, []);
@@ -104,7 +104,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
               onClose();
             }}
             className="p-2 rounded-full bg-white/20 backdrop-blur-sm text-white"
-            aria-label="닫기"
+            aria-label="Close"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -117,7 +117,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
           {isLoading && (
             <div className="text-white text-center">
               <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p>카메라를 준비하고 있습니다...</p>
+              <p>Preparing camera...</p>
             </div>
           )}
 
@@ -125,7 +125,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
             <div className="text-white text-center p-4">
               <p className="mb-4">{error}</p>
               <Button onClick={startCamera} variant="secondary">
-                다시 시도
+                Try Again
               </Button>
             </div>
           )}
@@ -145,7 +145,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
               <button
                 onClick={capturePhoto}
                 className="w-20 h-20 rounded-full bg-white flex items-center justify-center hover:scale-95 transition-transform"
-                aria-label="촬영"
+                aria-label="Capture"
               >
                 <div className="w-16 h-16 rounded-full bg-primary" />
               </button>

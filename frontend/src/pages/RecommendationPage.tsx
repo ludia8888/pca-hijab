@@ -154,7 +154,7 @@ const RecommendationPage = (): JSX.Element => {
     <PageLayout
       header={
         <Header
-          title="맞춤 추천"
+          title="Personalized Recommendations"
           showBack
           onBack={() => navigate(ROUTES.RESULT)}
         />
@@ -165,7 +165,7 @@ const RecommendationPage = (): JSX.Element => {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-600">
-              {currentStep + 1}/{steps.length + 1} 단계
+              Step {currentStep + 1}/{steps.length + 1}
             </span>
             <span className="text-sm text-gray-600">{Math.round(progress)}%</span>
           </div>
@@ -230,16 +230,16 @@ const RecommendationPage = (): JSX.Element => {
           // Additional Notes Step
           <Card>
             <h2 className="text-h3 font-bold text-gray-900 mb-2">
-              추가 요청사항
+              Additional Requests
             </h2>
             <p className="text-body text-gray-600 mb-6">
-              추가로 고려했으면 하는 사항이 있다면 알려주세요 (선택사항)
+              Please let us know if you have any additional preferences (optional)
             </p>
 
             <textarea
               value={formData.additionalNotes}
               onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-              placeholder="예: 얼굴이 작아 보이는 스타일 선호, 특정 브랜드 선호 등"
+              placeholder="Example: Prefer styles that make face look smaller, specific brand preferences, etc."
               className="w-full p-4 border border-gray-200 rounded-xl resize-none h-32 focus:outline-none focus:border-primary"
             />
           </Card>
@@ -253,7 +253,7 @@ const RecommendationPage = (): JSX.Element => {
               onClick={handleBack}
               className="flex-1"
             >
-              이전
+              Previous
             </Button>
           )}
           
@@ -263,14 +263,14 @@ const RecommendationPage = (): JSX.Element => {
               disabled={!isCurrentStepValid()}
               className="flex-1"
             >
-              다음
+              Next
             </Button>
           ) : (
             <Button
               onClick={handleSubmit}
               className="flex-1"
             >
-              추천 받기
+              Get Recommendations
             </Button>
           )}
         </div>

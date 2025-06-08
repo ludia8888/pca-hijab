@@ -65,22 +65,22 @@ const AnalyzingPage = (): JSX.Element => {
       }, ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000);
     } catch (err) {
       console.error('Analysis error:', err);
-      let errorMessage = '분석 중 오류가 발생했습니다.';
+      let errorMessage = 'An error occurred during analysis.';
       
       if (err instanceof Error) {
         // Check for specific error types
         if (err.message.includes('HEIC')) {
-          errorMessage = 'HEIC 파일 형식은 지원되지 않습니다. JPG 또는 PNG 파일을 사용해주세요.';
+          errorMessage = 'HEIC format is not supported. Please use JPG or PNG files.';
         } else if (err.message.includes('network') || err.message.includes('Network')) {
-          errorMessage = '네트워크 연결을 확인해주세요.';
+          errorMessage = 'Please check your network connection.';
         } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
-          errorMessage = '분석 시간이 초과되었습니다. 다시 시도해주세요.';
+          errorMessage = 'Analysis timed out. Please try again.';
         } else {
           errorMessage = err.message;
         }
       }
       
-      setError(`오류: ${errorMessage}`);
+      setError(`Error: ${errorMessage}`);
     }
   };
 
@@ -92,7 +92,7 @@ const AnalyzingPage = (): JSX.Element => {
         {/* Progress indicator */}
         <div className="w-full max-w-md mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600">분석 진행중</span>
+            <span className="text-sm text-gray-600">Analyzing</span>
             <span className="text-sm text-gray-600">{progress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -151,7 +151,7 @@ const AnalyzingPage = (): JSX.Element => {
               }}
               className="w-full py-2 bg-error text-white rounded-lg hover:bg-error/90 transition-colors"
             >
-              다시 시도
+              Try Again
             </button>
           </div>
         )}

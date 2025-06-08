@@ -60,17 +60,17 @@ export class ErrorBoundary extends Component<Props, State> {
                 </svg>
               </div>
               <h1 className="text-h2 font-bold text-gray-900 mb-2">
-                앗, 문제가 발생했어요
+                Oops, something went wrong
               </h1>
               <p className="text-body text-gray-600 mb-6">
-                일시적인 오류가 발생했습니다.
+                A temporary error occurred.
                 <br />
-                잠시 후 다시 시도해주세요.
+                Please try again later.
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="text-left bg-gray-100 p-4 rounded-lg mb-6">
                   <summary className="cursor-pointer text-sm font-medium text-gray-700">
-                    에러 상세 정보
+                    Error Details
                   </summary>
                   <pre className="mt-2 text-xs text-gray-600 overflow-auto">
                     {this.state.error.message}
@@ -80,7 +80,7 @@ export class ErrorBoundary extends Component<Props, State> {
               )}
             </div>
             <Button onClick={this.handleReset} size="lg">
-              홈으로 돌아가기
+              Go Home
             </Button>
           </div>
         </div>

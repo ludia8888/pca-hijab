@@ -89,7 +89,7 @@ const ResultPage = (): JSX.Element => {
   const result = analysisResult || (process.env.NODE_ENV === 'development' ? mockResult : null);
   
   if (!result) {
-    return <div>로딩중...</div>;
+    return <div>Loading...</div>;
   }
 
   // Safely get season info with fallback
@@ -115,8 +115,8 @@ const ResultPage = (): JSX.Element => {
   const handleShare = async (): Promise<void> => {
     try {
       await shareOrCopy({
-        title: '히잡 퍼스널 컬러 진단 결과',
-        text: `나의 퍼스널 컬러는 ${seasonInfo.ko}입니다!`,
+        title: 'Hijab Personal Color Analysis Results',
+        text: `My personal color is ${seasonInfo.en}!`,
         url: window.location.href,
       });
     } catch (error) {
@@ -131,7 +131,7 @@ const ResultPage = (): JSX.Element => {
       downloadResultCard(blob, filename);
     } catch (error) {
       console.error('Failed to save image:', error);
-      alert('이미지 저장에 실패했습니다. 다시 시도해주세요.');
+      alert('Failed to save image. Please try again.');
     }
   };
 
@@ -149,7 +149,7 @@ const ResultPage = (): JSX.Element => {
             <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl">
               <img 
                 src={uploadedImage} 
-                alt="분석된 사진"
+                alt="Analyzed photo"
                 className="w-full h-full object-cover"
               />
               {/* Gradient overlay */}
@@ -161,7 +161,7 @@ const ResultPage = (): JSX.Element => {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-xs">
-                        ✨ AI 분석 완료
+                        ✨ AI Analysis Complete
                       </div>
                     </div>
                     <h1 className="text-2xl md:text-3xl font-bold mb-1">
@@ -226,7 +226,7 @@ const ResultPage = (): JSX.Element => {
         {result.confidence && (
           <div className="flex items-center gap-2 text-xs text-gray-600 mb-3">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            AI 정확도 {Math.round(result.confidence * 100)}%
+            AI Confidence {Math.round(result.confidence * 100)}%
           </div>
         )}
 
@@ -236,7 +236,7 @@ const ResultPage = (): JSX.Element => {
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-3">
               <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
-                <span className="text-base">🎨</span> 당신의 컬러 팔레트
+                <span className="text-base">🎨</span> Your Color Palette
               </h3>
               {/*
                 1. bestColors를 4개씩 묶어서 여러 줄로 렌더링
@@ -280,7 +280,7 @@ const ResultPage = (): JSX.Element => {
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-3">
               <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
-                <span className="text-base">⚠️</span> 피하면 좋은 컬러
+                <span className="text-base">⚠️</span> Colors to Avoid
               </h3>
               {/*
                 1. worstColors도 4개씩 묶어서 여러 줄로 렌더링
