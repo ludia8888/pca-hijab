@@ -79,5 +79,8 @@ ShowMeTheColor/src/*.log
 yarn.lock
 pnpm-lock.yaml
 
-# Existing AI API (as submodule or separate)
-ShowMeTheColor/
+# AI API specific ignores
+ShowMeTheColor/__pycache__/
+ShowMeTheColor/venv/
+ShowMeTheColor/.env
+ShowMeTheColor/src/*.log
