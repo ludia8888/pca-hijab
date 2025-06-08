@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: showmethecolor-api
+    runtime: docker
+    repo: https://github.com/ludia8888/pca-hijab
+    dockerCommand: cd ShowMeTheColor/src && uvicorn api:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./ShowMeTheColor/Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: showmethecolor-api
+    runtime: docker
+    dockerfilePath: ./ShowMeTheColor/Dockerfile.render
+    rootDir: .
+    envVars:
+      - key: PORT
+        value: 8000

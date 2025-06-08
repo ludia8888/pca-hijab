@@ -1,0 +1,29 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacksPlan": {
+      "providers": ["python"],
+      "phases": {
+        "setup": {
+          "nixPkgs": ["python39", "cmake", "boost", "openblas", "lapack", "gtk3", "pkg-config"],
+          "aptPkgs": ["build-essential", "cmake", "libopenblas-dev", "liblapack-dev", "libx11-dev", "libgtk-3-dev", "libboost-all-dev"]
+        },
+        "install": {
+          "cmds": [
+            "cd ShowMeTheColor",
+            "pip install --upgrade pip setuptools wheel",
+            "pip install cmake",
+            "pip install dlib==19.24.2 --verbose",
+            "pip install -r requirements.txt"
+          ]
+        }
+      }
+    }
+  },
+  "deploy": {
+    "startCommand": "cd ShowMeTheColor/src && uvicorn api:app --host 0.0.0.0 --port $PORT",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
