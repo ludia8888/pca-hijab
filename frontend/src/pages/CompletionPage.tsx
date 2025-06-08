@@ -6,6 +6,7 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
+import { generateEnhancedResultCard } from '@/utils/resultCardEnhanced';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -36,8 +37,10 @@ const CompletionPage = (): JSX.Element => {
     if (!analysisResult || !instagramId) return;
     
     try {
+      // Generate the beautiful enhanced result card
       const blob = await generateResultCard(analysisResult, instagramId);
-      const filename = `hijab_recommendation_${Date.now()}.jpg`;
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `hijab_personal_color_${timestamp}.jpg`;
       downloadResultCard(blob, filename);
     } catch (error) {
       console.error('Failed to save result card:', error);
