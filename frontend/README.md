@@ -12,6 +12,7 @@ A mobile-optimized web application built with React + TypeScript + Vite.
 - **Routing**: React Router v6
 - **HTTP Client**: Axios
 - **Code Quality**: ESLint, Prettier
+- **Typography**: Custom fonts (Playfair Display, Noto Sans)
 
 ## 🚀 Getting Started
 
@@ -49,6 +50,10 @@ src/
 ├── services/          # API communication logic
 ├── store/             # Zustand state management
 ├── utils/             # Utility functions
+│   ├── colorData.ts   # Season color palettes
+│   ├── seasonData.ts  # Comprehensive season data
+│   ├── resultCardGenerator.ts  # Beautiful result cards
+│   └── fontLoader.ts  # Custom font loading
 ├── types/             # TypeScript type definitions
 └── styles/            # Global styles
 ```
@@ -90,10 +95,17 @@ npm run test:coverage
 - Success: `#10B981`
 - Error: `#EF4444`
 - Gray Scale: `gray-50` ~ `gray-900`
+- Season Gradients:
+  - Spring: Soft pink to peach
+  - Summer: Lavender to pink
+  - Autumn: Bisque to peach puff
+  - Winter: Alice blue to lavender
 
 ### Typography
 
-- Font: Pretendard
+- Primary Font: Pretendard (UI)
+- Display Font: Playfair Display (Headers)
+- Secondary Font: Noto Sans (Body text)
 - Sizes: `text-xs` ~ `text-h1`
 - Weights: `font-normal`, `font-medium`, `font-semibold`, `font-bold`
 
@@ -123,6 +135,7 @@ VITE_MAX_IMAGE_SIZE=5242880
 - Scroll performance optimization
 - Image lazy loading
 - Privacy-first photo handling
+- Instagram story optimized result cards (1080x1920)
 
 ## 🧪 Code Quality
 
@@ -158,6 +171,23 @@ const { data, setData } = useAppStore();
 // Using services/api
 const result = await analyzeImage(file);
 ```
+
+## 🎬 Result Card Features
+
+### Beautiful Korean-Inspired Design
+- Gradient backgrounds matching personal color seasons
+- Premium typography with serif headers
+- Comprehensive beauty recommendations
+- Instagram story optimized (1080x1920px)
+
+### Included Information
+- Personal color season with keywords
+- Best hijab color palette
+- Makeup recommendations (lips, eyes, blush)
+- Signature perfume suggestions
+- Jewelry metal preferences
+- Atmospheric descriptions
+- Date stamp and Instagram handle
 
 ## 🚨 Important Notes
 
