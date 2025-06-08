@@ -68,6 +68,15 @@ const IntroPage = (): JSX.Element => {
               </div>
             </div>
             <div className="flex items-start space-x-3">
+              <span className="text-2xl">🔒</span>
+              <div>
+                <h3 className="font-semibold text-gray-900">100% Privacy Safe</h3>
+                <p className="text-body-sm text-gray-600">
+                  Photos are analyzed instantly and deleted immediately
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
               <span className="text-2xl">🧕</span>
               <div>
                 <h3 className="font-semibold text-gray-900">Personalized Hijab Recommendations</h3>

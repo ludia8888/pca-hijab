@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
 import { useAppStore } from '@/store';
-import { Button, Card, DemoNotice } from '@/components/ui';
+import { Button, Card, DemoNotice, PrivacyNotice } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
 
@@ -68,6 +68,9 @@ const UploadPage = (): JSX.Element => {
     >
       <div className="max-w-2xl mx-auto w-full space-y-6">
         <DemoNotice />
+        
+        {/* Privacy Notice */}
+        <PrivacyNotice />
         
         {/* Instructions */}
         <Card>
@@ -154,12 +157,18 @@ const UploadPage = (): JSX.Element => {
           </Button>
         )}
 
-        {/* Privacy Notice */}
-        <p className="text-caption text-gray-500 text-center mt-4">
-          Your uploaded photo is used only for analysis
-          <br />
-          and will be deleted immediately after completion.
-        </p>
+        {/* Privacy Footer */}
+        <div className="text-center mt-4 space-y-2">
+          <div className="flex items-center justify-center gap-2 text-caption text-gray-500">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+              <path d="M12 2L4 7V11C4 16 7.5 20.3 12 21C16.5 20.3 20 16 20 11V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Encrypted & Secure Processing</span>
+          </div>
+          <p className="text-caption text-gray-400">
+            Photo deleted in <span className="font-semibold">0 seconds</span> after analysis
+          </p>
+        </div>
       </div>
     </PageLayout>
   );

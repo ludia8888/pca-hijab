@@ -54,7 +54,7 @@ const ResultPage = (): JSX.Element => {
   // Use mock data for development if no analysis result
   const mockResult = {
     personal_color: '봄 웜톤',
-    personal_color_en: 'spring' as const,
+    personal_color_en: 'Spring Warm',
     tone: '웜톤',
     tone_en: 'warm' as const,
     details: {
@@ -97,7 +97,7 @@ const ResultPage = (): JSX.Element => {
   const seasonInfo = SEASON_DESCRIPTIONS[seasonKey] || {
     ko: result.personal_color || '분석 중',
     en: result.personal_color_en || 'analyzing',
-    description: '당신만의 특별한 색감을 찾았어요',
+    description: 'We found your unique color palette',
   };
   
   console.log('ResultPage render:', { 
@@ -165,7 +165,7 @@ const ResultPage = (): JSX.Element => {
                       </div>
                     </div>
                     <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                      {seasonInfo?.ko || result.personal_color}
+                      {seasonInfo?.en || result.personal_color_en}
                     </h1>
                     <p className="text-sm opacity-90">
                       {seasonInfo?.description || 'We found your unique color palette'}
@@ -176,7 +176,7 @@ const ResultPage = (): JSX.Element => {
                     <button
                       onClick={handleShare}
                       className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all"
-                      aria-label="공유"
+                      aria-label="Share"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
                         <path
@@ -192,7 +192,7 @@ const ResultPage = (): JSX.Element => {
                     <button
                       onClick={handleSaveImage}
                       className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all"
-                      aria-label="저장"
+                      aria-label="Save"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
                         <path
@@ -213,7 +213,7 @@ const ResultPage = (): JSX.Element => {
             // Fallback when no image
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white text-center">
               <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                {seasonInfo?.ko || result.personal_color}
+                {seasonInfo?.en || result.personal_color_en}
               </h1>
               <p className="text-sm opacity-90">
                 {seasonInfo?.description || 'We found your unique color palette'}
