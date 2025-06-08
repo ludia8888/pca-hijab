@@ -1,7 +1,7 @@
-# Use Python 3.9 with build tools
-FROM python:3.9
+# Use Python 3.8 which has better dlib compatibility
+FROM python:3.8
 
-# Install system dependencies for dlib
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -16,13 +16,12 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy only ShowMeTheColor directory
+# Copy ShowMeTheColor directory
 COPY ShowMeTheColor/ .
 
-# Install Python packages with specific versions
-RUN pip install --upgrade pip==24.0 setuptools==69.5.1 wheel && \
-    pip install cmake==3.25.0 && \
-    pip install dlib==19.24.2 --no-cache-dir && \
+# Install dlib first with Python 3.8
+RUN pip install --upgrade pip && \
+    pip install dlib==19.24.2 && \
     pip install -r requirements.txt
 
 # Set environment
