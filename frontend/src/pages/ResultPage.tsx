@@ -126,12 +126,14 @@ const ResultPage = (): JSX.Element => {
 
   const handleSaveImage = async (): Promise<void> => {
     try {
+      console.log('Starting to generate result card...', { result, instagramId });
       const blob = await generateResultCard(result, instagramId || 'user');
+      console.log('Result card generated successfully, blob size:', blob.size);
       const filename = `personal_color_${result.personal_color_en}_${Date.now()}.jpg`;
       downloadResultCard(blob, filename);
     } catch (error) {
       console.error('Failed to save image:', error);
-      alert('Failed to save image. Please try again.');
+      alert(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

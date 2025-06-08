@@ -3,6 +3,10 @@ import { SEASON_DESCRIPTIONS } from './constants';
 import { SEASON_COLORS } from './colorData';
 import { SEASON_DATA, SEASON_GRADIENTS, type SeasonType } from './seasonData';
 import { loadFonts } from './fontLoader';
+import { setupCanvasPolyfill } from './canvasPolyfill';
+
+// Setup polyfill
+setupCanvasPolyfill();
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -33,6 +37,7 @@ function drawGradientRoundRect(
   
   ctx.fillStyle = gradient;
   ctx.beginPath();
+  // @ts-ignore - roundRect might not be in types but we have polyfill
   ctx.roundRect(x, y, width, height, radius);
   ctx.fill();
 }
@@ -106,8 +111,15 @@ export const generateResultCard = async (
   result: PersonalColorResult,
   instagramId: string
 ): Promise<Blob> => {
+  console.log('generateResultCard called with:', { result, instagramId });
+  
   // Load fonts first
-  await loadFonts();
+  try {
+    await loadFonts();
+    console.log('Fonts loaded successfully');
+  } catch (error) {
+    console.warn('Font loading error:', error);
+  }
   
   // Create canvas
   const canvas = document.createElement('canvas');
@@ -125,10 +137,17 @@ export const generateResultCard = async (
 
   // Get season info
   const seasonKey = getSeasonKey(result.personal_color_en) as SeasonType;
+  console.log('Season key:', seasonKey);
   const seasonInfo = SEASON_DESCRIPTIONS[seasonKey];
   const seasonData = SEASON_DATA[seasonKey];
   const seasonColors = SEASON_COLORS[seasonKey];
   const gradientColors = SEASON_GRADIENTS[seasonKey];
+  console.log('Season data loaded:', { seasonInfo, seasonData, gradientColors });
+  
+  if (!seasonData || !gradientColors) {
+    console.error('Missing season data for:', seasonKey);
+    throw new Error(`Missing season data for ${seasonKey}`);
+  }
   
   // Background - Soft gradient
   const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
@@ -170,6 +189,7 @@ export const generateResultCard = async (
   
   ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
   ctx.beginPath();
+  // @ts-ignore - roundRect might not be in types but we have polyfill
   ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 30);
   ctx.fill();
   
@@ -223,6 +243,7 @@ export const generateResultCard = async (
     ctx.shadowBlur = 8;
     ctx.fillStyle = color.hex;
     ctx.beginPath();
+    // @ts-ignore - roundRect might not be in types but we have polyfill
     ctx.roundRect(x, y, swatchSize, swatchSize, 15);
     ctx.fill();
     ctx.shadowColor = 'transparent';
