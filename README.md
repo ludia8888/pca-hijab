@@ -3,8 +3,8 @@
 AI를 활용하여 사용자의 퍼스널 컬러를 진단하고, 개인에게 맞는 히잡 색상을 추천하는 모바일 최적화 웹 서비스입니다.
 
 ## 🚀 배포 URL
-- **Frontend**: https://pca-hijab.vercel.app (예정)
-- **Backend API**: https://pca-hijab-backend.onrender.com (예정)
+- **Frontend**: https://pca-hijab.vercel.app (준비 완료)
+- **Backend API**: https://pca-hijab-backend.onrender.com (준비 완료)
 - **AI API**: 로컬 환경에서만 실행 (ShowMeTheColor)
 
 ## 🎯 프로젝트 개요
@@ -16,11 +16,23 @@ AI를 활용하여 사용자의 퍼스널 컬러를 진단하고, 개인에게 �
 - **모바일 최적화**: 모바일 환경에 최적화된 UI/UX
 
 ### 기술 스택
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
+
+#### Frontend
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + CSS Modules
 - **State Management**: Zustand with persist
-- **Backend Integration**: Python FastAPI (AI 분석 서버)
-- **Image Processing**: Browser Canvas API, HEIC 지원
-- **Mobile Features**: PWA ready, Camera API integration
+- **Server State**: React Query (TanStack Query)
+- **Routing**: React Router v6
+- **Testing**: Vitest + React Testing Library
+- **Image Processing**: Browser Canvas API, HEIC to JPEG conversion
+- **Mobile Features**: Camera API integration, Touch optimized UI
+
+#### Backend
+- **Main API**: Express.js + TypeScript
+- **AI API**: Python FastAPI (ShowMeTheColor)
+- **Database**: PostgreSQL with in-memory fallback
+- **Deployment**: Render (Backend), Vercel (Frontend)
 
 ## 🚀 시작하기
 
@@ -33,7 +45,7 @@ AI를 활용하여 사용자의 퍼스널 컬러를 진단하고, 개인에게 �
 
 ```bash
 # 저장소 클론
-git clone https://github.com/yourusername/pca-hijab.git
+git clone https://github.com/ludia8888/pca-hijab.git
 cd pca-hijab
 
 # 프론트엔드 디렉토리로 이동
@@ -183,8 +195,23 @@ VITE_API_BASE_URL=http://localhost:5001/api
 # VITE_API_BASE_URL=https://pca-hijab-backend.onrender.com/api
 ```
 
-### Backend
-백엔드 환경 변수는 `ShowMeTheColor/README.md`를 참조하세요.
+### Backend (.env)
+```env
+# Server Configuration
+PORT=5001
+NODE_ENV=development
+
+# Database Configuration (optional)
+DATABASE_URL=postgresql://user:password@localhost:5432/pca_hijab
+
+# CORS
+CLIENT_URL=http://localhost:5173
+
+# Security
+JWT_SECRET=your-jwt-secret-key
+```
+
+ShowMeTheColor API 환경 변수는 `ShowMeTheColor/README.md`를 참조하세요.
 
 ## 📊 API 엔드포인트
 
@@ -192,9 +219,14 @@ VITE_API_BASE_URL=http://localhost:5001/api
 - `POST /api/analyze` - 이미지 업로드 및 분석
 - `GET /api/health` - 서버 상태 확인
 
+### 세션 관리
+- `POST /api/sessions` - 새 세션 생성
+- `GET /api/sessions/:id` - 세션 정보 조회
+
 ### 추천 시스템
 - `POST /api/recommendations` - 히잡 추천 요청
-- `GET /api/recommendations/{id}/status` - 추천 상태 조회
+- `GET /api/recommendations/:id` - 추천 정보 조회
+- `PUT /api/recommendations/:id/status` - 추천 상태 업데이트
 
 ## 🚦 개발 현황
 
@@ -205,25 +237,23 @@ VITE_API_BASE_URL=http://localhost:5001/api
 - [x] 모바일 카메라 및 HEIC 지원
 - [x] 결과 공유 및 저장 기능
 - [x] 맞춤 추천 입력 폼
-- [x] Backend API 구축 (세션 및 추천 요청 저장)
-- [x] 결과 이미지 생성 및 다운로드 기능
+- [x] Backend API 구축 (Express.js + TypeScript)
+- [x] PostgreSQL 데이터베이스 지원 (in-memory fallback)
+- [x] 세션 관리 시스템
+- [x] 추천 요청 저장 및 상태 관리
+- [x] 결과 이미지 생성 (Canvas API)
+- [x] 인스타그램 스토리 형식 결과 카드
 - [x] Vercel/Render 배포 설정
+- [x] 포괄적인 테스트 커버리지
 
-### 🚧 개발 예정
+### 🚧 향후 개발 계획
 
-#### 1. 추천 시스템 백엔드 구현
-현재 추천 요청은 Mock 응답만 반환합니다. 실제 구현 필요:
-- [ ] PostgreSQL 데이터베이스 설계 (사용자, 분석 결과, 추천 내역)
-- [ ] 추천 요청 저장 및 관리 API
-- [ ] 관리자용 대시보드 (추천 요청 확인 및 DM 발송 관리)
+#### 1. 실제 히잡 제품 추천 시스템
+현재는 추천 요청을 수동으로 처리합니다. 자동화 필요:
 - [ ] 히잡 제품 데이터베이스 구축
-
-#### 2. 결과 이미지 생성 기능
-"결과 이미지 저장하기" 버튼의 실제 구현:
-- [ ] Canvas API를 이용한 결과 카드 생성
-- [ ] 사용자 사진 + 퍼스널 컬러 결과 + 브랜딩 요소 합성
-- [ ] PNG 파일로 다운로드 제공
-- [ ] SNS 공유용 메타데이터 포함
+- [ ] AI 기반 제품 매칭 알고리즘
+- [ ] 관리자용 대시보드 (추천 요청 확인 및 DM 발송 관리)
+- [ ] Instagram API 연동 (자동 DM 발송)
 
 #### 3. PWA (Progressive Web App) 설정
 모바일 앱처럼 동작하도록:
@@ -283,7 +313,7 @@ npm run test:e2e
 ## 📞 문의
 
 - 이메일: support@hijabcolor.com
-- 이슈 트래커: [GitHub Issues](https://github.com/yourusername/pca-hijab/issues)
+- 이슈 트래커: [GitHub Issues](https://github.com/ludia8888/pca-hijab/issues)
 
 ## 🙏 감사의 말
 
