@@ -6,7 +6,6 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
-import { generateEnhancedResultCard } from '@/utils/resultCardEnhanced';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();
