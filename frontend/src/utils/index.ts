@@ -6,6 +6,7 @@ export * from './colorData';
 export * from './imageConverter';
 export * from './camera';
 export * from './resultCardGenerator';
+export * from './resultCardGeneratorSimple';
 export * from './seasonData';
 export * from './fontLoader';
 export * from './resultCardEnhanced';
