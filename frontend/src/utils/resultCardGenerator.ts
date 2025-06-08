@@ -8,7 +8,6 @@ function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS
     'Spring Warm': 'spring',
     'Summer Cool': 'summer',
     'Autumn Warm': 'autumn',
-    'Fall Warm': 'fall',
     'Winter Cool': 'winter'
   };
   

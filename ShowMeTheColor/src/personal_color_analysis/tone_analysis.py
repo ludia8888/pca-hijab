@@ -34,29 +34,29 @@ def is_spr(hsv_s, a):
     '''
     파라미터 hsv_s = [skin_s, hair_s, eye_s]
     a = 가중치 [skin, hair, eye]
-    질의색상 hsv_s값에서 spring의 hsv_s, fall의 hsv_s값 간의 거리를
+    질의색상 hsv_s값에서 spring의 hsv_s, autumn의 hsv_s값 간의 거리를
     각각 계산하여 spring이 가까우면 1, 반대 경우 0 리턴
     '''
     #skin, hair, eye
     spr_s_std = [18.59296, 30.30303, 25.80645]
-    fal_s_std = [27.13987, 39.75155, 37.5]
+    aut_s_std = [27.13987, 39.75155, 37.5]
 
     spr_dist = 0
-    fal_dist = 0
+    aut_dist = 0
 
     body_part = ['skin', 'eyebrow', 'eye']
     for i in range(3):
         spr_dist += abs(hsv_s[i] - spr_s_std[i]) * a[i]
         print(body_part[i],"의 spring 기준값과의 거리")
         print(abs(hsv_s[i] - spr_s_std[i]) * a[i])
-        fal_dist += abs(hsv_s[i] - fal_s_std[i]) * a[i]
-        print(body_part[i],"의 fall 기준값과의 거리")
-        print(abs(hsv_s[i] - fal_s_std[i]) * a[i])
+        aut_dist += abs(hsv_s[i] - aut_s_std[i]) * a[i]
+        print(body_part[i],"의 autumn 기준값과의 거리")
+        print(abs(hsv_s[i] - aut_s_std[i]) * a[i])
 
-    if(spr_dist <= fal_dist):
+    if(spr_dist <= aut_dist):
         return 1 #spring
     else:
-        return 0 #fall
+        return 0 #autumn
 
 def is_smr(hsv_s, a):
     '''
