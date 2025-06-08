@@ -5,7 +5,7 @@ import { Button, Card } from '@/components/ui';
 import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
-import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
+import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();

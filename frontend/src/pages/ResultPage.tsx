@@ -5,8 +5,7 @@ import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
-import { generateResultCard, downloadResultCard } from '@/utils/resultCardGenerator';
-import { generateSimpleResultCard } from '@/utils/resultCardGeneratorSimple';
+import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -127,18 +126,10 @@ const ResultPage = (): JSX.Element => {
 
   const handleSaveImage = async (): Promise<void> => {
     try {
-      console.log('Starting to generate result card...', { result, instagramId });
-      // Try the beautiful version first
-      let blob: Blob;
-      try {
-        blob = await generateResultCard(result, instagramId || 'user');
-        console.log('Beautiful result card generated successfully');
-      } catch (error) {
-        console.error('Beautiful version failed, using simple version:', error);
-        blob = await generateSimpleResultCard(result, instagramId || 'user');
-      }
-      console.log('Result card generated successfully, blob size:', blob.size);
-      const filename = `personal_color_${result.personal_color_en}_${Date.now()}.jpg`;
+      console.log('Starting to generate mobile-optimized result card...', { result, instagramId });
+      const blob = await generateResultCard(result, instagramId || 'user');
+      console.log('Mobile result card generated successfully, blob size:', blob.size);
+      const filename = `hijab_color_${result.personal_color_en.replace(' ', '_')}_${Date.now()}.jpg`;
       downloadResultCard(blob, filename);
     } catch (error) {
       console.error('Failed to save image:', error);

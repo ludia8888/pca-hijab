@@ -5,13 +5,12 @@ export * from './constants';
 export * from './colorData';
 export * from './imageConverter';
 export * from './camera';
-export * from './resultCardGenerator';
-export * from './resultCardGeneratorSimple';
+export * from './resultCardGeneratorV3';
+export * from './resultCardMobile';
 export { 
   SEASON_DATA, 
   SEASON_GRADIENTS,
-  // Explicitly re-export SeasonType from seasonData
   type SeasonType as SeasonDataType 
 } from './seasonData';
 export * from './fontLoader';
-export * from './resultCardEnhanced';
+export * from './canvasPolyfill';
