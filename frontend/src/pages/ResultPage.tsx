@@ -54,7 +54,7 @@ const ResultPage = (): JSX.Element => {
   // Use mock data for development if no analysis result
   const mockResult = {
     personal_color: '봄 웜톤',
-    personal_color_en: 'Spring Warm',
+    personal_color_en: 'spring' as const,
     tone: '웜톤',
     tone_en: 'warm' as const,
     details: {

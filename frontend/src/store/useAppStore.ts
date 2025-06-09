@@ -2,35 +2,36 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { PersonalColorResult, UserPreferences } from '@/types';
 
-interface AppState {
+export interface AppActions {
+  setInstagramId: (id: string) => void;
+  setUploadedImage: (preview: string, file: File) => void;
+  clearUploadedImage: () => void;
+  setAnalysisResult: (result: PersonalColorResult) => void;
+  setUserPreferences: (preferences: UserPreferences) => void;
+  initSession: () => void;
+  setSessionData: (sessionId: string, instagramId: string) => void;
+  resetApp: () => void;
+}
+
+export interface AppState {
   // User data
   instagramId: string | null;
-  setInstagramId: (id: string) => void;
   
   // Image data
   uploadedImage: File | null;
   uploadedImagePreview: string | null;
-  setUploadedImage: (preview: string, file: File) => void;
-  clearUploadedImage: () => void;
   
   // Analysis results
   analysisResult: PersonalColorResult | null;
-  setAnalysisResult: (result: PersonalColorResult) => void;
   
   // User preferences
   userPreferences: UserPreferences | null;
-  setUserPreferences: (preferences: UserPreferences) => void;
   
   // Session
   sessionId: string | null;
-  initSession: () => void;
-  setSessionData: (sessionId: string, instagramId: string) => void;
-  
-  // Reset
-  resetApp: () => void;
 }
 
-export const useAppStore = create<AppState>()(
+export const useAppStore = create<AppState & AppActions>()(
   devtools(
     persist(
       (set) => ({
