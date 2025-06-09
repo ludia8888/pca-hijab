@@ -5,7 +5,7 @@ export const validateInstagramId = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   const { instagramId } = req.body;
   
   if (!instagramId || typeof instagramId !== 'string') {
@@ -25,7 +25,7 @@ export const validateRecommendationData = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   const { sessionId, instagramId, personalColorResult, userPreferences } = req.body;
   
   if (!sessionId || !instagramId || !personalColorResult || !userPreferences) {

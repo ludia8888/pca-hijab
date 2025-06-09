@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { validateRecommendationData } from '../middleware/validation';
 import { AppError } from '../middleware/errorHandler';
+import type { Recommendation } from '../types';
 
 const router = Router();
 
@@ -25,7 +26,7 @@ router.post('/', validateRecommendationData, async (req, res, next) => {
       status: 'pending'
     });
     
-    console.log('New recommendation created:', {
+    console.info('New recommendation created:', {
       id: recommendation.id,
       instagramId: recommendation.instagramId,
       personalColor: recommendation.personalColorResult.personal_color_en,
@@ -76,7 +77,7 @@ router.get('/', async (req, res, next) => {
     const { status } = req.query;
     
     const recommendations = status 
-      ? await db.getRecommendationsByStatus(status as any)
+      ? await db.getRecommendationsByStatus(status as Recommendation['status'])
       : await db.getAllRecommendations();
     
     res.json({

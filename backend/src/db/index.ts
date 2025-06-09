@@ -1,5 +1,5 @@
 import { Session, Recommendation } from '../types';
-import { db as postgresDb, PostgresDatabase } from './postgres';
+import { db as postgresDb } from './postgres';
 
 // In-memory storage as fallback for development
 class InMemoryDatabase {
@@ -71,9 +71,9 @@ export const db = usePostgres ? postgresDb : new InMemoryDatabase();
 
 // Initialize database on startup
 if (usePostgres) {
-  postgresDb.testConnection().then(connected => {
+  void postgresDb.testConnection().then(connected => {
     if (connected) {
-      console.log('Using PostgreSQL database');
+      console.info('Using PostgreSQL database');
       // Initialize schema only in development
       if (process.env.NODE_ENV !== 'production') {
         postgresDb.initialize().catch(console.error);
@@ -83,5 +83,5 @@ if (usePostgres) {
     }
   });
 } else {
-  console.log('Using in-memory database (DATABASE_URL not set)');
+  console.info('Using in-memory database (DATABASE_URL not set)');
 }

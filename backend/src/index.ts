@@ -43,6 +43,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.info(`Server is running on port ${PORT}`);
+  console.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
