@@ -11,6 +11,8 @@ services:
       - key: PORT
         value: 10000
       - key: CLIENT_URL
-        value: https://pca-hijab.vercel.app
-      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_API_KEY
         generateValue: true

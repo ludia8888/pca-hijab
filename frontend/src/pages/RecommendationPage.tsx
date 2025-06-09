@@ -9,7 +9,7 @@ import type { UserPreferences } from '@/types';
 
 const RecommendationPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { analysisResult, instagramId, setRecommendationPreferences } = useAppStore();
+  const { analysisResult, instagramId, setUserPreferences } = useAppStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<UserPreferences>({
     style: [],
@@ -117,7 +117,7 @@ const RecommendationPage = (): JSX.Element => {
 
     try {
       // Store preferences
-      setRecommendationPreferences(formData);
+      setUserPreferences(formData);
       
       // Submit recommendation request
       const response = await RecommendationAPI.submitRecommendation({

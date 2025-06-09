@@ -1,10 +1,12 @@
 // Personal Color Analysis Types
 export interface PersonalColorResult {
   personal_color: string;
-  personal_color_en: string;  // API returns full strings like "Spring Warm"
+  personal_color_en: 'spring' | 'summer' | 'autumn' | 'winter';
   confidence?: number;
   best_colors?: string[];
   worst_colors?: string[];
+  bestColors?: Color[];
+  worstColors?: Color[];
   // Optional fields that may come from more detailed analysis
   tone?: string;
   tone_en?: 'warm' | 'cool';
@@ -45,6 +47,18 @@ export interface UserPreferences {
   material: string[];
   occasion: string[];
   additionalNotes: string;
+}
+
+// Recommendation Type
+export interface Recommendation {
+  id: string;
+  sessionId: string;
+  instagramId: string;
+  personalColorResult: PersonalColorResult;
+  userPreferences: UserPreferences;
+  status: 'pending' | 'processing' | 'completed';
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Form Types

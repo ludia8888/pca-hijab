@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { lazy, Suspense } from 'react';
+import { ProtectedAdminRoute } from '@/components/auth/ProtectedAdminRoute';
 
 // Lazy load pages for code splitting
 const IntroPage = lazy(() => import('@/pages/IntroPage'));
@@ -9,6 +10,11 @@ const AnalyzingPage = lazy(() => import('@/pages/AnalyzingPage'));
 const ResultPage = lazy(() => import('@/pages/ResultPage'));
 const RecommendationPage = lazy(() => import('@/pages/RecommendationPage'));
 const CompletionPage = lazy(() => import('@/pages/CompletionPage'));
+
+// Admin pages
+const AdminLoginPage = lazy(() => import('@/pages/admin/AdminLoginPage'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const AdminRecommendationDetail = lazy(() => import('@/pages/admin/AdminRecommendationDetail'));
 
 // Loading component
 const PageLoader = (): JSX.Element => (
@@ -99,6 +105,45 @@ const router = createBrowserRouter([
     ),
     errorElement: <RouteErrorBoundary />,
   },
+  
+  // Admin routes
+  {
+    path: '/admin/login',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminLoginPage />
+      </Suspense>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/admin',
+    element: <ProtectedAdminRoute />,
+    errorElement: <RouteErrorBoundary />,
+    children: [
+      {
+        path: 'dashboard',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <AdminDashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'recommendations/:id',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <AdminRecommendationDetail />
+          </Suspense>
+        ),
+      },
+      {
+        path: '',
+        element: <Navigate to="/admin/dashboard" replace />,
+      },
+    ],
+  },
+  
   {
     path: '*',
     element: <Navigate to={ROUTES.HOME} replace />,

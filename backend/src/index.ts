@@ -5,6 +5,7 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
+import { adminRouter } from './routes/admin';
 import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
@@ -35,6 +36,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Routes
 app.use('/api/sessions', sessionRouter);
 app.use('/api/recommendations', recommendationRouter);
+app.use('/api/admin', adminRouter);
 
 // Error handling middleware (must be last)
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

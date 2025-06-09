@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "env": {
+    "VITE_AI_API_URL": "@ai_api_url",
+    "VITE_BACKEND_API_URL": "@backend_api_url"
+  },
   "rewrites": [
     {
       "source": "/(.*)",

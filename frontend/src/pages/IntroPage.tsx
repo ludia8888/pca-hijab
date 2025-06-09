@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
-import { generateSessionId } from '@/utils/helpers';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { Button, Input } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
+import { SessionAPI } from '@/services/api/session';
 
 const IntroPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -30,14 +30,23 @@ const IntroPage = (): JSX.Element => {
     setError(valid ? '' : 'Please enter a valid Instagram ID');
   };
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!isValid) return;
 
-    // Generate session ID and store in global state
-    const sessionId = generateSessionId();
-    setSessionData(sessionId, instagramId);
-    navigate(ROUTES.UPLOAD);
+    try {
+      // Create session on backend
+      const response = await SessionAPI.createSession(instagramId);
+      
+      // Store session data in global state
+      setSessionData(response.data.sessionId, response.data.instagramId);
+      
+      // Navigate to upload page
+      navigate(ROUTES.UPLOAD);
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      setError('Failed to create session. Please try again.');
+    }
   };
 
   return (
