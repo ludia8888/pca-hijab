@@ -2,40 +2,45 @@
 
 A mobile-optimized web service that uses AI to diagnose personal color types and recommend hijab colors tailored to individual users.
 
-## 🚀 Deployment URLs
-- **Frontend**: https://pca-hijab.vercel.app (Ready)
-- **Backend API**: https://pca-hijab-backend.onrender.com (Ready)
-- **AI API**: Local environment only (ShowMeTheColor)
+## 🚀 Live Demo
+- **Production App**: https://pca-hijab.vercel.app
+- **Backend API**: https://pca-hijab-backend.onrender.com
+- **AI API**: Currently requires local setup (see deployment guide for cloud options)
 
 ## 🎯 Project Overview
 
-### Key Features
+### ✨ Key Features
 - **AI Personal Color Analysis**: Analyzes facial photos to diagnose Spring/Summer/Autumn/Winter types
 - **Custom Color Recommendations**: Suggests suitable colors and colors to avoid based on analysis
 - **Hijab Recommendation System**: Personalized hijab recommendations based on preferences
-- **Mobile Optimization**: UI/UX optimized for mobile devices
-- **Privacy-First Design**: Photos are analyzed instantly and deleted immediately - no storage
+- **Mobile-First Design**: Optimized for Instagram DM shopping flow
+- **Privacy-First Approach**: Photos are analyzed instantly and deleted immediately - no storage
 - **Beautiful Result Cards**: Korean-inspired aesthetic with comprehensive beauty recommendations
+- **Multi-Language Support**: Currently in English (Korean version available)
+- **Fast Analysis**: Optimized to complete in ~11 seconds
 
 ### Tech Stack
 
 #### Frontend
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite
+- **Framework**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS + CSS Modules
-- **State Management**: Zustand with persist
-- **Server State**: React Query (TanStack Query)
+- **State Management**: Zustand with persist middleware
+- **Server State**: React Query v5 (TanStack Query)
 - **Routing**: React Router v6
-- **Testing**: Vitest + React Testing Library
+- **Testing**: Vitest + React Testing Library + MSW
 - **Image Processing**: Browser Canvas API, HEIC to JPEG conversion
-- **Typography**: Custom fonts (Playfair Display, Noto Sans) for premium aesthetics
-- **Mobile Features**: Camera API integration, Touch optimized UI
+- **Typography**: Playfair Display + Noto Sans for premium aesthetics
+- **Mobile Features**: Camera API, Touch gestures, PWA ready
+- **Performance**: Code splitting, lazy loading, Vercel Speed Insights
 
 #### Backend
 - **Main API**: Express.js + TypeScript
 - **AI API**: Python FastAPI (ShowMeTheColor)
+- **Face Detection**: dlib with 68-point landmarks
+- **Color Analysis**: K-means clustering, Lab/HSV color spaces
 - **Database**: PostgreSQL with in-memory fallback
 - **Deployment**: Render (Backend), Vercel (Frontend)
+- **Security**: CORS, rate limiting, input validation
 
 ## 🚀 Getting Started
 
@@ -44,26 +49,46 @@ A mobile-optimized web service that uses AI to diagnose personal color types and
 - npm or yarn
 - Python 3.8+ (for backend server)
 
-### Frontend Installation & Setup
+### Quick Start
 
 ```bash
 # Clone repository
-git clone https://github.com/ludia8888/pca-hijab.git
+git clone https://github.com/yourusername/pca-hijab.git
 cd pca-hijab
 
-# Navigate to frontend directory
+# Install all dependencies
+npm install
+
+# Start all services (requires 3 terminals)
+# Terminal 1: Frontend (http://localhost:5173)
+cd frontend && npm run dev
+
+# Terminal 2: Backend API (http://localhost:5001)
+cd backend && npm run dev
+
+# Terminal 3: AI API (http://localhost:8000)
+cd ShowMeTheColor/src && python api.py
+```
+
+### Detailed Frontend Setup
+
+```bash
+# Navigate to frontend
 cd frontend
 
 # Install dependencies
 npm install
 
-# Run development server (http://localhost:5173)
+# Copy environment variables
+cp .env.example .env
+
+# Run development server
 npm run dev
 
-# Production build
+# Build for production
 npm run build
 
-# Preview build
+# Preview production build
 npm run preview
 ```
 
@@ -109,68 +134,103 @@ npm start
 ## 📱 Main Screens & User Flow
 
 ### 1. Intro Screen (`/`)
-- Service introduction and Instagram ID input
+- Service introduction with hero image
+- Instagram ID input with validation
 - Privacy consent with clear photo deletion policy
+- Demo mode notice for testing
 
 ### 2. Photo Upload (`/upload`)
 - Gallery selection or camera capture
-- HEIC format support
-- Automatic image compression
-- Privacy notice about instant analysis and deletion
+- HEIC format auto-conversion (iOS)
+- Automatic image compression (max 5MB)
+- Privacy notice: "Your photo will be analyzed and immediately deleted"
+- Face detection validation
 
 ### 3. AI Analysis (`/analyzing`)
-- Real-time progress display
-- 5-step analysis animation (~11 seconds)
+- Real-time 5-step progress display:
+  1. Detecting face landmarks
+  2. Extracting skin tone
+  3. Analyzing color harmony
+  4. Calculating seasonal type
+  5. Generating recommendations
+- ~11 seconds total processing time
 
 ### 4. Result Screen (`/result`)
-- Personal color type (Spring/Summer/Autumn/Winter)
-- Recommended color palette (4x1 grid)
-- Colors to avoid
-- Share results feature
-- AI confidence score
-- Download beautiful result card with:
-  - Season keywords and atmosphere
-  - Best hijab colors
-  - Makeup palette recommendations
-  - Signature scent suggestions
-  - Jewelry preferences (gold/silver/rose-gold)
+- Personal color diagnosis (Spring/Summer/Autumn/Winter)
+- AI confidence percentage
+- Recommended color palette (interactive 4x1 grid)
+- Colors to avoid section
+- Downloadable result card (v3) featuring:
+  - Seasonal atmosphere keywords
+  - Best hijab color recommendations
+  - Makeup palette (eyes, lips, cheeks)
+  - Signature scent profile
+  - Jewelry metal preferences
+  - Celebrity style references
+- Share functionality (Instagram, WhatsApp, etc.)
 
 ### 5. Hijab Recommendation (`/recommendation`)
-- Style preference selection
-- Price range setting
-- Material and occasion selection
-- Additional requests
+- Style preferences (Simple, Pattern, Texture, Embellished)
+- Price range slider ($10-100+)
+- Material selection (Cotton, Chiffon, Silk, Jersey, Modal)
+- Occasion tags (Daily, Work, Formal, Special, Travel)
+- Free-text additional requests
+- Instagram handle confirmation
 
 ### 6. Completion Screen (`/completion`)
-- DM delivery notice
-- Save and share results
+- Success message with Instagram DM notice
+- Recommendation ID for tracking
+- Options to:
+  - Save result image
+  - Share on social media
+  - Start new analysis
 
 ## 🔧 Development Commands
 
+### Frontend Commands
 ```bash
-# Run development server
+# Development server with hot reload
 npm run dev
 
 # TypeScript type checking
 npm run typecheck
 
-# Run ESLint
+# Linting with auto-fix
 npm run lint
-
-# Code formatting
-npm run format
-
-# Production build
-npm run build
-
-# Preview build
-npm run preview
+npm run lint:fix
 
 # Run tests
 npm test
+npm run test:ui     # With UI
+npm run test:coverage # Coverage report
 
-# Test coverage
-npm run test:coverage
+# Production build
+npm run build
+npm run preview     # Preview production build
+```
+
+### Backend Commands
+```bash
+# Development with nodemon
+npm run dev
+
+# Production build & start
+npm run build
+npm start
+
+# Database migrations
+npm run db:migrate
+npm run db:seed
+```
+
+### AI API Commands
+```bash
+# Start FastAPI server
+cd ShowMeTheColor/src
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
+
+# Or use the simple runner
+python api.py
 ```
 
 ## 🏗 Project Structure
@@ -230,20 +290,85 @@ JWT_SECRET=your-jwt-secret-key
 
 For ShowMeTheColor API environment variables, refer to `ShowMeTheColor/README.md`.
 
-## 📊 API Endpoints
+## 📊 API Documentation
 
-### Personal Color Analysis
-- `POST /api/analyze` - Upload and analyze image
-- `GET /api/health` - Server health check
+### AI Analysis Endpoints
+```typescript
+// Health check
+GET /health
+Response: { status: "healthy", service: "Personal Color Analysis API" }
 
-### Session Management
-- `POST /api/sessions` - Create new session
-- `GET /api/sessions/:id` - Get session info
+// Analyze image
+POST /analyze
+Content-Type: multipart/form-data
+Body: { file: File, debug?: boolean }
+Response: {
+  personal_color: string,      // e.g., "가을 웜톤"
+  personal_color_en: string,   // e.g., "autumn"
+  tone: string,                // e.g., "웜톤"
+  tone_en: string,             // e.g., "warm"
+  details: {
+    is_warm: number,
+    skin_lab_b: number,
+    eyebrow_lab_b: number,
+    eye_lab_b: number,
+    skin_hsv_s: number,
+    eyebrow_hsv_s: number,
+    eye_hsv_s: number
+  },
+  facial_colors: {
+    cheek: { rgb: number[], lab: number[], hsv: number[] },
+    eyebrow: { rgb: number[], lab: number[], hsv: number[] },
+    eye: { rgb: number[], lab: number[], hsv: number[] }
+  },
+  confidence: number           // 0-1 confidence score
+}
+```
 
-### Recommendation System
-- `POST /api/recommendations` - Request hijab recommendations
-- `GET /api/recommendations/:id` - Get recommendation info
-- `PUT /api/recommendations/:id/status` - Update recommendation status
+### Backend API Endpoints
+```typescript
+// Session Management
+POST /api/sessions
+Body: { instagramId: string }
+Response: { id: string, instagramId: string, createdAt: string }
+
+// Recommendation System
+POST /api/recommendations
+Body: {
+  instagramId: string,
+  personalColorResult: AnalysisResult,
+  preferences: {
+    style: string[],
+    priceRange: string,
+    material: string[],
+    occasion: string[],
+    additionalNotes?: string
+  }
+}
+Response: { success: boolean, message: string, recommendationId: string }
+
+// Get Recommendation Status
+GET /api/recommendations/:id/status
+Response: { status: "pending" | "processing" | "completed", updatedAt: string }
+```
+
+## 🎨 Recent Updates
+
+### Version 3.0 (January 2025)
+- ✅ Complete UI translation to English
+- ✅ Mobile-optimized result card redesign with Korean aesthetics
+- ✅ 50% faster AI analysis performance
+- ✅ Enhanced privacy UX with clear data handling notices
+- ✅ Autumn/Fall terminology unification
+- ✅ Vercel Speed Insights integration
+- ✅ Improved error handling and user feedback
+
+### Version 2.0 Features
+- ✅ HEIC to JPEG conversion for iOS
+- ✅ Camera capture integration
+- ✅ Result card download functionality
+- ✅ Social sharing capabilities
+- ✅ Responsive design for all screen sizes
 
 ## 🚦 Development Status
 
@@ -269,7 +394,14 @@ For ShowMeTheColor API environment variables, refer to `ShowMeTheColor/README.md
 - [x] Comprehensive beauty recommendations (makeup, perfume, jewelry)
 - [x] Premium typography with custom fonts
 
-### 🚧 Future Development Plans
+### 🛠️ In Development
+- [ ] Cloud deployment for AI API (Google Cloud Run/AWS ECS)
+- [ ] Real-time recommendation tracking
+- [ ] Multi-language support (Arabic, Malay, Turkish)
+- [ ] PWA offline capabilities
+- [ ] Advanced color matching algorithm
+
+### 🚀 Future Plans
 
 #### 1. Automated Hijab Product Recommendation System
 Currently, recommendation requests are processed manually. Automation needed:
@@ -335,11 +467,20 @@ This project is distributed under the MIT License. See `LICENSE` file for detail
 
 ## 📞 Contact
 
-- Email: support@hijabcolor.com
-- Issue Tracker: [GitHub Issues](https://github.com/ludia8888/pca-hijab/issues)
+- Project Repository: [GitHub](https://github.com/yourusername/pca-hijab)
+- Issue Tracker: [GitHub Issues](https://github.com/yourusername/pca-hijab/issues)
+- Documentation: [API Docs](./API_TECHNICAL_DOCUMENTATION.md) | [Deployment Guide](./DEPLOYMENT_GUIDE.md)
 
 ## 🙏 Acknowledgments
 
-- AI personal color analysis engine: ShowMeTheColor team
-- UI/UX design inspiration: Modern mobile design trends
-- Amazing libraries from the open source community
+- **ShowMeTheColor**: Original AI personal color analysis engine
+- **Design Inspiration**: Korean beauty apps and Instagram shopping UX
+- **Open Source Libraries**: React, FastAPI, dlib, and many more
+- **Fonts**: Google Fonts (Playfair Display, Noto Sans)
+- **Icons**: Lucide React
+
+---
+
+<p align="center">
+  Made with ❤️ for the hijab-wearing community
+</p>

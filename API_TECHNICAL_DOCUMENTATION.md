@@ -4,16 +4,17 @@
 1. [Overview](#overview)
 2. [Architecture](#architecture)
 3. [API Specification](#api-specification)
-4. [Core Algorithm](#core-algorithm)
-5. [Data Models](#data-models)
-6. [Installation & Setup](#installation--setup)
-7. [Deployment Guide](#deployment-guide)
-8. [Frontend Integration](#frontend-integration)
-9. [Performance Optimization](#performance-optimization)
-10. [Security Considerations](#security-considerations)
-11. [Testing](#testing)
-12. [Monitoring & Logging](#monitoring--logging)
-13. [Troubleshooting](#troubleshooting)
+4. [Frontend-Backend Communication](#frontend-backend-communication)
+5. [Core Algorithm](#core-algorithm)
+6. [Data Models](#data-models)
+7. [Installation & Setup](#installation--setup)
+8. [Deployment Guide](#deployment-guide)
+9. [Frontend Integration](#frontend-integration)
+10. [Performance Optimization](#performance-optimization)
+11. [Security Considerations](#security-considerations)
+12. [Testing](#testing)
+13. [Monitoring & Logging](#monitoring--logging)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -185,6 +186,445 @@ POST /analyze
 {
   "detail": "분석 중 오류가 발생했습니다: [error message]"
 }
+```
+
+#### 4. Hijab Recommendation (Backend API Integration)
+```http
+POST /api/recommendations
+```
+
+**Request:**
+- Method: `POST`
+- Content-Type: `application/json`
+
+```json
+{
+  "instagramId": "user_instagram",
+  "personalColorResult": {
+    "personal_color": "가을 웜톤",
+    "personal_color_en": "autumn",
+    "tone": "웜톤",
+    "tone_en": "warm",
+    "details": { ... },
+    "facial_colors": { ... }
+  },
+  "preferences": {
+    "style": ["simple", "pattern"],
+    "priceRange": "30-50",
+    "material": ["cotton", "chiffon"],
+    "occasion": ["daily", "work"],
+    "additionalNotes": "얼굴이 작아 보이는 스타일 선호"
+  }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "추천 요청이 성공적으로 전송되었습니다",
+  "recommendationId": "rec_1234567890"
+}
+```
+
+#### 5. Recommendation Status Check
+```http
+GET /api/recommendations/{recommendationId}/status
+```
+
+**Response:**
+```json
+{
+  "status": "pending",
+  "updatedAt": "2024-06-06T12:00:00Z"
+}
+```
+
+---
+
+## Frontend-Backend Communication
+
+### Architecture Overview
+
+#### Frontend (React + TypeScript)
+- **Base URL**: Vite proxy를 통한 `/api` 경로
+- **실제 Backend URL**: `http://localhost:8000`
+- **통신 방식**: Axios 기반 REST API
+- **State Management**: Zustand + React Query
+
+#### Backend Integration
+- **Backend API (새 API)**: Express.js (포트 3001)
+- **AI API (ShowMeTheColor)**: FastAPI (포트 8000)
+- **CORS**: 개발 환경에서 모든 origin 허용
+
+### API Client Configuration
+
+```typescript
+// services/api/client.ts
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    // Add auth token if available
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### Service Layer Structure
+
+```typescript
+// services/api/personalColor.ts
+import { apiClient } from './client';
+import type { PersonalColorResult } from '@/types';
+
+export class PersonalColorAPI {
+  async analyzeImage(file: File, debug = false): Promise<PersonalColorResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post<PersonalColorResult>(
+      `/analyze${debug ? '?debug=true' : ''}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  async healthCheck() {
+    const response = await apiClient.get<{ status: string; service: string }>('/health');
+    return response.data;
+  }
+}
+
+// services/api/recommendation.ts
+import { apiClient } from './client';
+import type { RecommendationRequest, RecommendationResponse } from '@/types';
+
+export class RecommendationAPI {
+  async submitRecommendation(data: RecommendationRequest): Promise<RecommendationResponse> {
+    try {
+      const response = await apiClient.post<RecommendationResponse>(
+        '/recommendations',
+        data
+      );
+      return response.data;
+    } catch (error) {
+      // Fallback to mock response in development
+      if (import.meta.env.DEV) {
+        return {
+          success: true,
+          message: '추천 요청이 성공적으로 전송되었습니다',
+          recommendationId: `rec_${Date.now()}`,
+        };
+      }
+      throw error;
+    }
+  }
+
+  async getRecommendationStatus(recommendationId: string) {
+    const response = await apiClient.get(
+      `/recommendations/${recommendationId}/status`
+    );
+    return response.data;
+  }
+}
+```
+
+### Error Handling Strategy
+
+```typescript
+// utils/errorHandler.ts
+export class APIError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+    public details?: any
+  ) {
+    super(message);
+    this.name = 'APIError';
+  }
+}
+
+export function handleAPIError(error: any): never {
+  if (error.response) {
+    // Server responded with error
+    throw new APIError(
+      error.response.status,
+      error.response.data.code || 'UNKNOWN_ERROR',
+      error.response.data.detail || error.response.data.message || 'An error occurred',
+      error.response.data
+    );
+  } else if (error.request) {
+    // Network error
+    throw new APIError(
+      0,
+      'NETWORK_ERROR',
+      'Network connection failed. Please check your internet connection.',
+      { originalError: error }
+    );
+  } else {
+    // Other errors
+    throw new APIError(
+      0,
+      'CLIENT_ERROR',
+      error.message || 'An unexpected error occurred',
+      { originalError: error }
+    );
+  }
+}
+```
+
+### React Query Integration
+
+```typescript
+// hooks/usePersonalColor.ts
+import { useMutation } from '@tanstack/react-query';
+import { personalColorAPI } from '@/services/api';
+import { queryClient } from '@/hooks/queryClient';
+
+export function useAnalyzeImage() {
+  return useMutation({
+    mutationFn: (file: File) => personalColorAPI.analyzeImage(file),
+    onSuccess: (data) => {
+      // Cache the result
+      queryClient.setQueryData(['personalColor', 'latest'], data);
+    },
+    onError: (error) => {
+      console.error('Analysis failed:', error);
+    },
+  });
+}
+
+// hooks/useRecommendation.ts
+export function useSubmitRecommendation() {
+  return useMutation({
+    mutationFn: (data: RecommendationRequest) => 
+      recommendationAPI.submitRecommendation(data),
+    onSuccess: (data) => {
+      // Store recommendation ID
+      localStorage.setItem('latestRecommendationId', data.recommendationId);
+    },
+  });
+}
+```
+
+### Development Proxy Configuration
+
+```javascript
+// vite.config.ts
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
+    },
+  },
+});
+```
+
+### Mock Data for Development
+
+```typescript
+// mocks/handlers.ts
+import { rest } from 'msw';
+
+export const handlers = [
+  rest.post('/api/analyze', (req, res, ctx) => {
+    return res(
+      ctx.delay(1000),
+      ctx.json({
+        personal_color: '가을 웜톤',
+        personal_color_en: 'autumn',
+        tone: '웜톤',
+        tone_en: 'warm',
+        details: {
+          is_warm: 1,
+          skin_lab_b: 15.2,
+          eyebrow_lab_b: 12.5,
+          eye_lab_b: 8.3,
+          skin_hsv_s: 30,
+          eyebrow_hsv_s: 40,
+          eye_hsv_s: 25,
+        },
+        facial_colors: {
+          cheek: {
+            rgb: [255, 200, 180],
+            lab: [80, 15, 20],
+            hsv: [15, 30, 100],
+          },
+          eyebrow: {
+            rgb: [120, 80, 60],
+            lab: [40, 10, 15],
+            hsv: [20, 50, 47],
+          },
+          eye: {
+            rgb: [80, 60, 50],
+            lab: [30, 5, 10],
+            hsv: [20, 37, 31],
+          },
+        },
+        confidence: 0.85,
+      })
+    );
+  }),
+
+  rest.post('/api/recommendations', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        success: true,
+        message: '추천 요청이 성공적으로 전송되었습니다',
+        recommendationId: `rec_${Date.now()}`,
+      })
+    );
+  }),
+];
+```
+
+### Image Processing and File Upload
+
+```typescript
+// utils/imageProcessor.ts
+export async function processImageForUpload(file: File): Promise<File> {
+  // Check file size
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  if (file.size > MAX_SIZE) {
+    // Compress image
+    return await compressImage(file, 0.8);
+  }
+  return file;
+}
+
+export async function compressImage(file: File, quality: number): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        
+        // Calculate new dimensions
+        let width = img.width;
+        let height = img.height;
+        const MAX_DIMENSION = 1024;
+        
+        if (width > height && width > MAX_DIMENSION) {
+          height = (height * MAX_DIMENSION) / width;
+          width = MAX_DIMENSION;
+        } else if (height > MAX_DIMENSION) {
+          width = (width * MAX_DIMENSION) / height;
+          height = MAX_DIMENSION;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+    };
+  });
+}
+```
+
+### Rate Limiting and Request Management
+
+```typescript
+// utils/rateLimiter.ts
+class RateLimiter {
+  private queue: Array<() => Promise<any>> = [];
+  private processing = false;
+  private lastRequestTime = 0;
+  private minInterval = 1000; // 1 second between requests
+
+  async add<T>(fn: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await fn();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.process();
+    });
+  }
+
+  private async process() {
+    if (this.processing || this.queue.length === 0) return;
+    
+    this.processing = true;
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.minInterval) {
+      await new Promise(resolve => 
+        setTimeout(resolve, this.minInterval - timeSinceLastRequest)
+      );
+    }
+    
+    const fn = this.queue.shift()!;
+    this.lastRequestTime = Date.now();
+    
+    await fn();
+    this.processing = false;
+    this.process();
+  }
+}
+
+export const apiRateLimiter = new RateLimiter();
 ```
 
 ---

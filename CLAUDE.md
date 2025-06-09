@@ -1,10 +1,12 @@
 # CLAUDE.md - PCA-HIJAB 프로젝트 가이드
 
-## 🎯 프로젝트 개요
-- **프로젝트명**: 히잡 퍼스널 컬러 AI 진단 서비스 MVP
-- **목표**: AI 퍼스널 컬러 진단을 통한 히잡 색상 추천
-- **타겟**: 18-35세 히잡 착용 여성 (인스타그램 사용자)
-- **핵심 가치**: 개인화된 색상 추천으로 구매 결정 지원
+## 🎯 Project Overview
+- **Project Name**: PCA-HIJAB - AI Personal Color Analysis for Hijab
+- **Goal**: AI-powered personal color diagnosis for hijab color recommendations
+- **Target**: 18-35 year old hijab-wearing women (Instagram users)
+- **Core Value**: Personalized color recommendations to support purchase decisions
+- **Current Version**: 3.0 (January 2025)
+- **Live Demo**: https://pca-hijab.vercel.app
 
 ## 🛠 기술 스택
 ### Frontend
