@@ -1,8 +1,20 @@
 # Database Setup Guide
 
-## Development (Optional)
+## Database Configuration
 
-The backend supports both in-memory storage and PostgreSQL. By default, it uses in-memory storage if `DATABASE_URL` is not set.
+The backend supports two database modes:
+
+1. **In-Memory Storage** (Development only)
+   - Used when `DATABASE_URL` is not set
+   - Data is lost on server restart
+   - Suitable for local development and testing
+
+2. **PostgreSQL** (Required for production)
+   - Used when `DATABASE_URL` is set
+   - Persistent data storage
+   - Required when `NODE_ENV=production`
+
+## Development Setup
 
 ### Using PostgreSQL Locally
 
@@ -38,8 +50,11 @@ The backend supports both in-memory storage and PostgreSQL. By default, it uses 
 
 4. **Initialize Schema**
    ```bash
-   # The schema will be automatically created on first run
+   # The schema will be automatically created on first run (development only)
    npm run dev
+   
+   # Or manually run the schema
+   psql $DATABASE_URL < src/db/schema.sql
    ```
 
 ## Production (Render)
@@ -62,46 +77,60 @@ Render provides managed PostgreSQL databases that automatically set the `DATABAS
    - This automatically adds `DATABASE_URL`
 
 3. **Initialize Production Schema**
-   ```sql
-   -- Connect to database using Render's PSQL command
-   -- Run the contents of src/db/schema.sql
-   ```
+   - Schema is NOT auto-created in production
+   - Use Render's dashboard PSQL tool
+   - Run the contents of `src/db/schema.sql`
+   - Or use the Render CLI:
+     ```bash
+     render db:connect
+     # Then paste the schema.sql contents
+     ```
 
 ### Database Schema
 
 ```sql
 -- Sessions table
-sessions
-├── id (VARCHAR PRIMARY KEY)
-├── instagram_id (VARCHAR)
-└── created_at (TIMESTAMP)
+CREATE TABLE IF NOT EXISTS sessions (
+    id VARCHAR(255) PRIMARY KEY,
+    instagram_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Recommendations table  
-recommendations
-├── id (VARCHAR PRIMARY KEY)
-├── session_id (VARCHAR FK)
-├── instagram_id (VARCHAR)
-├── personal_color_result (JSONB)
-├── user_preferences (JSONB)
-├── status (VARCHAR)
-├── created_at (TIMESTAMP)
-└── updated_at (TIMESTAMP)
+CREATE TABLE IF NOT EXISTS recommendations (
+    id VARCHAR(255) PRIMARY KEY,
+    session_id VARCHAR(255) REFERENCES sessions(id),
+    instagram_id VARCHAR(255) NOT NULL,
+    personal_color_result JSONB NOT NULL,
+    user_preferences JSONB NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for performance
+CREATE INDEX idx_recommendations_status ON recommendations(status);
+CREATE INDEX idx_recommendations_created_at ON recommendations(created_at DESC);
+CREATE INDEX idx_sessions_instagram_id ON sessions(instagram_id);
 ```
 
-## Migrations
+## Schema Updates
 
-For production, use a migration tool like `node-pg-migrate`:
+For production schema changes:
 
-```bash
-# Install migration tool
-npm install --save-dev node-pg-migrate
+1. **Test locally first**
+   ```bash
+   # Test with local PostgreSQL
+   psql $DATABASE_URL < new-schema.sql
+   ```
 
-# Create migration
-npm run migrate create add-recommendations-table
+2. **Apply to production**
+   - Create a backup first
+   - Use Render's maintenance mode
+   - Apply changes via PSQL tool
+   - Verify with test queries
 
-# Run migrations
-npm run migrate up
-```
+3. **Future Enhancement**: Consider adding a migration tool like `node-pg-migrate` for version-controlled schema changes.
 
 ## Backup and Restore
 
@@ -130,9 +159,40 @@ render db:backups:restore <backup-id>
 - **Queries**: Add logging for slow queries
 
 ```typescript
-// Enable query logging in development
-const pool = new Pool({
-  // ... other config
-  log: (msg) => console.log(msg),
-});
+// Query logging is available in development
+// Set NODE_ENV=development to see detailed logs
+
+// Monitor slow queries in production:
+// - Render Dashboard → Database → Metrics
+// - Look for queries > 100ms
+// - Check connection pool usage
 ```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Connection Failed in Production**
+   - Verify `DATABASE_URL` is set correctly
+   - Check database is in same region as web service
+   - Ensure database is not suspended (free tier limitation)
+
+2. **Schema Not Found**
+   - Production does not auto-create schema
+   - Manually run schema.sql via PSQL tool
+   - Check for migration errors in logs
+
+3. **Performance Issues**
+   - Check indexes are created
+   - Monitor connection pool size
+   - Review slow query logs
+   - Consider upgrading from free tier
+
+### Connection Pool Settings
+
+The application uses these default pool settings:
+- `max`: 10 connections
+- `idleTimeoutMillis`: 30000
+- `connectionTimeoutMillis`: 2000
+
+Adjust in `src/db/postgres.ts` if needed based on your plan limits.

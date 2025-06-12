@@ -53,21 +53,36 @@ export class PersonalColorAPI {
     file: File,
     debug = false,
   ): Promise<PersonalColorResult> {
+    console.log('analyzeImage called with:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      USE_MOCK_AI,
+      AI_API_URL,
+      debug,
+      envVars: {
+        VITE_USE_MOCK_AI: import.meta.env.VITE_USE_MOCK_AI,
+        VITE_AI_API_URL: import.meta.env.VITE_AI_API_URL,
+      }
+    });
     
     const formData = new FormData();
     formData.append('file', file);
 
     // Use mock data if AI API is not available
     if (USE_MOCK_AI) {
+      console.log('Using mock AI mode');
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Return random mock result
       const mockResult = MOCK_RESULTS[Math.floor(Math.random() * MOCK_RESULTS.length)];
+      console.log('Returning mock result:', mockResult);
       return mockResult;
     }
 
     try {
+      console.log('Making real API call to:', AI_API_URL);
       // Create separate axios instance for AI API
       const aiApiClient = axios.create({
         baseURL: AI_API_URL,
@@ -84,12 +99,32 @@ export class PersonalColorAPI {
         },
       );
 
+      console.log('API response:', response.data);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.code === 'ECONNREFUSED') {
-        throw new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+      console.error('API call failed:', error);
+      
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          message: error.message,
+          code: error.code,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        
+        if (error.code === 'ECONNREFUSED') {
+          throw new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        }
+        if (error.response?.status === 500) {
+          throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        }
+        if (error.response?.status === 413) {
+          throw new Error('파일 크기가 너무 큽니다. 10MB 이하의 파일을 업로드해주세요.');
+        }
       }
-      throw error;
+      
+      // Re-throw with more context
+      throw new Error(`Image analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

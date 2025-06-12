@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { useAppStore } from '@/store';
 import type { UserPreferences, PersonalColorResult } from '@/types';
 
 export interface RecommendationRequest {
@@ -25,24 +26,47 @@ export class RecommendationAPI {
   ): Promise<RecommendationResponse> {
     try {
       // Get sessionId from store if not provided
-      const sessionId = data.sessionId || (window as unknown as { __APP_STORE__?: { getState: () => { sessionId?: string } } }).__APP_STORE__?.getState()?.sessionId;
+      const sessionId = data.sessionId || useAppStore.getState().sessionId;
+      
+      if (!sessionId) {
+        throw new Error('Session ID not found');
+      }
+      
+      // Transform personalColorResult to match backend expectations
+      const transformedPersonalColorResult = {
+        ...data.personalColorResult,
+        season: data.personalColorResult.personal_color_en,
+        tone: data.personalColorResult.tone_en || 
+              (data.personalColorResult.personal_color_en === 'spring' || 
+               data.personalColorResult.personal_color_en === 'autumn' ? 'warm' : 'cool')
+      };
+      
+      // Log the data being sent
+      const requestData = {
+        sessionId,
+        instagramId: data.instagramId,
+        personalColorResult: transformedPersonalColorResult,
+        userPreferences: data.preferences
+      };
+      
+      console.log('Sending recommendation request:', requestData);
       
       const response = await apiClient.post<RecommendationResponse>(
         '/recommendations',
-        {
-          ...data,
-          sessionId,
-          userPreferences: data.preferences
-        }
+        requestData
       );
       return response.data;
-    } catch {
-      // Return mock success for MVP
-      return {
-        success: true,
-        message: '추천 요청이 성공적으로 전송되었습니다',
-        recommendationId: `rec_${Date.now()}`
-      };
+    } catch (error: any) {
+      console.error('Recommendation submission error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        code: error.code,
+        config: error.config
+      });
+      // Re-throw the error to see what's actually happening
+      throw error;
     }
   }
 

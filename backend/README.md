@@ -77,6 +77,8 @@ All admin endpoints require authentication via API key header:
 X-API-Key: [ADMIN_API_KEY]
 ```
 
+**Important**: The `ADMIN_API_KEY` environment variable must be set in production. The server will fail to start if this is not configured.
+
 #### Admin Statistics
 ```http
 GET /api/admin/statistics
@@ -85,9 +87,14 @@ Returns usage statistics including session counts and recommendation status brea
 
 #### List Recommendations
 ```http
-GET /api/admin/recommendations?page=1&limit=20
+GET /api/admin/recommendations?limit=50&offset=0&status=pending
 ```
 Paginated list of all recommendations with filtering support.
+
+Query parameters:
+- `limit`: Number of results (1-100, default: 50)
+- `offset`: Skip n results (default: 0)
+- `status`: Filter by status (optional: pending/processing/completed)
 
 #### Get Recommendation Detail
 ```http
@@ -97,13 +104,15 @@ Detailed information about a specific recommendation.
 
 #### Update Recommendation Status
 ```http
-PUT /api/admin/recommendations/:id/status
+PATCH /api/admin/recommendations/:id/status
 Content-Type: application/json
 
 {
   "status": "completed"
 }
 ```
+
+Valid status values: `pending`, `processing`, `completed`
 
 ## Environment Variables
 
@@ -132,7 +141,7 @@ npm run build
 npm start
 
 # Testing
-npm test
+npm test  # Note: Test script not yet implemented
 
 # Linting
 npm run lint
@@ -140,24 +149,29 @@ npm run lint
 
 ## Database
 
-The application uses an in-memory database by default with automatic fallback. When `DATABASE_URL` is provided, it connects to PostgreSQL.
+The application supports both in-memory storage (development) and PostgreSQL (production).
+
+- **Development**: Uses in-memory storage by default if `DATABASE_URL` is not set
+- **Production**: Requires PostgreSQL via `DATABASE_URL` environment variable
+
+**Note**: In production mode (`NODE_ENV=production`), the server will fail to start without a valid `DATABASE_URL`.
 
 ### Schema
 
 #### Sessions Table
-- `id` (UUID)
-- `instagramId` (string)
-- `createdAt` (timestamp)
+- `id` (VARCHAR) - Auto-generated session identifier
+- `instagram_id` (VARCHAR) - User's Instagram handle
+- `created_at` (TIMESTAMP) - Creation timestamp
 
 #### Recommendations Table
-- `id` (UUID)
-- `sessionId` (UUID, FK)
-- `instagramId` (string)
-- `preferences` (JSON)
-- `personalColorResult` (JSON)
-- `status` (pending/completed)
-- `createdAt` (timestamp)
-- `updatedAt` (timestamp)
+- `id` (VARCHAR) - Auto-generated recommendation identifier
+- `session_id` (VARCHAR, FK) - Reference to sessions table
+- `instagram_id` (VARCHAR) - User's Instagram handle
+- `user_preferences` (JSONB) - User style preferences
+- `personal_color_result` (JSONB) - AI analysis result
+- `status` (VARCHAR) - pending/processing/completed
+- `created_at` (TIMESTAMP) - Creation timestamp
+- `updated_at` (TIMESTAMP) - Last update timestamp
 
 ## Security
 
@@ -198,9 +212,23 @@ npm run lint:fix
 
 ## Production Deployment
 
-1. Set environment variables
-2. Build the application: `npm run build`
-3. Start the server: `npm start`
+### Render Deployment
+
+The project includes Render configuration (`render.yaml`):
+
+1. Connect GitHub repository to Render
+2. Environment variables are automatically configured:
+   - `NODE_ENV=production`
+   - `PORT=10000`
+   - `ADMIN_API_KEY` (auto-generated)
+   - Set `CLIENT_URL` and `DATABASE_URL` manually
+3. Deployment is automatic on git push
+
+### Manual Deployment
+
+1. Set all required environment variables
+2. Build: `npm run build`
+3. Start: `npm start`
 4. Configure reverse proxy (nginx/Apache)
 5. Set up SSL certificates
 6. Enable monitoring and logging

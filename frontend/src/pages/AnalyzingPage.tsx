@@ -49,9 +49,11 @@ const AnalyzingPage = (): JSX.Element => {
     if (!uploadedFile) return;
 
     try {
+      console.log('Starting analysis for file:', uploadedFile.name);
       // Call AI API
       const result = await analyzeImage(uploadedFile);
       
+      console.log('Analysis successful:', result);
       // Store result
       setAnalysisResult(result);
       
@@ -60,9 +62,16 @@ const AnalyzingPage = (): JSX.Element => {
         navigate(ROUTES.RESULT);
       }, ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000);
     } catch (err) {
+      console.error('Analysis error:', err);
       let errorMessage = 'An error occurred during analysis.';
       
       if (err instanceof Error) {
+        console.error('Error details:', {
+          name: err.name,
+          message: err.message,
+          stack: err.stack
+        });
+        
         // Check for specific error types
         if (err.message.includes('HEIC')) {
           errorMessage = 'HEIC format is not supported. Please use JPG or PNG files.';
@@ -70,9 +79,14 @@ const AnalyzingPage = (): JSX.Element => {
           errorMessage = 'Please check your network connection.';
         } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
           errorMessage = 'Analysis timed out. Please try again.';
+        } else if (err.message.includes('분석 서비스')) {
+          errorMessage = err.message; // Korean error message from API
         } else {
           errorMessage = err.message;
         }
+      } else {
+        console.error('Non-Error object thrown:', err);
+        errorMessage = String(err);
       }
       
       setError(`Error: ${errorMessage}`);

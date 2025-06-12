@@ -6,6 +6,7 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { RecommendationAPI } from '@/services/api';
 import type { UserPreferences } from '@/types';
+import DebugInfo from '@/components/debug/DebugInfo';
 
 const RecommendationPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -133,9 +134,22 @@ const RecommendationPage = (): JSX.Element => {
         // Handle error case
         alert('Failed to submit request. Please try again.');
       }
-    } catch {
+    } catch (error: any) {
       // Handle network error
-      alert('Network error. Please check your connection and try again.');
+      console.error('Submission error:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error properties:', Object.keys(error));
+      
+      let errorMessage = 'Network error';
+      if (error.error) {
+        errorMessage = error.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      alert(`Error: ${errorMessage}. Please check your connection and try again.`);
     }
   };
 
@@ -277,6 +291,7 @@ const RecommendationPage = (): JSX.Element => {
           )}
         </div>
       </div>
+      <DebugInfo />
     </PageLayout>
   );
 };

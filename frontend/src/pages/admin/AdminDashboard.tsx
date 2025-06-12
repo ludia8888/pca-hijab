@@ -130,14 +130,14 @@ const AdminDashboard = (): JSX.Element => {
       <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
           <Button
             variant="ghost"
             onClick={handleLogout}
             className="flex items-center gap-2"
           >
             <LogOut className="w-4 h-4" />
-            Logout
+            로그아웃
           </Button>
         </div>
 
@@ -147,7 +147,7 @@ const AdminDashboard = (): JSX.Element => {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Requests</p>
+                  <p className="text-sm text-gray-600">전체 요청</p>
                   <p className="text-2xl font-bold">{statistics.total}</p>
                 </div>
                 <Users className="w-8 h-8 text-gray-400" />
@@ -157,7 +157,7 @@ const AdminDashboard = (): JSX.Element => {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Pending</p>
+                  <p className="text-sm text-gray-600">대기 중</p>
                   <p className="text-2xl font-bold text-yellow-600">
                     {statistics.byStatus.pending}
                   </p>
@@ -169,7 +169,7 @@ const AdminDashboard = (): JSX.Element => {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Processing</p>
+                  <p className="text-sm text-gray-600">처리 중</p>
                   <p className="text-2xl font-bold text-blue-600">
                     {statistics.byStatus.processing}
                   </p>
@@ -181,7 +181,7 @@ const AdminDashboard = (): JSX.Element => {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Completed</p>
+                  <p className="text-sm text-gray-600">완료</p>
                   <p className="text-2xl font-bold text-green-600">
                     {statistics.byStatus.completed}
                   </p>
@@ -197,7 +197,7 @@ const AdminDashboard = (): JSX.Element => {
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Palette className="w-5 h-5" />
-              Personal Color Distribution
+              퍼스널 컬러 분포
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {Object.entries(statistics.byPersonalColor).map(([color, count]) => (
@@ -221,7 +221,7 @@ const AdminDashboard = (): JSX.Element => {
               size="sm"
               onClick={() => setStatusFilter(status)}
             >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === 'all' ? '전체' : status === 'pending' ? '대기 중' : status === 'processing' ? '처리 중' : '완료'}
             </Button>
           ))}
         </div>
@@ -233,22 +233,22 @@ const AdminDashboard = (): JSX.Element => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Instagram ID
+                    인스타그램 ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Personal Color
+                    퍼스널 컬러
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preferences
+                    선호 사항
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    상태
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
+                    생성일
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    작업
                   </th>
                 </tr>
               </thead>
@@ -267,14 +267,14 @@ const AdminDashboard = (): JSX.Element => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        <p>Style: {rec.userPreferences.style.join(', ')}</p>
-                        <p className="text-gray-500">Price: {rec.userPreferences.priceRange}</p>
+                        <p>스타일: {rec.userPreferences.style?.join(', ') || rec.userPreferences.fitStyle?.join(', ') || '-'}</p>
+                        <p className="text-gray-500">가격대: {rec.userPreferences.priceRange || '-'}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(rec.status)}`}>
                         {getStatusIcon(rec.status)}
-                        {rec.status}
+                        {rec.status === 'pending' ? '대기 중' : rec.status === 'processing' ? '처리 중' : '완료'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -287,7 +287,7 @@ const AdminDashboard = (): JSX.Element => {
                         onClick={() => navigate(`/admin/recommendations/${rec.id}`)}
                         className="flex items-center gap-1"
                       >
-                        View
+                        보기
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     </td>

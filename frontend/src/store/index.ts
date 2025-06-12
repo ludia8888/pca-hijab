@@ -26,6 +26,7 @@ interface AppActions {
   setUploadedImage: (imageUrl: string, file: File) => void;
   setAnalysisResult: (result: PersonalColorResult) => void;
   setRecommendationPreferences: (preferences: UserPreferences) => void;
+  setUserPreferences: (preferences: UserPreferences) => void; // Alias for setRecommendationPreferences
   setCurrentStep: (step: number) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -72,6 +73,12 @@ export const useAppStore = create<AppState & AppActions>()(
           })),
 
         setRecommendationPreferences: (preferences) =>
+          set((state) => ({
+            ...state,
+            recommendationPreferences: preferences,
+          })),
+
+        setUserPreferences: (preferences) =>
           set((state) => ({
             ...state,
             recommendationPreferences: preferences,

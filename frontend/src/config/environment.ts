@@ -5,7 +5,7 @@ export const env = {
   
   // API URLs
   aiApiUrl: import.meta.env.VITE_AI_API_URL || 'http://localhost:8000',
-  backendApiUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  backendApiUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api',
   
   // Features
   enableDebug: import.meta.env.VITE_ENABLE_DEBUG === 'true',

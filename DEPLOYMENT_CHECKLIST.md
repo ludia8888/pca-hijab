@@ -49,7 +49,7 @@ Add these in Render dashboard:
 NODE_ENV=production
 PORT=10000
 CLIENT_URL=https://your-frontend.vercel.app
-DATABASE_URL=postgresql://...
+DATABASE_URL=postgresql://... (optional - uses in-memory if not set)
 ADMIN_API_KEY=<generate-secure-key>
 ```
 
@@ -57,6 +57,7 @@ ADMIN_API_KEY=<generate-secure-key>
 - Build Command: `npm install && npm run build`
 - Start Command: `npm start`
 - Runtime: Node
+- Auto-Deploy: Enable for main branch
 
 ## Database Setup (PostgreSQL)
 
@@ -111,7 +112,7 @@ CODECOV_TOKEN=<for-coverage-reports>
 
 ### 3. Admin Panel Setup
 1. Access `/admin/login`
-2. Use API key from environment
+2. Use API key from environment (passed as X-API-Key header)
 3. Verify dashboard loads
 4. Test recommendation status updates
 
@@ -119,6 +120,7 @@ CODECOV_TOKEN=<for-coverage-reports>
 Ensure backend allows frontend domain:
 - Update `CLIENT_URL` in backend environment
 - Verify no CORS errors in browser console
+- Backend uses Helmet.js for security headers
 
 ## Monitoring & Maintenance
 
@@ -159,8 +161,9 @@ Ensure backend allows frontend domain:
 
 4. **Admin Login Failed**
    - Verify `ADMIN_API_KEY` matches
-   - Check API key header format
+   - Check X-API-Key header is being sent
    - Verify backend logs
+   - Ensure header value matches environment variable exactly
 
 ## Rollback Procedure
 
@@ -210,3 +213,25 @@ Ensure backend allows frontend domain:
 - AI API Issues: Check deployment logs
 
 Remember to update this checklist as the deployment evolves!
+
+## Quick Deployment Commands
+
+### Deploy AI API to Heroku
+```bash
+cd ShowMeTheColor
+heroku create pca-hijab-ai
+heroku buildpacks:set heroku/python
+git push heroku main
+```
+
+### Test Endpoints
+```bash
+# Test Backend Health
+curl https://pca-hijab-backend.onrender.com/api/health
+
+# Test AI API
+curl http://localhost:8000/health
+
+# Test Admin Auth
+curl -H "X-API-Key: your-api-key" https://pca-hijab-backend.onrender.com/api/admin/statistics
+```

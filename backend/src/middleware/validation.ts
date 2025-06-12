@@ -33,14 +33,17 @@ export const validateRecommendationData = (
   }
   
   // Validate personal color result structure
-  if (!personalColorResult.personal_color_en || !personalColorResult.tone_en) {
-    return next(new AppError(400, 'Invalid personal color result data'));
+  // Accept both old format (season/tone) and new format (personal_color_en/tone_en)
+  const hasOldFormat = personalColorResult.season && personalColorResult.tone;
+  const hasNewFormat = personalColorResult.personal_color_en && 
+                      (personalColorResult.tone_en || personalColorResult.tone);
+  
+  if (!hasOldFormat && !hasNewFormat) {
+    return next(new AppError(400, 'Invalid personal color result data - missing season/tone information'));
   }
   
-  // Validate user preferences structure
-  if (!userPreferences.style || !Array.isArray(userPreferences.style)) {
-    return next(new AppError(400, 'Invalid user preferences: style must be an array'));
-  }
+  // Validate user preferences structure - no specific validation needed
+  // as the structure is flexible based on form inputs
   
   next();
 };

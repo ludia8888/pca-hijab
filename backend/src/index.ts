@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
 import { adminRouter } from './routes/admin';
+import { debugRouter } from './routes/debug';
 import { errorHandler } from './middleware/errorHandler';
 import { db } from './db';
 
@@ -24,9 +25,16 @@ if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
 // Middleware
 app.use(helmet());
 app.use(compression());
+// Parse CLIENT_URL for multiple origins
+const allowedOrigins = process.env.CLIENT_URL 
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  : ['http://localhost:3000', 'http://localhost:5173'];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -60,6 +68,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 app.use('/api/sessions', sessionRouter);
 app.use('/api/recommendations', recommendationRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/debug', debugRouter);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

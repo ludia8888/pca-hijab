@@ -35,14 +35,14 @@ A mobile-optimized web service that uses AI to diagnose personal color types and
 - **Performance**: Code splitting, lazy loading, Vercel Speed Insights
 
 #### Backend
-- **Main API**: Express.js + TypeScript (Port 5001)
+- **Main API**: Express.js + TypeScript (Port 5000)
 - **AI API**: Python FastAPI (ShowMeTheColor - Port 8000)
 - **Face Detection**: dlib with 68-point landmarks
 - **Color Analysis**: K-means clustering, Lab/HSV color spaces
-- **Database**: In-memory storage (PostgreSQL ready)
-- **Admin Panel**: Secure admin dashboard with API key authentication
+- **Database**: Dual support - PostgreSQL (production) / In-memory (development)
+- **Admin Panel**: Secure admin dashboard with X-API-Key header authentication
 - **Deployment**: Render (Backend), Vercel (Frontend)
-- **Security**: CORS, rate limiting, input validation, API key auth
+- **Security**: CORS, Helmet.js, input validation, API key auth
 
 ## 🚀 Getting Started
 
@@ -65,7 +65,7 @@ npm install
 # Terminal 1: Frontend (http://localhost:5173)
 cd frontend && npm run dev
 
-# Terminal 2: Backend API (http://localhost:5001)
+# Terminal 2: Backend API (http://localhost:5000)
 cd backend && npm run dev
 
 # Terminal 3: AI API (http://localhost:8000)
@@ -123,9 +123,13 @@ npm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env file
+# Edit .env file with:
+# PORT=5000
+# NODE_ENV=development
+# CLIENT_URL=http://localhost:5173
+# ADMIN_API_KEY=your-dev-api-key
 
-# Run development server (http://localhost:5001)
+# Run development server (http://localhost:5000)
 npm run dev
 
 # Production build
@@ -267,27 +271,27 @@ pca-hijab/
 ```env
 # API Configuration
 VITE_AI_API_URL=http://localhost:8000
-VITE_API_BASE_URL=http://localhost:5001/api
+VITE_API_BASE_URL=http://localhost:5000/api
 
 # For production:
-# VITE_AI_API_URL=http://localhost:8000
+# VITE_AI_API_URL=https://pca-hijab-ai.herokuapp.com
 # VITE_API_BASE_URL=https://pca-hijab-backend.onrender.com/api
 ```
 
 ### Backend (.env)
 ```env
 # Server Configuration
-PORT=5001
+PORT=5000
 NODE_ENV=development
 
-# Database Configuration (optional)
+# Database Configuration (optional - uses in-memory if not set)
 DATABASE_URL=postgresql://user:password@localhost:5432/pca_hijab
 
 # CORS
 CLIENT_URL=http://localhost:5173
 
 # Security
-JWT_SECRET=your-jwt-secret-key
+ADMIN_API_KEY=your-secure-admin-api-key
 ```
 
 For ShowMeTheColor API environment variables, refer to `ShowMeTheColor/README.md`.
@@ -329,34 +333,44 @@ Response: {
 
 ### Backend API Endpoints
 ```typescript
+// Health Check
+GET /api/health
+Response: { status: string, service: string, timestamp: string, database: string }
+
 // Session Management
 POST /api/sessions
 Body: { instagramId: string }
-Response: { id: string, instagramId: string, createdAt: string }
+Response: { success: boolean, data: { id: string, instagramId: string, createdAt: string } }
 
 // Recommendation System
 POST /api/recommendations
 Body: {
+  sessionId: string,
   instagramId: string,
   personalColorResult: AnalysisResult,
   preferences: {
-    style: string[],
+    styles: string[],
+    fabricTypes: string[],
     priceRange: string,
-    material: string[],
-    occasion: string[],
-    additionalNotes?: string
+    occasions: string[]
   }
 }
-Response: { success: boolean, message: string, recommendationId: string }
+Response: { success: boolean, data: { id: string, status: string, createdAt: string } }
 
-// Get Recommendation Status
-GET /api/recommendations/:id/status
-Response: { status: "pending" | "processing" | "completed", updatedAt: string }
+// Get Recommendation
+GET /api/recommendations/:id
+Response: { success: boolean, data: Recommendation }
+
+// Admin Endpoints (requires X-API-Key header)
+GET /api/admin/statistics
+GET /api/admin/recommendations
+GET /api/admin/recommendations/:id
+PATCH /api/admin/recommendations/:id/status
 ```
 
 ## 🎨 Recent Updates
 
-### Version 3.0 (January 2025)
+### Version 3.0 (December 2024)
 - ✅ Complete UI translation to English
 - ✅ Mobile-optimized result card redesign with Korean aesthetics
 - ✅ 50% faster AI analysis performance
@@ -364,6 +378,9 @@ Response: { status: "pending" | "processing" | "completed", updatedAt: string }
 - ✅ Autumn/Fall terminology unification
 - ✅ Vercel Speed Insights integration
 - ✅ Improved error handling and user feedback
+- ✅ Admin dashboard implementation
+- ✅ PostgreSQL database support with in-memory fallback
+- ✅ CI/CD pipeline configuration
 
 ### Version 2.0 Features
 - ✅ HEIC to JPEG conversion for iOS

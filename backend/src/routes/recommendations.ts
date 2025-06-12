@@ -30,10 +30,7 @@ router.post('/', validateRecommendationData, async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Recommendation request submitted successfully',
-      data: {
-        recommendationId: recommendation.id,
-        status: recommendation.status
-      }
+      recommendationId: recommendation.id
     });
   } catch (error) {
     next(error);
@@ -113,5 +110,30 @@ router.patch('/:recommendationId/status', async (req, res, next) => {
     next(error);
   }
 });
+
+// GET /api/recommendations/debug - Debug endpoint (development only)
+if (process.env.NODE_ENV === 'development') {
+  router.get('/debug', async (_req, res, next) => {
+    try {
+      const recommendations = await db.getAllRecommendations();
+      
+      res.json({
+        success: true,
+        count: recommendations.length,
+        recommendations: recommendations.map(rec => ({
+          id: rec.id,
+          sessionId: rec.sessionId,
+          instagramId: rec.instagramId,
+          status: rec.status,
+          personalColor: rec.personalColorResult.personal_color_en || 'N/A',
+          createdAt: rec.createdAt,
+          preferences: rec.userPreferences
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+}
 
 export const recommendationRouter = router;

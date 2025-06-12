@@ -67,6 +67,17 @@ class InMemoryDatabase {
     const recs = await this.getAllRecommendations();
     return recs.filter(rec => rec.status === status);
   }
+  
+  // Debug methods (for development only)
+  async getAllSessions(): Promise<Session[]> {
+    return Array.from(this.sessions.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async clearAllData(): Promise<void> {
+    this.sessions.clear();
+    this.recommendations.clear();
+  }
 }
 
 // Database interface to ensure consistency
@@ -79,6 +90,9 @@ interface Database {
   getAllRecommendations(): Promise<Recommendation[]>;
   getRecommendationsByStatus(status: Recommendation['status']): Promise<Recommendation[]>;
   testConnection?(): Promise<boolean>;
+  // Debug methods
+  getAllSessions?(): Promise<Session[]>;
+  clearAllData?(): Promise<void>;
 }
 
 // Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory

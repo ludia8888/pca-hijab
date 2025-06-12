@@ -152,6 +152,9 @@ async def analyze_personal_color(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        error_details = f"Analysis failed: {str(e)}\nTraceback: {traceback.format_exc()}"
+        print(error_details)  # Log to console
         raise HTTPException(
             status_code=500,
             detail=f"Analysis failed: {str(e)}"

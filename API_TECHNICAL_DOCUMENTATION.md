@@ -3,40 +3,46 @@
 ## Table of Contents
 1. [Overview](#overview)
 2. [Architecture](#architecture)
-3. [API Specification](#api-specification)
-4. [Frontend-Backend Communication](#frontend-backend-communication)
-5. [Core Algorithm](#core-algorithm)
-6. [Data Models](#data-models)
-7. [Installation & Setup](#installation--setup)
-8. [Deployment Guide](#deployment-guide)
-9. [Frontend Integration](#frontend-integration)
-10. [Performance Optimization](#performance-optimization)
-11. [Security Considerations](#security-considerations)
-12. [Testing](#testing)
-13. [Monitoring & Logging](#monitoring--logging)
-14. [Troubleshooting](#troubleshooting)
+3. [AI API Specification](#ai-api-specification)
+4. [Backend API Specification](#backend-api-specification)
+5. [Frontend-Backend Communication](#frontend-backend-communication)
+6. [Core Algorithm](#core-algorithm)
+7. [Data Models](#data-models)
+8. [Installation & Setup](#installation--setup)
+9. [Deployment Guide](#deployment-guide)
+10. [Frontend Integration](#frontend-integration)
+11. [Performance Optimization](#performance-optimization)
+12. [Security Considerations](#security-considerations)
+13. [Testing](#testing)
+14. [Monitoring & Logging](#monitoring--logging)
+15. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
 ### Project Description
-Personal Color Analysis API is an AI-based REST API service that analyzes user facial images to diagnose personal color types (Spring/Summer/Autumn/Winter).
+Personal Color Analysis API is an AI-based system that analyzes user facial images to diagnose personal color types (Spring/Summer/Autumn/Winter) and provides hijab color recommendations.
 
-### Key Features
-- Face recognition and feature extraction (dlib-based)
-- Skin, eyebrow, and iris color analysis
-- Scientific classification based on Lab/HSV color spaces
-- Warm/Cool tone and seasonal type diagnosis
-- RESTful API 인터페이스
+### System Components
+1. **AI API (ShowMeTheColor)**: Core personal color analysis engine
+2. **Backend API**: Session management, recommendations, and admin functions
+3. **Frontend**: User interface for analysis and results
 
 ### Technology Stack
+#### AI API
 - **Language**: Python 3.9+
 - **Framework**: FastAPI
 - **Face Detection**: dlib, OpenCV
 - **ML/Scientific**: scikit-learn, scipy, numpy
 - **Color Processing**: colormath
 - **Server**: Uvicorn (ASGI)
+
+#### Backend API
+- **Language**: TypeScript
+- **Framework**: Express.js 5.1.0
+- **Database**: PostgreSQL (production) / In-memory (development)
+- **Security**: Helmet, CORS, API key authentication
 
 ---
 
@@ -45,44 +51,27 @@ Personal Color Analysis API is an AI-based REST API service that analyzes user f
 ### System Architecture Diagram
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Client App    │────▶│   FastAPI Server │────▶│  Core Analysis  │
-│  (Web/Mobile)   │◀────│   (api.py)       │◀────│    Engine       │
+│   Frontend      │────▶│   Backend API    │────▶│     Database    │
+│  (React/Vite)   │     │   (Express.js)   │     │  (PostgreSQL)   │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
-                               │                          │
-                               ▼                          ▼
-                        ┌──────────────┐          ┌──────────────┐
-                        │   CORS       │          │ Face Detection│
-                        │ Middleware   │          │   (dlib)     │
-                        └──────────────┘          └──────────────┘
-                                                          │
-                                                          ▼
-                                                  ┌──────────────┐
-                                                  │Color Analysis│
-                                                  │  (K-means)   │
-                                                  └──────────────┘
+         │                       │
+         │                       │
+         └───────────┬───────────┘
+                     ▼
+              ┌──────────────────┐
+              │     AI API       │
+              │   (FastAPI)      │
+              └──────────────────┘
 ```
 
-### Component Structure
-```
-ShowMeTheColor/
-├── src/
-│   ├── api.py                          # FastAPI application
-│   ├── personal_color_analysis/
-│   │   ├── detect_face.py              # Face detection module
-│   │   ├── color_extract.py            # Color extraction module
-│   │   ├── tone_analysis.py            # Tone classification
-│   │   └── personal_color.py           # Main analysis logic
-│   ├── test_api.py                     # API test script
-│   └── web_test.html                   # Web test interface
-├── res/
-│   └── shape_predictor_68_face_landmarks.dat  # dlib model
-├── requirements.txt                     # Dependencies
-└── README_API.md                       # API documentation
-```
+### Service Ports
+- Frontend: 5173 (development)
+- Backend API: 5000
+- AI API: 8000
 
 ---
 
-## API Specification
+## AI API Specification
 
 ### Base URL
 ```
@@ -96,11 +85,11 @@ http://localhost:8000
 GET /health
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "status": "healthy",
-  "service": "Personal Color Analysis API"
+  "timestamp": "2024-06-06T12:00:00Z"
 }
 ```
 
@@ -109,14 +98,12 @@ GET /health
 GET /
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
-  "message": "Personal Color Analysis API",
-  "endpoints": {
-    "/analyze": "POST - 이미지를 업로드하여 퍼스널 컬러 분석",
-    "/health": "GET - API 상태 확인"
-  }
+  "name": "Personal Color Analysis API",
+  "version": "1.0.0",
+  "description": "AI-based personal color analysis service"
 }
 ```
 
@@ -128,46 +115,35 @@ POST /analyze
 **Request:**
 - Method: `POST`
 - Content-Type: `multipart/form-data`
-- Body: `file` (image file)
-- Query Parameters: 
-  - `debug` (boolean, optional): Include debug information
+- Body: `file` (image file, JPEG/PNG/JPG)
 
 **Response (200 OK):**
 ```json
 {
   "personal_color": "가을 웜톤",
-  "personal_color_en": "fall",
+  "personal_color_en": "autumn",
   "tone": "웜톤",
   "tone_en": "warm",
   "details": {
-    "is_warm": 1.0,
-    "skin_lab_b": 20.48,
-    "eyebrow_lab_b": 22.31,
-    "eye_lab_b": 11.49,
-    "skin_hsv_s": 33.0,
-    "eyebrow_hsv_s": 57.0,
-    "eye_hsv_s": 29.0
+    "best_colors": ["브릭레드", "머스타드", "카키"],
+    "worst_colors": ["쿨핑크", "라벤더", "아이시블루"]
   },
   "facial_colors": {
-    "cheek": {
-      "rgb": [203, 164, 135],
-      "lab": [70.17, 10.23, 20.48],
-      "hsv": [25.59, 33.0, 79.61]
+    "skin": {
+      "lab": [75.23, 12.45, 18.67],
+      "hsv": [25.3, 0.28, 0.82],
+      "hex": "#E8C5A0"
     },
     "eyebrow": {
-      "rgb": [166, 82, 71],
-      "lab": [45.16, 33.77, 22.31],
-      "hsv": [6.63, 57.0, 65.29]
+      "lab": [42.15, 8.23, 15.45],
+      "hsv": [35.2, 0.52, 0.48],
+      "hex": "#7A5D3F"
     },
     "eye": {
-      "rgb": [120, 100, 85],
-      "lab": [44.09, 5.53, 11.49],
-      "hsv": [25.71, 29.0, 47.25]
+      "lab": [35.67, 6.12, 10.34],
+      "hsv": [38.5, 0.45, 0.38],
+      "hex": "#614A35"
     }
-  },
-  "debug_info": {
-    "Lab_b": [20.48, 22.31, 11.49],
-    "hsv_s": [33.0, 57.0, 29.0]
   }
 }
 ```
@@ -188,55 +164,239 @@ POST /analyze
 }
 ```
 
-#### 4. Hijab Recommendation (Backend API Integration)
+---
+
+## Backend API Specification
+
+### Base URL
+```
+http://localhost:5000/api
+```
+
+### Authentication
+Admin endpoints require API key authentication:
+```
+X-API-Key: [ADMIN_API_KEY]
+```
+
+### Public Endpoints
+
+#### 1. Health Check
 ```http
-POST /api/recommendations
+GET /api/health
+```
+
+**Response (200 OK):**
+```json
+{
+  "status": "ok",
+  "service": "pca-hijab-backend",
+  "timestamp": "2024-06-06T12:00:00Z",
+  "database": "connected"
+}
+```
+
+#### 2. Create Session
+```http
+POST /api/sessions
 ```
 
 **Request:**
-- Method: `POST`
-- Content-Type: `application/json`
-
 ```json
 {
-  "instagramId": "user_instagram",
-  "personalColorResult": {
-    "personal_color": "가을 웜톤",
-    "personal_color_en": "autumn",
-    "tone": "웜톤",
-    "tone_en": "warm",
-    "details": { ... },
-    "facial_colors": { ... }
-  },
-  "preferences": {
-    "style": ["simple", "pattern"],
-    "priceRange": "30-50",
-    "material": ["cotton", "chiffon"],
-    "occasion": ["daily", "work"],
-    "additionalNotes": "얼굴이 작아 보이는 스타일 선호"
+  "instagramId": "@username"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "session_1234567890_abc",
+    "instagramId": "@username",
+    "createdAt": "2024-06-06T12:00:00Z"
   }
 }
+```
+
+#### 3. Get Session
+```http
+GET /api/sessions/:sessionId
 ```
 
 **Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "추천 요청이 성공적으로 전송되었습니다",
-  "recommendationId": "rec_1234567890"
+  "data": {
+    "id": "session_1234567890_abc",
+    "instagramId": "@username",
+    "createdAt": "2024-06-06T12:00:00Z"
+  }
 }
 ```
 
-#### 5. Recommendation Status Check
+#### 4. Create Recommendation
 ```http
-GET /api/recommendations/{recommendationId}/status
+POST /api/recommendations
 ```
 
-**Response:**
+**Request:**
 ```json
 {
-  "status": "pending",
-  "updatedAt": "2024-06-06T12:00:00Z"
+  "sessionId": "session_1234567890_abc",
+  "instagramId": "@username",
+  "preferences": {
+    "styles": ["modern", "elegant"],
+    "fabricTypes": ["cotton", "silk"],
+    "priceRange": "medium",
+    "occasions": ["daily", "formal"]
+  },
+  "personalColorResult": {
+    "personal_color_en": "Spring",
+    "tone": "Warm",
+    "details": {...}
+  }
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rec_1234567890_xyz",
+    "sessionId": "session_1234567890_abc",
+    "instagramId": "@username",
+    "status": "pending",
+    "createdAt": "2024-06-06T12:00:00Z"
+  }
+}
+```
+
+#### 5. Get Recommendation
+```http
+GET /api/recommendations/:recommendationId
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rec_1234567890_xyz",
+    "sessionId": "session_1234567890_abc",
+    "instagramId": "@username",
+    "personalColorResult": {...},
+    "preferences": {...},
+    "status": "pending",
+    "createdAt": "2024-06-06T12:00:00Z",
+    "updatedAt": "2024-06-06T12:00:00Z"
+  }
+}
+```
+
+### Admin Endpoints
+
+All admin endpoints require `X-API-Key` header authentication.
+
+#### 1. Get Statistics
+```http
+GET /api/admin/statistics
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 150,
+    "byStatus": {
+      "pending": 45,
+      "processing": 30,
+      "completed": 75
+    },
+    "byPersonalColor": {
+      "Spring": 40,
+      "Summer": 35,
+      "Autumn": 45,
+      "Winter": 30
+    },
+    "recentRequests": [...]
+  }
+}
+```
+
+#### 2. List Recommendations
+```http
+GET /api/admin/recommendations?limit=50&offset=0&status=pending
+```
+
+**Query Parameters:**
+- `limit`: Number of results (1-100, default: 50)
+- `offset`: Skip n results (default: 0)
+- `status`: Filter by status (optional: pending/processing/completed)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "recommendations": [...],
+    "total": 150,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+#### 3. Get Recommendation Detail
+```http
+GET /api/admin/recommendations/:id
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rec_1234567890_xyz",
+    "sessionId": "session_1234567890_abc",
+    "instagramId": "@username",
+    "personalColorResult": {...},
+    "preferences": {...},
+    "status": "pending",
+    "createdAt": "2024-06-06T12:00:00Z",
+    "updatedAt": "2024-06-06T12:00:00Z"
+  }
+}
+```
+
+#### 4. Update Recommendation Status
+```http
+PATCH /api/admin/recommendations/:id/status
+```
+
+**Request:**
+```json
+{
+  "status": "completed"
+}
+```
+
+**Valid status values:** `pending`, `processing`, `completed`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Status updated successfully",
+  "data": {
+    "id": "rec_1234567890_xyz",
+    "status": "completed",
+    "updatedAt": "2024-06-06T12:00:00Z"
+  }
 }
 ```
 
@@ -247,15 +407,15 @@ GET /api/recommendations/{recommendationId}/status
 ### Architecture Overview
 
 #### Frontend (React + TypeScript)
-- **Base URL**: Vite proxy를 통한 `/api` 경로
-- **실제 Backend URL**: `http://localhost:8000`
-- **통신 방식**: Axios 기반 REST API
+- **Development Proxy**: Vite proxy configuration
+- **Production**: Direct API calls with CORS
 - **State Management**: Zustand + React Query
+- **HTTP Client**: Axios
 
-#### Backend Integration
-- **Backend API (새 API)**: Express.js (포트 3001)
-- **AI API (ShowMeTheColor)**: FastAPI (포트 8000)
-- **CORS**: 개발 환경에서 모든 origin 허용
+#### API Integration
+- **Backend API**: Express.js (port 5001)
+- **AI API**: FastAPI (port 8000)
+- **CORS**: Configured for specific origins
 
 ### API Client Configuration
 
@@ -263,7 +423,8 @@ GET /api/recommendations/{recommendationId}/status
 // services/api/client.ts
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const AI_API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:8000';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -273,862 +434,336 @@ export const apiClient = axios.create({
   },
 });
 
-// Request interceptor
+export const aiApiClient = axios.create({
+  baseURL: AI_API_URL,
+  timeout: 60000, // Longer timeout for AI processing
+});
+
+// Request interceptor for admin authentication
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const adminKey = localStorage.getItem('adminApiKey');
+    if (adminKey && config.url?.includes('/admin')) {
+      config.headers['X-API-Key'] = adminKey;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized
-      window.location.href = '/login';
+      // Handle unauthorized access
+      localStorage.removeItem('adminApiKey');
+      window.location.href = '/admin/login';
     }
     return Promise.reject(error);
   }
 );
 ```
 
-### Service Layer Structure
+### Service Layer Example
 
 ```typescript
 // services/api/personalColor.ts
-import { apiClient } from './client';
-import type { PersonalColorResult } from '@/types';
-
 export class PersonalColorAPI {
-  async analyzeImage(file: File, debug = false): Promise<PersonalColorResult> {
+  // AI Analysis
+  async analyzeImage(file: File): Promise<PersonalColorResult> {
     const formData = new FormData();
     formData.append('file', file);
-
-    const response = await apiClient.post<PersonalColorResult>(
-      `/analyze${debug ? '?debug=true' : ''}`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-
-    return response.data;
-  }
-
-  async healthCheck() {
-    const response = await apiClient.get<{ status: string; service: string }>('/health');
-    return response.data;
-  }
-}
-
-// services/api/recommendation.ts
-import { apiClient } from './client';
-import type { RecommendationRequest, RecommendationResponse } from '@/types';
-
-export class RecommendationAPI {
-  async submitRecommendation(data: RecommendationRequest): Promise<RecommendationResponse> {
-    try {
-      const response = await apiClient.post<RecommendationResponse>(
-        '/recommendations',
-        data
-      );
-      return response.data;
-    } catch (error) {
-      // Fallback to mock response in development
-      if (import.meta.env.DEV) {
-        return {
-          success: true,
-          message: '추천 요청이 성공적으로 전송되었습니다',
-          recommendationId: `rec_${Date.now()}`,
-        };
-      }
-      throw error;
-    }
-  }
-
-  async getRecommendationStatus(recommendationId: string) {
-    const response = await apiClient.get(
-      `/recommendations/${recommendationId}/status`
-    );
-    return response.data;
-  }
-}
-```
-
-### Error Handling Strategy
-
-```typescript
-// utils/errorHandler.ts
-export class APIError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-    public details?: any
-  ) {
-    super(message);
-    this.name = 'APIError';
-  }
-}
-
-export function handleAPIError(error: any): never {
-  if (error.response) {
-    // Server responded with error
-    throw new APIError(
-      error.response.status,
-      error.response.data.code || 'UNKNOWN_ERROR',
-      error.response.data.detail || error.response.data.message || 'An error occurred',
-      error.response.data
-    );
-  } else if (error.request) {
-    // Network error
-    throw new APIError(
-      0,
-      'NETWORK_ERROR',
-      'Network connection failed. Please check your internet connection.',
-      { originalError: error }
-    );
-  } else {
-    // Other errors
-    throw new APIError(
-      0,
-      'CLIENT_ERROR',
-      error.message || 'An unexpected error occurred',
-      { originalError: error }
-    );
-  }
-}
-```
-
-### React Query Integration
-
-```typescript
-// hooks/usePersonalColor.ts
-import { useMutation } from '@tanstack/react-query';
-import { personalColorAPI } from '@/services/api';
-import { queryClient } from '@/hooks/queryClient';
-
-export function useAnalyzeImage() {
-  return useMutation({
-    mutationFn: (file: File) => personalColorAPI.analyzeImage(file),
-    onSuccess: (data) => {
-      // Cache the result
-      queryClient.setQueryData(['personalColor', 'latest'], data);
-    },
-    onError: (error) => {
-      console.error('Analysis failed:', error);
-    },
-  });
-}
-
-// hooks/useRecommendation.ts
-export function useSubmitRecommendation() {
-  return useMutation({
-    mutationFn: (data: RecommendationRequest) => 
-      recommendationAPI.submitRecommendation(data),
-    onSuccess: (data) => {
-      // Store recommendation ID
-      localStorage.setItem('latestRecommendationId', data.recommendationId);
-    },
-  });
-}
-```
-
-### Development Proxy Configuration
-
-```javascript
-// vite.config.ts
-export default defineConfig({
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
-    },
-  },
-});
-```
-
-### Mock Data for Development
-
-```typescript
-// mocks/handlers.ts
-import { rest } from 'msw';
-
-export const handlers = [
-  rest.post('/api/analyze', (req, res, ctx) => {
-    return res(
-      ctx.delay(1000),
-      ctx.json({
-        personal_color: '가을 웜톤',
-        personal_color_en: 'autumn',
-        tone: '웜톤',
-        tone_en: 'warm',
-        details: {
-          is_warm: 1,
-          skin_lab_b: 15.2,
-          eyebrow_lab_b: 12.5,
-          eye_lab_b: 8.3,
-          skin_hsv_s: 30,
-          eyebrow_hsv_s: 40,
-          eye_hsv_s: 25,
-        },
-        facial_colors: {
-          cheek: {
-            rgb: [255, 200, 180],
-            lab: [80, 15, 20],
-            hsv: [15, 30, 100],
-          },
-          eyebrow: {
-            rgb: [120, 80, 60],
-            lab: [40, 10, 15],
-            hsv: [20, 50, 47],
-          },
-          eye: {
-            rgb: [80, 60, 50],
-            lab: [30, 5, 10],
-            hsv: [20, 37, 31],
-          },
-        },
-        confidence: 0.85,
-      })
-    );
-  }),
-
-  rest.post('/api/recommendations', (req, res, ctx) => {
-    return res(
-      ctx.json({
-        success: true,
-        message: '추천 요청이 성공적으로 전송되었습니다',
-        recommendationId: `rec_${Date.now()}`,
-      })
-    );
-  }),
-];
-```
-
-### Image Processing and File Upload
-
-```typescript
-// utils/imageProcessor.ts
-export async function processImageForUpload(file: File): Promise<File> {
-  // Check file size
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-  if (file.size > MAX_SIZE) {
-    // Compress image
-    return await compressImage(file, 0.8);
-  }
-  return file;
-}
-
-export async function compressImage(file: File, quality: number): Promise<File> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!;
-        
-        // Calculate new dimensions
-        let width = img.width;
-        let height = img.height;
-        const MAX_DIMENSION = 1024;
-        
-        if (width > height && width > MAX_DIMENSION) {
-          height = (height * MAX_DIMENSION) / width;
-          width = MAX_DIMENSION;
-        } else if (height > MAX_DIMENSION) {
-          width = (width * MAX_DIMENSION) / height;
-          height = MAX_DIMENSION;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-            } else {
-              reject(new Error('Failed to compress image'));
-            }
-          },
-          'image/jpeg',
-          quality
-        );
-      };
-    };
-  });
-}
-```
-
-### Rate Limiting and Request Management
-
-```typescript
-// utils/rateLimiter.ts
-class RateLimiter {
-  private queue: Array<() => Promise<any>> = [];
-  private processing = false;
-  private lastRequestTime = 0;
-  private minInterval = 1000; // 1 second between requests
-
-  async add<T>(fn: () => Promise<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.queue.push(async () => {
-        try {
-          const result = await fn();
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      this.process();
+    
+    const response = await aiApiClient.post('/analyze', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
+    
+    return response.data;
   }
-
-  private async process() {
-    if (this.processing || this.queue.length === 0) return;
-    
-    this.processing = true;
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    
-    if (timeSinceLastRequest < this.minInterval) {
-      await new Promise(resolve => 
-        setTimeout(resolve, this.minInterval - timeSinceLastRequest)
-      );
-    }
-    
-    const fn = this.queue.shift()!;
-    this.lastRequestTime = Date.now();
-    
-    await fn();
-    this.processing = false;
-    this.process();
+  
+  // Session Management
+  async createSession(instagramId: string): Promise<Session> {
+    const response = await apiClient.post('/api/sessions', { instagramId });
+    return response.data.data;
+  }
+  
+  // Recommendation
+  async createRecommendation(data: RecommendationRequest): Promise<Recommendation> {
+    const response = await apiClient.post('/api/recommendations', data);
+    return response.data.data;
   }
 }
-
-export const apiRateLimiter = new RateLimiter();
 ```
 
 ---
 
 ## Core Algorithm
 
-### 1. Face Detection Process
-```python
-# detect_face.py - DetectFace class
-class DetectFace:
-    def __init__(self, image_path):
-        # Initialize dlib face detector and shape predictor
-        self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor(predictor_path)
-        
-    def detect_face_part(self):
-        # Extract 68 facial landmarks
-        # Return cropped regions for:
-        # - Left/Right Cheeks
-        # - Left/Right Eyebrows  
-        # - Left/Right Eyes
-```
+### Face Detection Process
+1. **Face Detection**: dlib의 68-point face landmark detection
+2. **Region Extraction**:
+   - Skin: Cheek area (landmarks 1-17)
+   - Eyebrow: Eyebrow region (landmarks 17-27)
+   - Eye/Iris: Eye region (landmarks 36-48)
 
-### 2. Color Extraction Algorithm
-```python
-# color_extract.py - DominantColors class
-class DominantColors:
-    def __init__(self, image, clusters=4):
-        # Apply K-means clustering to find dominant colors
-        kmeans = KMeans(n_clusters=clusters)
-        kmeans.fit(image_pixels)
-        
-    def getHistogram(self):
-        # Sort colors by frequency
-        # Filter out blue mask (non-face pixels)
-        # Return dominant colors
-```
+### Color Analysis Method
+1. **Color Space Conversion**: RGB → Lab, HSV
+2. **Representative Color Extraction**: K-means clustering (k=3)
+3. **Tone Classification**:
+   - Warm/Cool determination based on Lab 'b' value
+   - Seasonal type based on HSV saturation and value
 
-### 3. Tone Analysis Logic
+### Classification Rules
 ```python
-# tone_analysis.py
-def is_warm(lab_b_values, weights):
-    """
-    Warm/Cool classification using Lab color space
-    - Warm standard: [11.65, 11.71, 3.65]
-    - Cool standard: [4.64, 4.87, 0.19]
-    """
-    
-def is_spr(hsv_s_values, weights):
-    """
-    Spring/Autumn classification for warm tones
-    - Spring standard: [18.59, 30.30, 25.81]
-    - Autumn standard: [27.14, 39.75, 37.50]
-    """
-    
-def is_smr(hsv_s_values, weights):
-    """
-    Summer/Winter classification for cool tones
-    - Summer standard: [12.50, 21.72, 24.77]
-    - Winter standard: [16.74, 24.83, 31.37]
-    """
-```
+def classify_tone(lab_b_value):
+    return "warm" if lab_b_value > 0 else "cool"
 
-### 4. Classification Weights
-```python
-# Feature importance weights
-LAB_WEIGHTS = [30, 20, 5]  # [skin, eyebrow, eye]
-HSV_WEIGHTS = [10, 1, 1]   # [skin, eyebrow, eye]
-```
-
-### 5. Color Space Conversions
-```python
-# RGB → Lab conversion
-rgb = sRGBColor(r, g, b, is_upscaled=True)
-lab = convert_color(rgb, LabColor)
-
-# RGB → HSV conversion
-hsv = convert_color(rgb, HSVColor)
-hsv_s_percentage = hsv.hsv_s * 100
+def classify_season(tone, hsv_saturation, hsv_value):
+    if tone == "warm":
+        return "autumn" if hsv_saturation > 0.3 else "spring"
+    else:
+        return "winter" if hsv_value < 0.7 else "summer"
 ```
 
 ---
 
 ## Data Models
 
-### Pydantic Models
+### PersonalColorResult
+```typescript
+interface PersonalColorResult {
+  personal_color: string;      // Korean name
+  personal_color_en: string;   // English name (spring/summer/autumn/winter)
+  tone: string;               // Korean tone
+  tone_en: string;            // English tone (warm/cool)
+  details: {
+    best_colors: string[];
+    worst_colors: string[];
+  };
+  facial_colors: {
+    skin: ColorData;
+    eyebrow: ColorData;
+    eye: ColorData;
+  };
+}
 
-```python
-class ColorInfo(BaseModel):
-    rgb: List[int]        # [R, G, B] values (0-255)
-    lab: List[float]      # [L, a, b] values
-    hsv: List[float]      # [H, S, V] values
+interface ColorData {
+  lab: [number, number, number];
+  hsv: [number, number, number];
+  hex: string;
+}
+```
 
-class FacialFeatureColors(BaseModel):
-    cheek: ColorInfo
-    eyebrow: ColorInfo
-    eye: ColorInfo
+### Recommendation Models
+```typescript
+interface Session {
+  id: string;
+  instagramId: string;
+  createdAt: Date;
+}
 
-class AnalysisResult(BaseModel):
-    personal_color: str              # Korean name
-    personal_color_en: str           # English name
-    tone: str                        # 웜톤/쿨톤
-    tone_en: str                     # warm/cool
-    details: Dict[str, float]        # Detailed metrics
-    facial_colors: FacialFeatureColors
-    debug_info: Optional[Dict[str, List[float]]] = None
+interface Recommendation {
+  id: string;
+  sessionId: string;
+  instagramId: string;
+  personalColorResult: PersonalColorResult;
+  preferences: UserPreferences;
+  status: 'pending' | 'processing' | 'completed';
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-class ErrorResponse(BaseModel):
-    error: str
-    detail: str
+interface UserPreferences {
+  styles: string[];
+  fabricTypes: string[];
+  priceRange: string;
+  occasions: string[];
+}
 ```
 
 ---
 
 ## Installation & Setup
 
-### Prerequisites
-- Python 3.9+
-- macOS/Linux/Windows
-- 4GB+ RAM recommended
-
-### Installation Steps
-
-1. **Clone Repository**
+### AI API Setup
 ```bash
-git clone https://github.com/starbucksdolcelatte/ShowMeTheColor.git
-cd ShowMeTheColor
-```
+# Clone repository
+git clone https://github.com/yourusername/pca-hijab.git
+cd pca-hijab/ShowMeTheColor
 
-2. **Create Virtual Environment**
-```bash
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
 
-3. **Install Dependencies**
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-4. **Download dlib Model**
-Ensure `shape_predictor_68_face_landmarks.dat` exists in `res/` directory
+# Download dlib model
+python download_model.py
 
-5. **Run Server**
-```bash
+# Run the API
 cd src
 python api.py
-# or
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Dependencies List
-```txt
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-opencv-python==4.8.1.78
-dlib==19.24.2
-imutils==0.5.4
-numpy==1.24.3
-scikit-learn==1.3.2
-matplotlib==3.7.2
-colormath==3.0.0
-scipy==1.11.4
-pydantic==2.5.0
+### Backend API Setup
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install dependencies
+npm install
+
+# Create .env file
+cp .env.example .env
+
+# Development
+npm run dev
+
+# Production
+npm run build
+npm start
+```
+
+### Environment Variables
+
+#### AI API (.env)
+```bash
+# Optional - defaults work for development
+HOST=0.0.0.0
+PORT=8000
+```
+
+#### Backend API (.env)
+```bash
+# Server
+NODE_ENV=development
+PORT=5000
+
+# Database (optional - uses in-memory if not set)
+DATABASE_URL=postgresql://user:password@localhost:5432/pca_hijab
+
+# Security
+ADMIN_API_KEY=your-secure-admin-key
+
+# Frontend
+CLIENT_URL=http://localhost:5173
 ```
 
 ---
 
 ## Deployment Guide
 
-### Development Server
-```bash
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
-```
+### AI API Deployment (Heroku)
 
-### Production Deployment
-
-#### 1. Using Gunicorn
-```bash
-pip install gunicorn
-gunicorn api:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-#### 2. Docker Deployment
+1. **Prepare Dockerfile**:
 ```dockerfile
 FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install system dependencies for dlib
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
     cmake \
-    libopenblas-dev \
-    liblapack-dev \
-    libx11-dev \
-    libgtk-3-dev \
+    build-essential \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application code
 COPY . .
 
-WORKDIR /app/src
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Download dlib model
+RUN python download_model.py
+
+# Expose port
+EXPOSE 8000
+
+# Start the application
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-#### 3. Docker Compose
-```yaml
-version: '3.8'
-
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-    volumes:
-      - ./res:/app/res
-    restart: unless-stopped
-```
-
-#### 4. Kubernetes Deployment
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: personal-color-api
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: personal-color-api
-  template:
-    metadata:
-      labels:
-        app: personal-color-api
-    spec:
-      containers:
-      - name: api
-        image: personal-color-api:latest
-        ports:
-        - containerPort: 8000
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: personal-color-api-service
-spec:
-  selector:
-    app: personal-color-api
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8000
-  type: LoadBalancer
-```
-
-### Environment Variables
+2. **Deploy to Heroku**:
 ```bash
-# .env file
-API_HOST=0.0.0.0
-API_PORT=8000
-LOG_LEVEL=info
-CORS_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
-MAX_UPLOAD_SIZE=10485760  # 10MB
+heroku create pca-hijab-ai-api
+heroku container:push web
+heroku container:release web
 ```
 
-### Nginx Configuration
-```nginx
-server {
-    listen 80;
-    server_name api.yourdomain.com;
+### Backend API Deployment (Render)
 
-    location / {
-        proxy_pass http://localhost:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # File upload settings
-        client_max_body_size 10M;
-    }
-}
-```
+1. **Configure render.yaml** (already in project)
+2. **Connect GitHub repository**
+3. **Set environment variables in Render dashboard**
+4. **Deploy automatically on push**
+
+### Frontend Deployment (Vercel)
+
+1. **Configure vercel.json** (already in project)
+2. **Import project in Vercel dashboard**
+3. **Set environment variables**:
+   - `VITE_AI_API_URL`
+   - `VITE_API_BASE_URL`
+4. **Deploy automatically on push**
 
 ---
 
 ## Frontend Integration
 
-### JavaScript/TypeScript Example
+### Complete Flow Example
+
 ```typescript
-interface PersonalColorResult {
-  personal_color: string;
-  personal_color_en: string;
-  tone: string;
-  tone_en: string;
-  details: {
-    is_warm: number;
-    skin_lab_b: number;
-    eyebrow_lab_b: number;
-    eye_lab_b: number;
-    skin_hsv_s: number;
-    eyebrow_hsv_s: number;
-    eye_hsv_s: number;
-  };
-  facial_colors: {
-    cheek: ColorInfo;
-    eyebrow: ColorInfo;
-    eye: ColorInfo;
-  };
-}
+// pages/Analysis.tsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { personalColorAPI } from '@/services/api';
 
-interface ColorInfo {
-  rgb: number[];
-  lab: number[];
-  hsv: number[];
-}
-
-// API Client
-class PersonalColorAPI {
-  private baseURL: string;
-
-  constructor(baseURL: string = 'http://localhost:8000') {
-    this.baseURL = baseURL;
-  }
-
-  async analyzeImage(imageFile: File, debug: boolean = false): Promise<PersonalColorResult> {
-    const formData = new FormData();
-    formData.append('file', imageFile);
-
-    const response = await fetch(`${this.baseURL}/analyze?debug=${debug}`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Analysis failed');
-    }
-
-    return response.json();
-  }
-
-  async checkHealth(): Promise<{ status: string; service: string }> {
-    const response = await fetch(`${this.baseURL}/health`);
-    return response.json();
-  }
-}
-
-// Usage
-const api = new PersonalColorAPI();
-
-// File input handler
-async function handleFileUpload(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  
-  if (!file) return;
-
-  try {
-    const result = await api.analyzeImage(file, true);
-    console.log('Personal Color:', result.personal_color);
-    displayResult(result);
-  } catch (error) {
-    console.error('Analysis failed:', error);
-    showError(error.message);
-  }
-}
-```
-
-### React Component Example
-```jsx
-import React, { useState } from 'react';
-import { PersonalColorAPI } from './api/personalColor';
-
-const PersonalColorAnalyzer = () => {
-  const [result, setResult] = useState(null);
+export function AnalysisPage() {
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const api = new PersonalColorAPI();
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const navigate = useNavigate();
+  
+  const handleAnalysis = async () => {
     if (!file) return;
-
+    
     setLoading(true);
-    setError(null);
-
     try {
-      const analysisResult = await api.analyzeImage(file);
-      setResult(analysisResult);
-    } catch (err) {
-      setError(err.message);
+      // 1. Create session
+      const session = await personalColorAPI.createSession('@username');
+      
+      // 2. Analyze image
+      const analysisResult = await personalColorAPI.analyzeImage(file);
+      
+      // 3. Store result
+      localStorage.setItem('sessionId', session.id);
+      localStorage.setItem('analysisResult', JSON.stringify(analysisResult));
+      
+      // 4. Navigate to results
+      navigate('/result');
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      // Handle error
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
-    <div className="analyzer">
+    <div>
       <input 
         type="file" 
-        accept="image/*" 
-        onChange={handleFileChange}
-        disabled={loading}
+        accept="image/*"
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
       />
-      
-      {loading && <div>Analyzing...</div>}
-      
-      {error && <div className="error">{error}</div>}
-      
-      {result && (
-        <div className="result">
-          <h2>{result.personal_color}</h2>
-          <p>Type: {result.tone}</p>
-          <div className="colors">
-            {Object.entries(result.facial_colors).map(([feature, color]) => (
-              <div key={feature}>
-                <span>{feature}:</span>
-                <div 
-                  className="color-box" 
-                  style={{
-                    backgroundColor: `rgb(${color.rgb.join(',')})`
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <button onClick={handleAnalysis} disabled={!file || loading}>
+        {loading ? 'Analyzing...' : 'Analyze'}
+      </button>
     </div>
   );
-};
-```
-
-### Flutter Integration
-```dart
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:io';
-
-class PersonalColorAPI {
-  final String baseUrl;
-  
-  PersonalColorAPI({this.baseUrl = 'http://localhost:8000'});
-  
-  Future<PersonalColorResult> analyzeImage(File imageFile) async {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/analyze'),
-    );
-    
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        imageFile.path,
-      ),
-    );
-    
-    var response = await request.send();
-    var responseData = await response.stream.toBytes();
-    var responseString = String.fromCharCodes(responseData);
-    
-    if (response.statusCode == 200) {
-      return PersonalColorResult.fromJson(json.decode(responseString));
-    } else {
-      throw Exception('Failed to analyze image');
-    }
-  }
-}
-
-class PersonalColorResult {
-  final String personalColor;
-  final String personalColorEn;
-  final String tone;
-  final String toneEn;
-  final Map<String, double> details;
-  final Map<String, ColorInfo> facialColors;
-  
-  PersonalColorResult.fromJson(Map<String, dynamic> json)
-    : personalColor = json['personal_color'],
-      personalColorEn = json['personal_color_en'],
-      tone = json['tone'],
-      toneEn = json['tone_en'],
-      details = Map<String, double>.from(json['details']),
-      facialColors = (json['facial_colors'] as Map).map(
-        (key, value) => MapEntry(key, ColorInfo.fromJson(value))
-      );
 }
 ```
 
@@ -1136,576 +771,213 @@ class PersonalColorResult {
 
 ## Performance Optimization
 
-### 1. Image Preprocessing
-```python
-# Resize large images before processing
-def preprocess_image(image, max_size=1024):
-    height, width = image.shape[:2]
-    if width > max_size or height > max_size:
-        scale = max_size / max(width, height)
-        new_width = int(width * scale)
-        new_height = int(height * scale)
-        return cv2.resize(image, (new_width, new_height))
-    return image
-```
+### AI API Optimization
+1. **Image Preprocessing**:
+   - Resize images to max 1024x1024
+   - Convert to JPEG for smaller size
+   - Client-side compression
 
-### 2. Caching Strategy
-```python
-from functools import lru_cache
-import hashlib
+2. **Caching**:
+   - Cache dlib model in memory
+   - Reuse face detector instance
 
-@lru_cache(maxsize=100)
-def get_cached_analysis(image_hash):
-    # Cache analysis results for identical images
-    pass
+3. **Async Processing**:
+   - Use FastAPI's async endpoints
+   - Background tasks for heavy processing
 
-def generate_image_hash(image_data):
-    return hashlib.md5(image_data).hexdigest()
-```
+### Backend API Optimization
+1. **Database**:
+   - Connection pooling
+   - Indexes on frequently queried fields
+   - JSONB for flexible schema
 
-### 3. Async Processing
-```python
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
+2. **Caching**:
+   - Redis for session data (future)
+   - Query result caching
 
-executor = ThreadPoolExecutor(max_workers=4)
-
-async def analyze_image_async(image_path):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(executor, analyze_image_sync, image_path)
-```
-
-### 4. Load Balancing
-```yaml
-# nginx load balancing configuration
-upstream api_servers {
-    least_conn;
-    server localhost:8001;
-    server localhost:8002;
-    server localhost:8003;
-    server localhost:8004;
-}
-
-server {
-    location / {
-        proxy_pass http://api_servers;
-    }
-}
-```
+3. **Response Compression**:
+   - Gzip compression enabled
+   - Minimal response payloads
 
 ---
 
 ## Security Considerations
 
-### 1. Input Validation
-```python
-# File type validation
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+### AI API Security
+1. **Input Validation**:
+   - File type validation
+   - File size limits (10MB)
+   - Image format verification
 
-def validate_image_file(file):
-    if not file.content_type.startswith('image/'):
-        raise ValueError("Invalid file type")
-    
-    # Check file size
-    file.seek(0, 2)
-    size = file.tell()
-    file.seek(0)
-    
-    if size > MAX_FILE_SIZE:
-        raise ValueError("File too large")
-    
-    # Verify actual file content
-    header = file.read(512)
-    file.seek(0)
-    
-    if not is_valid_image_header(header):
-        raise ValueError("Invalid image file")
-```
+2. **Rate Limiting**:
+   - Per-IP rate limits
+   - Concurrent request limits
 
-### 2. Rate Limiting
-```python
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+### Backend API Security
+1. **Authentication**:
+   - API key for admin endpoints
+   - Session validation
 
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["100 per hour", "10 per minute"]
-)
+2. **Data Protection**:
+   - Input sanitization
+   - SQL injection prevention
+   - XSS protection with Helmet.js
 
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-@app.post("/analyze")
-@limiter.limit("5 per minute")
-async def analyze_personal_color(request: Request, file: UploadFile):
-    # Analysis logic
-    pass
-```
-
-### 3. CORS Configuration
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://yourdomain.com"],  # Specific origins in production
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-    max_age=3600,
-)
-```
-
-### 4. API Authentication (Optional)
-```python
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
-
-security = HTTPBearer()
-
-async def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-@app.post("/analyze")
-async def analyze_personal_color(
-    file: UploadFile = File(...),
-    current_user: dict = Depends(verify_token)
-):
-    # Protected endpoint
-    pass
-```
+3. **CORS Configuration**:
+   - Whitelist specific origins
+   - Credentials handling
 
 ---
 
 ## Testing
 
-### Unit Tests
+### AI API Testing
 ```python
-# test_tone_analysis.py
-import pytest
-from personal_color_analysis.tone_analysis import is_warm, is_spr, is_smr
-
-class TestToneAnalysis:
-    def test_warm_tone_detection(self):
-        # Warm tone sample
-        warm_lab_b = [15.0, 14.0, 5.0]
-        weights = [30, 20, 5]
-        assert is_warm(warm_lab_b, weights) == 1
-        
-    def test_cool_tone_detection(self):
-        # Cool tone sample
-        cool_lab_b = [3.0, 4.0, 0.5]
-        weights = [30, 20, 5]
-        assert is_warm(cool_lab_b, weights) == 0
-        
-    def test_spring_detection(self):
-        # Spring HSV saturation values
-        spring_hsv_s = [20.0, 32.0, 26.0]
-        weights = [10, 1, 1]
-        assert is_spr(spring_hsv_s, weights) == 1
-```
-
-### Integration Tests
-```python
-# test_api_integration.py
+# test_api.py
 import pytest
 from fastapi.testclient import TestClient
 from api import app
 
 client = TestClient(app)
 
-class TestAPI:
-    def test_health_check(self):
-        response = client.get("/health")
-        assert response.status_code == 200
-        assert response.json()["status"] == "healthy"
-        
-    def test_analyze_valid_image(self):
-        with open("test_images/face1.jpg", "rb") as f:
-            response = client.post(
-                "/analyze",
-                files={"file": ("test.jpg", f, "image/jpeg")}
-            )
-        assert response.status_code == 200
-        result = response.json()
-        assert "personal_color" in result
-        assert "facial_colors" in result
-        
-    def test_analyze_invalid_file(self):
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"
+
+def test_analyze_image():
+    with open("test_image.jpg", "rb") as f:
         response = client.post(
             "/analyze",
-            files={"file": ("test.txt", b"not an image", "text/plain")}
+            files={"file": ("test.jpg", f, "image/jpeg")}
         )
-        assert response.status_code == 400
+    assert response.status_code == 200
+    assert "personal_color_en" in response.json()
 ```
 
-### Load Testing
-```python
-# locustfile.py
-from locust import HttpUser, task, between
+### Backend API Testing
+```typescript
+// __tests__/api.test.ts
+import request from 'supertest';
+import app from '../src/index';
 
-class PersonalColorUser(HttpUser):
-    wait_time = between(1, 3)
-    
-    @task
-    def analyze_image(self):
-        with open("test_image.jpg", "rb") as f:
-            self.client.post(
-                "/analyze",
-                files={"file": ("test.jpg", f, "image/jpeg")}
-            )
-    
-    @task
-    def health_check(self):
-        self.client.get("/health")
-```
-
-Run load test:
-```bash
-locust -f locustfile.py --host=http://localhost:8000
+describe('API Tests', () => {
+  test('GET /api/health', async () => {
+    const response = await request(app).get('/api/health');
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('healthy');
+  });
+  
+  test('POST /api/sessions', async () => {
+    const response = await request(app)
+      .post('/api/sessions')
+      .send({ instagramId: '@testuser' });
+    expect(response.status).toBe(201);
+    expect(response.body.data.instagramId).toBe('@testuser');
+  });
+});
 ```
 
 ---
 
 ## Monitoring & Logging
 
-### Logging Configuration
-```python
-import logging
-from logging.handlers import RotatingFileHandler
-import json
-from datetime import datetime
+### Logging Strategy
+1. **Application Logs**:
+   - Request/response logging
+   - Error logging with stack traces
+   - Performance metrics
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-# File handler with rotation
-file_handler = RotatingFileHandler(
-    'api.log',
-    maxBytes=10485760,  # 10MB
-    backupCount=5
-)
-file_handler.setLevel(logging.INFO)
-
-# JSON formatter for structured logging
-class JSONFormatter(logging.Formatter):
-    def format(self, record):
-        log_data = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'level': record.levelname,
-            'message': record.getMessage(),
-            'module': record.module,
-            'function': record.funcName,
-            'line': record.lineno
-        }
-        if hasattr(record, 'user_id'):
-            log_data['user_id'] = record.user_id
-        if hasattr(record, 'request_id'):
-            log_data['request_id'] = record.request_id
-        return json.dumps(log_data)
-
-json_formatter = JSONFormatter()
-file_handler.setFormatter(json_formatter)
-logger = logging.getLogger(__name__)
-logger.addHandler(file_handler)
+2. **Structured Logging**:
+```typescript
+// Example log format
+{
+  "timestamp": "2024-06-06T12:00:00Z",
+  "level": "info",
+  "service": "backend-api",
+  "requestId": "uuid",
+  "message": "Recommendation created",
+  "metadata": {
+    "userId": "@username",
+    "personalColor": "spring"
+  }
+}
 ```
 
-### Request Tracking
-```python
-import uuid
-from fastapi import Request
-
-@app.middleware("http")
-async def add_request_id(request: Request, call_next):
-    request_id = str(uuid.uuid4())
-    request.state.request_id = request_id
-    
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    
-    logger.info(
-        "Request processed",
-        extra={
-            "request_id": request_id,
-            "method": request.method,
-            "path": request.url.path,
-            "status_code": response.status_code,
-            "process_time": process_time
-        }
-    )
-    
-    response.headers["X-Request-ID"] = request_id
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-```
-
-### Prometheus Metrics
-```python
-from prometheus_client import Counter, Histogram, generate_latest
-from fastapi import Response
-
-# Define metrics
-request_count = Counter(
-    'api_requests_total',
-    'Total number of API requests',
-    ['method', 'endpoint', 'status']
-)
-
-request_duration = Histogram(
-    'api_request_duration_seconds',
-    'API request duration',
-    ['method', 'endpoint']
-)
-
-analysis_duration = Histogram(
-    'analysis_duration_seconds',
-    'Personal color analysis duration'
-)
-
-@app.get("/metrics")
-async def metrics():
-    return Response(
-        generate_latest(),
-        media_type="text/plain"
-    )
-
-# Track metrics in endpoints
-@app.post("/analyze")
-async def analyze_personal_color(file: UploadFile):
-    start_time = time.time()
-    
-    try:
-        # Analysis logic
-        result = await perform_analysis(file)
-        
-        request_count.labels(
-            method="POST",
-            endpoint="/analyze",
-            status="200"
-        ).inc()
-        
-        return result
-    finally:
-        duration = time.time() - start_time
-        request_duration.labels(
-            method="POST",
-            endpoint="/analyze"
-        ).observe(duration)
-        analysis_duration.observe(duration)
-```
-
-### Health Check Endpoint Enhancement
-```python
-@app.get("/health")
-async def detailed_health_check():
-    health_status = {
-        "status": "healthy",
-        "service": "Personal Color Analysis API",
-        "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
-        "checks": {
-            "database": check_database_connection(),
-            "dlib_model": check_dlib_model(),
-            "disk_space": check_disk_space(),
-            "memory": check_memory_usage()
-        }
-    }
-    
-    # Overall status
-    if not all(health_status["checks"].values()):
-        health_status["status"] = "unhealthy"
-        
-    return health_status
-
-def check_dlib_model():
-    try:
-        import os
-        model_path = "../res/shape_predictor_68_face_landmarks.dat"
-        return os.path.exists(model_path) and os.path.getsize(model_path) > 0
-    except:
-        return False
-
-def check_disk_space():
-    import shutil
-    stat = shutil.disk_usage("/")
-    # Return True if more than 10% free
-    return (stat.free / stat.total) > 0.1
-
-def check_memory_usage():
-    import psutil
-    # Return True if less than 90% memory used
-    return psutil.virtual_memory().percent < 90
-```
+### Monitoring Tools
+- **APM**: New Relic, DataDog
+- **Logging**: LogDNA, Papertrail
+- **Uptime**: Pingdom, UptimeRobot
 
 ---
 
 ## Troubleshooting
 
-### Common Issues and Solutions
+### Common Issues
 
-#### 1. Face Detection Failures
-**Problem**: "얼굴을 찾을 수 없습니다" error
+#### AI API Issues
+1. **"얼굴을 찾을 수 없습니다"**
+   - Ensure image contains a clear face
+   - Check image orientation
+   - Verify dlib model is loaded
 
-**Solutions**:
-- Ensure image has clear, front-facing face
-- Check image resolution (minimum 200x200 recommended)
-- Verify lighting conditions
-- Add face detection fallback:
+2. **Slow Analysis**
+   - Check image size (recommend < 2MB)
+   - Monitor CPU usage
+   - Consider scaling horizontally
 
-```python
-def detect_with_fallback(image):
-    # Try different detection parameters
-    for upsample in [0, 1, 2]:
-        faces = detector(gray_image, upsample)
-        if faces:
-            return faces[0]
-    
-    # Try with different preprocessing
-    enhanced = cv2.equalizeHist(gray_image)
-    faces = detector(enhanced, 1)
-    if faces:
-        return faces[0]
-    
-    raise ValueError("No face detected")
-```
+#### Backend API Issues
+1. **Database Connection Failed**
+   - Verify DATABASE_URL
+   - Check PostgreSQL is running
+   - Review connection pool settings
 
-#### 2. Color Extraction Issues
-**Problem**: Incorrect color detection due to makeup/lighting
+2. **CORS Errors**
+   - Verify CLIENT_URL in environment
+   - Check request headers
+   - Review CORS configuration
 
-**Solutions**:
-- Add white balance correction:
-```python
-def white_balance_correction(image):
-    # Gray world assumption
-    avg_b = np.mean(image[:, :, 0])
-    avg_g = np.mean(image[:, :, 1])
-    avg_r = np.mean(image[:, :, 2])
-    avg_gray = (avg_b + avg_g + avg_r) / 3
-    
-    image[:, :, 0] = np.clip(image[:, :, 0] * (avg_gray / avg_b), 0, 255)
-    image[:, :, 1] = np.clip(image[:, :, 1] * (avg_gray / avg_g), 0, 255)
-    image[:, :, 2] = np.clip(image[:, :, 2] * (avg_gray / avg_r), 0, 255)
-    
-    return image.astype(np.uint8)
-```
+#### Integration Issues
+1. **404 Errors**
+   - Check API base URLs
+   - Verify proxy configuration
+   - Review route definitions
 
-#### 3. Memory Issues
-**Problem**: High memory usage with large images
-
-**Solutions**:
-- Implement image size limits
-- Use streaming for large files
-- Add garbage collection:
-
-```python
-import gc
-
-@app.post("/analyze")
-async def analyze_personal_color(file: UploadFile):
-    try:
-        # Process image
-        result = await process_image(file)
-        return result
-    finally:
-        # Force garbage collection
-        gc.collect()
-```
-
-#### 4. Performance Issues
-**Problem**: Slow analysis for high-resolution images
-
-**Solutions**:
-- Implement image pyramids
-- Use multiprocessing for batch analysis
-- Cache intermediate results:
-
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=128)
-def cached_face_detection(image_hash):
-    # Cache face detection results
-    pass
-```
-
-### Debug Mode
-Enable detailed debugging:
-
-```python
-# Set environment variable
-DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
-
-if DEBUG_MODE:
-    # Save intermediate results
-    cv2.imwrite("debug_face_detected.jpg", face_image)
-    
-    # Log detailed information
-    logger.debug(f"Face landmarks: {landmarks}")
-    logger.debug(f"Dominant colors: {colors}")
-    logger.debug(f"Lab values: {lab_values}")
-    logger.debug(f"HSV values: {hsv_values}")
-```
-
-### Error Codes Reference
-| Code | Description | Solution |
-|------|------------|----------|
-| 400 | Invalid image format | Check file type and content |
-| 404 | Endpoint not found | Verify API URL |
-| 413 | File too large | Reduce image size |
-| 422 | Validation error | Check request parameters |
-| 500 | Internal server error | Check server logs |
-| 503 | Service unavailable | Check server resources |
-
----
-
-## Appendix
-
-### A. Personal Color Theory
-- **Warm Tone**: Higher Lab b values (yellow undertone)
-- **Cool Tone**: Lower Lab b values (blue undertone)
-- **Spring**: Warm + Clear (lower saturation)
-- **Summer**: Cool + Soft (lower saturation)
-- **Autumn**: Warm + Deep (higher saturation)
-- **Winter**: Cool + Clear (higher saturation)
-
-### B. Color Space Reference
-- **RGB**: Device-dependent, 0-255 per channel
-- **Lab**: Perceptually uniform, L(lightness), a(green-red), b(blue-yellow)
-- **HSV**: Hue(0-360°), Saturation(0-100%), Value(0-100%)
-
-### C. API Response Time Benchmarks
-- Average response time: 200-500ms
-- Face detection: 50-100ms
-- Color extraction: 30-50ms per region
-- Color space conversion: <10ms
-- Total analysis: 150-300ms
-
-### D. Resource Requirements
-- **Minimum**: 2 CPU cores, 2GB RAM
-- **Recommended**: 4 CPU cores, 4GB RAM
-- **Storage**: 500MB for application + models
-- **Network**: 10Mbps for smooth operation
+2. **Authentication Failures**
+   - Verify API key is set
+   - Check header format
+   - Review middleware order
 
 ---
 
 ## Version History
-- v1.0.0 (2024-06-05): Initial API implementation
-  - FastAPI integration
-  - Basic personal color analysis
-  - Web test interface
 
-## Contact & Support
-- GitHub Issues: [Report issues](https://github.com/starbucksdolcelatte/ShowMeTheColor/issues)
-- API Documentation: [Swagger UI](http://localhost:8000/docs)
+### v3.0.0 (December 2024)
+- Separated AI and Backend APIs
+- Added admin dashboard with X-API-Key authentication
+- PostgreSQL integration with in-memory fallback
+- Improved error handling
+- CI/CD pipeline configuration
+- Helmet.js security integration
+
+### v2.0.0 (December 2024)
+- Added hijab recommendation system
+- User preference collection
+- Session management
+
+### v1.0.0 (November 2024)
+- Initial release
+- Personal color analysis
+- Basic API endpoints
 
 ---
 
-*This document is maintained for the ShowMeTheColor Personal Color Analysis API project.*
+## Contact & Support
+
+- **GitHub**: [github.com/yourusername/pca-hijab](https://github.com/yourusername/pca-hijab)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/pca-hijab/issues)
+- **Documentation**: This document
+
+---
+
+*Last Updated: January 2025*
