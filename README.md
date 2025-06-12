@@ -18,7 +18,8 @@ A mobile-optimized web service that uses AI to diagnose personal color types and
 - **Beautiful Result Cards**: Korean-inspired aesthetic with comprehensive beauty recommendations
 - **Multi-Language Support**: Currently in English (Korean version available)
 - **Fast Analysis**: Optimized to complete in ~11 seconds
-- **Admin Dashboard**: Comprehensive admin panel for recommendation management
+- **Admin Dashboard**: Korean-localized admin panel for managing recommendations
+- **E2E Testing**: Comprehensive test coverage with automated test data generation
 
 ### Tech Stack
 

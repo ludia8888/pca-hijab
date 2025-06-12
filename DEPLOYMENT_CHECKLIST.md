@@ -1,5 +1,7 @@
 # 🚀 PCA-HIJAB Deployment Checklist
 
+**Last Updated**: 2025-01-13
+
 ## Prerequisites
 
 ### 1. Accounts Required

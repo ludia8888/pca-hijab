@@ -7,6 +7,7 @@
 - **Core Value**: Personalized color recommendations to support purchase decisions
 - **Current Version**: 3.0 (January 2025)
 - **Live Demo**: https://pca-hijab.vercel.app
+- **Last Updated**: 2025-01-13
 
 ## 🛠 Tech Stack
 ### Frontend
@@ -165,13 +166,16 @@ class PersonalColorAPI {
 1. **AI API Delay**: 30-second timeout, retry logic
 2. **Image Upload Failure**: Client compression, 10MB limit
 3. **Mobile Performance**: Code splitting, image optimization
+4. **CORS Issues**: Configured for multiple origins (3000, 5173, 5174)
+5. **Session Management**: In-memory storage for development
 
 ## 📌 Important Notes
-- ShowMeTheColor API should not be modified
+- ShowMeTheColor API should not be modified (use api_simple.py for stability)
 - Mobile-first design approach
 - Recommendation results sent via Instagram DM
 - Minimal personal information collection
-- Admin panel accessible at `/admin/login`
+- Admin panel accessible at `/admin/login` (API Key: dev-admin-key-123 for development)
+- Admin UI is fully localized in Korean
 
 ## 🔗 Key Documentation
 - [Development Plan](./development_plan.md)
@@ -181,10 +185,13 @@ class PersonalColorAPI {
 - [API Technical Documentation](./API_TECHNICAL_DOCUMENTATION.md)
 
 ## 🐛 Debugging Tips
-1. AI API connection failure: Check CORS settings
+1. AI API connection failure: Check CORS settings and ensure x-api-key header is allowed
 2. Image upload failure: Check file size and format
 3. Style issues: Check Tailwind purge settings
 4. Admin access issues: Verify ADMIN_API_KEY environment variable
+5. Session errors: Backend restart clears in-memory data
+6. Personal color data format: Ensure season/tone fields match backend expectations
+7. Debug mode: Use DebugInfo component to view current state
 
 ## 🔧 Prompt: "Write Code with *Minimum* Bug Risk – 7-Step Engineering Playbook"
 

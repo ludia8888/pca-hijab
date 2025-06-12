@@ -1,5 +1,7 @@
 # Personal Color Analysis API - Technical Documentation
 
+**Last Updated**: 2025-01-13
+
 ## Table of Contents
 1. [Overview](#overview)
 2. [Architecture](#architecture)
