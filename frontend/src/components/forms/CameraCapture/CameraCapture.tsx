@@ -33,14 +33,13 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         // Use promise-based play to handle async properly
-        await videoRef.current.play().catch((error) => {
-          console.warn('Video play was interrupted:', error);
+        await videoRef.current.play().catch(() => {
+          // Video play was interrupted, but this is often expected behavior
         });
       }
 
       setIsLoading(false);
-    } catch (err) {
-      console.error('Camera access error:', err);
+    } catch {
       setError('Camera access permission is required.');
       setIsLoading(false);
     }

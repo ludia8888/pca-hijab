@@ -53,25 +53,17 @@ export class PersonalColorAPI {
     file: File,
     debug = false,
   ): Promise<PersonalColorResult> {
-    console.log('Analyzing image:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: new Date(file.lastModified).toISOString()
-    });
     
     const formData = new FormData();
     formData.append('file', file);
 
     // Use mock data if AI API is not available
     if (USE_MOCK_AI) {
-      console.log('Using mock AI analysis');
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Return random mock result
       const mockResult = MOCK_RESULTS[Math.floor(Math.random() * MOCK_RESULTS.length)];
-      console.log('Mock analysis response:', mockResult);
       return mockResult;
     }
 
@@ -92,10 +84,8 @@ export class PersonalColorAPI {
         },
       );
 
-      console.log('Analysis response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('API call failed:', error);
       if (axios.isAxiosError(error) && error.code === 'ECONNREFUSED') {
         throw new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
       }

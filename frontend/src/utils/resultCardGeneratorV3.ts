@@ -9,7 +9,6 @@ export const generateResultCard = async (
   result: PersonalColorResult,
   instagramId: string
 ): Promise<Blob> => {
-  console.log('generateResultCard v3.0 - Mobile Optimized', { result, instagramId });
   
   // Use the new mobile-optimized version
   return generateMobileResultCard(result, instagramId);

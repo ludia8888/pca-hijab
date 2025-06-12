@@ -14,6 +14,18 @@ router.get('/recommendations', async (req, res, next) => {
   try {
     const { status, limit = '50', offset = '0' } = req.query;
     
+    // Validate pagination parameters
+    const limitNum = parseInt(limit as string);
+    const offsetNum = parseInt(offset as string);
+    
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+      throw new AppError(400, 'Invalid limit parameter (1-100)');
+    }
+    
+    if (isNaN(offsetNum) || offsetNum < 0) {
+      throw new AppError(400, 'Invalid offset parameter');
+    }
+    
     let recommendations: Recommendation[];
     
     if (status) {
@@ -23,17 +35,15 @@ router.get('/recommendations', async (req, res, next) => {
     }
     
     // Apply pagination
-    const startIndex = parseInt(offset as string);
-    const endIndex = startIndex + parseInt(limit as string);
-    const paginatedRecommendations = recommendations.slice(startIndex, endIndex);
+    const paginatedRecommendations = recommendations.slice(offsetNum, offsetNum + limitNum);
     
     res.json({
       success: true,
       data: {
         recommendations: paginatedRecommendations,
         total: recommendations.length,
-        limit: parseInt(limit as string),
-        offset: startIndex
+        limit: limitNum,
+        offset: offsetNum
       }
     });
   } catch (error) {

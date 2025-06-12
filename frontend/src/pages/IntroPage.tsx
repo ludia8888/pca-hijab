@@ -43,8 +43,7 @@ const IntroPage = (): JSX.Element => {
       
       // Navigate to upload page
       navigate(ROUTES.UPLOAD);
-    } catch (error) {
-      console.error('Failed to create session:', error);
+    } catch {
       setError('Failed to create session. Please try again.');
     }
   };

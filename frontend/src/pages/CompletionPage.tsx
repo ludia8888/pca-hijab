@@ -27,8 +27,8 @@ const CompletionPage = (): JSX.Element => {
         text: `Get AI personal color analysis and personalized hijab recommendations!`,
         url: window.location.origin,
       });
-    } catch (error) {
-      console.error('Share failed:', error);
+    } catch {
+      // Sharing failed silently, copy was likely used instead
     }
   };
 
@@ -41,8 +41,7 @@ const CompletionPage = (): JSX.Element => {
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `hijab_personal_color_${timestamp}.jpg`;
       downloadResultCard(blob, filename);
-    } catch (error) {
-      console.error('Failed to save result card:', error);
+    } catch {
       alert('Failed to save image. Please try again.');
     }
   };

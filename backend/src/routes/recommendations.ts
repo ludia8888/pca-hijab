@@ -26,12 +26,6 @@ router.post('/', validateRecommendationData, async (req, res, next) => {
       status: 'pending'
     });
     
-    console.info('New recommendation created:', {
-      id: recommendation.id,
-      instagramId: recommendation.instagramId,
-      personalColor: recommendation.personalColorResult.personal_color_en,
-      preferences: recommendation.userPreferences
-    });
     
     res.status(201).json({
       success: true,

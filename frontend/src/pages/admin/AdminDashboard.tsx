@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
@@ -40,16 +40,7 @@ const AdminDashboard = (): JSX.Element => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'processing' | 'completed'>('all');
 
-  useEffect(() => {
-    if (!apiKey) {
-      navigate('/admin/login');
-      return;
-    }
-
-    loadData();
-  }, [apiKey, statusFilter]);
-
-  const loadData = async (): Promise<void> => {
+  const loadData = useCallback(async (): Promise<void> => {
     if (!apiKey) return;
 
     setIsLoading(true);
@@ -62,12 +53,21 @@ const AdminDashboard = (): JSX.Element => {
       const params = statusFilter === 'all' ? {} : { status: statusFilter };
       const response = await AdminAPI.getRecommendations(apiKey, params);
       setRecommendations(response.recommendations);
-    } catch (error) {
-      console.error('Failed to load admin data:', error);
+    } catch {
+      // Handle error silently, data will remain as loading state
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [apiKey, statusFilter]);
+
+  useEffect(() => {
+    if (!apiKey) {
+      navigate('/admin/login');
+      return;
+    }
+
+    loadData();
+  }, [apiKey, statusFilter, navigate, loadData]);
 
   const handleLogout = (): void => {
     logout();

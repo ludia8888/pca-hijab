@@ -226,7 +226,7 @@ function drawMobileCard(
   
   ctx.fillStyle = gradient;
   ctx.beginPath();
-  // @ts-ignore
+  // @ts-expect-error - roundRect is not in TypeScript definitions yet
   ctx.roundRect(x, y, width, height, 20);
   ctx.fill();
   
@@ -293,7 +293,7 @@ function drawKeywordTags(
     ctx.lineWidth = 1;
     
     ctx.beginPath();
-    // @ts-ignore
+    // @ts-expect-error - roundRect is not in TypeScript definitions yet
     ctx.roundRect(tagX, y, width, tagHeight, tagHeight / 2);
     ctx.fill();
     ctx.stroke();
@@ -330,7 +330,7 @@ function drawMobileColorPalette(
     // Color swatch
     ctx.fillStyle = color.hex;
     ctx.beginPath();
-    // @ts-ignore
+    // @ts-expect-error - roundRect is not in TypeScript definitions yet
     ctx.roundRect(x, swatchY, swatchSize, swatchSize, 12);
     ctx.fill();
     
@@ -391,7 +391,7 @@ function drawStyleTip(
   // Background
   ctx.fillStyle = MOBILE_GRADIENTS[season].card[1];
   ctx.beginPath();
-  // @ts-ignore
+  // @ts-expect-error - roundRect is not in TypeScript definitions yet
   ctx.roundRect(x, y, boxWidth, boxHeight, 12);
   ctx.fill();
   

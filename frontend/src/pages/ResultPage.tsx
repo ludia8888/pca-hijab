@@ -43,7 +43,6 @@ const ResultPage = (): JSX.Element => {
   // Redirect if no analysis result
   useEffect(() => {
     if (!analysisResult || !instagramId) {
-      console.log('No analysis result or instagram ID:', { analysisResult, instagramId });
       // Only redirect in production, show mock in development
       if (process.env.NODE_ENV !== 'development') {
         navigate(ROUTES.HOME);
@@ -100,12 +99,6 @@ const ResultPage = (): JSX.Element => {
     description: 'We found your unique color palette',
   };
   
-  console.log('ResultPage render:', { 
-    analysisResult, 
-    mockResult: process.env.NODE_ENV === 'development' ? mockResult : null,
-    result,
-    usingMock: result === mockResult 
-  }); // Debug log
   
   // Get season-specific colors
   const seasonColors = SEASON_COLORS[seasonKey] || SEASON_COLORS.spring;
@@ -119,20 +112,17 @@ const ResultPage = (): JSX.Element => {
         text: `My personal color is ${seasonInfo.en}!`,
         url: window.location.href,
       });
-    } catch (error) {
-      console.error('Share failed:', error);
+    } catch {
+      // Sharing failed silently, copy was likely used instead
     }
   };
 
   const handleSaveImage = async (): Promise<void> => {
     try {
-      console.log('Starting to generate mobile-optimized result card...', { result, instagramId });
       const blob = await generateResultCard(result, instagramId || 'user');
-      console.log('Mobile result card generated successfully, blob size:', blob.size);
       const filename = `hijab_color_${result.personal_color_en.replace(' ', '_')}_${Date.now()}.jpg`;
       downloadResultCard(blob, filename);
     } catch (error) {
-      console.error('Failed to save image:', error);
       alert(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

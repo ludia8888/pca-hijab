@@ -30,7 +30,7 @@ export const loadFonts = async (): Promise<void> => {
       ]),
       new Promise((resolve) => setTimeout(resolve, 1000)) // 1 second timeout
     ]);
-  } catch (error) {
-    console.warn('Some fonts may not have loaded properly:', error);
+  } catch {
+    // Some fonts may not have loaded properly, continue with fallback fonts
   }
 };

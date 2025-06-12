@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { Card } from '../Card';
 
 // Helper function to render Card with testid
-const renderCard = (props?: any, children = 'Content') => {
+const renderCard = (props?: React.ComponentProps<typeof Card>, children = 'Content') => {
   render(
     <Card data-testid="test-card" {...props}>
       {children}

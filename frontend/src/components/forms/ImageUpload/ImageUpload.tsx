@@ -49,7 +49,6 @@ export const ImageUpload = ({
           previewUrl = createImagePreview(processedFile);
         } catch (conversionError) {
           // If conversion fails, show error to user
-          console.error('HEIC conversion failed:', conversionError);
           onError(conversionError instanceof Error ? conversionError.message : 'Failed to convert HEIC file.');
           return;
         }
@@ -59,8 +58,7 @@ export const ImageUpload = ({
       
       setPreview(previewUrl);
       onUpload(processedFile, previewUrl);
-    } catch (error) {
-      console.error('Error handling image:', error);
+    } catch {
       onError('An error occurred while processing the image.');
     }
   }, [onUpload, onError]);

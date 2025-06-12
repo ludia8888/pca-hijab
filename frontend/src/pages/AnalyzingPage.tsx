@@ -50,21 +50,16 @@ const AnalyzingPage = (): JSX.Element => {
 
     try {
       // Call AI API
-      console.log('Starting analysis with file:', uploadedFile);
       const result = await analyzeImage(uploadedFile);
-      console.log('Analysis complete, result:', result);
       
       // Store result
       setAnalysisResult(result);
-      console.log('Result stored in state');
       
       // Wait for animation to complete
       setTimeout(() => {
-        console.log('Navigating to result page');
         navigate(ROUTES.RESULT);
       }, ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000);
     } catch (err) {
-      console.error('Analysis error:', err);
       let errorMessage = 'An error occurred during analysis.';
       
       if (err instanceof Error) {

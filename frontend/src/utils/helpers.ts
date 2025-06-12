@@ -16,7 +16,7 @@ export const compressImage = async (
 ): Promise<File> => {
   // Skip compression for HEIC files (they should be converted first)
   if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-    console.warn('HEIC file passed to compress function - should be converted first');
+    // HEIC file passed to compress function - should be converted first
     return file;
   }
   
@@ -87,7 +87,6 @@ export const createImagePreview = (file: File): string => {
   try {
     return URL.createObjectURL(file);
   } catch (error) {
-    console.error('Failed to create object URL:', error);
     // Return a fallback for unsupported formats
     const fileExtension = file.name.toLowerCase().split('.').pop();
     if (fileExtension === 'heic' || fileExtension === 'heif') {

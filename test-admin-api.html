@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin API Test</title>
+</head>
+<body>
+    <h1>Admin API Test</h1>
+    <button onclick="testAPI()">Test Admin API</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testAPI() {
+            const resultEl = document.getElementById('result');
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/admin/statistics', {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': 'pca-hijab-admin-2024',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                
+                if (response.ok) {
+                    alert('Success! Check the result below.');
+                } else {
+                    alert('Failed: ' + data.error);
+                }
+            } catch (error) {
+                resultEl.textContent = 'Error: ' + error.message;
+                alert('Network Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

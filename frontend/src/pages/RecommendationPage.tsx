@@ -130,10 +130,12 @@ const RecommendationPage = (): JSX.Element => {
         // Navigate to completion page
         navigate(ROUTES.COMPLETION);
       } else {
-        console.error('Failed to submit recommendation');
+        // Handle error case
+        alert('Failed to submit request. Please try again.');
       }
-    } catch (error) {
-      console.error('Failed to submit preferences:', error);
+    } catch {
+      // Handle network error
+      alert('Network error. Please check your connection and try again.');
     }
   };
 

@@ -1,4 +1,4 @@
-# CLAUDE.md - PCA-HIJAB 프로젝트 가이드
+# CLAUDE.md - PCA-HIJAB Project Guide
 
 ## 🎯 Project Overview
 - **Project Name**: PCA-HIJAB - AI Personal Color Analysis for Hijab
@@ -8,81 +8,81 @@
 - **Current Version**: 3.0 (January 2025)
 - **Live Demo**: https://pca-hijab.vercel.app
 
-## 🛠 기술 스택
+## 🛠 Tech Stack
 ### Frontend
 - React 18 + TypeScript
-- Vite (빌드 도구)
+- Vite (build tool)
 - Tailwind CSS + CSS Modules
-- Zustand (상태관리)
-- React Query (서버 상태)
+- Zustand (state management)
+- React Query (server state)
 - React Router v6
 
 ### Backend
-- 기존 API: ShowMeTheColor (FastAPI, 포트 8000)
-- 새 API: Express.js 또는 FastAPI
-- PostgreSQL
-- AWS S3 또는 Cloudinary (이미지 저장)
+- AI API: ShowMeTheColor (FastAPI, port 8000)
+- Backend API: Express.js + TypeScript (port 5001)
+- Database: In-memory storage (PostgreSQL ready)
+- Admin Panel: API key authentication
 
-## 📁 프로젝트 구조
+## 📁 Project Structure
 ```
 pca-hijab/
-├── frontend/          # React 애플리케이션
-├── backend/           # 새 백엔드 API
-├── ShowMeTheColor/    # 기존 AI API (수정 불필요)
-└── docs/             # 문서
+├── frontend/          # React application
+├── backend/           # Express.js backend API
+├── ShowMeTheColor/    # AI API (FastAPI)
+└── docs/             # Documentation
 ```
 
-## 🚀 자주 사용하는 명령어
+## 🚀 Common Commands
 
 ### Frontend
 ```bash
-# 개발 서버 실행
+# Start development server
 cd frontend && npm run dev
 
-# 빌드
+# Build
 cd frontend && npm run build
 
-# 타입 체크
+# Type check
 cd frontend && npm run typecheck
 
-# 린트
+# Lint
 cd frontend && npm run lint
 
-# 테스트
+# Test
 cd frontend && npm test
 ```
 
-### Backend (새 API)
+### Backend (Express API)
 ```bash
-# 개발 서버 실행
+# Start development server
 cd backend && npm run dev
 
-# 프로덕션 실행
+# Production start
 cd backend && npm start
 
-# 테스트
+# Test
 cd backend && npm test
 ```
 
 ### ShowMeTheColor API
 ```bash
-# API 실행
+# Start API
 cd ShowMeTheColor/src && python api.py
 
-# 또는
+# or
 cd ShowMeTheColor/src && uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 📝 코딩 컨벤션
+## 📝 Coding Conventions
 
-### 명명 규칙
-- **컴포넌트**: PascalCase (예: `PersonalColorResult.tsx`)
-- **함수/변수**: camelCase (예: `analyzeImage`, `isLoading`)
-- **상수**: UPPER_SNAKE_CASE (예: `MAX_FILE_SIZE`)
-- **타입/인터페이스**: PascalCase + 접미사 (예: `ButtonProps`, `UserData`)
-- **파일명**: 컴포넌트는 PascalCase, 유틸은 camelCase
+### Naming Conventions
+- **Components**: PascalCase (e.g., `PersonalColorResult.tsx`)
+- **Functions/Variables**: camelCase (e.g., `analyzeImage`, `isLoading`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`)
+- **Types/Interfaces**: PascalCase + suffix (e.g., `ButtonProps`, `UserData`)
+- **File names**: PascalCase for components, camelCase for utilities
 
-### 컴포넌트 구조
+### Component Structure
 ```typescript
 // 1. imports
 // 2. types/interfaces
@@ -91,24 +91,24 @@ cd ShowMeTheColor/src && uvicorn api:app --reload --host 0.0.0.0 --port 8000
 // 5. exports
 ```
 
-### Props 명명
-- 이벤트 핸들러: `on` + 동작 (예: `onClick`, `onSubmit`)
-- Boolean: `is/has/can` + 형용사 (예: `isLoading`, `hasError`)
-- 자식 요소: `children`
+### Props Naming
+- Event handlers: `on` + action (e.g., `onClick`, `onSubmit`)
+- Boolean: `is/has/can` + adjective (e.g., `isLoading`, `hasError`)
+- Child elements: `children`
 
-## 🏗 아키텍처 패턴
+## 🏗 Architecture Patterns
 
-### 상태 관리
-1. **전역 상태** (Zustand): 사용자 세션, 진단 결과
-2. **서버 상태** (React Query): API 데이터, 캐싱
-3. **로컬 상태** (useState): UI 상태, 폼 입력
+### State Management
+1. **Global State** (Zustand): User session, diagnosis results
+2. **Server State** (React Query): API data, caching
+3. **Local State** (useState): UI state, form inputs
 
-### 컴포넌트 설계
-1. **Container/Presentational 패턴**: 로직과 UI 분리
-2. **Compound Components**: 복잡한 컴포넌트 구성
-3. **Custom Hooks**: 재사용 가능한 로직 추상화
+### Component Design
+1. **Container/Presentational Pattern**: Separate logic and UI
+2. **Compound Components**: Complex component composition
+3. **Custom Hooks**: Reusable logic abstraction
 
-### API 통합
+### API Integration
 ```typescript
 // services/api/personalColor.ts
 class PersonalColorAPI {
@@ -120,70 +120,73 @@ class PersonalColorAPI {
 }
 ```
 
-## 🎨 디자인 시스템
+## 🎨 Design System
 
-### 색상
-- Primary: `#FF6B6B` (코랄 핑크)
-- Secondary: `#4ECDC4` (민트)
+### Colors
+- Primary: `#FF6B6B` (Coral Pink)
+- Secondary: `#4ECDC4` (Mint)
 - Gray Scale: Gray 50-900
 - Semantic: Success, Warning, Error, Info
 
-### 반응형 브레이크포인트
+### Responsive Breakpoints
 - Mobile: 320px - 767px
 - Tablet: 768px - 1023px
 - Desktop: 1024px+
 
-### 터치 타겟
-- 최소 크기: 44px × 44px
-- 간격: 최소 8px
+### Touch Targets
+- Minimum size: 44px × 44px
+- Spacing: minimum 8px
 
-## 📱 모바일 최적화 체크리스트
-- [ ] 터치 타겟 크기 확인 (44px)
-- [ ] 이미지 lazy loading
-- [ ] 폰트 preload
-- [ ] 코드 스플리팅
-- [ ] PWA 지원
+## 📱 Mobile Optimization Checklist
+- [ ] Touch target size check (44px)
+- [ ] Image lazy loading
+- [ ] Font preload
+- [ ] Code splitting
+- [ ] PWA support
 
-## 🧪 테스트 전략
-1. **단위 테스트**: Jest + React Testing Library
-2. **통합 테스트**: API 연동 테스트
-3. **E2E 테스트**: Cypress (선택적)
-4. **성능 테스트**: Lighthouse CI
+## 🧪 Testing Strategy
+1. **Unit Tests**: Jest + React Testing Library
+2. **Integration Tests**: API integration tests
+3. **E2E Tests**: Cypress (optional)
+4. **Performance Tests**: Lighthouse CI
 
-## 📊 성공 지표
-### 기술적 지표
-- 페이지 로드: < 3초
-- AI 분석: < 30초
-- Lighthouse 점수: > 90
+## 📊 Success Metrics
+### Technical Metrics
+- Page load: < 3 seconds
+- AI analysis: < 30 seconds
+- Lighthouse score: > 90
 
-### 비즈니스 지표
-- 플로우 완료율: > 40%
-- 추천 요청률: > 60%
-- 공유율: > 20%
+### Business Metrics
+- Flow completion rate: > 40%
+- Recommendation request rate: > 60%
+- Share rate: > 20%
 
-## 🚨 주요 리스크 및 대응
-1. **AI API 지연**: 타임아웃 30초, 재시도 로직
-2. **이미지 업로드 실패**: 클라이언트 압축, 10MB 제한
-3. **모바일 성능**: 코드 스플리팅, 이미지 최적화
+## 🚨 Key Risks and Mitigation
+1. **AI API Delay**: 30-second timeout, retry logic
+2. **Image Upload Failure**: Client compression, 10MB limit
+3. **Mobile Performance**: Code splitting, image optimization
 
-## 📌 중요 참고사항
-- 기존 ShowMeTheColor API는 수정하지 않음
-- 모바일 우선 설계 (Mobile First)
-- 인스타그램 DM으로 추천 결과 발송
-- 개인정보는 최소한으로 수집
+## 📌 Important Notes
+- ShowMeTheColor API should not be modified
+- Mobile-first design approach
+- Recommendation results sent via Instagram DM
+- Minimal personal information collection
+- Admin panel accessible at `/admin/login`
 
-## 🔗 주요 문서
-- [개발 계획](./development_plan.md)
-- [메인 기획문서](./hijab_personal_color_prd.md)
-- [디자인 시스템](./design_system.md)
-- [화면별 상세 기획](./screens_specification.md)
-- [API 기술 문서](./API_TECHNICAL_DOCUMENTATION.md)
+## 🔗 Key Documentation
+- [Development Plan](./development_plan.md)
+- [Main Product Requirements](./hijab_personal_color_prd.md)
+- [Design System](./design_system.md)
+- [Screen Specifications](./screens_specification.md)
+- [API Technical Documentation](./API_TECHNICAL_DOCUMENTATION.md)
 
-## 🐛 디버깅 팁
-1. AI API 연결 실패 시: CORS 설정 확인
-2. 이미지 업로드 실패 시: 파일 크기 및 형식 확인
-3. 스타일 깨짐: Tailwind purge 설정 확인
-## 🔧 Prompt: “Write Code with *Minimum* Bug Risk – 7-Step Engineering Playbook”
+## 🐛 Debugging Tips
+1. AI API connection failure: Check CORS settings
+2. Image upload failure: Check file size and format
+3. Style issues: Check Tailwind purge settings
+4. Admin access issues: Verify ADMIN_API_KEY environment variable
+
+## 🔧 Prompt: "Write Code with *Minimum* Bug Risk – 7-Step Engineering Playbook"
 
 > **Context**  
 > You are coding a new feature. Your top priority is to **reduce the probability of introducing bugs**. Apply the following evidence-based strategies, which combine *systemic thinking, practical tooling, and collaborative process*.
@@ -191,17 +194,17 @@ class PersonalColorAPI {
 ---
 
 ### 1 ️⃣  Design & Build in Small Pieces  *(Modularization + Single-Responsibility)*
-- **Principle** High complexity ⇒ exponential bug risk. Cohesion↑ & Coupling↓ ⇒ errors↓.  
-- **Rules** One function = one job, keep it ≤ 10 – 30 lines.  
+- **Principle** High complexity ⇒ exponential bug risk. Cohesion↑ & Coupling↓ ⇒ errors↓.  
+- **Rules** One function = one job, keep it ≤ 10 – 30 lines.  
   Layer complex flows (e.g., `handler → service → logic → utils`).
 
 ### 2 ️⃣  Write Tests First (TDD) or at Least Unit Tests
-- **Evidence** Google’s 15-year study: higher coverage slashes maintenance cost.  
-- **Do** For every core behavior add a test (`pytest`, `unittest`, `jest`, `vitest`).  
+- **Evidence** Google's 15-year study: higher coverage slashes maintenance cost.  
+- **Do** For every core behavior add a test (`pytest`, `unittest`, `jest`, `vitest`).  
   Always test side-effects (DB, files).
 
 ### 3 ️⃣  Use Static Analysis (Lint + Type Check)
-- **Why** Machines catch repetitive human mistakes instantly.  
+- **Why** Machines catch repetitive human mistakes instantly.  
 - **Tools**  
   - *Python*: `mypy`, `ruff`, `flake8`  
   - *JS/TS*: `eslint`, `prettier`, `typescript --strict`  
@@ -215,7 +218,7 @@ class PersonalColorAPI {
 ### 5 ️⃣  Enforce Code Review / Rubber-Duck Routine
 - Explaining code exposes hidden logic flaws.  
 - Describe the flow to ChatGPT, a teammate, or an imaginary duck before merging.  
-- Ask yourself: “Can I clearly justify this design?”
+- Ask yourself: "Can I clearly justify this design?"
 
 ### 6 ️⃣  Prefer Logging over Ad-hoc Debugging  *(Observability)*
 - Post-deploy debugging is harder than pre-deploy insight.  
@@ -233,6 +236,14 @@ class PersonalColorAPI {
 #### ✳️ Bonus – Use AI Tools, but Verify
 Copilot, Cursor, ChatGPT = pattern engines ~70-80 % accurate.  
 Double-check DB logic, async flows, edge cases.  
-Always ask: “*Why did I choose this solution?*”
+Always ask: "*Why did I choose this solution?*"
 ---
-*이 문서는 Claude가 프로젝트를 더 잘 이해하고 도움을 줄 수 있도록 작성되었습니다.*
+*This document was created to help Claude better understand and assist with the project.*
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+      
+      IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context or otherwise consider it in your response unless it is highly relevant to your task. Most of the time, it is not relevant.

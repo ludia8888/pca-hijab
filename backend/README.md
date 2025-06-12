@@ -1,44 +1,210 @@
 # PCA-HIJAB Backend API
 
-## 개요
-히잡 퍼스널 컬러 추천 서비스의 백엔드 API입니다. 사용자의 Instagram ID와 추천 요청 데이터를 저장합니다.
+Express.js backend API for the PCA-HIJAB personal color analysis and hijab recommendation service.
 
-## 주요 기능
-- 세션 생성 및 Instagram ID 저장
-- 사용자 선호도 및 퍼스널 컬러 결과 저장
-- 추천 상태 관리 (pending, processing, completed)
+## Overview
 
-## API 엔드포인트
+This backend provides RESTful APIs for:
+- Session management
+- Recommendation tracking
+- Admin dashboard
+- Integration with AI analysis service
 
-### 세션 관리
-- `POST /api/sessions` - 새 세션 생성
-- `GET /api/sessions/:sessionId` - 세션 정보 조회
+## Tech Stack
 
-### 추천 관리
-- `POST /api/recommendations` - 추천 요청 생성
-- `GET /api/recommendations/:recommendationId` - 추천 상태 조회
-- `GET /api/recommendations` - 모든 추천 조회 (관리자용)
-- `PATCH /api/recommendations/:recommendationId/status` - 추천 상태 업데이트
+- **Framework**: Express.js 5.1.0
+- **Language**: TypeScript
+- **Database**: In-memory storage (PostgreSQL ready)
+- **Security**: Helmet, CORS, API key authentication
+- **Server Port**: 5001
 
-## 설치 및 실행
+## API Endpoints
 
-```bash
-# 의존성 설치
-npm install
+### Public Endpoints
 
-# 개발 서버 실행
-npm run dev
+#### Health Check
+```http
+GET /api/health
+```
+Returns service health status and database connectivity.
 
-# 프로덕션 빌드
-npm run build
+#### Create Session
+```http
+POST /api/sessions
+Content-Type: application/json
 
-# 프로덕션 실행
-npm start
+{
+  "instagramId": "@username"
+}
 ```
 
-## 환경 변수
-`.env.example` 파일을 참고하여 `.env` 파일을 생성하세요.
+#### Get Session
+```http
+GET /api/sessions/:sessionId
+```
 
-## 데이터 저장
-현재는 In-memory 저장소를 사용합니다. 서버 재시작 시 데이터가 초기화됩니다.
-프로덕션에서는 PostgreSQL로 마이그레이션 예정입니다.
+#### Create Recommendation
+```http
+POST /api/recommendations
+Content-Type: application/json
+
+{
+  "sessionId": "ses123",
+  "instagramId": "@username",
+  "preferences": {
+    "styles": ["modern", "elegant"],
+    "fabricTypes": ["cotton", "silk"],
+    "priceRange": "medium",
+    "occasions": ["daily", "formal"]
+  },
+  "personalColorResult": {
+    "personalColor": "Spring",
+    "tone": "Warm",
+    "details": {...}
+  }
+}
+```
+
+#### Get Recommendation
+```http
+GET /api/recommendations/:recommendationId
+```
+
+### Admin Endpoints
+
+All admin endpoints require authentication via API key header:
+```
+X-API-Key: [ADMIN_API_KEY]
+```
+
+#### Admin Statistics
+```http
+GET /api/admin/statistics
+```
+Returns usage statistics including session counts and recommendation status breakdown.
+
+#### List Recommendations
+```http
+GET /api/admin/recommendations?page=1&limit=20
+```
+Paginated list of all recommendations with filtering support.
+
+#### Get Recommendation Detail
+```http
+GET /api/admin/recommendations/:id
+```
+Detailed information about a specific recommendation.
+
+#### Update Recommendation Status
+```http
+PUT /api/admin/recommendations/:id/status
+Content-Type: application/json
+
+{
+  "status": "completed"
+}
+```
+
+## Environment Variables
+
+```bash
+# Required
+PORT=5001                    # Server port
+NODE_ENV=production         # Environment (development/production)
+ADMIN_API_KEY=your-key      # Admin authentication key
+
+# Optional
+DATABASE_URL=postgresql://...  # PostgreSQL connection (if available)
+CLIENT_URL=https://...        # Frontend URL for CORS
+```
+
+## Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Development
+npm run dev
+
+# Production build
+npm run build
+npm start
+
+# Testing
+npm test
+
+# Linting
+npm run lint
+```
+
+## Database
+
+The application uses an in-memory database by default with automatic fallback. When `DATABASE_URL` is provided, it connects to PostgreSQL.
+
+### Schema
+
+#### Sessions Table
+- `id` (UUID)
+- `instagramId` (string)
+- `createdAt` (timestamp)
+
+#### Recommendations Table
+- `id` (UUID)
+- `sessionId` (UUID, FK)
+- `instagramId` (string)
+- `preferences` (JSON)
+- `personalColorResult` (JSON)
+- `status` (pending/completed)
+- `createdAt` (timestamp)
+- `updatedAt` (timestamp)
+
+## Security
+
+- API key authentication for admin routes
+- CORS configured for specific origins
+- Helmet.js for security headers
+- Input validation on all endpoints
+- Rate limiting recommended for production
+
+## Error Handling
+
+All errors follow a consistent format:
+```json
+{
+  "error": {
+    "message": "Error description",
+    "code": "ERROR_CODE",
+    "statusCode": 400
+  }
+}
+```
+
+## Development
+
+```bash
+# Watch mode
+npm run dev
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Fix lint issues
+npm run lint:fix
+```
+
+## Production Deployment
+
+1. Set environment variables
+2. Build the application: `npm run build`
+3. Start the server: `npm start`
+4. Configure reverse proxy (nginx/Apache)
+5. Set up SSL certificates
+6. Enable monitoring and logging
+
+## License
+
+MIT

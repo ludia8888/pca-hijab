@@ -29,7 +29,6 @@ export const convertHEICToJPEG = async (file: File): Promise<File> => {
   }
 
   try {
-    console.log('Converting HEIC file:', file.name);
     
     // Convert HEIC to JPEG using heic2any
     const convertedBlob = await heic2any({
@@ -48,10 +47,8 @@ export const convertHEICToJPEG = async (file: File): Promise<File> => {
       { type: 'image/jpeg', lastModified: Date.now() }
     );
     
-    console.log('HEIC conversion successful:', convertedFile.name);
     return convertedFile;
-  } catch (error) {
-    console.error('HEIC conversion error:', error);
+  } catch {
     
     // If conversion fails, throw an error instead of returning the original file
     // This way the user knows the file cannot be processed

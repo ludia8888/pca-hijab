@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import type { ReactNode, ErrorInfo } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui';
 
 interface Props {
@@ -22,8 +22,9 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  componentDidCatch(): void {
+    // Error has already been captured by getDerivedStateFromError
+    // Additional error reporting can be added here if needed
   }
 
   handleReset = (): void => {

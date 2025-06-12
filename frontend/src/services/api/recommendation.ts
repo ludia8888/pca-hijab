@@ -25,7 +25,7 @@ export class RecommendationAPI {
   ): Promise<RecommendationResponse> {
     try {
       // Get sessionId from store if not provided
-      const sessionId = data.sessionId || (window as any).__APP_STORE__?.getState()?.sessionId;
+      const sessionId = data.sessionId || (window as unknown as { __APP_STORE__?: { getState: () => { sessionId?: string } } }).__APP_STORE__?.getState()?.sessionId;
       
       const response = await apiClient.post<RecommendationResponse>(
         '/recommendations',
@@ -36,8 +36,7 @@ export class RecommendationAPI {
         }
       );
       return response.data;
-    } catch (error) {
-      console.error('Failed to submit recommendation:', error);
+    } catch {
       // Return mock success for MVP
       return {
         success: true,
@@ -60,8 +59,7 @@ export class RecommendationAPI {
         `/recommendations/${recommendationId}/status`
       );
       return response.data;
-    } catch (error) {
-      console.error('Failed to get recommendation status:', error);
+    } catch {
       // Return mock status for MVP
       return {
         status: 'pending',

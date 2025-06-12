@@ -80,7 +80,7 @@ export const handlers = [
 
   // POST /api/recommend
   http.post('/api/recommend', async ({ request }) => {
-    const data = await request.json() as any;
+    const data = await request.json() as { sessionId?: string; instagramId?: string; preferences?: unknown };
     
     // 필수 필드 검증
     if (!data?.sessionId || !data?.instagramId || !data?.preferences) {

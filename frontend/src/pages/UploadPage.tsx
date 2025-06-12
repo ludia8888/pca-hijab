@@ -29,8 +29,6 @@ const UploadPage = (): JSX.Element => {
 
   const handleImageError = (error: string): void => {
     setError(error);
-    // Log error for debugging
-    console.error('Image upload error:', error);
   };
 
   const handleAnalyze = async (): Promise<void> => {

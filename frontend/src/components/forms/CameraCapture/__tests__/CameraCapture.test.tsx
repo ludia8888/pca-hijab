@@ -23,7 +23,7 @@ describe('CameraCapture', () => {
   const originalError = console.error;
   
   beforeAll(() => {
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
       if (args[0]?.includes?.('Camera access error')) {
         return;
       }
@@ -41,11 +41,11 @@ describe('CameraCapture', () => {
     // Mock canvas methods
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
       drawImage: vi.fn(),
-    })) as any;
+    })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
     
     HTMLCanvasElement.prototype.toBlob = vi.fn((callback) => {
       callback(new Blob(['mock-image'], { type: 'image/jpeg' }));
-    }) as any;
+    }) as unknown as typeof HTMLCanvasElement.prototype.toBlob;
     
     // Mock video element play
     HTMLVideoElement.prototype.play = vi.fn().mockResolvedValue(undefined);

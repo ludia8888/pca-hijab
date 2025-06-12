@@ -21,13 +21,13 @@
 ## Overview
 
 ### Project Description
-Personal Color Analysis API는 사용자의 얼굴 이미지를 분석하여 퍼스널 컬러(봄/여름/가을/겨울)를 진단하는 AI 기반 REST API 서비스입니다.
+Personal Color Analysis API is an AI-based REST API service that analyzes user facial images to diagnose personal color types (Spring/Summer/Autumn/Winter).
 
 ### Key Features
-- 얼굴 인식 및 특징점 추출 (dlib 기반)
-- 피부, 눈썹, 눈동자 색상 분석
-- Lab/HSV 색공간 기반 과학적 분류
-- 웜톤/쿨톤 및 계절별 타입 진단
+- Face recognition and feature extraction (dlib-based)
+- Skin, eyebrow, and iris color analysis
+- Scientific classification based on Lab/HSV color spaces
+- Warm/Cool tone and seasonal type diagnosis
 - RESTful API 인터페이스
 
 ### Technology Stack

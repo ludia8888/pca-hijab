@@ -592,7 +592,7 @@ function drawCelebritySection(
 
 function drawPerfumeSection(
   ctx: CanvasRenderingContext2D,
-  perfumeData: any,
+  perfumeData: { family: string; notes: string[]; recommendations: string[] },
   y: number,
   width: number
 ) {
@@ -624,7 +624,7 @@ function drawPerfumeSection(
 
 function drawJewelrySection(
   ctx: CanvasRenderingContext2D,
-  accessoryData: any,
+  accessoryData: { metal: string; style: string; },
   y: number,
   width: number
 ) {

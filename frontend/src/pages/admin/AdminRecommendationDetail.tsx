@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
@@ -15,6 +15,20 @@ const AdminRecommendationDetail = (): JSX.Element => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const loadRecommendation = useCallback(async (): Promise<void> => {
+    if (!apiKey || !id) return;
+
+    setIsLoading(true);
+    try {
+      const data = await AdminAPI.getRecommendation(apiKey, id);
+      setRecommendation(data);
+    } catch {
+      // Handle error silently
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKey, id]);
+
   useEffect(() => {
     if (!apiKey || !id) {
       navigate('/admin/login');
@@ -22,21 +36,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
     }
 
     loadRecommendation();
-  }, [apiKey, id]);
-
-  const loadRecommendation = async (): Promise<void> => {
-    if (!apiKey || !id) return;
-
-    setIsLoading(true);
-    try {
-      const data = await AdminAPI.getRecommendation(apiKey, id);
-      setRecommendation(data);
-    } catch (error) {
-      console.error('Failed to load recommendation:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [apiKey, id, navigate, loadRecommendation]);
 
   const handleStatusUpdate = async (newStatus: 'pending' | 'processing' | 'completed'): Promise<void> => {
     if (!apiKey || !id || !recommendation) return;
@@ -45,8 +45,8 @@ const AdminRecommendationDetail = (): JSX.Element => {
     try {
       const updated = await AdminAPI.updateRecommendationStatus(apiKey, id, newStatus);
       setRecommendation(updated);
-    } catch (error) {
-      console.error('Failed to update status:', error);
+    } catch {
+      // Handle error silently
     } finally {
       setIsUpdating(false);
     }

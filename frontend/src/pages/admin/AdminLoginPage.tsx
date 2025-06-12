@@ -25,9 +25,8 @@ const AdminLoginPage = (): JSX.Element => {
       // If successful, save API key and navigate to dashboard
       setApiKey(apiKeyInput);
       navigate('/admin/dashboard');
-    } catch (error) {
+    } catch {
       setError('Invalid API key. Please try again.');
-      console.error('Admin login error:', error);
     } finally {
       setIsLoading(false);
     }

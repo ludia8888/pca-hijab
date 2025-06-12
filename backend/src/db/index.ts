@@ -57,6 +57,11 @@ class InMemoryDatabase {
     return Array.from(this.recommendations.values())
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
+  
+  // Test connection (for health checks)
+  async testConnection(): Promise<boolean> {
+    return true; // In-memory DB is always available
+  }
 
   async getRecommendationsByStatus(status: Recommendation['status']): Promise<Recommendation[]> {
     const recs = await this.getAllRecommendations();
@@ -64,10 +69,22 @@ class InMemoryDatabase {
   }
 }
 
+// Database interface to ensure consistency
+interface Database {
+  createSession(instagramId: string): Promise<Session>;
+  getSession(sessionId: string): Promise<Session | undefined>;
+  createRecommendation(data: Omit<Recommendation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Recommendation>;
+  getRecommendation(recommendationId: string): Promise<Recommendation | undefined>;
+  updateRecommendationStatus(recommendationId: string, status: Recommendation['status']): Promise<Recommendation | undefined>;
+  getAllRecommendations(): Promise<Recommendation[]>;
+  getRecommendationsByStatus(status: Recommendation['status']): Promise<Recommendation[]>;
+  testConnection?(): Promise<boolean>;
+}
+
 // Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory
 const usePostgres = !!process.env.DATABASE_URL;
 
-export const db = usePostgres ? postgresDb : new InMemoryDatabase();
+export const db: Database = usePostgres ? postgresDb : new InMemoryDatabase();
 
 // Initialize database on startup
 if (usePostgres) {
@@ -79,9 +96,18 @@ if (usePostgres) {
         postgresDb.initialize().catch(console.error);
       }
     } else {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('FATAL: PostgreSQL connection failed in production');
+        process.exit(1);
+      }
       console.warn('PostgreSQL connection failed, falling back to in-memory database');
     }
   });
 } else {
-  console.info('Using in-memory database (DATABASE_URL not set)');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: DATABASE_URL is required in production');
+    process.exit(1);
+  }
+  console.warn('⚠️  Using in-memory database (DATA WILL BE LOST ON RESTART)');
+  console.info('Set DATABASE_URL environment variable to use PostgreSQL');
 }

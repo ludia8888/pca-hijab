@@ -18,6 +18,7 @@ A mobile-optimized web service that uses AI to diagnose personal color types and
 - **Beautiful Result Cards**: Korean-inspired aesthetic with comprehensive beauty recommendations
 - **Multi-Language Support**: Currently in English (Korean version available)
 - **Fast Analysis**: Optimized to complete in ~11 seconds
+- **Admin Dashboard**: Comprehensive admin panel for recommendation management
 
 ### Tech Stack
 
@@ -34,13 +35,14 @@ A mobile-optimized web service that uses AI to diagnose personal color types and
 - **Performance**: Code splitting, lazy loading, Vercel Speed Insights
 
 #### Backend
-- **Main API**: Express.js + TypeScript
-- **AI API**: Python FastAPI (ShowMeTheColor)
+- **Main API**: Express.js + TypeScript (Port 5001)
+- **AI API**: Python FastAPI (ShowMeTheColor - Port 8000)
 - **Face Detection**: dlib with 68-point landmarks
 - **Color Analysis**: K-means clustering, Lab/HSV color spaces
-- **Database**: PostgreSQL with in-memory fallback
+- **Database**: In-memory storage (PostgreSQL ready)
+- **Admin Panel**: Secure admin dashboard with API key authentication
 - **Deployment**: Render (Backend), Vercel (Frontend)
-- **Security**: CORS, rate limiting, input validation
+- **Security**: CORS, rate limiting, input validation, API key auth
 
 ## 🚀 Getting Started
 
@@ -53,7 +55,7 @@ A mobile-optimized web service that uses AI to diagnose personal color types and
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/pca-hijab.git
+git clone https://github.com/[your-username]/pca-hijab.git
 cd pca-hijab
 
 # Install all dependencies

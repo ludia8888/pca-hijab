@@ -20,7 +20,12 @@ vi.mock('@/utils/helpers', () => ({
 }));
 
 // Simple mock for CameraCapture to avoid MediaStream errors
-const MockCameraCapture = ({ onCapture, onClose }: any) => (
+interface MockCameraCaptureProps {
+  onCapture: (file: File) => void;
+  onClose: () => void;
+}
+
+const MockCameraCapture = ({ onCapture, onClose }: MockCameraCaptureProps) => (
   <div data-testid="camera-capture">
     <button onClick={() => onCapture(new File([''], 'camera.jpg', { type: 'image/jpeg' }))}>
       Capture
@@ -41,7 +46,7 @@ describe('ImageUpload', () => {
   const originalError = console.error;
   
   beforeAll(() => {
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
       if (args[0]?.includes?.('Camera access error') || 
           args[0]?.includes?.('Not available in test environment')) {
         return;
