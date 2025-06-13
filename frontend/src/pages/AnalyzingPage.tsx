@@ -79,6 +79,8 @@ const AnalyzingPage = (): JSX.Element => {
           errorMessage = 'Please check your network connection.';
         } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
           errorMessage = 'Analysis timed out. Please try again.';
+        } else if (err.message.includes('분석에 시간이 오래 걸리고 있습니다')) {
+          errorMessage = '서버가 준비 중입니다. 잠시 후 다시 시도해주세요.';
         } else if (err.message.includes('분석 서비스')) {
           errorMessage = err.message; // Korean error message from API
         } else {

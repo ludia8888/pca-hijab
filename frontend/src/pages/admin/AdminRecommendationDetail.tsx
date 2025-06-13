@@ -182,11 +182,11 @@ const AdminRecommendationDetail = (): JSX.Element => {
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-primary h-2 rounded-full"
-                      style={{ width: `${recommendation.personalColorResult.confidence * 100}%` }}
+                      style={{ width: `${Math.min(recommendation.personalColorResult.confidence * 100, 100)}%` }}
                     />
                   </div>
                   <span className="text-sm font-medium">
-                    {(recommendation.personalColorResult.confidence * 100).toFixed(1)}%
+                    {Math.min(recommendation.personalColorResult.confidence * 100, 100).toFixed(1)}%
                   </span>
                 </div>
               </div>
@@ -274,31 +274,35 @@ const AdminRecommendationDetail = (): JSX.Element => {
         {/* Status Update Actions */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">상태 업데이트</h2>
-          <div className="flex gap-3">
-            <Button
-              variant={recommendation.status === 'pending' ? 'primary' : 'secondary'}
-              onClick={() => handleStatusUpdate('pending')}
-              disabled={isUpdating || recommendation.status === 'pending'}
-              loading={isUpdating}
-            >
-              대기 중으로 변경
-            </Button>
-            <Button
-              variant={recommendation.status === 'processing' ? 'primary' : 'secondary'}
-              onClick={() => handleStatusUpdate('processing')}
-              disabled={isUpdating || recommendation.status === 'processing'}
-              loading={isUpdating}
-            >
-              처리 중으로 변경
-            </Button>
-            <Button
-              variant={recommendation.status === 'completed' ? 'primary' : 'secondary'}
-              onClick={() => handleStatusUpdate('completed')}
-              disabled={isUpdating || recommendation.status === 'completed'}
-              loading={isUpdating}
-            >
-              완료로 변경
-            </Button>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="status"
+                value="pending"
+                checked={recommendation.status === 'pending'}
+                onChange={() => !isUpdating && handleStatusUpdate('pending')}
+                disabled={isUpdating}
+                className="w-4 h-4 text-yellow-600 focus:ring-yellow-500"
+              />
+              <span className={`font-medium ${recommendation.status === 'pending' ? 'text-yellow-600' : 'text-gray-600'}`}>
+                대기중
+              </span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="status"
+                value="completed"
+                checked={recommendation.status === 'completed'}
+                onChange={() => !isUpdating && handleStatusUpdate('completed')}
+                disabled={isUpdating}
+                className="w-4 h-4 text-green-600 focus:ring-green-500"
+              />
+              <span className={`font-medium ${recommendation.status === 'completed' ? 'text-green-600' : 'text-gray-600'}`}>
+                완료
+              </span>
+            </label>
           </div>
         </Card>
       </div>

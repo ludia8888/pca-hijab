@@ -4,6 +4,7 @@ import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
 import { Card, Button, LoadingSpinner } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
+import { SimpleFunnelDashboard } from '@/components/analytics/SimpleFunnelDashboard';
 import { 
   Users, 
   Clock, 
@@ -11,7 +12,9 @@ import {
   AlertCircle,
   LogOut,
   ChevronRight,
-  Palette
+  Palette,
+  BarChart3,
+  UserCog
 } from 'lucide-react';
 import type { Recommendation } from '@/types';
 
@@ -32,6 +35,8 @@ interface Statistics {
   }>;
 }
 
+type TabType = 'analytics' | 'users';
+
 const AdminDashboard = (): JSX.Element => {
   const navigate = useNavigate();
   const { apiKey, logout } = useAdminStore();
@@ -39,6 +44,7 @@ const AdminDashboard = (): JSX.Element => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'processing' | 'completed'>('all');
+  const [activeTab, setActiveTab] = useState<TabType>('users');
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!apiKey) return;
@@ -141,26 +147,50 @@ const AdminDashboard = (): JSX.Element => {
           </Button>
         </div>
 
-        {/* Statistics Cards */}
-        {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">전체 요청</p>
-                  <p className="text-2xl font-bold">{statistics.total}</p>
-                </div>
-                <Users className="w-8 h-8 text-gray-400" />
-              </div>
-            </Card>
+        {/* Tab Navigation */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === 'users'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <UserCog className="w-4 h-4" />
+              사용자 관리
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === 'analytics'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              데이터 분석
+            </div>
+          </button>
+        </div>
 
+        {/* Tab Content */}
+        {activeTab === 'users' && (
+          <>
+            {/* Statistics Cards */}
+        {statistics && (
+          <div className="grid grid-cols-3 gap-4">
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">대기 중</p>
+                  <p className="text-sm text-gray-600">추천 대기중</p>
                   <p className="text-2xl font-bold text-yellow-600">
-                    {statistics.byStatus.pending}
+                    {statistics.byStatus.pending}명
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">히잡 추천 요청한 사용자</p>
                 </div>
                 <Clock className="w-8 h-8 text-yellow-400" />
               </div>
@@ -169,61 +199,61 @@ const AdminDashboard = (): JSX.Element => {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">처리 중</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {statistics.byStatus.processing}
+                  <p className="text-sm text-gray-600">추천 완료</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {statistics.byStatus.completed}명
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">히잡 추천까지 완료</p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-blue-400" />
+                <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
             </Card>
 
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">완료</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {statistics.byStatus.completed}
-                  </p>
+                  <p className="text-sm text-gray-600">총 추천 요청</p>
+                  <p className="text-2xl font-bold">{statistics.total}명</p>
+                  <p className="text-xs text-gray-500 mt-1">전체 히잡 추천 사용자</p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-400" />
+                <Users className="w-8 h-8 text-gray-400" />
               </div>
             </Card>
           </div>
         )}
 
-        {/* Personal Color Distribution */}
-        {statistics && (
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Palette className="w-5 h-5" />
-              퍼스널 컬러 분포
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(statistics.byPersonalColor).map(([color, count]) => (
-                <div key={color} className="text-center">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getPersonalColorClass(color)}`}>
-                    {color.toUpperCase()}
-                  </div>
-                  <p className="text-2xl font-bold mt-2">{count}</p>
-                </div>
-              ))}
+        {/* User Type Info Banner */}
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-blue-900">사용자 유형 안내</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                현재 <strong>히잡 추천을 요청한 사용자</strong>만 표시됩니다. 
+                퍼스널 컬러만 측정받은 사용자는 별도 추적이 필요합니다.
+              </p>
             </div>
-          </Card>
-        )}
+          </div>
+        </Card>
+
 
         {/* Filter Tabs */}
-        <div className="flex space-x-2">
-          {(['all', 'pending', 'processing', 'completed'] as const).map((status) => (
-            <Button
-              key={status}
-              variant={statusFilter === status ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setStatusFilter(status)}
-            >
-              {status === 'all' ? '전체' : status === 'pending' ? '대기 중' : status === 'processing' ? '처리 중' : '완료'}
-            </Button>
-          ))}
+        <div className="flex justify-between items-center">
+          <div className="flex space-x-2">
+            {(['pending', 'completed', 'all'] as const).map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => setStatusFilter(status)}
+              >
+                {status === 'all' ? '전체 히잡 추천' : status === 'pending' ? '추천 대기중' : status === 'processing' ? '처리 중' : '추천 완료'}
+              </Button>
+            ))}
+          </div>
+          <div className="text-sm text-gray-500">
+            히잡 추천 요청 사용자 목록
+          </div>
         </div>
 
         {/* Recommendations Table */}
@@ -232,6 +262,9 @@ const AdminDashboard = (): JSX.Element => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    사용자 유형
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     인스타그램 ID
                   </th>
@@ -242,10 +275,10 @@ const AdminDashboard = (): JSX.Element => {
                     선호 사항
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    상태
+                    추천 상태
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    생성일
+                    요청일
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     작업
@@ -255,6 +288,12 @@ const AdminDashboard = (): JSX.Element => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {recommendations.map((rec) => (
                   <tr key={rec.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <Users className="w-3 h-3" />
+                        히잡 추천
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         @{rec.instagramId}
@@ -297,6 +336,12 @@ const AdminDashboard = (): JSX.Element => {
             </table>
           </div>
         </Card>
+          </>
+        )}
+
+        {activeTab === 'analytics' && (
+          <SimpleFunnelDashboard />
+        )}
       </div>
     </PageLayout>
   );

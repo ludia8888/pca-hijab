@@ -1,7 +1,7 @@
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 export const AI_API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:8000';
-export const API_TIMEOUT = 30000; // 30 seconds
+export const API_TIMEOUT = 15000; // 15 seconds
 export const USE_MOCK_AI = import.meta.env.VITE_USE_MOCK_AI === 'true' || !import.meta.env.VITE_AI_API_URL;
 
 // File Upload
@@ -16,35 +16,35 @@ export const ANALYSIS_STEPS = [
     icon: '🎨',
     message: 'Analyzing skin undertones...',
     progress: 20,
-    duration: 2500,
+    duration: 1250,
   },
   {
     id: 'saturation-calculation',
     icon: '🌈',
     message: 'Calculating your ideal saturation levels...',
     progress: 45,
-    duration: 2500,
+    duration: 1250,
   },
   {
     id: 'tone-analysis',
     icon: '✨',
     message: 'Analyzing overall tone through contrast...',
     progress: 70,
-    duration: 2500,
+    duration: 1250,
   },
   {
     id: 'palette-generation',
     icon: '🎨',
     message: 'Generating your optimal color palette...',
     progress: 90,
-    duration: 2500,
+    duration: 1250,
   },
   {
     id: 'completion',
     icon: '✅',
     message: 'Your results are ready!',
     progress: 100,
-    duration: 1000,
+    duration: 500,
   },
 ];
 

@@ -50,42 +50,7 @@ const ResultPage = (): JSX.Element => {
     }
   }, [analysisResult, instagramId, navigate]);
 
-  // Use mock data for development if no analysis result
-  const mockResult = {
-    personal_color: '봄 웜톤',
-    personal_color_en: 'spring' as const,
-    tone: '웜톤',
-    tone_en: 'warm' as const,
-    details: {
-      is_warm: 1,
-      skin_lab_b: 15.2,
-      eyebrow_lab_b: 12.5,
-      eye_lab_b: 8.3,
-      skin_hsv_s: 0.3,
-      eyebrow_hsv_s: 0.4,
-      eye_hsv_s: 0.2,
-    },
-    facial_colors: {
-      cheek: {
-        rgb: [255, 200, 180] as [number, number, number],
-        lab: [80, 15, 20] as [number, number, number],
-        hsv: [15, 0.3, 1] as [number, number, number],
-      },
-      eyebrow: {
-        rgb: [120, 80, 60] as [number, number, number],
-        lab: [40, 10, 15] as [number, number, number],
-        hsv: [20, 0.5, 0.5] as [number, number, number],
-      },
-      eye: {
-        rgb: [80, 60, 50] as [number, number, number],
-        lab: [30, 5, 10] as [number, number, number],
-        hsv: [20, 0.4, 0.3] as [number, number, number],
-      },
-    },
-    confidence: 0.85,
-  };
-
-  const result = analysisResult || (process.env.NODE_ENV === 'development' ? mockResult : null);
+  const result = analysisResult;
   
   if (!result) {
     return <div>Loading...</div>;

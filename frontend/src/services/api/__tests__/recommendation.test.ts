@@ -11,32 +11,6 @@ describe('RecommendationAPI', () => {
     personal_color_en: 'autumn',
     tone: '따뜻한 톤',
     tone_en: 'warm',
-    details: {
-      is_warm: 1,
-      skin_lab_b: 10.5,
-      eyebrow_lab_b: 8.2,
-      eye_lab_b: 7.8,
-      skin_hsv_s: 20.5,
-      eyebrow_hsv_s: 15.3,
-      eye_hsv_s: 12.7
-    },
-    facial_colors: {
-      cheek: {
-        rgb: [255, 200, 180],
-        lab: [80, 10, 15],
-        hsv: [20, 30, 100]
-      },
-      eyebrow: {
-        rgb: [90, 70, 60],
-        lab: [30, 5, 10],
-        hsv: [20, 33, 35]
-      },
-      eye: {
-        rgb: [80, 60, 50],
-        lab: [25, 5, 8],
-        hsv: [20, 38, 31]
-      }
-    },
     confidence: 0.92
   };
 
@@ -54,7 +28,6 @@ describe('RecommendationAPI', () => {
 
   describe('submitRecommendation', () => {
     it('should successfully submit recommendation', async () => {
-      // 커스텀 핸들러로 엔드포인트 수정
       server.use(
         http.post('/api/recommendations', async () => {
           return HttpResponse.json({
@@ -88,13 +61,11 @@ describe('RecommendationAPI', () => {
 
       const incompleteData = {
         ...mockRecommendationData,
-        instagramId: '' // 빈 ID
+        instagramId: ''
       };
 
-      // RecommendationAPI는 에러를 catch하고 mock 성공을 반환하므로
-      // 실제로는 성공 응답을 받음
       const result = await RecommendationAPI.submitRecommendation(incompleteData);
-      expect(result.success).toBe(true); // catch 블록에서 mock 성공 반환
+      expect(result.success).toBe(true);
     });
 
     it('should handle server errors gracefully', async () => {
@@ -107,7 +78,6 @@ describe('RecommendationAPI', () => {
         })
       );
 
-      // 에러가 발생해도 catch 블록에서 성공을 반환
       const result = await RecommendationAPI.submitRecommendation(mockRecommendationData);
       
       expect(result.success).toBe(true);
@@ -121,7 +91,6 @@ describe('RecommendationAPI', () => {
         })
       );
 
-      // 네트워크 에러도 catch되어 mock 성공 반환
       const result = await RecommendationAPI.submitRecommendation(mockRecommendationData);
       
       expect(result.success).toBe(true);
@@ -161,7 +130,6 @@ describe('RecommendationAPI', () => {
         })
       );
 
-      // 에러 시 mock 응답 반환
       const result = await RecommendationAPI.getRecommendationStatus(recommendationId);
       
       expect(result.status).toBe('pending');

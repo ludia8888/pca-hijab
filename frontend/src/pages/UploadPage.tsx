@@ -6,6 +6,7 @@ import { useAppStore } from '@/store';
 import { Button, Card, DemoNotice, PrivacyNotice } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
+import { PersonalColorAPI } from '@/services/api/personalColor';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -20,6 +21,15 @@ const UploadPage = (): JSX.Element => {
       navigate(ROUTES.HOME);
     }
   }, [instagramId, navigate]);
+
+  // Pre-warm API on component mount (production only)
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      PersonalColorAPI.healthCheck().catch(err => {
+        console.log('API pre-warming failed:', err);
+      });
+    }
+  }, []);
 
   const handleImageUpload = async (file: File, preview: string): Promise<void> => {
     setSelectedFile(file);
