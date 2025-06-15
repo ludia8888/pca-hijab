@@ -21,10 +21,18 @@ export default defineConfig({
     port: 5173,
     open: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
+      // Only proxy backend API calls, not AI API calls
+      '/api/sessions': {
+        target: 'http://localhost:5001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/recommendations': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/admin': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
       },
     },
   },
