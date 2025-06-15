@@ -97,7 +97,7 @@ const UploadPage = (): JSX.Element => {
 
         {/* Glass Morphism Upload Area */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary-light/20 rounded-3xl blur-xl" />
           <div className="relative bg-white/70 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <ImageUpload
               onUpload={handleImageUpload}
@@ -113,7 +113,7 @@ const UploadPage = (): JSX.Element => {
             <button
               onClick={handleAnalyze}
               disabled={isCompressing}
-              className="w-full max-w-md mx-auto block bg-gradient-to-r from-primary to-secondary text-white font-medium py-4 px-8 rounded-full shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full max-w-md mx-auto block bg-gradient-to-r from-primary to-primary-light text-white font-medium py-4 px-8 rounded-full shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCompressing ? (
                 <span className="flex items-center justify-center gap-2">

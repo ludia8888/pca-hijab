@@ -101,7 +101,7 @@ export const FunnelVisualization = ({
                 >
                   {/* 퍼널 모양 */}
                   <div 
-                    className="relative bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg p-6 mx-auto"
+                    className="relative bg-gradient-to-r from-primary to-primary-light text-white rounded-lg p-6 mx-auto"
                     style={{ 
                       width: `${getFunnelWidth(step.users)}%`,
                       minWidth: '300px'

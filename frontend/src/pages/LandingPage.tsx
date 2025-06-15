@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
@@ -15,15 +15,33 @@ const LandingPage = (): JSX.Element => {
   const [showInstagramInput, setShowInstagramInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+  const [pageLoaded, setPageLoaded] = useState(false);
+  const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setPageLoaded(true);
     
     const handleScroll = () => {
-      setScrolled(window.scrollY > 100);
+      const scrollY = window.scrollY;
+      setScrolled(scrollY > 100);
+      
+      // Update active section based on scroll position
+      const sections = ['hero', 'features', 'how-it-works', 'benefits', 'statistics'];
+      for (const section of sections) {
+        const element = sectionsRef.current[section];
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 100 && rect.bottom >= 100) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
     };
     
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -59,23 +77,42 @@ const LandingPage = (): JSX.Element => {
   };
 
   const scrollToSection = (sectionId: string) => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 80; // Navigation height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${pageLoaded ? styles.loaded : ''}`}>
       {/* Navigation */}
       <nav className={`${styles.nav} ${scrolled ? styles.navScrolled : ''}`}>
         <div className={styles.navContent}>
-          <h1 className={styles.logo}>PCA Hijab</h1>
+          <h1 className={styles.logo} onClick={() => scrollToSection('hero')}>PCA Hijab</h1>
           <div className={styles.navLinks}>
-            <button onClick={() => scrollToSection('features')} className={styles.navLink}>
+            <button 
+              onClick={() => scrollToSection('features')} 
+              className={`${styles.navLink} ${activeSection === 'features' ? styles.navLinkActive : ''}`}
+            >
               Features
             </button>
-            <button onClick={() => scrollToSection('how-it-works')} className={styles.navLink}>
+            <button 
+              onClick={() => scrollToSection('how-it-works')} 
+              className={`${styles.navLink} ${activeSection === 'how-it-works' ? styles.navLinkActive : ''}`}
+            >
               How it Works
             </button>
-            <button onClick={() => scrollToSection('benefits')} className={styles.navLink}>
+            <button 
+              onClick={() => scrollToSection('benefits')} 
+              className={`${styles.navLink} ${activeSection === 'benefits' ? styles.navLinkActive : ''}`}
+            >
               Benefits
             </button>
           </div>
@@ -83,7 +120,7 @@ const LandingPage = (): JSX.Element => {
       </nav>
 
       {/* Hero Section */}
-      <section className={styles.hero}>
+      <section id="hero" ref={el => sectionsRef.current['hero'] = el} className={styles.hero}>
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <h1 className={styles.heroTitle}>
@@ -104,14 +141,14 @@ const LandingPage = (): JSX.Element => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className={styles.features}>
+      <section id="features" ref={el => sectionsRef.current['features'] = el} className={styles.features}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
             <span className={styles.sectionTitleSmall}>Why Choose PCA Hijab?</span>
             <span className={styles.sectionTitleMain}>AI-Powered Color Analysis</span>
           </h2>
           <div className={styles.featureGrid}>
-            <div className={styles.featureCard}>
+            <div className={`${styles.featureCard} ${styles.fadeInUp}`}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>🤖</div>
               </div>
@@ -121,7 +158,7 @@ const LandingPage = (): JSX.Element => {
                 precisely analyzes your skin tone
               </p>
             </div>
-            <div className={styles.featureCard}>
+            <div className={`${styles.featureCard} ${styles.fadeInUp} ${styles.delay1}`}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>⚡</div>
               </div>
@@ -131,7 +168,7 @@ const LandingPage = (): JSX.Element => {
                 analysis in just 30 seconds
               </p>
             </div>
-            <div className={styles.featureCard}>
+            <div className={`${styles.featureCard} ${styles.fadeInUp} ${styles.delay2}`}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>🎨</div>
               </div>
@@ -141,7 +178,7 @@ const LandingPage = (): JSX.Element => {
                 matched to your skin tone
               </p>
             </div>
-            <div className={styles.featureCard}>
+            <div className={`${styles.featureCard} ${styles.fadeInUp} ${styles.delay3}`}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>🔒</div>
               </div>
@@ -156,7 +193,7 @@ const LandingPage = (): JSX.Element => {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className={styles.howItWorks}>
+      <section id="how-it-works" ref={el => sectionsRef.current['how-it-works'] = el} className={styles.howItWorks}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
             <span className={styles.sectionTitleSmall}>Simple 3-Step Process</span>
@@ -207,7 +244,7 @@ const LandingPage = (): JSX.Element => {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className={styles.benefits}>
+      <section id="benefits" ref={el => sectionsRef.current['benefits'] = el} className={styles.benefits}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
             <span className={styles.sectionTitleSmall}>Exclusive Benefits</span>
@@ -243,7 +280,7 @@ const LandingPage = (): JSX.Element => {
       </section>
 
       {/* Statistics Section */}
-      <section className={styles.statistics}>
+      <section id="statistics" ref={el => sectionsRef.current['statistics'] = el} className={styles.statistics}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
             <span className={styles.sectionTitleSmall}>Join the Revolution</span>

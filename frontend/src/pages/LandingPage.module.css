@@ -2,6 +2,12 @@
   min-height: 100vh;
   background: linear-gradient(to bottom, #ffffff, #f9fafb);
   overflow-x: hidden;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.container.loaded {
+  opacity: 1;
 }
 
 /* Navigation */
@@ -131,7 +137,7 @@
 .heroTitleGradient {
   font-size: 2.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -287,7 +293,7 @@
   position: relative;
   width: 100%;
   height: 500px;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 142, 142, 0.1) 100%);
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -386,7 +392,7 @@
   width: 80px;
   height: 80px;
   font-size: 2.5rem;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 142, 142, 0.1) 100%);
   border-radius: 20px;
 }
 
@@ -468,7 +474,7 @@
 .stepImage {
   width: 200px;
   height: 150px;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 142, 142, 0.1) 100%);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -513,7 +519,7 @@
   object-fit: cover;
   border-radius: 24px;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 142, 142, 0.1) 100%);
 }
 
 .benefitTitle {
@@ -567,7 +573,7 @@
 .statNumber {
   font-size: 3rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -637,8 +643,8 @@
 }
 
 .comparisonCard:last-child {
-  border: 2px solid #D1FAE5;
-  background: linear-gradient(135deg, rgba(78, 205, 196, 0.05) 0%, rgba(255, 107, 107, 0.05) 100%);
+  border: 2px solid #FFE4E4;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.08) 0%, rgba(255, 142, 142, 0.05) 100%);
 }
 
 .comparisonIcon {
@@ -677,13 +683,13 @@
 }
 
 .comparisonCard:last-child .comparisonList li::before {
-  color: #4ECDC4;
+  color: #FF6B6B;
 }
 
 /* Final CTA Section */
 .finalCta {
   padding: 6rem 0;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.05) 0%, rgba(78, 205, 196, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.08) 0%, rgba(255, 142, 142, 0.05) 100%);
 }
 
 .ctaContent {
