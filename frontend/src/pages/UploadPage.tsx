@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
 import { useAppStore } from '@/store';
-import { Button, Card, PrivacyPopup } from '@/components/ui';
+import { Button, Card, PrivacyPopup, PrivacyAssurance } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
 import { PersonalColorAPI } from '@/services/api/personalColor';
@@ -15,6 +15,7 @@ const UploadPage = (): JSX.Element => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
+  const [showPrivacyAssurance, setShowPrivacyAssurance] = useState(true);
 
   // Redirect if no Instagram ID
   useEffect(() => {
@@ -179,6 +180,15 @@ const UploadPage = (): JSX.Element => {
           isOpen={showPrivacyPopup} 
           onClose={() => setShowPrivacyPopup(false)} 
         />
+        
+        {/* Privacy Assurance - Auto popup */}
+        {showPrivacyAssurance && (
+          <PrivacyAssurance 
+            onClose={() => setShowPrivacyAssurance(false)}
+            autoClose={true}
+            autoCloseDelay={7000}
+          />
+        )}
       </div>
     </PageLayout>
   );

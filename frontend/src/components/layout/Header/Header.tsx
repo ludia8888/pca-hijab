@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export const Header = ({
-  title = 'Hijab Color AI',
+  title = 'Noor.AI',
   showBack = false,
   onBack,
   actions,

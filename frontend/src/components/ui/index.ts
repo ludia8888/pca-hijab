@@ -5,3 +5,4 @@ export { LoadingSpinner } from './LoadingSpinner/LoadingSpinner';
 export * from './DemoNotice';
 export * from './PrivacyNotice';
 export * from './PrivacyPopup';
+export * from './PrivacyAssurance';

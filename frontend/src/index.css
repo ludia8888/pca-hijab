@@ -142,4 +142,19 @@
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
   }
+
+  /* Gentle bounce animation */
+  @keyframes gentle-bounce {
+    0% {
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+    }
+    50% {
+      transform: translateX(-50%) translateY(-5px);
+    }
+    100% {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  }
 }

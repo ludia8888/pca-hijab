@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Card } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { SessionAPI } from '@/services/api/session';
 
@@ -52,88 +52,75 @@ const IntroPage = (): JSX.Element => {
     <PageLayout header={<Header />}>
       <div className="max-w-md mx-auto w-full">
           {/* Hero Section */}
-          <div className="text-center mb-8">
+          <Card className="mb-6 text-center">
             <h2 className="text-h2 tablet:text-h1 font-bold text-gray-900 mb-4">
-              Find Your Perfect
+              Discover Your Perfect
               <br />
-              Hijab Colors with AI
+              <span className="text-primary">Hijab Colors</span>
             </h2>
-            <p className="text-body text-gray-600 leading-relaxed">
-              Discover hijab colors that complement your natural beauty through personal color analysis.
-              We'll send personalized recommendations to your Instagram DM.
+            <p className="text-body text-gray-600">
+              AI-powered personal color analysis
             </p>
-          </div>
+          </Card>
 
-          {/* Benefits */}
-          <div className="space-y-3 mb-8">
-            <div className="flex items-start space-x-3">
-              <span className="text-2xl">🎨</span>
-              <div>
-                <h3 className="font-semibold text-gray-900">AI Personal Color Analysis</h3>
-                <p className="text-body-sm text-gray-600">
-                  Accurate personal color diagnosis through facial analysis
-                </p>
+          {/* Benefits - Simplified */}
+          <Card className="mb-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-3xl mb-2">🎨</div>
+                <h3 className="font-medium text-gray-900 text-sm">AI Analysis</h3>
+                <p className="text-xs text-gray-600 mt-1">Instant color diagnosis</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-2">🔒</div>
+                <h3 className="font-medium text-gray-900 text-sm">100% Private</h3>
+                <p className="text-xs text-gray-600 mt-1">Photo deleted instantly</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-2">🧕</div>
+                <h3 className="font-medium text-gray-900 text-sm">Hijab Match</h3>
+                <p className="text-xs text-gray-600 mt-1">Personalized colors</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-2">📱</div>
+                <h3 className="font-medium text-gray-900 text-sm">DM Delivery</h3>
+                <p className="text-xs text-gray-600 mt-1">Sent to Instagram</p>
               </div>
             </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-2xl">🔒</span>
-              <div>
-                <h3 className="font-semibold text-gray-900">100% Privacy Safe</h3>
-                <p className="text-body-sm text-gray-600">
-                  Photos are analyzed instantly and deleted immediately
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-2xl">🧕</span>
-              <div>
-                <h3 className="font-semibold text-gray-900">Personalized Hijab Recommendations</h3>
-                <p className="text-body-sm text-gray-600">
-                  Real products recommended based on your analysis results
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-2xl">📱</span>
-              <div>
-                <h3 className="font-semibold text-gray-900">Convenient DM Delivery</h3>
-                <p className="text-body-sm text-gray-600">
-                  Receive your recommendations directly via Instagram DM
-                </p>
-              </div>
-            </div>
-          </div>
+          </Card>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Enter your Instagram ID"
-              type="text"
-              value={instagramId}
-              onChange={(e) => handleIdChange(e.target.value)}
-              placeholder="your_instagram_id"
-              prefix="@"
-              error={error}
-              required
-              fullWidth
-            />
+          <Card>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Enter your Instagram ID"
+                type="text"
+                value={instagramId}
+                onChange={(e) => handleIdChange(e.target.value)}
+                placeholder="your_instagram_id"
+                prefix="@"
+                error={error}
+                required
+                fullWidth
+              />
 
-            <Button
-              type="submit"
-              disabled={!isValid}
-              fullWidth
-              size="lg"
-            >
-              Start Analysis
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                disabled={!isValid}
+                fullWidth
+                size="lg"
+              >
+                Start Analysis
+              </Button>
+            </form>
+          </Card>
 
-          {/* Privacy Notice */}
-          <p className="mt-6 text-caption text-gray-500 text-center">
-            Your Instagram ID is used only for delivering recommendations
-            <br />
-            and will be safely deleted after service completion.
-          </p>
+          {/* Simple Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-gray-400">
+              By continuing, you agree to our privacy policy
+            </p>
+          </div>
       </div>
     </PageLayout>
   );
