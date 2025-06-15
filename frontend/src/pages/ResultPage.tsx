@@ -175,7 +175,7 @@ const ResultPage = (): JSX.Element => {
                     
                     {/* Floating Hint Popup attached to save button */}
                     {showDownloadHint && (
-                      <div className="absolute top-full mt-3 right-0 z-10">
+                      <div className="absolute top-full mt-3 right-0 z-50">
                         <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 whitespace-nowrap animate-bounce">
                           <span className="text-lg">✨</span>
                           <span className="font-medium">Save your result card!</span>
