@@ -1,17 +1,17 @@
 import type { PersonalColorResult } from '@/types';
-import { generateKoreanStyleCard } from './resultCardKoreanStyle';
+import { generateDynamicCard } from './resultCardDynamic';
 
 /**
- * Version 3.0 - Korean Instagram Style Result Card
- * Generates a rich, content-filled result card with Korean aesthetic
+ * Version 3.0 - Dynamic Layout Result Card
+ * Generates a responsive result card with automatic layout
  */
 export const generateResultCard = async (
   result: PersonalColorResult,
   instagramId: string
 ): Promise<Blob> => {
   
-  // Use the new Korean-style version with rich content
-  return generateKoreanStyleCard(result, instagramId);
+  // Use the new dynamic version with auto-layout
+  return generateDynamicCard(result, instagramId);
 };
 
 /**

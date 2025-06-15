@@ -18,6 +18,11 @@
   transition: all 0.3s ease;
 }
 
+.navScrolled {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+}
+
 .navContent {
   max-width: 1200px;
   margin: 0 auto;
@@ -654,4 +659,134 @@
 .footerPrivacy {
   color: #6B7280;
   font-size: 0.75rem;
+}
+
+/* Floating CTA */
+.floatingCta {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .floatingCta {
+    bottom: 3rem;
+  }
+}
+
+.floatingButton {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+  color: white;
+  padding: 1.25rem 3rem;
+  border-radius: 100px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 40px rgba(255, 107, 107, 0.4);
+  transition: all 0.3s ease;
+  animation: floatAnimation 3s ease-in-out infinite;
+}
+
+@keyframes floatAnimation {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floatingButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 50px rgba(255, 107, 107, 0.5);
+}
+
+.floatingButton:active {
+  transform: translateY(-1px);
+}
+
+/* Floating Form */
+.floatingForm {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1rem;
+  border-radius: 24px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+}
+
+@media (min-width: 768px) {
+  .floatingForm {
+    min-width: 400px;
+  }
+}
+
+.floatingInputWrapper {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 16px;
+  padding: 0 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.floatingInputWrapper:focus-within {
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.floatingInput {
+  flex: 1;
+  padding: 1rem 0.5rem;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.floatingInput::placeholder {
+  color: #9CA3AF;
+}
+
+.floatingSubmit {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floatingSubmit:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.floatingSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.floatingError {
+  color: #EF4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Hide floating CTA when active */
+.floatingCtaActive {
+  animation: none;
 }

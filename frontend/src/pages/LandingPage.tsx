@@ -14,9 +14,17 @@ const LandingPage = (): JSX.Element => {
   const [error, setError] = useState('');
   const [showInstagramInput, setShowInstagramInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 100);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleIdChange = (value: string): void => {
@@ -31,7 +39,7 @@ const LandingPage = (): JSX.Element => {
 
     const valid = validateInstagramId(cleanedValue);
     setIsValid(valid);
-    setError(valid ? '' : 'Instagram ID를 확인해주세요');
+    setError(valid ? '' : 'Please enter a valid Instagram ID');
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -44,7 +52,7 @@ const LandingPage = (): JSX.Element => {
       setSessionData(response.data.sessionId, response.data.instagramId);
       navigate(ROUTES.UPLOAD);
     } catch {
-      setError('세션 생성에 실패했습니다. 다시 시도해주세요.');
+      setError('Failed to create session. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -57,18 +65,18 @@ const LandingPage = (): JSX.Element => {
   return (
     <div className={styles.container}>
       {/* Navigation */}
-      <nav className={styles.nav}>
+      <nav className={`${styles.nav} ${scrolled ? styles.navScrolled : ''}`}>
         <div className={styles.navContent}>
           <h1 className={styles.logo}>PCA Hijab</h1>
           <div className={styles.navLinks}>
             <button onClick={() => scrollToSection('features')} className={styles.navLink}>
-              특징
+              Features
             </button>
             <button onClick={() => scrollToSection('how-it-works')} className={styles.navLink}>
-              진단 과정
+              How it Works
             </button>
             <button onClick={() => scrollToSection('benefits')} className={styles.navLink}>
-              혜택
+              Benefits
             </button>
           </div>
         </div>
@@ -79,45 +87,13 @@ const LandingPage = (): JSX.Element => {
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <h1 className={styles.heroTitle}>
-              <span className={styles.heroTitleMain}>당신에게 어울리는</span>
-              <span className={styles.heroTitleGradient}>완벽한 히잡 컬러</span>
+              <span className={styles.heroTitleMain}>Discover Your</span>
+              <span className={styles.heroTitleGradient}>Perfect Hijab Colors</span>
             </h1>
             <p className={styles.heroSubtitle}>
-              AI가 찾아주는 나만의 퍼스널 컬러로<br />
-              더욱 아름다운 당신을 발견하세요
+              AI-powered personal color analysis<br />
+              designed specifically for hijab wearers
             </p>
-            <div className={styles.heroCta}>
-              {!showInstagramInput ? (
-                <button 
-                  onClick={() => setShowInstagramInput(true)} 
-                  className={styles.ctaButton}
-                >
-                  지금 진단하기
-                </button>
-              ) : (
-                <form onSubmit={handleSubmit} className={styles.instagramForm}>
-                  <div className={styles.inputWrapper}>
-                    <span className={styles.inputPrefix}>@</span>
-                    <input
-                      type="text"
-                      value={instagramId}
-                      onChange={(e) => handleIdChange(e.target.value)}
-                      placeholder="Instagram ID"
-                      className={styles.instagramInput}
-                      autoFocus
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    disabled={!isValid || isLoading}
-                    className={styles.submitButton}
-                  >
-                    {isLoading ? '처리중...' : '시작하기'}
-                  </button>
-                  {error && <p className={styles.errorText}>{error}</p>}
-                </form>
-              )}
-            </div>
           </div>
           <div className={styles.heroImage}>
             <div className={styles.heroImagePlaceholder}>
@@ -131,48 +107,48 @@ const LandingPage = (): JSX.Element => {
       <section id="features" className={styles.features}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>왜 PCA Hijab인가요?</span>
-            <span className={styles.sectionTitleMain}>AI로 찾는 나만의 컬러</span>
+            <span className={styles.sectionTitleSmall}>Why Choose PCA Hijab?</span>
+            <span className={styles.sectionTitleMain}>AI-Powered Color Analysis</span>
           </h2>
           <div className={styles.featureGrid}>
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>🤖</div>
               </div>
-              <h3 className={styles.featureTitle}>정확한 AI 분석</h3>
+              <h3 className={styles.featureTitle}>Accurate AI Analysis</h3>
               <p className={styles.featureDescription}>
-                최신 AI 기술로 당신의 피부톤을<br />
-                정밀하게 분석합니다
+                Advanced AI technology<br />
+                precisely analyzes your skin tone
               </p>
             </div>
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>⚡</div>
               </div>
-              <h3 className={styles.featureTitle}>빠른 진단</h3>
+              <h3 className={styles.featureTitle}>Quick Results</h3>
               <p className={styles.featureDescription}>
-                단 30초 만에 당신의<br />
-                퍼스널 컬러를 찾아드립니다
+                Get your personal color<br />
+                analysis in just 30 seconds
               </p>
             </div>
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>🎨</div>
               </div>
-              <h3 className={styles.featureTitle}>맞춤 추천</h3>
+              <h3 className={styles.featureTitle}>Custom Recommendations</h3>
               <p className={styles.featureDescription}>
-                당신에게 어울리는<br />
-                히잡 컬러를 추천합니다
+                Hijab colors perfectly<br />
+                matched to your skin tone
               </p>
             </div>
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}>
                 <div className={styles.iconGradient}>🔒</div>
               </div>
-              <h3 className={styles.featureTitle}>100% 프라이버시</h3>
+              <h3 className={styles.featureTitle}>100% Privacy</h3>
               <p className={styles.featureDescription}>
-                사진은 분석 후<br />
-                즉시 삭제됩니다
+                Your photos are deleted<br />
+                immediately after analysis
               </p>
             </div>
           </div>
@@ -183,17 +159,17 @@ const LandingPage = (): JSX.Element => {
       <section id="how-it-works" className={styles.howItWorks}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>간단한 3단계</span>
-            <span className={styles.sectionTitleMain}>이렇게 진행됩니다</span>
+            <span className={styles.sectionTitleSmall}>Simple 3-Step Process</span>
+            <span className={styles.sectionTitleMain}>How It Works</span>
           </h2>
           <div className={styles.stepsContainer}>
             <div className={styles.step}>
               <div className={styles.stepNumber}>1</div>
               <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>사진 업로드</h3>
+                <h3 className={styles.stepTitle}>Upload Photo</h3>
                 <p className={styles.stepDescription}>
-                  자연광에서 촬영한<br />
-                  얼굴 사진을 업로드하세요
+                  Take a photo in<br />
+                  natural lighting
                 </p>
               </div>
               <div className={styles.stepImage}>
@@ -203,10 +179,10 @@ const LandingPage = (): JSX.Element => {
             <div className={styles.step}>
               <div className={styles.stepNumber}>2</div>
               <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>AI 분석</h3>
+                <h3 className={styles.stepTitle}>AI Analysis</h3>
                 <p className={styles.stepDescription}>
-                  AI가 당신의 피부톤을<br />
-                  정밀하게 분석합니다
+                  Our AI analyzes<br />
+                  your skin tone
                 </p>
               </div>
               <div className={styles.stepImage}>
@@ -216,10 +192,10 @@ const LandingPage = (): JSX.Element => {
             <div className={styles.step}>
               <div className={styles.stepNumber}>3</div>
               <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>결과 확인</h3>
+                <h3 className={styles.stepTitle}>Get Results</h3>
                 <p className={styles.stepDescription}>
-                  Instagram DM으로<br />
-                  맞춤 컬러를 받아보세요
+                  Receive personalized<br />
+                  colors via Instagram DM
                 </p>
               </div>
               <div className={styles.stepImage}>
@@ -234,32 +210,32 @@ const LandingPage = (): JSX.Element => {
       <section id="benefits" className={styles.benefits}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>특별한 혜택</span>
-            <span className={styles.sectionTitleMain}>더 아름다운 당신을 위해</span>
+            <span className={styles.sectionTitleSmall}>Exclusive Benefits</span>
+            <span className={styles.sectionTitleMain}>Enhance Your Beauty</span>
           </h2>
           <div className={styles.benefitsGrid}>
             <div className={styles.benefitCard}>
               <img src="/images/benefit1.png" alt="Personalized colors" />
-              <h3 className={styles.benefitTitle}>나만의 컬러 팔레트</h3>
+              <h3 className={styles.benefitTitle}>Personal Color Palette</h3>
               <p className={styles.benefitDescription}>
-                계절별 퍼스널 컬러와 함께<br />
-                어울리는 히잡 컬러를 제안합니다
+                Seasonal color analysis with<br />
+                hijab color recommendations
               </p>
             </div>
             <div className={styles.benefitCard}>
               <img src="/images/benefit2.png" alt="Shopping guide" />
-              <h3 className={styles.benefitTitle}>스마트한 쇼핑 가이드</h3>
+              <h3 className={styles.benefitTitle}>Smart Shopping Guide</h3>
               <p className={styles.benefitDescription}>
-                더 이상 고민하지 마세요<br />
-                당신에게 어울리는 컬러만 선택하세요
+                Never second-guess again<br />
+                Choose colors that truly suit you
               </p>
             </div>
             <div className={styles.benefitCard}>
               <img src="/images/benefit3.png" alt="Confidence boost" />
-              <h3 className={styles.benefitTitle}>자신감 UP</h3>
+              <h3 className={styles.benefitTitle}>Confidence Boost</h3>
               <p className={styles.benefitDescription}>
-                나에게 어울리는 컬러로<br />
-                더욱 빛나는 당신이 되세요
+                Shine brighter with colors<br />
+                that enhance your natural beauty
               </p>
             </div>
           </div>
@@ -270,15 +246,15 @@ const LandingPage = (): JSX.Element => {
       <section className={styles.testimonials}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>사용자 후기</span>
-            <span className={styles.sectionTitleMain}>함께한 분들의 이야기</span>
+            <span className={styles.sectionTitleSmall}>User Testimonials</span>
+            <span className={styles.sectionTitleMain}>Success Stories</span>
           </h2>
           <div className={styles.testimonialGrid}>
             <div className={styles.testimonialCard}>
               <div className={styles.testimonialQuote}>"</div>
               <p className={styles.testimonialText}>
-                항상 어떤 색이 어울릴지 고민했는데,<br />
-                이제는 자신있게 선택할 수 있어요!
+                I used to struggle with color choices,<br />
+                now I shop with confidence!
               </p>
               <div className={styles.testimonialAuthor}>
                 <span className={styles.authorName}>@fashion_lover</span>
@@ -287,8 +263,8 @@ const LandingPage = (): JSX.Element => {
             <div className={styles.testimonialCard}>
               <div className={styles.testimonialQuote}>"</div>
               <p className={styles.testimonialText}>
-                AI 분석이 정말 정확해요.<br />
-                추천받은 색상들이 모두 잘 어울려요
+                The AI analysis is incredibly accurate.<br />
+                All recommended colors look perfect on me
               </p>
               <div className={styles.testimonialAuthor}>
                 <span className={styles.authorName}>@hijab_style</span>
@@ -297,8 +273,8 @@ const LandingPage = (): JSX.Element => {
             <div className={styles.testimonialCard}>
               <div className={styles.testimonialQuote}>"</div>
               <p className={styles.testimonialText}>
-                쇼핑할 때 정말 유용해요.<br />
-                실패 없는 컬러 선택이 가능해졌어요
+                Shopping has become so much easier.<br />
+                No more color mistakes!
               </p>
               <div className={styles.testimonialAuthor}>
                 <span className={styles.authorName}>@smart_shopper</span>
@@ -312,20 +288,11 @@ const LandingPage = (): JSX.Element => {
       <section className={styles.finalCta}>
         <div className={styles.ctaContent}>
           <h2 className={styles.ctaTitle}>
-            지금 바로 시작하세요
+            Start Your Journey Today
           </h2>
           <p className={styles.ctaSubtitle}>
-            30초 만에 당신의 퍼스널 컬러를 찾아드립니다
+            Discover your personal colors in just 30 seconds
           </p>
-          <button 
-            onClick={() => {
-              setShowInstagramInput(true);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }} 
-            className={styles.ctaButtonLarge}
-          >
-            무료로 진단받기
-          </button>
         </div>
       </section>
 
@@ -336,10 +303,44 @@ const LandingPage = (): JSX.Element => {
             © 2025 PCA Hijab. All rights reserved.
           </p>
           <p className={styles.footerPrivacy}>
-            사진은 분석 후 즉시 삭제되며, 개인정보는 안전하게 보호됩니다.
+            Your photos are deleted immediately after analysis. Your privacy is our priority.
           </p>
         </div>
       </footer>
+
+      {/* Floating CTA */}
+      <div className={`${styles.floatingCta} ${showInstagramInput ? styles.floatingCtaActive : ''}`}>
+        {!showInstagramInput ? (
+          <button 
+            onClick={() => setShowInstagramInput(true)} 
+            className={styles.floatingButton}
+          >
+            Get Started
+          </button>
+        ) : (
+          <form onSubmit={handleSubmit} className={styles.floatingForm}>
+            <div className={styles.floatingInputWrapper}>
+              <span className={styles.inputPrefix}>@</span>
+              <input
+                type="text"
+                value={instagramId}
+                onChange={(e) => handleIdChange(e.target.value)}
+                placeholder="Instagram ID"
+                className={styles.floatingInput}
+                autoFocus
+              />
+              <button 
+                type="submit" 
+                disabled={!isValid || isLoading}
+                className={styles.floatingSubmit}
+              >
+                {isLoading ? '...' : '→'}
+              </button>
+            </div>
+            {error && <p className={styles.floatingError}>{error}</p>}
+          </form>
+        )}
+      </div>
     </div>
   );
 };
