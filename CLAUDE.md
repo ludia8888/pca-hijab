@@ -174,7 +174,7 @@ class PersonalColorAPI {
 - Mobile-first design approach
 - Recommendation results sent via Instagram DM
 - Minimal personal information collection
-- Admin panel accessible at `/admin/login` (API Key: dev-admin-key-123 for development)
+- Admin panel accessible at `/admin/login` (API Key: 1234 for development)
 - Admin UI is fully localized in Korean
 
 ## 🔗 Key Documentation
