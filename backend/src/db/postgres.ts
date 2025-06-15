@@ -164,12 +164,28 @@ export class PostgresDatabase {
     created_at: Date;
     updated_at: Date;
   }): Recommendation {
+    // Parse JSON data if it's returned as a string
+    let personalColorResult: PersonalColorResult;
+    let userPreferences: UserPreferences;
+    
+    if (typeof row.personal_color_result === 'string') {
+      personalColorResult = JSON.parse(row.personal_color_result);
+    } else {
+      personalColorResult = row.personal_color_result as PersonalColorResult;
+    }
+    
+    if (typeof row.user_preferences === 'string') {
+      userPreferences = JSON.parse(row.user_preferences);
+    } else {
+      userPreferences = row.user_preferences as UserPreferences;
+    }
+    
     return {
       id: row.id,
       sessionId: row.session_id,
       instagramId: row.instagram_id,
-      personalColorResult: row.personal_color_result as PersonalColorResult,
-      userPreferences: row.user_preferences as UserPreferences,
+      personalColorResult,
+      userPreferences,
       status: row.status as Recommendation['status'],
       createdAt: row.created_at,
       updatedAt: row.updated_at,

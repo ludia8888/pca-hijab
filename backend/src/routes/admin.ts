@@ -115,14 +115,19 @@ router.get('/statistics', async (_req, res, next) => {
         completed: recommendations.filter(r => r.status === 'completed').length
       },
       byPersonalColor: recommendations.reduce((acc, rec) => {
-        const color = rec.personalColorResult.personal_color_en;
+        // Handle both old and new format
+        const color = rec.personalColorResult?.personal_color_en || 
+                      rec.personalColorResult?.personal_color || 
+                      'unknown';
         acc[color] = (acc[color] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
       recentRequests: recommendations.slice(0, 5).map(rec => ({
         id: rec.id,
         instagramId: rec.instagramId,
-        personalColor: rec.personalColorResult.personal_color_en,
+        personalColor: rec.personalColorResult?.personal_color_en || 
+                       rec.personalColorResult?.personal_color || 
+                       'N/A',
         status: rec.status,
         createdAt: rec.createdAt
       }))
@@ -133,6 +138,7 @@ router.get('/statistics', async (_req, res, next) => {
       data: statistics
     });
   } catch (error) {
+    console.error('Error in /api/admin/statistics:', error);
     next(error);
   }
 });
