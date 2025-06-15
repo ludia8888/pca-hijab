@@ -113,21 +113,46 @@ export const generateKoreanStyleCard = async (
   });
 };
 
-// Calculate section positions to prevent overlap
+// Calculate section positions to prevent overlap - MOBILE OPTIMIZED
 function calculateSections(totalHeight: number) {
-  const margin = 40;
-  const spacing = 30;
+  const topMargin = 60;
+  const spacing = 25;
+  let currentY = topMargin;
   
-  return {
-    header: { y: margin, height: 280 },
-    personalInfo: { y: margin + 280 + spacing, height: 140 },
-    colorPalette: { y: margin + 280 + 140 + spacing * 2, height: 320 },
-    makeup: { y: margin + 280 + 140 + 320 + spacing * 3, height: 240 },
-    style: { y: margin + 280 + 140 + 320 + 240 + spacing * 4, height: 180 },
-    accessory: { y: margin + 280 + 140 + 320 + 240 + 180 + spacing * 5, height: 160 },
-    celebrity: { y: margin + 280 + 140 + 320 + 240 + 180 + 160 + spacing * 6, height: 140 },
-    footer: { y: totalHeight - 160, height: 120 }
+  const sections = {
+    header: { y: currentY, height: 300 },
+    personalInfo: { y: 0, height: 160 },
+    colorPalette: { y: 0, height: 360 },
+    makeup: { y: 0, height: 260 },
+    style: { y: 0, height: 200 },
+    accessory: { y: 0, height: 180 },
+    celebrity: { y: 0, height: 120 },
+    footer: { y: 0, height: 140 }
   };
+  
+  // Calculate cumulative positions
+  currentY += sections.header.height + spacing;
+  sections.personalInfo.y = currentY;
+  
+  currentY += sections.personalInfo.height + spacing;
+  sections.colorPalette.y = currentY;
+  
+  currentY += sections.colorPalette.height + spacing;
+  sections.makeup.y = currentY;
+  
+  currentY += sections.makeup.height + spacing;
+  sections.style.y = currentY;
+  
+  currentY += sections.style.height + spacing;
+  sections.accessory.y = currentY;
+  
+  currentY += sections.accessory.height + spacing;
+  sections.celebrity.y = currentY;
+  
+  // Footer at bottom
+  sections.footer.y = totalHeight - sections.footer.height - 40;
+  
+  return sections;
 }
 
 // Modern minimalist background
@@ -180,36 +205,37 @@ async function drawHeaderSection(
   // Content
   let currentY = section.y + 60;
   
-  // Brand mark
-  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
+  // Brand mark - MOBILE SIZE
+  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '2px';
   ctx.fillText('NOOR.AI × PERSONAL COLOR ANALYSIS', width / 2, currentY);
   
-  currentY += 50;
+  currentY += 60;
   
-  // Season type with elegant typography
-  ctx.font = 'bold 48px -apple-system, "Helvetica Neue", sans-serif';
+  // Season type - MOBILE SIZE
+  ctx.font = 'bold 56px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.accent;
   ctx.textAlign = 'center';
   ctx.fillText(seasonInfo.en.toUpperCase(), width / 2, currentY);
   
-  currentY += 40;
+  currentY += 50;
   
-  // Korean name
-  ctx.font = '24px -apple-system, "Helvetica Neue", sans-serif';
+  // Korean name - MOBILE SIZE
+  ctx.font = '28px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.secondary;
+  ctx.textAlign = 'center';
   ctx.fillText(seasonInfo.ko, width / 2, currentY);
   
-  currentY += 45;
+  currentY += 50;
   
-  // Description
-  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
+  // Description - MOBILE SIZE WITH WRAP
+  ctx.font = '20px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.secondary;
-  const lines = wrapText(ctx, seasonInfo.description, cardWidth - 100);
+  ctx.textAlign = 'center';
+  const lines = wrapText(ctx, seasonInfo.description, cardWidth - 80);
   lines.forEach((line, i) => {
-    ctx.fillText(line, width / 2, currentY + i * 25);
+    ctx.fillText(line, width / 2, currentY + i * 30);
   });
 }
 
@@ -230,19 +256,18 @@ async function drawPersonalInfoSection(
   const tagY = section.y + 50;
   const tags = seasonData.keywords.map(k => k.toUpperCase());
   
-  // Title
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Title - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
-  ctx.fillText('YOUR CHARACTERISTICS', width / 2, tagY - 20);
+  ctx.fillText('YOUR CHARACTERISTICS', width / 2, tagY - 25);
   
   // Draw tags in a row
   drawElegantTags(ctx, tags, width / 2, tagY + 20, theme);
   
-  // Atmosphere quote
-  const quoteY = tagY + 70;
-  ctx.font = 'italic 20px Georgia, serif';
+  // Atmosphere quote - MOBILE SIZE
+  const quoteY = tagY + 80;
+  ctx.font = 'italic 22px Georgia, serif';
   ctx.fillStyle = theme.text.primary;
   ctx.textAlign = 'center';
   ctx.fillText(`"${seasonData.atmosphere}"`, width / 2, quoteY);
@@ -263,22 +288,23 @@ async function drawColorPaletteSection(
   
   let currentY = section.y + 40;
   
-  // Title
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Title - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
   ctx.fillText('YOUR PERFECT COLORS', width / 2, currentY);
   
-  currentY += 40;
+  currentY += 50;
   
-  // Best colors
-  drawColorRow(ctx, seasonColors.bestColors, cardMargin + 60, currentY, cardWidth - 120, 'BEST', theme);
+  // Best colors - CENTERED
+  const colorAreaWidth = cardWidth - 120;
+  const colorStartX = (width - colorAreaWidth) / 2;
+  drawColorRow(ctx, seasonColors.bestColors, colorStartX, currentY, colorAreaWidth, 'BEST', theme, width);
   
-  currentY += 140;
+  currentY += 160;
   
-  // Worst colors
-  drawColorRow(ctx, seasonColors.worstColors, cardMargin + 60, currentY, cardWidth - 120, 'AVOID', theme);
+  // Worst colors - CENTERED
+  drawColorRow(ctx, seasonColors.worstColors, colorStartX, currentY, colorAreaWidth, 'AVOID', theme, width);
 }
 
 // Makeup recommendations section
@@ -296,17 +322,16 @@ async function drawMakeupSection(
   
   let currentY = section.y + 40;
   
-  // Title
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Title - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
   ctx.fillText('MAKEUP PALETTE', width / 2, currentY);
   
   currentY += 50;
   
-  // Foundation recommendation
-  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
+  // Foundation recommendation - MOBILE SIZE
+  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.secondary;
   ctx.textAlign = 'center';
   ctx.fillText(`Foundation: ${seasonData.makeupColors.foundation}`, width / 2, currentY);
@@ -337,24 +362,26 @@ async function drawStyleSection(
   
   let currentY = section.y + 40;
   
-  // Title
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Title - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
   ctx.fillText('STYLE GUIDE', width / 2, currentY);
   
   currentY += 40;
   
-  // Style tips based on season
+  // Style tips - MOBILE SIZE & CENTERED
   const tips = getStyleTips(getSeasonFromData(seasonData));
   
-  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
+  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.secondary;
-  ctx.textAlign = 'left';
+  ctx.textAlign = 'center';
   
   tips.forEach((tip, i) => {
-    ctx.fillText(`• ${tip}`, cardMargin + 60, currentY + i * 30);
+    const tipLines = wrapText(ctx, tip, cardWidth - 100);
+    tipLines.forEach((line, j) => {
+      ctx.fillText(line, width / 2, currentY + (i * 50) + (j * 25));
+    });
   });
 }
 
@@ -373,29 +400,29 @@ async function drawAccessorySection(
   
   let currentY = section.y + 40;
   
-  // Title
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Title - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
   ctx.fillText('ACCESSORIES', width / 2, currentY);
   
   currentY += 40;
   
-  // Metal preference
-  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
+  // Metal preference - MOBILE SIZE
+  ctx.font = '22px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.primary;
   ctx.textAlign = 'center';
   ctx.fillText(`Best Metal: ${seasonData.accessories.metal.toUpperCase()}`, width / 2, currentY);
   
-  currentY += 35;
+  currentY += 40;
   
-  // Style description
-  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
+  // Style description - MOBILE SIZE
+  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.secondary;
-  const accessoryLines = wrapText(ctx, seasonData.accessories.style, cardWidth - 120);
+  ctx.textAlign = 'center';
+  const accessoryLines = wrapText(ctx, seasonData.accessories.style, cardWidth - 100);
   accessoryLines.forEach((line, i) => {
-    ctx.fillText(line, width / 2, currentY + i * 25);
+    ctx.fillText(line, width / 2, currentY + i * 30);
   });
 }
 
@@ -414,17 +441,16 @@ async function drawCelebritySection(
   
   let currentY = section.y + 40;
   
-  // Title
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Title - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
   ctx.fillText('CELEBRITY REFERENCES', width / 2, currentY);
   
   currentY += 40;
   
-  // Celebrity names
-  ctx.font = '18px -apple-system, "Helvetica Neue", sans-serif';
+  // Celebrity names - MOBILE SIZE
+  ctx.font = '20px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.primary;
   ctx.textAlign = 'center';
   ctx.fillText(seasonData.celebrities.join(' • '), width / 2, currentY);
@@ -440,24 +466,26 @@ async function drawFooterSection(
 ) {
   let currentY = section.y + 30;
   
-  // Instagram handle
-  ctx.font = '20px -apple-system, "Helvetica Neue", sans-serif';
+  // Instagram handle - MOBILE SIZE
+  ctx.font = '24px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.primary;
   ctx.textAlign = 'center';
   ctx.fillText(`@${instagramId}`, width / 2, currentY);
   
-  currentY += 35;
+  currentY += 40;
   
-  // Brand
-  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
+  // Brand - MOBILE SIZE
+  ctx.font = '20px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.accent;
+  ctx.textAlign = 'center';
   ctx.fillText('Noor.AI', width / 2, currentY);
   
-  currentY += 25;
+  currentY += 30;
   
-  // URL
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // URL - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
+  ctx.textAlign = 'center';
   ctx.fillText('www.noor.ai', width / 2, currentY);
 }
 
@@ -494,12 +522,12 @@ function drawElegantTags(
   y: number,
   theme: typeof MODERN_THEMES[SeasonType]
 ) {
-  const tagHeight = 36;
-  const padding = 24;
-  const spacing = 12;
+  const tagHeight = 40;
+  const padding = 28;
+  const spacing = 16;
   
-  // Calculate positions
-  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
+  // Calculate positions - MOBILE SIZE
+  ctx.font = '16px -apple-system, "Helvetica Neue", sans-serif';
   const positions: Array<{ text: string; width: number; x: number }> = [];
   let totalWidth = 0;
   
@@ -541,25 +569,27 @@ function drawColorRow(
   y: number,
   width: number,
   label: string,
-  theme: typeof MODERN_THEMES[SeasonType]
+  theme: typeof MODERN_THEMES[SeasonType],
+  canvasWidth: number
 ) {
-  // Label
-  ctx.font = '12px -apple-system, "Helvetica Neue", sans-serif';
+  // Label - CENTERED & MOBILE SIZE
+  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
-  ctx.textAlign = 'left';
-  ctx.letterSpacing = '1px';
-  ctx.fillText(label, x, y - 10);
+  ctx.textAlign = 'center';
+  ctx.fillText(label, canvasWidth / 2, y - 15);
   
-  // Color swatches
-  const swatchSize = 60;
-  const spacing = 16;
+  // Color swatches - MOBILE OPTIMIZED
+  const swatchSize = 70;
+  const spacing = 20;
   const swatchesPerRow = 4;
+  const totalRowWidth = swatchesPerRow * swatchSize + (swatchesPerRow - 1) * spacing;
+  const startX = (canvasWidth - totalRowWidth) / 2;
   
   colors.forEach((color, i) => {
     const col = i % swatchesPerRow;
     const row = Math.floor(i / swatchesPerRow);
-    const swatchX = x + col * (swatchSize + spacing);
-    const swatchY = y + row * (swatchSize + 40);
+    const swatchX = startX + col * (swatchSize + spacing);
+    const swatchY = y + row * (swatchSize + 50);
     
     // Swatch with border
     ctx.fillStyle = color.hex;
@@ -571,11 +601,11 @@ function drawColorRow(
     ctx.fill();
     ctx.stroke();
     
-    // Color name
-    ctx.font = '11px -apple-system, "Helvetica Neue", sans-serif';
+    // Color name - MOBILE SIZE
+    ctx.font = '13px -apple-system, "Helvetica Neue", sans-serif';
     ctx.fillStyle = theme.text.secondary;
     ctx.textAlign = 'center';
-    ctx.fillText(color.name.toUpperCase(), swatchX + swatchSize / 2, swatchY + swatchSize + 20);
+    ctx.fillText(color.name.toUpperCase(), swatchX + swatchSize / 2, swatchY + swatchSize + 25);
   });
 }
 
@@ -587,16 +617,15 @@ function drawMakeupColors(
   label: string,
   theme: typeof MODERN_THEMES[SeasonType]
 ) {
-  // Label
-  ctx.font = '12px -apple-system, "Helvetica Neue", sans-serif';
+  // Label - MOBILE SIZE
+  ctx.font = '14px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.muted;
   ctx.textAlign = 'center';
-  ctx.letterSpacing = '1px';
-  ctx.fillText(label, centerX, y - 10);
+  ctx.fillText(label, centerX, y - 15);
   
-  // Color dots
-  const dotSize = 32;
-  const spacing = 20;
+  // Color dots - MOBILE SIZE
+  const dotSize = 36;
+  const spacing = 24;
   const totalWidth = colors.length * dotSize + (colors.length - 1) * spacing;
   const startX = centerX - totalWidth / 2;
   
