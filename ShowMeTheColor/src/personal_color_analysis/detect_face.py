@@ -11,7 +11,14 @@ class DetectFace:
         # initialize dlib's face detector (HOG-based)
         # and then create the facial landmark predictor
         self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor('../../res/shape_predictor_68_face_landmarks.dat')
+        import os
+        # Get the correct path to the landmarks file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        landmarks_path = os.path.join(current_dir, '..', '..', 'res', 'shape_predictor_68_face_landmarks.dat')
+        if not os.path.exists(landmarks_path):
+            # Try alternative path for Docker
+            landmarks_path = '/app/res/shape_predictor_68_face_landmarks.dat'
+        self.predictor = dlib.shape_predictor(landmarks_path)
 
         #face detection part
         self.img = cv2.imread(image)
@@ -34,7 +41,10 @@ class DetectFace:
     def detect_face_part(self):
         face_parts = [[],[],[],[],[],[],[]]
         # detect faces in the grayscale image
-        rect = self.detector(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY), 1)[0]
+        faces = self.detector(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY), 1)
+        if len(faces) == 0:
+            raise Exception("No face detected in the image")
+        rect = faces[0]
 
         # determine the facial landmarks for the face region, then
         # convert the landmark (x, y)-coordinates to a NumPy array
