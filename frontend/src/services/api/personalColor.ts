@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { PersonalColorResult } from '@/types';
-import { AI_API_URL, USE_MOCK_AI, API_TIMEOUT } from '@/utils/constants';
+import { getAIApiUrl, shouldUseMockAI, getApiTimeout, debugApiConfig } from '@/utils/apiConfig';
 
 export class PersonalColorAPI {
   /**
@@ -15,34 +15,51 @@ export class PersonalColorAPI {
     debug = false,
     retryCount = 0,
   ): Promise<PersonalColorResult> {
-    console.log('analyzeImage called with:', {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      USE_MOCK_AI,
-      AI_API_URL,
-      debug,
-      retryCount,
-      envVars: {
-        VITE_USE_MOCK_AI: import.meta.env.VITE_USE_MOCK_AI,
-        VITE_AI_API_URL: import.meta.env.VITE_AI_API_URL,
+    // Get dynamic configuration
+    const aiApiUrl = getAIApiUrl();
+    const useMockAI = shouldUseMockAI();
+    const apiTimeout = getApiTimeout();
+    
+    // Debug logging only in development
+    if (import.meta.env.DEV) {
+      console.log('analyzeImage called with:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        aiApiUrl,
+        useMockAI,
+        debug,
+        retryCount,
+      });
+      
+      // Extra debug on first call
+      if (retryCount === 0) {
+        debugApiConfig();
       }
-    });
+    }
     
     const formData = new FormData();
     formData.append('file', file);
 
-    // Use mock data if AI API is not available
-    if (USE_MOCK_AI) {
-      throw new Error('Mock mode is disabled. Please configure AI API.');
+    // Check if we should use mock AI (using dynamic config)
+    if (useMockAI) {
+      console.warn('⚠️ Mock AI mode is enabled but not implemented');
+      throw new Error('Mock mode is not implemented. Please configure the AI API URL.');
+    }
+    
+    // Validate AI API URL
+    if (!aiApiUrl) {
+      throw new Error('AI API URL is not configured. Please check your environment variables.');
     }
 
     try {
-      console.log('Making real API call to:', AI_API_URL);
-      // Create separate axios instance for AI API
+      if (import.meta.env.DEV) {
+        console.log('Making real API call to:', aiApiUrl);
+      }
+      // Create separate axios instance for AI API with dynamic config
       const aiApiClient = axios.create({
-        baseURL: AI_API_URL,
-        timeout: API_TIMEOUT,
+        baseURL: aiApiUrl,
+        timeout: apiTimeout,
       });
 
       const response = await aiApiClient.post<PersonalColorResult>(
@@ -55,22 +72,30 @@ export class PersonalColorAPI {
         },
       );
 
-      console.log('API response:', response.data);
+      if (import.meta.env.DEV) {
+        console.log('API response:', response.data);
+      }
       return response.data;
     } catch (error) {
-      console.error('API call failed:', error);
+      if (import.meta.env.DEV) {
+        console.error('API call failed:', error);
+      }
       
       if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', {
-          message: error.message,
-          code: error.code,
-          response: error.response?.data,
-          status: error.response?.status,
-        });
+        if (import.meta.env.DEV) {
+          console.error('Axios error details:', {
+            message: error.message,
+            code: error.code,
+            response: error.response?.data,
+            status: error.response?.status,
+          });
+        }
         
         // Handle timeout with retry
         if (error.code === 'ECONNABORTED' && retryCount < 1) {
-          console.log('Timeout occurred, retrying...');
+          if (import.meta.env.DEV) {
+            console.log('Timeout occurred, retrying...');
+          }
           // Wait 2 seconds before retry
           await new Promise(resolve => setTimeout(resolve, 2000));
           return this.analyzeImage(file, debug, retryCount + 1);
@@ -100,12 +125,15 @@ export class PersonalColorAPI {
    * @returns Promise<{ status: string; service: string }>
    */
   static async healthCheck(): Promise<{ status: string; service: string }> {
-    if (USE_MOCK_AI) {
+    const aiApiUrl = getAIApiUrl();
+    const useMockAI = shouldUseMockAI();
+    
+    if (useMockAI) {
       return { status: 'ok', service: 'mock-ai' };
     }
 
     const aiApiClient = axios.create({
-      baseURL: AI_API_URL,
+      baseURL: aiApiUrl,
       timeout: 5000,
     });
     

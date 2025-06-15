@@ -2,7 +2,21 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 export const AI_API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:8000';
 export const API_TIMEOUT = 15000; // 15 seconds
-export const USE_MOCK_AI = import.meta.env.VITE_USE_MOCK_AI === 'true' || !import.meta.env.VITE_AI_API_URL;
+
+// More explicit USE_MOCK_AI logic
+// Only use mock if explicitly set to 'true', not based on AI_API_URL presence
+export const USE_MOCK_AI = import.meta.env.VITE_USE_MOCK_AI === 'true';
+
+// Log the configuration on module load for debugging
+if (import.meta.env.DEV) {
+  console.log('Constants module loaded:', {
+    API_BASE_URL,
+    AI_API_URL,
+    USE_MOCK_AI,
+    VITE_USE_MOCK_AI: import.meta.env.VITE_USE_MOCK_AI,
+    VITE_AI_API_URL: import.meta.env.VITE_AI_API_URL,
+  });
+}
 
 // File Upload
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
