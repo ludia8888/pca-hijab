@@ -61,6 +61,20 @@ app.options('*', (_req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
+// Root endpoint
+app.get('/', (_req: Request, res: Response) => {
+  res.json({
+    message: 'PCA-HIJAB Backend API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      sessions: '/api/sessions',
+      recommendations: '/api/recommendations',
+      admin: '/api/admin'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', async (_req: Request, res: Response) => {
   try {
