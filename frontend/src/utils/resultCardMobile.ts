@@ -96,78 +96,103 @@ export const generateMobileResultCard = async (
   // Draw main card with subtle shadow
   drawMobileCard(ctx, cardX, cardY, cardWidth, cardHeight, gradients.card);
   
-  // Header section with better design
-  let currentY = cardY + 80;
+  // Header section - fixed positioning
+  let currentY = cardY + 60;
   
   // App branding at top
-  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#9B59B6';
   ctx.textAlign = 'center';
-  ctx.fillText('NOOR.AI PERSONAL COLOR ANALYSIS', width / 2, currentY - 40);
-  
-  // Season emoji and result
-  ctx.font = '80px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText(SEASON_EMOJIS[seasonKey], width / 2, currentY);
-  
-  currentY += 85;
-  
-  // Season name with shadow effect
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-  ctx.shadowBlur = 4;
-  ctx.shadowOffsetY = 2;
-  ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillStyle = '#2D3436';
-  ctx.textAlign = 'center';
-  ctx.fillText(seasonInfo.en.toUpperCase(), width / 2, currentY);
-  ctx.shadowColor = 'transparent';
+  ctx.fillText('NOOR.AI PERSONAL COLOR ANALYSIS', width / 2, currentY);
   
   currentY += 50;
   
-  // Season description in English (not Korean)
-  ctx.font = '26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Season emoji
+  ctx.font = '72px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(SEASON_EMOJIS[seasonKey], width / 2, currentY);
+  
+  currentY += 70;
+  
+  // Season name
+  ctx.font = 'bold 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#2D3436';
+  ctx.textAlign = 'center';
+  ctx.fillText(seasonInfo.en.toUpperCase(), width / 2, currentY);
+  
+  currentY += 45;
+  
+  // Season description
+  ctx.font = '22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#636E72';
-  ctx.fillText(SEASON_DESCRIPTIONS[seasonKey].description, width / 2, currentY);
+  ctx.textAlign = 'center';
+  // Word wrap long descriptions
+  const description = SEASON_DESCRIPTIONS[seasonKey].description;
+  const maxWidth = cardWidth - 100;
+  const words = description.split(' ');
+  let line = '';
+  let lineY = currentY;
   
-  currentY += 60;
+  words.forEach((word, index) => {
+    const testLine = line + word + ' ';
+    const metrics = ctx.measureText(testLine);
+    const testWidth = metrics.width;
+    
+    if (testWidth > maxWidth && line !== '') {
+      ctx.fillText(line.trim(), width / 2, lineY);
+      line = word + ' ';
+      lineY += 28;
+    } else {
+      line = testLine;
+    }
+    
+    if (index === words.length - 1) {
+      ctx.fillText(line.trim(), width / 2, lineY);
+    }
+  });
   
-  // Divider line
+  currentY = lineY + 50;
+  
+  // Divider
   drawDivider(ctx, width / 2 - 100, currentY, 200);
-  currentY += 40;
+  currentY += 30;
   
-  // Keywords section
+  // Keywords
   drawKeywordTags(ctx, seasonData.keywords, width / 2, currentY, seasonKey);
-  currentY += 100;
+  currentY += 90;
   
-  // Best colors section with icon
-  ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Best colors section
+  ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#2D3436';
   ctx.textAlign = 'center';
   ctx.fillText('🎨 YOUR BEST HIJAB COLORS', width / 2, currentY);
   
-  currentY += 60;
+  currentY += 50;
   
-  // Color palette with better spacing
-  drawMobileColorPalette(ctx, seasonColors.bestColors.slice(0, 6), width / 2, currentY);
-  currentY += 240;
+  // Color palette - calculate proper height
+  const colorPaletteHeight = drawMobileColorPalette(ctx, seasonColors.bestColors.slice(0, 6), width / 2, currentY);
+  currentY += colorPaletteHeight + 60;
   
-  // Makeup colors section with icon
-  ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Makeup section
+  ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#2D3436';
   ctx.fillText('💄 MAKEUP PALETTE', width / 2, currentY);
   
-  currentY += 50;
+  currentY += 45;
   
-  // Lip colors with better label
+  // Lip colors
   drawMakeupRecommendations(ctx, seasonData.makeupColors.lips.slice(0, 4), width / 2, currentY, 'Recommended Lip Colors');
-  currentY += 100;
+  currentY += 90;
   
-  // Style tip
-  drawStyleTip(ctx, seasonData.atmosphere, width / 2, currentY, seasonKey);
-  currentY += 100;
+  // Style tip - check if there's enough space
+  const remainingSpace = (cardY + cardHeight - 180) - currentY;
+  if (remainingSpace > 100) {
+    drawStyleTip(ctx, seasonData.atmosphere, width / 2, currentY, seasonKey);
+    currentY += 100;
+  }
   
-  // Footer section
-  drawMobileFooter(ctx, instagramId, width, cardY + cardHeight - 80);
+  // Footer - fixed position at bottom
+  drawMobileFooter(ctx, instagramId, width, cardY + cardHeight - 150);
   
   // Convert to blob
   return new Promise((resolve, reject) => {
@@ -334,30 +359,33 @@ function drawMobileColorPalette(
   colors: Array<{hex: string; name: string}>,
   centerX: number,
   y: number
-) {
-  const swatchSize = 90;
-  const spacing = 24;
+): number {
+  const swatchSize = 80;
+  const spacing = 20;
+  const nameHeight = 35;
+  const rowSpacing = swatchSize + nameHeight + 20;
   const totalWidth = 3 * swatchSize + 2 * spacing;
   const startX = centerX - totalWidth / 2;
+  const numRows = Math.ceil(colors.length / 3);
   
   colors.forEach((color, index) => {
     const row = Math.floor(index / 3);
     const col = index % 3;
     const x = startX + col * (swatchSize + spacing);
-    const swatchY = y + row * (swatchSize + spacing + 50);
+    const swatchY = y + row * rowSpacing;
     
-    // Enhanced shadow for swatch
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 15;
-    ctx.shadowOffsetY = 8;
+    // Shadow for swatch
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 5;
     
-    // Color swatch with border
+    // Color swatch
     ctx.fillStyle = color.hex;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     // @ts-expect-error - roundRect is not in TypeScript definitions yet
-    ctx.roundRect(x, swatchY, swatchSize, swatchSize, 20);
+    ctx.roundRect(x, swatchY, swatchSize, swatchSize, 16);
     ctx.fill();
     ctx.stroke();
     
@@ -365,17 +393,20 @@ function drawMobileColorPalette(
     ctx.shadowColor = 'transparent';
     
     // Color code inside swatch
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(color.hex.toUpperCase(), x + swatchSize / 2, swatchY + swatchSize - 10);
+    ctx.fillText(color.hex.toUpperCase(), x + swatchSize / 2, swatchY + swatchSize - 8);
     
     // Color name below swatch
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#2D3436';
     ctx.textAlign = 'center';
-    ctx.fillText(color.name.toUpperCase(), x + swatchSize / 2, swatchY + swatchSize + 30);
+    ctx.fillText(color.name.toUpperCase(), x + swatchSize / 2, swatchY + swatchSize + 22);
   });
+  
+  // Return total height used
+  return numRows * rowSpacing;
 }
 
 function drawMakeupRecommendations(
@@ -467,21 +498,21 @@ function drawMobileFooter(
   y: number
 ) {
   // Divider line
-  drawDivider(ctx, width / 2 - 200, y - 30, 400);
+  drawDivider(ctx, width / 2 - 150, y - 20, 300);
   
-  // Instagram handle with better design
-  ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Instagram handle
+  ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#2D3436';
   ctx.textAlign = 'center';
   ctx.fillText(`@${instagramId}`, width / 2, y + 10);
   
-  // Service name with better branding
-  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Service name
+  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#9B59B6';
-  ctx.fillText('🧕 Noor.AI - Personal Color Analysis', width / 2, y + 50);
+  ctx.fillText('🧕 Noor.AI - Personal Color Analysis', width / 2, y + 45);
   
   // Website URL
-  ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#636E72';
-  ctx.fillText('www.noor.ai', width / 2, y + 80);
+  ctx.fillText('www.noor.ai', width / 2, y + 70);
 }
