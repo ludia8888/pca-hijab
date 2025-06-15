@@ -44,7 +44,7 @@ export class AdminAPI {
     }
   ): Promise<RecommendationsResponse> {
     const response = await apiClient.get<{ success: boolean; data: RecommendationsResponse }>(
-      '/api/admin/recommendations',
+      '/admin/recommendations',
       {
         headers: this.getAuthHeaders(apiKey),
         params
@@ -58,7 +58,7 @@ export class AdminAPI {
    */
   static async getRecommendation(apiKey: string, id: string): Promise<Recommendation> {
     const response = await apiClient.get<{ success: boolean; data: Recommendation }>(
-      `/api/admin/recommendations/${id}`,
+      `/admin/recommendations/${id}`,
       {
         headers: this.getAuthHeaders(apiKey)
       }
@@ -75,7 +75,7 @@ export class AdminAPI {
     status: 'pending' | 'processing' | 'completed'
   ): Promise<Recommendation> {
     const response = await apiClient.patch<{ success: boolean; data: Recommendation }>(
-      `/api/admin/recommendations/${id}/status`,
+      `/admin/recommendations/${id}/status`,
       { status },
       {
         headers: this.getAuthHeaders(apiKey)
@@ -89,7 +89,7 @@ export class AdminAPI {
    */
   static async getStatistics(apiKey: string): Promise<AdminStatistics> {
     const response = await apiClient.get<{ success: boolean; data: AdminStatistics }>(
-      '/api/admin/statistics',
+      '/admin/statistics',
       {
         headers: this.getAuthHeaders(apiKey)
       }

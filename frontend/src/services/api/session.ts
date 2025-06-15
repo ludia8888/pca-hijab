@@ -16,7 +16,7 @@ export class SessionAPI {
    * @returns Promise<SessionResponse>
    */
   static async createSession(instagramId: string): Promise<SessionResponse> {
-    const response = await apiClient.post<SessionResponse>('/api/sessions', {
+    const response = await apiClient.post<SessionResponse>('/sessions', {
       instagramId
     });
     return response.data;
@@ -35,7 +35,7 @@ export class SessionAPI {
       createdAt: string;
     };
   }> {
-    const response = await apiClient.get(`/api/sessions/${sessionId}`);
+    const response = await apiClient.get(`/sessions/${sessionId}`);
     return response.data;
   }
 }
