@@ -27,9 +27,10 @@ const UploadPage = (): JSX.Element => {
   // Pre-warm API on component mount (production only)
   useEffect(() => {
     if (import.meta.env.PROD) {
-      PersonalColorAPI.healthCheck().catch(err => {
-        console.log('API pre-warming failed:', err);
-      });
+      // Skip health check for now to avoid 404 errors
+      // PersonalColorAPI.healthCheck().catch(err => {
+      //   console.log('API pre-warming failed:', err);
+      // });
     }
   }, []);
 
