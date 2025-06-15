@@ -19,22 +19,22 @@ function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS
   return seasonMap[personalColorEn] || 'spring';
 }
 
-// Mobile-optimized gradient backgrounds
+// Enhanced mobile-optimized gradient backgrounds
 const MOBILE_GRADIENTS: Record<SeasonType, { bg: string[], card: string[] }> = {
   spring: {
-    bg: ['#FFF5F5', '#FFE0EC', '#FFDAB9'], // Soft pink to peach
+    bg: ['#FFF0F5', '#FFE4EC', '#FFDBDB', '#FFDCC5'], // Enhanced pink to peach
     card: ['#FFFFFF', '#FFF9FC']
   },
   summer: {
-    bg: ['#F8F5FF', '#E6D7FF', '#E4D4F4'], // Soft lavender
+    bg: ['#F3F0FF', '#E6D7FF', '#D4C5F9', '#C8B6FF'], // Enhanced lavender
     card: ['#FFFFFF', '#FAFAFF']
   },
   autumn: {
-    bg: ['#FFF8F0', '#FFE5D0', '#FFDAB9'], // Warm beige to apricot
+    bg: ['#FFF5EB', '#FFE5D0', '#FFD4B0', '#FFC090'], // Enhanced warm tones
     card: ['#FFFFFF', '#FFFAF6']
   },
   winter: {
-    bg: ['#F5F8FF', '#E8EFFF', '#DDE6FF'], // Cool blue tones
+    bg: ['#EFF4FF', '#E0EBFF', '#D1E3FF', '#C2DAFF'], // Enhanced cool blues
     card: ['#FFFFFF', '#F8FAFF']
   }
 };
@@ -96,28 +96,38 @@ export const generateMobileResultCard = async (
   // Draw main card with subtle shadow
   drawMobileCard(ctx, cardX, cardY, cardWidth, cardHeight, gradients.card);
   
-  // Header section
-  let currentY = cardY + 60;
+  // Header section with better design
+  let currentY = cardY + 80;
+  
+  // App branding at top
+  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#9B59B6';
+  ctx.textAlign = 'center';
+  ctx.fillText('NOOR.AI PERSONAL COLOR ANALYSIS', width / 2, currentY - 40);
   
   // Season emoji and result
-  ctx.font = '64px Arial';
+  ctx.font = '80px Arial';
   ctx.textAlign = 'center';
   ctx.fillText(SEASON_EMOJIS[seasonKey], width / 2, currentY);
   
-  currentY += 70;
+  currentY += 85;
   
-  // Season name
-  ctx.font = 'bold 42px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Season name with shadow effect
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+  ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#2D3436';
   ctx.textAlign = 'center';
   ctx.fillText(seasonInfo.en.toUpperCase(), width / 2, currentY);
+  ctx.shadowColor = 'transparent';
   
-  currentY += 45;
+  currentY += 50;
   
-  // Korean name
-  ctx.font = '28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Season description in English (not Korean)
+  ctx.font = '26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#636E72';
-  ctx.fillText(seasonInfo.ko, width / 2, currentY);
+  ctx.fillText(SEASON_DESCRIPTIONS[seasonKey].description, width / 2, currentY);
   
   currentY += 60;
   
@@ -129,28 +139,28 @@ export const generateMobileResultCard = async (
   drawKeywordTags(ctx, seasonData.keywords, width / 2, currentY, seasonKey);
   currentY += 100;
   
-  // Best colors section
-  ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Best colors section with icon
+  ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#2D3436';
   ctx.textAlign = 'center';
-  ctx.fillText('YOUR BEST HIJAB COLORS', width / 2, currentY);
+  ctx.fillText('🎨 YOUR BEST HIJAB COLORS', width / 2, currentY);
+  
+  currentY += 60;
+  
+  // Color palette with better spacing
+  drawMobileColorPalette(ctx, seasonColors.bestColors.slice(0, 6), width / 2, currentY);
+  currentY += 240;
+  
+  // Makeup colors section with icon
+  ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#2D3436';
+  ctx.fillText('💄 MAKEUP PALETTE', width / 2, currentY);
   
   currentY += 50;
   
-  // Color palette
-  drawMobileColorPalette(ctx, seasonColors.bestColors.slice(0, 6), width / 2, currentY);
-  currentY += 180;
-  
-  // Makeup colors section
-  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillStyle = '#2D3436';
-  ctx.fillText('MAKEUP PALETTE', width / 2, currentY);
-  
-  currentY += 40;
-  
-  // Lip colors
-  drawMakeupRecommendations(ctx, seasonData.makeupColors.lips.slice(0, 4), width / 2, currentY, 'Lips');
-  currentY += 80;
+  // Lip colors with better label
+  drawMakeupRecommendations(ctx, seasonData.makeupColors.lips.slice(0, 4), width / 2, currentY, 'Recommended Lip Colors');
+  currentY += 100;
   
   // Style tip
   drawStyleTip(ctx, seasonData.atmosphere, width / 2, currentY, seasonKey);
@@ -262,17 +272,28 @@ function drawKeywordTags(
   y: number,
   season: SeasonType
 ) {
-  const tagHeight = 36;
-  const padding = 24;
-  const spacing = 12;
+  const tagHeight = 42;
+  const padding = 30;
+  const spacing = 16;
+  
+  // Get season-specific colors for tags
+  const seasonColors = {
+    spring: '#FFB6C1',
+    summer: '#B19CD9',
+    autumn: '#DEB887',
+    winter: '#87CEEB'
+  };
   
   // Calculate positions
   const positions: Array<{ keyword: string; width: number; x: number }> = [];
   let currentX = 0;
   
-  ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   
-  keywords.forEach((keyword) => {
+  // Ensure keywords are in English
+  const englishKeywords = keywords.map(k => k.toUpperCase());
+  
+  englishKeywords.forEach((keyword) => {
     const width = ctx.measureText(keyword).width + padding * 2;
     positions.push({ keyword, width, x: currentX });
     currentX += width + spacing;
@@ -282,15 +303,18 @@ function drawKeywordTags(
   const totalWidth = currentX - spacing;
   const startX = centerX - totalWidth / 2;
   
-  // Draw tags
+  // Draw tags with enhanced design
   positions.forEach(({ keyword, width, x }) => {
     const tagX = startX + x;
     
-    // Tag background
-    const tagColor = MOBILE_GRADIENTS[season].card[1];
-    ctx.fillStyle = tagColor;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-    ctx.lineWidth = 1;
+    // Tag background with gradient
+    const gradient = ctx.createLinearGradient(tagX, y, tagX + width, y + tagHeight);
+    gradient.addColorStop(0, seasonColors[season]);
+    gradient.addColorStop(1, `${seasonColors[season]}CC`);
+    
+    ctx.fillStyle = gradient;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
     
     ctx.beginPath();
     // @ts-expect-error - roundRect is not in TypeScript definitions yet
@@ -299,9 +323,9 @@ function drawKeywordTags(
     ctx.stroke();
     
     // Tag text
-    ctx.fillStyle = '#636E72';
+    ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
-    ctx.fillText(keyword, tagX + width / 2, y + tagHeight / 2 + 6);
+    ctx.fillText(keyword, tagX + width / 2, y + tagHeight / 2 + 7);
   });
 }
 
@@ -311,8 +335,8 @@ function drawMobileColorPalette(
   centerX: number,
   y: number
 ) {
-  const swatchSize = 72;
-  const spacing = 16;
+  const swatchSize = 90;
+  const spacing = 24;
   const totalWidth = 3 * swatchSize + 2 * spacing;
   const startX = centerX - totalWidth / 2;
   
@@ -320,28 +344,37 @@ function drawMobileColorPalette(
     const row = Math.floor(index / 3);
     const col = index % 3;
     const x = startX + col * (swatchSize + spacing);
-    const swatchY = y + row * (swatchSize + spacing + 30);
+    const swatchY = y + row * (swatchSize + spacing + 50);
     
-    // Shadow for swatch
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetY = 4;
+    // Enhanced shadow for swatch
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowBlur = 15;
+    ctx.shadowOffsetY = 8;
     
-    // Color swatch
+    // Color swatch with border
     ctx.fillStyle = color.hex;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     // @ts-expect-error - roundRect is not in TypeScript definitions yet
-    ctx.roundRect(x, swatchY, swatchSize, swatchSize, 12);
+    ctx.roundRect(x, swatchY, swatchSize, swatchSize, 20);
     ctx.fill();
+    ctx.stroke();
     
     // Reset shadow
     ctx.shadowColor = 'transparent';
     
-    // Color name
-    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#636E72';
+    // Color code inside swatch
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(color.name, x + swatchSize / 2, swatchY + swatchSize + 20);
+    ctx.fillText(color.hex.toUpperCase(), x + swatchSize / 2, swatchY + swatchSize - 10);
+    
+    // Color name below swatch
+    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#2D3436';
+    ctx.textAlign = 'center';
+    ctx.fillText(color.name.toUpperCase(), x + swatchSize / 2, swatchY + swatchSize + 30);
   });
 }
 
@@ -353,27 +386,38 @@ function drawMakeupRecommendations(
   label: string
 ) {
   // Label
-  ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#636E72';
   ctx.textAlign = 'center';
-  ctx.fillText(label, centerX, y);
+  ctx.fillText(label.toUpperCase(), centerX, y);
   
-  // Color dots
-  const dotSize = 28;
-  const spacing = 16;
+  // Color dots with better design
+  const dotSize = 36;
+  const spacing = 20;
   const totalWidth = colors.length * dotSize + (colors.length - 1) * spacing;
   const startX = centerX - totalWidth / 2;
   
   colors.forEach((_, index) => {
     const x = startX + index * (dotSize + spacing) + dotSize / 2;
     
-    // Placeholder color for lips
+    // Placeholder color for lips with better variety
     const lipColors = ['#E8747C', '#E89B97', '#D4736E', '#C96169'];
     
+    // Shadow for dots
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 3;
+    
     ctx.fillStyle = lipColors[index] || '#E8747C';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(x, y + 30, dotSize / 2, 0, Math.PI * 2);
+    ctx.arc(x, y + 35, dotSize / 2, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
   });
 }
 
@@ -384,28 +428,36 @@ function drawStyleTip(
   y: number,
   season: SeasonType
 ) {
-  const boxWidth = 600;
-  const boxHeight = 60;
+  const boxWidth = 700;
+  const boxHeight = 80;
   const x = centerX - boxWidth / 2;
   
-  // Background
-  ctx.fillStyle = MOBILE_GRADIENTS[season].card[1];
+  // Background with gradient
+  const gradient = ctx.createLinearGradient(x, y, x + boxWidth, y);
+  gradient.addColorStop(0, MOBILE_GRADIENTS[season].card[1]);
+  gradient.addColorStop(0.5, '#FFFFFF');
+  gradient.addColorStop(1, MOBILE_GRADIENTS[season].card[1]);
+  
+  ctx.fillStyle = gradient;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
   // @ts-expect-error - roundRect is not in TypeScript definitions yet
-  ctx.roundRect(x, y, boxWidth, boxHeight, 12);
+  ctx.roundRect(x, y, boxWidth, boxHeight, 16);
   ctx.fill();
+  ctx.stroke();
   
   // Quote marks
-  ctx.font = '24px Georgia, serif';
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+  ctx.font = '32px Georgia, serif';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
   ctx.textAlign = 'center';
-  ctx.fillText('"', x + 30, y + 35);
-  ctx.fillText('"', x + boxWidth - 30, y + 35);
+  ctx.fillText('"', x + 40, y + 40);
+  ctx.fillText('"', x + boxWidth - 40, y + 40);
   
-  // Text
-  ctx.font = 'italic 18px Georgia, serif';
-  ctx.fillStyle = '#636E72';
-  ctx.fillText(tip, centerX, y + boxHeight / 2 + 6);
+  // Text - ensure it's in English
+  ctx.font = 'italic 20px Georgia, serif';
+  ctx.fillStyle = '#2D3436';
+  ctx.fillText(tip.toUpperCase(), centerX, y + boxHeight / 2 + 8);
 }
 
 function drawMobileFooter(
@@ -414,14 +466,22 @@ function drawMobileFooter(
   width: number,
   y: number
 ) {
-  // Instagram handle
-  ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillStyle = '#636E72';
-  ctx.textAlign = 'center';
-  ctx.fillText(`@${instagramId}`, width / 2, y);
+  // Divider line
+  drawDivider(ctx, width / 2 - 200, y - 30, 400);
   
-  // Service name with icon
-  ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  // Instagram handle with better design
+  ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#2D3436';
-  ctx.fillText('🧕 Hijab Personal Color AI', width / 2, y + 35);
+  ctx.textAlign = 'center';
+  ctx.fillText(`@${instagramId}`, width / 2, y + 10);
+  
+  // Service name with better branding
+  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#9B59B6';
+  ctx.fillText('🧕 Noor.AI - Personal Color Analysis', width / 2, y + 50);
+  
+  // Website URL
+  ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#636E72';
+  ctx.fillText('www.noor.ai', width / 2, y + 80);
 }

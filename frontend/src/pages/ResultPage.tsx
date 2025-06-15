@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout';
 import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
@@ -39,6 +39,7 @@ function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
 const ResultPage = (): JSX.Element => {
   const navigate = useNavigate();
   const { analysisResult, instagramId, uploadedImage } = useAppStore();
+  const [showDownloadHint, setShowDownloadHint] = useState(true);
 
   // Redirect if no analysis result
   useEffect(() => {
@@ -276,6 +277,51 @@ const ResultPage = (): JSX.Element => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Download Section - Enhanced Design */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl blur-xl opacity-30 animate-pulse" />
+          <div className="relative bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 text-white shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold mb-1 flex items-center gap-2">
+                  <span className="animate-bounce">⬇️</span> Save Your Result Card
+                </h3>
+                <p className="text-white/90 text-sm">
+                  Download your personal color analysis as an image
+                </p>
+              </div>
+              <div className="text-4xl animate-pulse">💾</div>
+            </div>
+            <button
+              onClick={handleSaveImage}
+              className="w-full bg-white text-green-600 font-bold py-4 rounded-xl hover:bg-gray-50 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-3"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              </svg>
+              Download Result Card
+            </button>
+          </div>
+          
+          {/* Floating Hint Popup */}
+          {showDownloadHint && (
+            <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 animate-bounce">
+              <div className="relative bg-purple-600 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                <span className="animate-pulse">👉</span>
+                <span>Click here to save your detailed results!</span>
+                <button
+                  onClick={() => setShowDownloadHint(false)}
+                  className="ml-2 text-white/70 hover:text-white"
+                >
+                  ×
+                </button>
+                {/* Arrow pointing up */}
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-purple-600" />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* CTA Section - Elegant Design */}
