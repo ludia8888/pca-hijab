@@ -52,7 +52,7 @@ export class RecommendationAPI {
       console.log('Sending recommendation request:', requestData);
       
       const response = await apiClient.post<RecommendationResponse>(
-        '/recommendations',
+        '/api/recommendations',
         requestData
       );
       return response.data;
@@ -80,7 +80,7 @@ export class RecommendationAPI {
   ): Promise<{ status: string; updatedAt: string }> {
     try {
       const response = await apiClient.get(
-        `/recommendations/${recommendationId}/status`
+        `/api/recommendations/${recommendationId}/status`
       );
       return response.data;
     } catch {
