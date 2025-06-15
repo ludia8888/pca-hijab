@@ -1,4 +1,5 @@
-import heic2any from 'heic2any';
+// Dynamic import to reduce bundle size
+const heic2any = () => import('heic2any');
 
 /**
  * Checks if HEIC is supported by the browser
@@ -31,7 +32,8 @@ export const convertHEICToJPEG = async (file: File): Promise<File> => {
   try {
     
     // Convert HEIC to JPEG using heic2any
-    const convertedBlob = await heic2any({
+    const heic2anyModule = await heic2any();
+    const convertedBlob = await heic2anyModule.default({
       blob: file,
       toType: 'image/jpeg',
       quality: 0.9
