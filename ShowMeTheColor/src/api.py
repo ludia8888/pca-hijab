@@ -26,6 +26,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
+        "https://noorai-ashy.vercel.app",
         "https://pca-hijab.vercel.app",
         "https://noor.ai",
         "https://www.noor.ai",
