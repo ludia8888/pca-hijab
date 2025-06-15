@@ -148,77 +148,75 @@ export const ImageUpload = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            'relative border-2 border-dashed rounded-xl p-8 transition-all',
+            'relative rounded-3xl p-12 transition-all min-h-[280px]',
             'flex flex-col items-center justify-center text-center',
-            isDragging ? 'border-primary bg-primary/5' : 'border-gray-300',
-            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400',
+            'bg-gradient-to-b from-gray-50/50 to-gray-100/50',
+            isDragging ? 'scale-105 shadow-2xl' : '',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           )}
           onClick={!disabled ? handleButtonClick : undefined}
         >
-          {/* Upload icon */}
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={cn('mb-4', isDragging ? 'text-primary' : 'text-gray-400')}
-          >
-            <path
-              d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C19.8587 21 19.149 21 17.7397 21H6.26031C4.85103 21 4.14639 21 3.59102 20.4142C3 19.7893 3 19.2478 3 18.1649V15"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M12 3V15M12 3L8 7M12 3L16 7"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {/* Camera Icon */}
+          <div className={cn(
+            'w-20 h-20 rounded-full flex items-center justify-center mb-4',
+            'bg-gradient-to-br from-purple-500 to-pink-500',
+            'shadow-lg transform transition-transform',
+            isDragging ? 'scale-110' : ''
+          )}>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="text-white"
+            >
+              <path
+                d="M23 19C23 20.1046 22.1046 21 21 21H3C1.89543 21 1 20.1046 1 19V8C1 6.89543 1.89543 6 3 6H7L9 3H15L17 6H21C22.1046 6 23 6.89543 23 8V19Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+          </div>
 
-          <p className="text-body font-medium text-gray-700 mb-2">
-            {isDragging ? 'Drop here' : 'Click to select photo'}
+          <p className="text-lg font-medium text-gray-800 mb-1">
+            {isDragging ? 'Drop your photo' : 'Add your photo'}
           </p>
-          <p className="text-body-sm text-gray-500">
-            Or drag and drop your file here
-          </p>
-          <p className="text-caption text-gray-400 mt-2">
-            JPG, PNG, HEIC (max 10MB)
+          <p className="text-sm text-gray-500 mb-6">
+            Tap to choose or drag here
           </p>
 
-          {/* Mobile-specific buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full max-w-xs">
+          {/* Simplified Mobile Buttons */}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={handleCameraClick}
+              className="px-6 py-2.5 bg-white/80 backdrop-blur text-gray-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
+              disabled={disabled}
+            >
+              📷 Camera
+            </button>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleButtonClick();
               }}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+              className="px-6 py-2.5 bg-white/80 backdrop-blur text-gray-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
               disabled={disabled}
             >
-              Select from Gallery
-            </button>
-            <button
-              type="button"
-              onClick={handleCameraClick}
-              className="flex-1 px-4 py-2 bg-white text-primary border border-primary rounded-lg font-medium hover:bg-gray-50 transition-colors"
-              disabled={disabled}
-            >
-              Take Photo
+              🖼️ Gallery
             </button>
           </div>
         </div>
       ) : (
-        <div className="relative rounded-xl overflow-hidden bg-gray-100">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 shadow-xl">
           <img
             src={preview}
-            alt="Uploaded image"
-            className="w-full h-auto max-h-96 object-contain"
+            alt="Your photo"
+            className="w-full h-auto max-h-80 object-cover"
             onError={(e) => {
               // Fallback for failed image loads
               const target = e.target as HTMLImageElement;
@@ -232,31 +230,11 @@ export const ImageUpload = ({
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-4 right-4 p-2 bg-white/90 rounded-lg shadow-md hover:bg-white transition-colors"
-            aria-label="Remove image"
+            className="absolute top-3 right-3 w-10 h-10 bg-black/20 backdrop-blur-lg rounded-full flex items-center justify-center hover:bg-black/30 transition-colors"
+            aria-label="Remove"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-gray-700"
-            >
-              <path
-                d="M18 6L6 18"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M6 6L18 18"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
           </button>
         </div>

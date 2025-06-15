@@ -77,102 +77,66 @@ const UploadPage = (): JSX.Element => {
         />
       }
     >
-      <div className="max-w-2xl mx-auto w-full space-y-6">
-        {/* Instructions */}
-        <Card>
-          <h2 className="text-h3 font-bold text-gray-900 mb-4">
-            Please upload your face photo
+      <div className="max-w-md mx-auto w-full px-5">
+        {/* Minimal Instructions */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            Upload Your Photo
           </h2>
-          
-          <div className="space-y-3 text-body-sm text-gray-600">
-            <h3 className="font-semibold text-gray-700">📸 Photo Guidelines</h3>
-            <ul className="space-y-2 ml-6">
-              <li className="flex items-start">
-                <span className="text-success mr-2">✓</span>
-                <span>Front-facing photo</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-success mr-2">✓</span>
-                <span>Taken in bright natural light or white lighting</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-success mr-2">✓</span>
-                <span>No makeup or light makeup</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-error mr-2">✗</span>
-                <span>Photos with filters or color correction</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-error mr-2">✗</span>
-                <span>Photos with shadows or backlighting</span>
-              </li>
-            </ul>
-          </div>
-        </Card>
+          <p className="text-gray-500 text-sm">
+            Natural lighting • No filters • Front facing
+          </p>
+        </div>
 
-        {/* Error Display */}
+        {/* Minimal Error Display */}
         {error && (
-          <Card className="bg-error/10 border-error">
-            <div className="flex items-start space-x-3">
-              <svg
-                className="w-5 h-5 text-error flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <div className="flex-1">
-                <p className="text-error font-medium">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="text-sm text-error underline mt-1"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </Card>
+          <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-2xl">
+            <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
         )}
 
-        {/* Image Upload */}
-        <Card>
-          <ImageUpload
-            onUpload={handleImageUpload}
-            onError={handleImageError}
-            disabled={isCompressing}
-          />
-        </Card>
+        {/* Glass Morphism Upload Area */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-3xl blur-xl" />
+          <div className="relative bg-white/70 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+            <ImageUpload
+              onUpload={handleImageUpload}
+              onError={handleImageError}
+              disabled={isCompressing}
+            />
+          </div>
+        </div>
 
-        {/* Action Button */}
+        {/* Floating Action Button */}
         {selectedFile && previewUrl && (
-          <Button
-            fullWidth
-            size="lg"
-            onClick={handleAnalyze}
-            loading={isCompressing}
-            className="animate-fade-in"
-          >
-            {isCompressing ? 'Processing image...' : 'Start Analysis'}
-          </Button>
+          <div className="fixed bottom-8 left-0 right-0 px-5 z-40">
+            <button
+              onClick={handleAnalyze}
+              disabled={isCompressing}
+              className="w-full max-w-md mx-auto block bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium py-4 px-8 rounded-full shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCompressing ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                'Analyze My Colors'
+              )}
+            </button>
+          </div>
         )}
 
-        {/* Privacy Link */}
-        <div className="text-center mt-4">
+        {/* Minimal Privacy Link */}
+        <div className="text-center mt-8">
           <button
             onClick={() => setShowPrivacyPopup(true)}
-            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-current">
-              <path d="M12 2L4 7V11C4 16 7.5 20.3 12 21C16.5 20.3 20 16 20 11V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span>Privacy & Security Information</span>
+            Privacy Policy
           </button>
         </div>
         

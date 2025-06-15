@@ -242,42 +242,58 @@ const LandingPage = (): JSX.Element => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className={styles.testimonials}>
+      {/* Statistics Section */}
+      <section className={styles.statistics}>
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>User Testimonials</span>
-            <span className={styles.sectionTitleMain}>Success Stories</span>
+            <span className={styles.sectionTitleSmall}>Join the Revolution</span>
+            <span className={styles.sectionTitleMain}>Transform Your Style Today</span>
           </h2>
-          <div className={styles.testimonialGrid}>
-            <div className={styles.testimonialCard}>
-              <div className={styles.testimonialQuote}>"</div>
-              <p className={styles.testimonialText}>
-                I used to struggle with color choices,<br />
-                now I shop with confidence!
-              </p>
-              <div className={styles.testimonialAuthor}>
-                <span className={styles.authorName}>@fashion_lover</span>
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statNumber}>85%</div>
+              <div className={styles.statLabel}>Report Better Shopping Decisions</div>
+              <div className={styles.statDescription}>
+                Save money by choosing colors that truly work
               </div>
             </div>
-            <div className={styles.testimonialCard}>
-              <div className={styles.testimonialQuote}>"</div>
-              <p className={styles.testimonialText}>
-                The AI analysis is incredibly accurate.<br />
-                All recommended colors look perfect on me
-              </p>
-              <div className={styles.testimonialAuthor}>
-                <span className={styles.authorName}>@hijab_style</span>
+            <div className={styles.statCard}>
+              <div className={styles.statNumber}>10K+</div>
+              <div className={styles.statLabel}>Happy Users This Month</div>
+              <div className={styles.statDescription}>
+                Growing community of confident hijabis
               </div>
             </div>
-            <div className={styles.testimonialCard}>
-              <div className={styles.testimonialQuote}>"</div>
-              <p className={styles.testimonialText}>
-                Shopping has become so much easier.<br />
-                No more color mistakes!
-              </p>
-              <div className={styles.testimonialAuthor}>
-                <span className={styles.authorName}>@smart_shopper</span>
+            <div className={styles.statCard}>
+              <div className={styles.statNumber}>30s</div>
+              <div className={styles.statLabel}>To Complete Analysis</div>
+              <div className={styles.statDescription}>
+                Faster than any salon consultation
+              </div>
+            </div>
+          </div>
+          <div className={styles.comparisonSection}>
+            <h3 className={styles.comparisonTitle}>Why Guess When You Can Know?</h3>
+            <div className={styles.comparisonGrid}>
+              <div className={styles.comparisonCard}>
+                <div className={styles.comparisonIcon}>❌</div>
+                <h4 className={styles.comparisonHeading}>Without PCA Hijab</h4>
+                <ul className={styles.comparisonList}>
+                  <li>Waste money on wrong colors</li>
+                  <li>Hijabs sitting unused in closet</li>
+                  <li>Always unsure about purchases</li>
+                  <li>Miss out on your best looks</li>
+                </ul>
+              </div>
+              <div className={styles.comparisonCard}>
+                <div className={styles.comparisonIcon}>✅</div>
+                <h4 className={styles.comparisonHeading}>With PCA Hijab</h4>
+                <ul className={styles.comparisonList}>
+                  <li>Shop with 100% confidence</li>
+                  <li>Every hijab enhances your beauty</li>
+                  <li>Save money on perfect choices</li>
+                  <li>Discover your signature style</li>
+                </ul>
               </div>
             </div>
           </div>
