@@ -58,7 +58,7 @@ const MODERN_THEMES: Record<SeasonType, {
 };
 
 /**
- * Generates a sophisticated Korean-style result card with rich content
+ * Generates a sophisticated Korean-style result card with rich content (ALL ENGLISH)
  */
 export const generateKoreanStyleCard = async (
   result: PersonalColorResult,
@@ -221,11 +221,18 @@ async function drawHeaderSection(
   
   currentY += 50;
   
-  // Korean name - MOBILE SIZE
-  ctx.font = '28px -apple-system, "Helvetica Neue", sans-serif';
+  // Season subtitle - MOBILE SIZE (ENGLISH ONLY)
+  ctx.font = '24px -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillStyle = theme.text.secondary;
   ctx.textAlign = 'center';
-  ctx.fillText(seasonInfo.ko, width / 2, currentY);
+  // Convert season to subtitle
+  const subtitles = {
+    spring: 'WARM & BRIGHT',
+    summer: 'COOL & SOFT', 
+    autumn: 'WARM & DEEP',
+    winter: 'COOL & CLEAR'
+  };
+  ctx.fillText(subtitles[seasonKey], width / 2, currentY);
   
   currentY += 50;
   
@@ -265,12 +272,12 @@ async function drawPersonalInfoSection(
   // Draw tags in a row
   drawElegantTags(ctx, tags, width / 2, tagY + 20, theme);
   
-  // Atmosphere quote - MOBILE SIZE
+  // Atmosphere quote - MOBILE SIZE (ENGLISH)
   const quoteY = tagY + 80;
   ctx.font = 'italic 22px Georgia, serif';
   ctx.fillStyle = theme.text.primary;
   ctx.textAlign = 'center';
-  ctx.fillText(`"${seasonData.atmosphere}"`, width / 2, quoteY);
+  ctx.fillText(`"${seasonData.atmosphere.toUpperCase()}"`, width / 2, quoteY);
 }
 
 // Color palette section with all colors

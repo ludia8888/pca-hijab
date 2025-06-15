@@ -55,7 +55,7 @@ const router = createBrowserRouter([
     path: ROUTES.HOME,
     element: (
       <Suspense fallback={<PageLoader />}>
-        <IntroPage />
+        <LandingPage />
       </Suspense>
     ),
     errorElement: <RouteErrorBoundary />,
