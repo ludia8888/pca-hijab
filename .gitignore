@@ -84,3 +84,4 @@ ShowMeTheColor/__pycache__/
 ShowMeTheColor/venv/
 ShowMeTheColor/.env
 ShowMeTheColor/src/*.log
+.vercel
