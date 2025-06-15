@@ -529,62 +529,155 @@
   line-height: 1.6;
 }
 
-/* Testimonials Section */
-.testimonials {
+/* Statistics Section */
+.statistics {
   padding: 5rem 0;
   background: #f9fafb;
 }
 
-.testimonialGrid {
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.statCard {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.statNumber {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .statNumber {
+    font-size: 3.5rem;
+  }
+}
+
+.statLabel {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.statDescription {
+  font-size: 0.95rem;
+  color: #6B7280;
+  line-height: 1.6;
+}
+
+/* Comparison Section */
+.comparisonSection {
+  margin-top: 4rem;
+}
+
+.comparisonTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+  .comparisonTitle {
+    font-size: 2.5rem;
+  }
+}
+
+.comparisonGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
 }
 
 @media (min-width: 768px) {
-  .testimonialGrid {
-    grid-template-columns: repeat(3, 1fr);
+  .comparisonGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
   }
 }
 
-.testimonialCard {
+.comparisonCard {
   padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: white;
   border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.comparisonCard:first-child {
+  border: 2px solid #FEE2E2;
+}
+
+.comparisonCard:last-child {
+  border: 2px solid #D1FAE5;
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.05) 0%, rgba(255, 107, 107, 0.05) 100%);
+}
+
+.comparisonIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.comparisonHeading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.comparisonList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.comparisonList li {
+  font-size: 1rem;
+  color: #4B5563;
+  line-height: 1.8;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
   position: relative;
 }
 
-.testimonialQuote {
-  font-size: 3rem;
-  color: #FF6B6B;
-  opacity: 0.3;
+.comparisonList li::before {
+  content: '•';
   position: absolute;
-  top: 1rem;
-  left: 1.5rem;
-  line-height: 1;
+  left: 0;
+  color: #9CA3AF;
+  font-weight: bold;
 }
 
-.testimonialText {
-  font-size: 1rem;
-  color: #374151;
-  line-height: 1.8;
-  margin-bottom: 1.5rem;
-  padding-top: 2rem;
-}
-
-.testimonialAuthor {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.authorName {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #6B7280;
+.comparisonCard:last-child .comparisonList li::before {
+  color: #4ECDC4;
 }
 
 /* Final CTA Section */

@@ -159,7 +159,7 @@ export const ImageUpload = ({
           {/* Camera Icon */}
           <div className={cn(
             'w-20 h-20 rounded-full flex items-center justify-center mb-4',
-            'bg-gradient-to-br from-purple-500 to-pink-500',
+            'bg-gradient-to-br from-primary to-secondary',
             'shadow-lg transform transition-transform',
             isDragging ? 'scale-110' : ''
           )}>
