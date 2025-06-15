@@ -23,15 +23,20 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
         "https://pca-hijab.vercel.app",
+        "https://noor.ai",
+        "https://www.noor.ai",
         "https://pca-hijab-*.vercel.app",
-        "*"  # For development
+        "https://*.vercel.app"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "x-api-key", "Accept", "Origin"],
+    expose_headers=["Content-Length", "Content-Type"],
+    max_age=3600
 )
 
 @app.get("/")
@@ -44,6 +49,18 @@ async def health_check():
         "status": "ok",
         "service": "personal-color-analysis"
     }
+
+@app.options("/analyze")
+async def options_analyze():
+    """Handle preflight requests"""
+    return JSONResponse(
+        content={"message": "OK"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key"
+        }
+    )
 
 @app.post("/analyze")
 async def analyze_personal_color(
