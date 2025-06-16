@@ -197,23 +197,6 @@ const ResultPage = (): JSX.Element => {
                       </svg>
                     </button>
                     
-                    {/* Floating Hint Popup attached to save button */}
-                    {showDownloadHint && (
-                      <div className="absolute top-full mt-3 right-0 z-[9999]">
-                        <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 whitespace-nowrap animate-bounce">
-                          <span className="text-lg">✨</span>
-                          <span className="font-medium">Save your result card!</span>
-                          <button
-                            onClick={() => setShowDownloadHint(false)}
-                            className="ml-2 text-white/80 hover:text-white text-lg leading-none"
-                          >
-                            ×
-                          </button>
-                          {/* Arrow pointing up to save button */}
-                          <div className="absolute -top-2 right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-purple-600" />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -376,6 +359,23 @@ const ResultPage = (): JSX.Element => {
           </button>
         </div>
       </div>
+      {/* Floating Hint Popup - positioned independently */}
+      {showDownloadHint && (
+        <div className="fixed top-32 right-6 z-[9999] pointer-events-none">
+          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 whitespace-nowrap animate-bounce pointer-events-auto">
+            <span className="text-lg">✨</span>
+            <span className="font-medium">Save your result card!</span>
+            <button
+              onClick={() => setShowDownloadHint(false)}
+              className="ml-2 text-white/80 hover:text-white text-lg leading-none"
+            >
+              ×
+            </button>
+            {/* Arrow pointing to the general save area */}
+            <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-purple-600" />
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 };
