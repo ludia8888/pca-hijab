@@ -54,6 +54,13 @@ const LandingPage = (): JSX.Element => {
     try {
       const response = await SessionAPI.createSession(instagramId);
       setSessionData(response.data.sessionId, response.data.instagramId);
+      
+      // Track session start
+      AnalyticsEvents.SESSION_START({
+        instagram_id: instagramId,
+        session_id: response.data.sessionId
+      });
+      
       navigate(ROUTES.UPLOAD);
     } catch {
       setError('Failed to create session. Please try again.');
