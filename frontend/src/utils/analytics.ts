@@ -14,14 +14,14 @@ declare global {
 // GA4 Measurement ID
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID || 'G-JXPF7BL260';
 
-// Initialize GA4
-export const initGA = (): void => {
+// Initialize GA4 - 기본 초기화만 유지
+export const initializeGA4 = (): void => {
   if (typeof window.gtag !== 'undefined') {
     window.gtag('config', GA_MEASUREMENT_ID);
   }
 };
 
-// Track page views
+// 기본 페이지뷰만 유지
 export const trackPageView = (path: string): void => {
   if (typeof window.gtag !== 'undefined') {
     window.gtag('event', 'page_view', {
@@ -30,7 +30,7 @@ export const trackPageView = (path: string): void => {
   }
 };
 
-// Track custom events
+// 기본 이벤트 트래킹 함수만 유지
 export const trackEvent = (
   eventName: string,
   parameters?: Record<string, any>
@@ -40,17 +40,49 @@ export const trackEvent = (
   }
 };
 
-// Specific event tracking functions
+// Vercel Analytics만 유지된 트래킹 함수들
+export const trackSessionStart = (instagramId: string): void => {
+  VercelAnalytics.sessionStart(instagramId);
+};
 
+export const trackImageUpload = (success: boolean, fileSize?: number, fileType?: string): void => {
+  if (success && fileSize && fileType) {
+    VercelAnalytics.imageUpload(fileSize, fileType);
+  }
+};
+
+export const trackAIAnalysis = (result: {
+  personalColorType: string;
+  season: string;
+  tone: string;
+  confidence: number;
+  processingTime?: number;
+}): void => {
+  VercelAnalytics.analysisComplete({
+    personalColorType: result.personalColorType,
+    season: result.season,
+    tone: result.tone,
+    confidence: result.confidence,
+    processingTime: result.processingTime || 0
+  });
+};
+
+export const trackRecommendationRequest = (instagramId: string, personalColorType: string): void => {
+  VercelAnalytics.recommendationRequest(instagramId, personalColorType);
+};
+
+export const trackResultDownload = (personalColor: string): void => {
+  VercelAnalytics.resultShare('download');
+};
+
+// GA4 커스텀 이벤트들은 주석처리
+/*
 // Track session start
 export const trackSessionStart = (instagramId: string): void => {
   trackEvent('session_start', {
     event_category: 'engagement',
     instagram_id: instagramId,
   });
-  
-  // Also track with Vercel Analytics
-  VercelAnalytics.sessionStart(instagramId);
 };
 
 // Track image upload
@@ -59,11 +91,6 @@ export const trackImageUpload = (success: boolean, fileSize?: number, fileType?:
     event_category: 'user_action',
     success: success,
   });
-  
-  // Also track with Vercel Analytics
-  if (success && fileSize && fileType) {
-    VercelAnalytics.imageUpload(fileSize, fileType);
-  }
 };
 
 // Track AI analysis
@@ -78,15 +105,6 @@ export const trackAIAnalysis = (result: {
     event_category: 'conversion',
     personal_color: result.personalColorType,
     confidence: result.confidence,
-  });
-  
-  // Also track with Vercel Analytics
-  VercelAnalytics.analysisComplete({
-    personalColorType: result.personalColorType,
-    season: result.season,
-    tone: result.tone,
-    confidence: result.confidence,
-    processingTime: result.processingTime || 0
   });
 };
 
@@ -113,9 +131,6 @@ export const trackRecommendationRequest = (instagramId: string, personalColorTyp
     instagram_id: instagramId,
     personal_color_type: personalColorType,
   });
-  
-  // Also track with Vercel Analytics
-  VercelAnalytics.recommendationRequest(instagramId, personalColorType);
 };
 
 // Track result download
@@ -124,9 +139,6 @@ export const trackResultDownload = (personalColor: string): void => {
     event_category: 'user_action',
     personal_color: personalColor,
   });
-  
-  // Also track with Vercel Analytics
-  VercelAnalytics.resultShare('download');
 };
 
 // Track flow completion
@@ -145,3 +157,4 @@ export const trackDropOff = (step: string): void => {
     step: step,
   });
 };
+*/

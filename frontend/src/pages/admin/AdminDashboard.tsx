@@ -5,7 +5,7 @@ import { AdminAPI } from '@/services/api/admin';
 import { Card, Button, LoadingSpinner } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { SimpleFunnelDashboard } from '@/components/analytics/SimpleFunnelDashboard';
-import { RealTimeFunnelDashboard } from '@/components/analytics/RealTimeFunnelDashboard';
+// import { RealTimeFunnelDashboard } from '@/components/analytics/RealTimeFunnelDashboard';
 import { 
   Users, 
   Clock, 
@@ -341,7 +341,8 @@ const AdminDashboard = (): JSX.Element => {
         )}
 
         {activeTab === 'analytics' && (
-          <RealTimeFunnelDashboard />
+          <SimpleFunnelDashboard />
+          {/* <RealTimeFunnelDashboard /> */}
         )}
       </div>
     </PageLayout>
