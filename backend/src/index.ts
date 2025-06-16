@@ -7,8 +7,10 @@ import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
 import { adminRouter } from './routes/admin';
 import { debugRouter } from './routes/debug';
+import { analyticsRouter } from './routes/analytics';
 import { errorHandler } from './middleware/errorHandler';
 import { db } from './db';
+import { initializeGA4Client } from './services/ga4';
 
 // Load environment variables
 dotenv.config();
@@ -104,10 +106,14 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 app.use('/api/sessions', sessionRouter);
 app.use('/api/recommendations', recommendationRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/analytics', analyticsRouter);
 app.use('/api/debug', debugRouter);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
+
+// Initialize GA4 client
+initializeGA4Client().catch(console.error);
 
 // Start server
 app.listen(PORT, () => {

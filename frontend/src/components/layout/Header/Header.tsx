@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/cn';
+import { AnalyticsEvents } from '@/utils/analytics';
 
 interface HeaderProps {
   title?: string;
@@ -19,6 +20,12 @@ export const Header = ({
   const navigate = useNavigate();
 
   const handleBack = (): void => {
+    // Track back button click
+    AnalyticsEvents.BUTTON_CLICK({
+      button_name: 'back',
+      page: 'header'
+    });
+    
     if (onBack) {
       onBack();
     } else {

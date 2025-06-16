@@ -6,6 +6,7 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
+import { AnalyticsEvents } from '@/utils/analytics';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -17,11 +18,29 @@ const CompletionPage = (): JSX.Element => {
   useEffect(() => {
     if (!instagramId || !analysisResult) {
       navigate(ROUTES.HOME);
+    } else {
+      // Track recommendation request and flow completion
+      AnalyticsEvents.RECOMMENDATION_REQUEST({
+        instagram_id: instagramId,
+        personal_color: analysisResult.personal_color_en
+      });
+      
+      AnalyticsEvents.FLOW_COMPLETE({
+        instagram_id: instagramId,
+        personal_color: analysisResult.personal_color_en,
+        completion_time: 0 // We don't have the actual time here
+      });
     }
   }, [instagramId, analysisResult, navigate]);
 
   const handleShare = async (): Promise<void> => {
     try {
+      // Track share button click
+      AnalyticsEvents.BUTTON_CLICK({
+        button_name: 'share_app',
+        page: 'completion'
+      });
+      
       await shareOrCopy({
         title: 'Hijab Personal Color Analysis',
         text: `Get AI personal color analysis and personalized hijab recommendations!`,
@@ -36,6 +55,12 @@ const CompletionPage = (): JSX.Element => {
     if (!analysisResult || !instagramId) return;
     
     try {
+      // Track save result button click
+      AnalyticsEvents.BUTTON_CLICK({
+        button_name: 'save_result_image',
+        page: 'completion'
+      });
+      
       // Generate the beautiful enhanced result card
       const blob = await generateResultCard(analysisResult, instagramId);
       const timestamp = new Date().toISOString().split('T')[0];
@@ -47,6 +72,12 @@ const CompletionPage = (): JSX.Element => {
   };
 
   const handleGoHome = (): void => {
+    // Track go home button click
+    AnalyticsEvents.BUTTON_CLICK({
+      button_name: 'go_home',
+      page: 'completion'
+    });
+    
     reset();
     navigate(ROUTES.HOME);
   };

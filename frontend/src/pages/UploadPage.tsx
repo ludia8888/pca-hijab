@@ -7,6 +7,7 @@ import { Button, Card, PrivacyPopup, PrivacyAssurance } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
 import { PersonalColorAPI } from '@/services/api/personalColor';
+import { AnalyticsEvents } from '@/utils/analytics';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -38,10 +39,25 @@ const UploadPage = (): JSX.Element => {
     setSelectedFile(file);
     setPreviewUrl(preview);
     setError(null);
+    
+    // Track image upload success
+    AnalyticsEvents.IMAGE_UPLOAD({
+      file_size: file.size,
+      file_type: file.type,
+      status: 'success'
+    });
   };
 
   const handleImageError = (error: string): void => {
     setError(error);
+    
+    // Track image upload failure
+    AnalyticsEvents.IMAGE_UPLOAD({
+      file_size: 0,
+      file_type: 'unknown',
+      status: 'failed',
+      error_message: error
+    });
   };
 
   const handleAnalyze = async (): Promise<void> => {
@@ -50,6 +66,12 @@ const UploadPage = (): JSX.Element => {
     try {
       setIsCompressing(true);
       setLoading(true);
+
+      // Track AI analysis start
+      AnalyticsEvents.BUTTON_CLICK({
+        button_name: 'analyze_my_colors',
+        page: 'upload'
+      });
 
       // Compress image before storing
       const compressedFile = await compressImage(selectedFile);

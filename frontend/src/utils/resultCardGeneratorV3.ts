@@ -1,17 +1,17 @@
 import type { PersonalColorResult } from '@/types';
-import { generateFixedCard } from './resultCardFixed';
+import { generateCustomizedCard } from './resultCardCustomized';
 
 /**
- * Version 3.1 - Fixed Layout Result Card
- * Generates a result card with fixed positions to prevent any overlapping
+ * Version 3.2 - Customized Layout Result Card
+ * Generates a result card with season-specific layouts and designs
  */
 export const generateResultCard = async (
   result: PersonalColorResult,
   instagramId: string
 ): Promise<Blob> => {
   
-  // Use the fixed layout version to ensure no overlapping
-  return generateFixedCard(result, instagramId);
+  // Use the customized layout version for each season
+  return generateCustomizedCard(result, instagramId);
 };
 
 /**

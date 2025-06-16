@@ -1,4 +1,5 @@
 // Google Analytics 4 Event Tracking Utilities
+import { VercelAnalytics } from './vercelAnalytics';
 
 declare global {
   interface Window {
@@ -47,22 +48,45 @@ export const trackSessionStart = (instagramId: string): void => {
     event_category: 'engagement',
     instagram_id: instagramId,
   });
+  
+  // Also track with Vercel Analytics
+  VercelAnalytics.sessionStart(instagramId);
 };
 
 // Track image upload
-export const trackImageUpload = (success: boolean): void => {
+export const trackImageUpload = (success: boolean, fileSize?: number, fileType?: string): void => {
   trackEvent('image_upload', {
     event_category: 'user_action',
     success: success,
   });
+  
+  // Also track with Vercel Analytics
+  if (success && fileSize && fileType) {
+    VercelAnalytics.imageUpload(fileSize, fileType);
+  }
 };
 
 // Track AI analysis
-export const trackAIAnalysis = (personalColor: string, confidence: number): void => {
+export const trackAIAnalysis = (result: {
+  personalColorType: string;
+  season: string;
+  tone: string;
+  confidence: number;
+  processingTime?: number;
+}): void => {
   trackEvent('ai_analysis_complete', {
     event_category: 'conversion',
-    personal_color: personalColor,
-    confidence: confidence,
+    personal_color: result.personalColorType,
+    confidence: result.confidence,
+  });
+  
+  // Also track with Vercel Analytics
+  VercelAnalytics.analysisComplete({
+    personalColorType: result.personalColorType,
+    season: result.season,
+    tone: result.tone,
+    confidence: result.confidence,
+    processingTime: result.processingTime || 0
   });
 };
 
@@ -83,11 +107,15 @@ export const trackPreferenceSubmit = (preferences: {
 };
 
 // Track recommendation request
-export const trackRecommendationRequest = (recommendationId: string): void => {
+export const trackRecommendationRequest = (instagramId: string, personalColorType: string): void => {
   trackEvent('recommendation_request', {
     event_category: 'conversion',
-    recommendation_id: recommendationId,
+    instagram_id: instagramId,
+    personal_color_type: personalColorType,
   });
+  
+  // Also track with Vercel Analytics
+  VercelAnalytics.recommendationRequest(instagramId, personalColorType);
 };
 
 // Track result download
@@ -96,6 +124,9 @@ export const trackResultDownload = (personalColor: string): void => {
     event_category: 'user_action',
     personal_color: personalColor,
   });
+  
+  // Also track with Vercel Analytics
+  VercelAnalytics.resultShare('download');
 };
 
 // Track flow completion

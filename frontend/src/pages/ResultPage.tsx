@@ -6,6 +6,7 @@ import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
+import { AnalyticsEvents } from '@/utils/analytics';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -50,6 +51,19 @@ const ResultPage = (): JSX.Element => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Track AI analysis completion when result is available
+  useEffect(() => {
+    if (analysisResult && instagramId) {
+      const seasonKey = getSeasonKey(analysisResult.personal_color_en);
+      AnalyticsEvents.AI_ANALYSIS({
+        personal_color: analysisResult.personal_color_en,
+        season: seasonKey,
+        confidence: analysisResult.confidence || 0,
+        analysis_time: 0 // We don't have the actual time here
+      });
+    }
+  }, [analysisResult, instagramId]);
+
   // Redirect if no analysis result
   useEffect(() => {
     if (!analysisResult || !instagramId) {
@@ -82,6 +96,12 @@ const ResultPage = (): JSX.Element => {
 
   const handleShare = async (): Promise<void> => {
     try {
+      // Track share button click
+      AnalyticsEvents.BUTTON_CLICK({
+        button_name: 'share_result',
+        page: 'result'
+      });
+      
       await shareOrCopy({
         title: 'Hijab Personal Color Analysis Results',
         text: `My personal color is ${seasonInfo.en}!`,
@@ -94,6 +114,12 @@ const ResultPage = (): JSX.Element => {
 
   const handleSaveImage = async (): Promise<void> => {
     try {
+      // Track download button click
+      AnalyticsEvents.RESULT_DOWNLOAD({
+        personal_color: result.personal_color_en,
+        format: 'jpg'
+      });
+      
       const blob = await generateResultCard(result, instagramId || 'user');
       const filename = `hijab_color_${result.personal_color_en.replace(' ', '_')}_${Date.now()}.jpg`;
       downloadResultCard(blob, filename);
@@ -175,8 +201,8 @@ const ResultPage = (): JSX.Element => {
                     
                     {/* Floating Hint Popup attached to save button */}
                     {showDownloadHint && (
-                      <div className="absolute top-full mt-3 right-0 z-50">
-                        <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 whitespace-nowrap animate-bounce">
+                      <div className="absolute top-full mt-3 right-0 z-[9999]">
+                        <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 whitespace-nowrap animate-bounce">
                           <span className="text-lg">✨</span>
                           <span className="font-medium">Save your result card!</span>
                           <button
@@ -320,7 +346,14 @@ const ResultPage = (): JSX.Element => {
               <div className="text-4xl">🧕</div>
             </div>
             <button
-              onClick={() => navigate(ROUTES.RECOMMENDATION)}
+              onClick={() => {
+                // Track next step button click
+                AnalyticsEvents.BUTTON_CLICK({
+                  button_name: 'get_hijab_recommendations',
+                  page: 'result'
+                });
+                navigate(ROUTES.RECOMMENDATION);
+              }}
               className="w-full bg-white text-purple-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors"
             >
               Get Hijab Recommendations
@@ -331,7 +364,14 @@ const ResultPage = (): JSX.Element => {
         {/* Secondary Action */}
         <div className="text-center mt-4">
           <button
-            onClick={() => navigate(ROUTES.HOME)}
+            onClick={() => {
+              // Track try again button click
+              AnalyticsEvents.BUTTON_CLICK({
+                button_name: 'try_again',
+                page: 'result'
+              });
+              navigate(ROUTES.HOME);
+            }}
             className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
           >
             Try Again

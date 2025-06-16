@@ -3,6 +3,8 @@ import { Router } from './routes';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageTracker } from './components/analytics/PageTracker';
 import { initializeGA4 } from './utils/analytics';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function App(): JSX.Element {
   useEffect(() => {
@@ -14,6 +16,8 @@ function App(): JSX.Element {
     <ErrorBoundary>
       <PageTracker>
         <Router />
+        <Analytics />
+        <SpeedInsights />
       </PageTracker>
     </ErrorBoundary>
   );

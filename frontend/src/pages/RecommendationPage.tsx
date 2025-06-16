@@ -7,6 +7,7 @@ import { useAppStore } from '@/store';
 import { RecommendationAPI } from '@/services/api';
 import type { UserPreferences } from '@/types';
 import DebugInfo from '@/components/debug/DebugInfo';
+import { AnalyticsEvents } from '@/utils/analytics';
 
 const RecommendationPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -87,6 +88,12 @@ const RecommendationPage = (): JSX.Element => {
   const handleOptionClick = (value: string): void => {
     const field = currentStepData.field as keyof UserPreferences;
     
+    // Track preference selection
+    AnalyticsEvents.BUTTON_CLICK({
+      button_name: `preference_${field}_${value}`,
+      page: 'recommendation'
+    });
+    
     if (currentStepData.multiple) {
       const currentValues = formData[field] as string[];
       const newValues = currentValues.includes(value)
@@ -119,6 +126,15 @@ const RecommendationPage = (): JSX.Element => {
     try {
       // Store preferences
       setUserPreferences(formData);
+      
+      // Track preference submission
+      AnalyticsEvents.PREFERENCE_SUBMIT({
+        style: formData.style.join(','),
+        price_range: formData.priceRange,
+        material: formData.material.join(','),
+        occasion: formData.occasion.join(','),
+        has_notes: formData.additionalNotes !== ''
+      });
       
       // Submit recommendation request
       const response = await RecommendationAPI.submitRecommendation({

@@ -4,6 +4,7 @@ import { PageLayout } from '@/components/layout';
 import { ANALYSIS_STEPS, ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { analyzeImage } from '@/services/api';
+import { AnalyticsEvents } from '@/utils/analytics';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AnalyzingPage = (): JSX.Element => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStartTime, setAnalysisStartTime] = useState<number>(0);
 
   // Redirect if no image or instagram ID
   useEffect(() => {
@@ -50,10 +52,27 @@ const AnalyzingPage = (): JSX.Element => {
 
     try {
       console.log('Starting analysis for file:', uploadedFile.name);
+      
+      // Track analysis start
+      const startTime = Date.now();
+      setAnalysisStartTime(startTime);
+      
       // Call AI API
       const result = await analyzeImage(uploadedFile);
       
+      // Calculate analysis time
+      const analysisTime = Date.now() - startTime;
+      
       console.log('Analysis successful:', result);
+      
+      // Track successful AI analysis with time
+      AnalyticsEvents.AI_ANALYSIS({
+        personal_color: result.personal_color_en,
+        season: result.personal_color_en.toLowerCase().split(' ')[0],
+        confidence: result.confidence || 0,
+        analysis_time: analysisTime
+      });
+      
       // Store result
       setAnalysisResult(result);
       
@@ -155,6 +174,12 @@ const AnalyzingPage = (): JSX.Element => {
             <p className="text-error text-center mb-4">{error}</p>
             <button
               onClick={() => {
+                // Track retry button click
+                AnalyticsEvents.BUTTON_CLICK({
+                  button_name: 'try_again_analysis',
+                  page: 'analyzing'
+                });
+                
                 setError(null);
                 setCurrentStep(0);
                 setProgress(0);
