@@ -35,7 +35,7 @@ interface Statistics {
   }>;
 }
 
-type TabType = 'analytics' | 'users';
+type TabType = 'users' | 'analytics';
 
 const AdminDashboard = (): JSX.Element => {
   const navigate = useNavigate();

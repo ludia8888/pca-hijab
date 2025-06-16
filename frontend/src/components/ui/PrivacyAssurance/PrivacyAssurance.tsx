@@ -54,104 +54,51 @@ export const PrivacyAssurance = ({
         !isClosing && "animate-gentle-bounce"
       )}
     >
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 max-w-sm mx-4">
-        <div className="p-5">
-          {/* Header with icon */}
-          <div className="flex items-start gap-3 mb-3">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  className="text-green-600"
-                >
-                  <path 
-                    d="M12 2L4 7V11C4 16 7.5 20.3 12 21C16.5 20.3 20 16 20 11V7L12 2Z" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                  <path 
-                    d="M9 12L11 14L15 10" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+      {/* Glassmorphism Card */}
+      <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 max-w-xs mx-4">
+        {/* Glass effect overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-white/10 rounded-2xl" />
+        
+        <div className="relative p-4">
+          {/* Minimal Content */}
+          <div className="flex items-center gap-3">
+            {/* Icon */}
+            <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary-light/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-primary">
+                <path d="M12 2L4 7V11C4 16 7.5 20.3 12 21C16.5 20.3 20 16 20 11V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
             
+            {/* Text */}
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 text-base mb-1">
-                Your photo is safe with us 💚
-              </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                We understand your privacy concerns. Your photo will be analyzed instantly and <span className="font-medium text-gray-800">deleted immediately</span> - we never store any images or facial data.
+              <p className="text-sm font-medium text-gray-900">
+                Photos deleted instantly
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                We never store your images
               </p>
             </div>
 
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+              className="w-6 h-6 bg-white/50 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/70 transition-colors flex-shrink-0"
               aria-label="Close"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
 
-          {/* Visual representation */}
-          <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-center gap-3 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                📸
-              </div>
-              <span className="text-gray-600">Upload</span>
-            </div>
-            
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-gray-400">
-              <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            
-            <div className="flex items-center gap-1.5">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                🎨
-              </div>
-              <span className="text-gray-600">Analyze</span>
-            </div>
-            
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-gray-400">
-              <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            
-            <div className="flex items-center gap-1.5">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                🗑️
-              </div>
-              <span className="text-gray-600">Auto-delete</span>
-            </div>
-          </div>
-
-          {/* Trust indicators */}
-          <div className="mt-3 flex items-center justify-center gap-4 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-green-500">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span>100% Private</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-green-500">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span>Instant Delete</span>
-            </div>
+          {/* Simple Process Flow */}
+          <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-500">
+            <span>📸 Upload</span>
+            <span className="text-gray-300">→</span>
+            <span>🎨 Analyze</span>
+            <span className="text-gray-300">→</span>
+            <span>🗑️ Delete</span>
           </div>
         </div>
       </div>

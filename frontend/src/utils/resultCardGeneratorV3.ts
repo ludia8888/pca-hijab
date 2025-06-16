@@ -1,17 +1,17 @@
 import type { PersonalColorResult } from '@/types';
-import { generateDynamicCard } from './resultCardDynamic';
+import { generateFixedCard } from './resultCardFixed';
 
 /**
- * Version 3.0 - Dynamic Layout Result Card
- * Generates a responsive result card with automatic layout
+ * Version 3.1 - Fixed Layout Result Card
+ * Generates a result card with fixed positions to prevent any overlapping
  */
 export const generateResultCard = async (
   result: PersonalColorResult,
   instagramId: string
 ): Promise<Blob> => {
   
-  // Use the new dynamic version with auto-layout
-  return generateDynamicCard(result, instagramId);
+  // Use the fixed layout version to ensure no overlapping
+  return generateFixedCard(result, instagramId);
 };
 
 /**

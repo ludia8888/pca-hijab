@@ -12,37 +12,22 @@ const LandingPage = (): JSX.Element => {
   const [instagramId, setInstagramId] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [error, setError] = useState('');
-  const [showInstagramInput, setShowInstagramInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState('hero');
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [showApp, setShowApp] = useState(false);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    setPageLoaded(true);
-    
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setScrolled(scrollY > 100);
-      
-      // Update active section based on scroll position
-      const sections = ['hero', 'features', 'how-it-works', 'benefits', 'statistics'];
-      for (const section of sections) {
-        const element = sectionsRef.current[section];
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 100 && rect.bottom >= 100) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const timer = setTimeout(() => setShowApp(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % 3);
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleIdChange = (value: string): void => {
@@ -76,323 +61,191 @@ const LandingPage = (): JSX.Element => {
     }
   };
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const offset = 80; // Navigation height
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    const swipeThreshold = 50;
+    const diff = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        setCurrentSlide((prev) => (prev + 1) % 3);
+      } else {
+        setCurrentSlide((prev) => (prev - 1 + 3) % 3);
+      }
     }
   };
 
+  const slides = [
+    {
+      emoji: '🤳',
+      title: 'Take a Selfie',
+      description: 'Snap a photo in natural light'
+    },
+    {
+      emoji: '🤖',
+      title: 'AI Analysis',
+      description: 'Our AI analyzes your skin tone'
+    },
+    {
+      emoji: '🎨',
+      title: 'Get Your Colors',
+      description: 'Receive personalized hijab colors'
+    }
+  ];
+
   return (
-    <div className={`${styles.container} ${pageLoaded ? styles.loaded : ''}`}>
-      {/* Navigation */}
-      <nav className={`${styles.nav} ${scrolled ? styles.navScrolled : ''}`}>
-        <div className={styles.navContent}>
-          <h1 className={styles.logo} onClick={() => scrollToSection('hero')}>PCA Hijab</h1>
-          <div className={styles.navLinks}>
-            <button 
-              onClick={() => scrollToSection('features')} 
-              className={`${styles.navLink} ${activeSection === 'features' ? styles.navLinkActive : ''}`}
-            >
-              Features
-            </button>
-            <button 
-              onClick={() => scrollToSection('how-it-works')} 
-              className={`${styles.navLink} ${activeSection === 'how-it-works' ? styles.navLinkActive : ''}`}
-            >
-              How it Works
-            </button>
-            <button 
-              onClick={() => scrollToSection('benefits')} 
-              className={`${styles.navLink} ${activeSection === 'benefits' ? styles.navLinkActive : ''}`}
-            >
-              Benefits
-            </button>
+    <div className={`${styles.container} ${showApp ? styles.show : ''}`}>
+      <div className={styles.appWrapper}>
+        {/* Status Bar */}
+        <div className={styles.statusBar}>
+          <div className={styles.statusTime}>9:41</div>
+          <div className={styles.statusIcons}>
+            <span>📶</span>
+            <span>🔋</span>
           </div>
         </div>
-      </nav>
 
-      {/* Hero Section */}
-      <section id="hero" ref={el => sectionsRef.current['hero'] = el} className={styles.hero}>
-        <div className={styles.heroContent}>
-          <div className={styles.heroText}>
-            <h1 className={styles.heroTitle}>
-              <span className={styles.heroTitleMain}>Discover Your</span>
-              <span className={styles.heroTitleGradient}>Perfect Hijab Colors</span>
-            </h1>
+        {/* Header */}
+        <header className={styles.header}>
+          <h1 className={styles.logo}>PCA Hijab</h1>
+          <div className={styles.headerTag}>AI Color Analysis</div>
+        </header>
+
+        {/* Hero Section */}
+        <section className={styles.hero}>
+          <div className={styles.heroContent}>
+            <h2 className={styles.heroTitle}>
+              Find Your Perfect
+              <span className={styles.heroGradient}> Hijab Colors</span>
+            </h2>
             <p className={styles.heroSubtitle}>
-              AI-powered personal color analysis<br />
-              designed specifically for hijab wearers
+              AI-powered personal color analysis in 30 seconds
             </p>
           </div>
-          <div className={styles.heroImage}>
-            <div className={styles.heroImagePlaceholder}>
-              <img src="/images/hero-hijab.png" alt="Beautiful hijab colors" />
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section id="features" ref={el => sectionsRef.current['features'] = el} className={styles.features}>
-        <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>Why Choose PCA Hijab?</span>
-            <span className={styles.sectionTitleMain}>AI-Powered Color Analysis</span>
-          </h2>
-          <div className={styles.featureGrid}>
-            <div className={`${styles.featureCard} ${styles.fadeInUp}`}>
-              <div className={styles.featureIcon}>
-                <div className={styles.iconGradient}>🤖</div>
-              </div>
-              <h3 className={styles.featureTitle}>Accurate AI Analysis</h3>
-              <p className={styles.featureDescription}>
-                Advanced AI technology<br />
-                precisely analyzes your skin tone
-              </p>
-            </div>
-            <div className={`${styles.featureCard} ${styles.fadeInUp} ${styles.delay1}`}>
-              <div className={styles.featureIcon}>
-                <div className={styles.iconGradient}>⚡</div>
-              </div>
-              <h3 className={styles.featureTitle}>Quick Results</h3>
-              <p className={styles.featureDescription}>
-                Get your personal color<br />
-                analysis in just 30 seconds
-              </p>
-            </div>
-            <div className={`${styles.featureCard} ${styles.fadeInUp} ${styles.delay2}`}>
-              <div className={styles.featureIcon}>
-                <div className={styles.iconGradient}>🎨</div>
-              </div>
-              <h3 className={styles.featureTitle}>Custom Recommendations</h3>
-              <p className={styles.featureDescription}>
-                Hijab colors perfectly<br />
-                matched to your skin tone
-              </p>
-            </div>
-            <div className={`${styles.featureCard} ${styles.fadeInUp} ${styles.delay3}`}>
-              <div className={styles.featureIcon}>
-                <div className={styles.iconGradient}>🔒</div>
-              </div>
-              <h3 className={styles.featureTitle}>100% Privacy</h3>
-              <p className={styles.featureDescription}>
-                Your photos are deleted<br />
-                immediately after analysis
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" ref={el => sectionsRef.current['how-it-works'] = el} className={styles.howItWorks}>
-        <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>Simple 3-Step Process</span>
-            <span className={styles.sectionTitleMain}>How It Works</span>
-          </h2>
-          <div className={styles.stepsContainer}>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>1</div>
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>Upload Photo</h3>
-                <p className={styles.stepDescription}>
-                  Take a photo in<br />
-                  natural lighting
-                </p>
-              </div>
-              <div className={styles.stepImage}>
-                <img src="/images/step1.png" alt="Upload photo" />
-              </div>
-            </div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>2</div>
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>AI Analysis</h3>
-                <p className={styles.stepDescription}>
-                  Our AI analyzes<br />
-                  your skin tone
-                </p>
-              </div>
-              <div className={styles.stepImage}>
-                <img src="/images/step2.png" alt="AI analysis" />
-              </div>
-            </div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>3</div>
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>Get Results</h3>
-                <p className={styles.stepDescription}>
-                  Receive personalized<br />
-                  colors via Instagram DM
-                </p>
-              </div>
-              <div className={styles.stepImage}>
-                <img src="/images/step3.png" alt="Get results" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section id="benefits" ref={el => sectionsRef.current['benefits'] = el} className={styles.benefits}>
-        <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>Exclusive Benefits</span>
-            <span className={styles.sectionTitleMain}>Enhance Your Beauty</span>
-          </h2>
-          <div className={styles.benefitsGrid}>
-            <div className={styles.benefitCard}>
-              <img src="/images/benefit1.png" alt="Personalized colors" />
-              <h3 className={styles.benefitTitle}>Personal Color Palette</h3>
-              <p className={styles.benefitDescription}>
-                Seasonal color analysis with<br />
-                hijab color recommendations
-              </p>
-            </div>
-            <div className={styles.benefitCard}>
-              <img src="/images/benefit2.png" alt="Shopping guide" />
-              <h3 className={styles.benefitTitle}>Smart Shopping Guide</h3>
-              <p className={styles.benefitDescription}>
-                Never second-guess again<br />
-                Choose colors that truly suit you
-              </p>
-            </div>
-            <div className={styles.benefitCard}>
-              <img src="/images/benefit3.png" alt="Confidence boost" />
-              <h3 className={styles.benefitTitle}>Confidence Boost</h3>
-              <p className={styles.benefitDescription}>
-                Shine brighter with colors<br />
-                that enhance your natural beauty
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistics Section */}
-      <section id="statistics" ref={el => sectionsRef.current['statistics'] = el} className={styles.statistics}>
-        <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.sectionTitleSmall}>Join the Revolution</span>
-            <span className={styles.sectionTitleMain}>Transform Your Style Today</span>
-          </h2>
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statNumber}>85%</div>
-              <div className={styles.statLabel}>Report Better Shopping Decisions</div>
-              <div className={styles.statDescription}>
-                Save money by choosing colors that truly work
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statNumber}>10K+</div>
-              <div className={styles.statLabel}>Happy Users This Month</div>
-              <div className={styles.statDescription}>
-                Growing community of confident hijabis
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statNumber}>30s</div>
-              <div className={styles.statLabel}>To Complete Analysis</div>
-              <div className={styles.statDescription}>
-                Faster than any salon consultation
-              </div>
-            </div>
-          </div>
-          <div className={styles.comparisonSection}>
-            <h3 className={styles.comparisonTitle}>Why Guess When You Can Know?</h3>
-            <div className={styles.comparisonGrid}>
-              <div className={styles.comparisonCard}>
-                <div className={styles.comparisonIcon}>❌</div>
-                <h4 className={styles.comparisonHeading}>Without PCA Hijab</h4>
-                <ul className={styles.comparisonList}>
-                  <li>Waste money on wrong colors</li>
-                  <li>Hijabs sitting unused in closet</li>
-                  <li>Always unsure about purchases</li>
-                  <li>Miss out on your best looks</li>
-                </ul>
-              </div>
-              <div className={styles.comparisonCard}>
-                <div className={styles.comparisonIcon}>✅</div>
-                <h4 className={styles.comparisonHeading}>With PCA Hijab</h4>
-                <ul className={styles.comparisonList}>
-                  <li>Shop with 100% confidence</li>
-                  <li>Every hijab enhances your beauty</li>
-                  <li>Save money on perfect choices</li>
-                  <li>Discover your signature style</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className={styles.finalCta}>
-        <div className={styles.ctaContent}>
-          <h2 className={styles.ctaTitle}>
-            Start Your Journey Today
-          </h2>
-          <p className={styles.ctaSubtitle}>
-            Discover your personal colors in just 30 seconds
-          </p>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <p className={styles.footerText}>
-            © 2025 PCA Hijab. All rights reserved.
-          </p>
-          <p className={styles.footerPrivacy}>
-            Your photos are deleted immediately after analysis. Your privacy is our priority.
-          </p>
-        </div>
-      </footer>
-
-      {/* Floating CTA */}
-      <div className={`${styles.floatingCta} ${showInstagramInput ? styles.floatingCtaActive : ''}`}>
-        {!showInstagramInput ? (
-          <button 
-            onClick={() => setShowInstagramInput(true)} 
-            className={styles.floatingButton}
+          {/* Slider */}
+          <div 
+            className={styles.slider}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
-            Get Started
-          </button>
-        ) : (
-          <form onSubmit={handleSubmit} className={styles.floatingForm}>
-            <div className={styles.floatingInputWrapper}>
-              <span className={styles.inputPrefix}>@</span>
-              <input
-                type="text"
-                value={instagramId}
-                onChange={(e) => handleIdChange(e.target.value)}
-                placeholder="Instagram ID"
-                className={styles.floatingInput}
-                autoFocus
-              />
-              <button 
-                type="submit" 
-                disabled={!isValid || isLoading}
-                className={styles.floatingSubmit}
-              >
-                {isLoading ? '...' : '→'}
-              </button>
+            <div 
+              className={styles.sliderTrack}
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {slides.map((slide, index) => (
+                <div key={index} className={styles.slide}>
+                  <div className={styles.slideEmoji}>{slide.emoji}</div>
+                  <h3 className={styles.slideTitle}>{slide.title}</h3>
+                  <p className={styles.slideDescription}>{slide.description}</p>
+                </div>
+              ))}
             </div>
-            {error && <p className={styles.floatingError}>{error}</p>}
+            <div className={styles.sliderDots}>
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  className={`${styles.dot} ${currentSlide === index ? styles.dotActive : ''}`}
+                  onClick={() => setCurrentSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Grid */}
+        <section className={styles.features}>
+          <div className={styles.featureGrid}>
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>⚡</div>
+              <div className={styles.featureText}>
+                <h4>Fast</h4>
+                <p>30 seconds</p>
+              </div>
+            </div>
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>🔒</div>
+              <div className={styles.featureText}>
+                <h4>Private</h4>
+                <p>100% secure</p>
+              </div>
+            </div>
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>🎯</div>
+              <div className={styles.featureText}>
+                <h4>Accurate</h4>
+                <p>AI precision</p>
+              </div>
+            </div>
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>📱</div>
+              <div className={styles.featureText}>
+                <h4>Easy</h4>
+                <p>DM delivery</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className={styles.stats}>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>10K+</div>
+            <div className={styles.statLabel}>Happy Users</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>85%</div>
+            <div className={styles.statLabel}>Better Choices</div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className={styles.ctaSection}>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.inputGroup}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.inputPrefix}>@</span>
+                <input
+                  type="text"
+                  value={instagramId}
+                  onChange={(e) => handleIdChange(e.target.value)}
+                  placeholder="your.instagram"
+                  className={styles.input}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+              </div>
+              {error && <p className={styles.error}>{error}</p>}
+            </div>
+            <button
+              type="submit"
+              disabled={!isValid || isLoading}
+              className={styles.ctaButton}
+            >
+              {isLoading ? (
+                <span className={styles.loader}></span>
+              ) : (
+                'Start Analysis'
+              )}
+            </button>
           </form>
-        )}
+          <p className={styles.ctaHint}>
+            Free • No sign-up required • Results via DM
+          </p>
+        </section>
+
+        {/* Bottom Safe Area */}
+        <div className={styles.bottomSafe} />
       </div>
     </div>
   );

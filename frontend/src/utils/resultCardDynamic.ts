@@ -127,20 +127,27 @@ class DynamicCardRenderer {
   ): void {
     const startY = this.currentY;
     
-    // Measure content height first
+    // Save current state
     this.ctx.save();
-    const contentHeight = content() + this.cardPadding * 2;
+    
+    // Measure content height first by running content in a saved state
+    const measureY = this.currentY;
+    const contentHeight = content();
+    const totalHeight = contentHeight + this.cardPadding * 2;
+    
+    // Restore state and position
     this.ctx.restore();
+    this.currentY = measureY;
     
     // Draw card background
-    this.drawCard(contentHeight, theme);
+    this.drawCard(totalHeight, theme);
     
     // Draw content again on top of card
     this.currentY = startY + this.cardPadding;
     content();
     
-    // Move to next section
-    this.currentY = startY + contentHeight + this.sectionSpacing;
+    // Move to next section with extra safety margin
+    this.currentY = startY + totalHeight + this.sectionSpacing + 10;
   }
   
   // Text rendering helpers
@@ -297,9 +304,10 @@ export const generateDynamicCard = async (
     
     // Keywords
     const keywords = seasonData.keywords.map(k => k.toUpperCase());
-    height += drawKeywordTags(ctx, keywords, width / 2, renderer.getCurrentY(), theme);
+    const keywordHeight = drawKeywordTags(ctx, keywords, width / 2, renderer.getCurrentY(), theme);
+    height += keywordHeight;
     
-    renderer.addSpace(40);
+    renderer.setY(renderer.getCurrentY() + keywordHeight + 40);
     height += 40;
     
     // Quote
@@ -337,8 +345,8 @@ export const generateDynamicCard = async (
     );
     height += bestHeight;
     
-    renderer.addSpace(bestHeight + 30);
-    height += 30;
+    renderer.setY(renderer.getCurrentY() + bestHeight + 40);
+    height += 40;
     
     // Avoid colors
     const avoidHeight = drawColorGrid(
@@ -381,7 +389,7 @@ export const generateDynamicCard = async (
     height += 35;
     
     // Lip colors
-    height += drawMakeupDots(
+    const lipsHeight = drawMakeupDots(
       ctx,
       seasonData.makeupColors.lips,
       width / 2,
@@ -389,12 +397,13 @@ export const generateDynamicCard = async (
       'LIPS',
       theme
     );
+    height += lipsHeight;
     
-    renderer.addSpace(70);
-    height += 70;
+    renderer.setY(renderer.getCurrentY() + lipsHeight + 25);
+    height += 25;
     
     // Blush
-    height += drawMakeupDots(
+    const blushHeight = drawMakeupDots(
       ctx,
       seasonData.makeupColors.blush,
       width / 2,
@@ -402,9 +411,9 @@ export const generateDynamicCard = async (
       'BLUSH',
       theme
     );
+    height += blushHeight;
     
-    renderer.addSpace(50);
-    height += 50;
+    renderer.setY(renderer.getCurrentY() + blushHeight);
     
     return height;
   }, theme);
@@ -607,6 +616,7 @@ function drawColorGrid(
   
   const swatchSize = 65;
   const spacing = 20;
+  const textHeight = 30; // Space for text below each swatch
   const cols = 4;
   const rows = Math.ceil(colors.length / cols);
   
@@ -617,7 +627,7 @@ function drawColorGrid(
     const col = i % cols;
     const row = Math.floor(i / cols);
     const swatchX = startX + col * (swatchSize + spacing);
-    const swatchY = y + 25 + row * (swatchSize + 45);
+    const swatchY = y + 35 + row * (swatchSize + textHeight + spacing);
     
     // Swatch
     ctx.fillStyle = color.hex;
@@ -636,7 +646,7 @@ function drawColorGrid(
     ctx.fillText(color.name.toUpperCase(), swatchX + swatchSize / 2, swatchY + swatchSize + 22);
   });
   
-  return 25 + rows * (swatchSize + 45);
+  return 35 + rows * (swatchSize + textHeight + spacing) + 10;
 }
 
 function drawMakeupDots(
@@ -664,20 +674,21 @@ function drawMakeupDots(
   
   colors.forEach((_, i) => {
     const x = startX + i * (dotSize + spacing) + dotSize / 2;
+    const dotY = y + 35; // Increased from 25 to give more space
     
     ctx.strokeStyle = `${palette[i] || palette[0]}30`;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(x, y + 25, dotSize / 2 + 2, 0, Math.PI * 2);
+    ctx.arc(x, dotY, dotSize / 2 + 2, 0, Math.PI * 2);
     ctx.stroke();
     
     ctx.fillStyle = palette[i] || palette[0];
     ctx.beginPath();
-    ctx.arc(x, y + 25, dotSize / 2, 0, Math.PI * 2);
+    ctx.arc(x, dotY, dotSize / 2, 0, Math.PI * 2);
     ctx.fill();
   });
   
-  return 50;
+  return 70; // Increased from 50 to ensure no overlap
 }
 
 function getStyleTips(season: SeasonType): string[] {
