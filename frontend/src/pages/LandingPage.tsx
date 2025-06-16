@@ -4,7 +4,7 @@ import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
-import { AnalyticsEvents } from '@/utils/analytics';
+import { trackSessionStart } from '@/utils/analytics';
 import styles from './LandingPage.module.css';
 
 const LandingPage = (): JSX.Element => {
@@ -56,10 +56,7 @@ const LandingPage = (): JSX.Element => {
       setSessionData(response.data.sessionId, response.data.instagramId);
       
       // Track session start
-      AnalyticsEvents.SESSION_START({
-        instagram_id: instagramId,
-        session_id: response.data.sessionId
-      });
+      trackSessionStart(instagramId);
       
       navigate(ROUTES.UPLOAD);
     } catch {

@@ -4,7 +4,7 @@ import { PageLayout } from '@/components/layout';
 import { ANALYSIS_STEPS, ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { analyzeImage } from '@/services/api';
-import { AnalyticsEvents } from '@/utils/analytics';
+import { trackAIAnalysis, trackEvent } from '@/utils/analytics';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -66,11 +66,12 @@ const AnalyzingPage = (): JSX.Element => {
       console.log('Analysis successful:', result);
       
       // Track successful AI analysis with time
-      AnalyticsEvents.AI_ANALYSIS({
-        personal_color: result.personal_color_en,
+      trackAIAnalysis({
+        personalColorType: result.personal_color_en,
         season: result.personal_color_en.toLowerCase().split(' ')[0],
+        tone: result.personal_color_en.toLowerCase().split(' ')[1] || 'neutral',
         confidence: result.confidence || 0,
-        analysis_time: analysisTime
+        processingTime: analysisTime
       });
       
       // Store result
@@ -175,7 +176,7 @@ const AnalyzingPage = (): JSX.Element => {
             <button
               onClick={() => {
                 // Track retry button click
-                AnalyticsEvents.BUTTON_CLICK({
+                trackEvent('button_click', {
                   button_name: 'try_again_analysis',
                   page: 'analyzing'
                 });

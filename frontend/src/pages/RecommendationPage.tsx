@@ -7,7 +7,7 @@ import { useAppStore } from '@/store';
 import { RecommendationAPI } from '@/services/api';
 import type { UserPreferences } from '@/types';
 import DebugInfo from '@/components/debug/DebugInfo';
-import { AnalyticsEvents } from '@/utils/analytics';
+import { trackEvent } from '@/utils/analytics';
 
 const RecommendationPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const RecommendationPage = (): JSX.Element => {
     const field = currentStepData.field as keyof UserPreferences;
     
     // Track preference selection
-    AnalyticsEvents.BUTTON_CLICK({
+    trackEvent('button_click', {
       button_name: `preference_${field}_${value}`,
       page: 'recommendation'
     });
@@ -128,7 +128,7 @@ const RecommendationPage = (): JSX.Element => {
       setUserPreferences(formData);
       
       // Track preference submission
-      AnalyticsEvents.PREFERENCE_SUBMIT({
+      trackEvent('preference_submit', {
         style: formData.style.join(','),
         price_range: formData.priceRange,
         material: formData.material.join(','),

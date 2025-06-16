@@ -6,7 +6,7 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
-import { AnalyticsEvents } from '@/utils/analytics';
+import { trackRecommendationRequest, trackEvent } from '@/utils/analytics';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -20,12 +20,9 @@ const CompletionPage = (): JSX.Element => {
       navigate(ROUTES.HOME);
     } else {
       // Track recommendation request and flow completion
-      AnalyticsEvents.RECOMMENDATION_REQUEST({
-        instagram_id: instagramId,
-        personal_color: analysisResult.personal_color_en
-      });
+      trackRecommendationRequest(instagramId, analysisResult.personal_color_en);
       
-      AnalyticsEvents.FLOW_COMPLETE({
+      trackEvent('flow_complete', {
         instagram_id: instagramId,
         personal_color: analysisResult.personal_color_en,
         completion_time: 0 // We don't have the actual time here
@@ -36,7 +33,7 @@ const CompletionPage = (): JSX.Element => {
   const handleShare = async (): Promise<void> => {
     try {
       // Track share button click
-      AnalyticsEvents.BUTTON_CLICK({
+      trackEvent('button_click', {
         button_name: 'share_app',
         page: 'completion'
       });
@@ -56,7 +53,7 @@ const CompletionPage = (): JSX.Element => {
     
     try {
       // Track save result button click
-      AnalyticsEvents.BUTTON_CLICK({
+      trackEvent('button_click', {
         button_name: 'save_result_image',
         page: 'completion'
       });
@@ -73,7 +70,7 @@ const CompletionPage = (): JSX.Element => {
 
   const handleGoHome = (): void => {
     // Track go home button click
-    AnalyticsEvents.BUTTON_CLICK({
+    trackEvent('button_click', {
       button_name: 'go_home',
       page: 'completion'
     });

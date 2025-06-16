@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/cn';
-import { AnalyticsEvents } from '@/utils/analytics';
+import { trackEvent } from '@/utils/analytics';
 
 interface HeaderProps {
   title?: string;
@@ -21,7 +21,7 @@ export const Header = ({
 
   const handleBack = (): void => {
     // Track back button click
-    AnalyticsEvents.BUTTON_CLICK({
+    trackEvent('button_click', {
       button_name: 'back',
       page: 'header'
     });

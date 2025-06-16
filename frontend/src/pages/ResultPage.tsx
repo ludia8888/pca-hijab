@@ -6,7 +6,7 @@ import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
-import { AnalyticsEvents } from '@/utils/analytics';
+import { trackAIAnalysis, trackEvent, trackResultDownload } from '@/utils/analytics';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -55,11 +55,12 @@ const ResultPage = (): JSX.Element => {
   useEffect(() => {
     if (analysisResult && instagramId) {
       const seasonKey = getSeasonKey(analysisResult.personal_color_en);
-      AnalyticsEvents.AI_ANALYSIS({
-        personal_color: analysisResult.personal_color_en,
+      trackAIAnalysis({
+        personalColorType: analysisResult.personal_color_en,
         season: seasonKey,
+        tone: seasonKey,
         confidence: analysisResult.confidence || 0,
-        analysis_time: 0 // We don't have the actual time here
+        processingTime: 0 // We don't have the actual time here
       });
     }
   }, [analysisResult, instagramId]);
@@ -97,7 +98,7 @@ const ResultPage = (): JSX.Element => {
   const handleShare = async (): Promise<void> => {
     try {
       // Track share button click
-      AnalyticsEvents.BUTTON_CLICK({
+      trackEvent('button_click', {
         button_name: 'share_result',
         page: 'result'
       });
@@ -115,10 +116,7 @@ const ResultPage = (): JSX.Element => {
   const handleSaveImage = async (): Promise<void> => {
     try {
       // Track download button click
-      AnalyticsEvents.RESULT_DOWNLOAD({
-        personal_color: result.personal_color_en,
-        format: 'jpg'
-      });
+      trackResultDownload(result.personal_color_en);
       
       const blob = await generateResultCard(result, instagramId || 'user');
       const filename = `hijab_color_${result.personal_color_en.replace(' ', '_')}_${Date.now()}.jpg`;
@@ -348,7 +346,7 @@ const ResultPage = (): JSX.Element => {
             <button
               onClick={() => {
                 // Track next step button click
-                AnalyticsEvents.BUTTON_CLICK({
+                trackEvent('button_click', {
                   button_name: 'get_hijab_recommendations',
                   page: 'result'
                 });
@@ -366,7 +364,7 @@ const ResultPage = (): JSX.Element => {
           <button
             onClick={() => {
               // Track try again button click
-              AnalyticsEvents.BUTTON_CLICK({
+              trackEvent('button_click', {
                 button_name: 'try_again',
                 page: 'result'
               });

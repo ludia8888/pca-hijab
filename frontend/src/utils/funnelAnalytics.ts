@@ -1,4 +1,4 @@
-import { AnalyticsEvents, trackEvent } from './analytics';
+import { trackEvent } from './analytics';
 
 // 초세밀 퍼널 단계 정의
 export const FUNNEL_STEPS = {
