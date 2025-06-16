@@ -341,8 +341,10 @@ const AdminDashboard = (): JSX.Element => {
         )}
 
         {activeTab === 'analytics' && (
-          <SimpleFunnelDashboard />
-          {/* <RealTimeFunnelDashboard /> */}
+          <>
+            <SimpleFunnelDashboard />
+            {/* <RealTimeFunnelDashboard /> */}
+          </>
         )}
       </div>
     </PageLayout>
