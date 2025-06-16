@@ -4,6 +4,7 @@ import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
+import { AnalyticsEvents } from '@/utils/analytics';
 import styles from './LandingPage.module.css';
 
 const LandingPage = (): JSX.Element => {
