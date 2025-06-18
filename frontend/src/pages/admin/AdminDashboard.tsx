@@ -4,18 +4,13 @@ import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
 import { Card, Button, LoadingSpinner } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
-import { SimpleFunnelDashboard } from '@/components/analytics/SimpleFunnelDashboard';
-// import { RealTimeFunnelDashboard } from '@/components/analytics/RealTimeFunnelDashboard';
 import { 
   Users, 
   Clock, 
   CheckCircle, 
   AlertCircle,
   LogOut,
-  ChevronRight,
-  Palette,
-  BarChart3,
-  UserCog
+  ChevronRight
 } from 'lucide-react';
 import type { Recommendation } from '@/types';
 
@@ -36,8 +31,6 @@ interface Statistics {
   }>;
 }
 
-type TabType = 'users' | 'analytics';
-
 const AdminDashboard = (): JSX.Element => {
   const navigate = useNavigate();
   const { apiKey, logout } = useAdminStore();
@@ -45,7 +38,6 @@ const AdminDashboard = (): JSX.Element => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'processing' | 'completed'>('all');
-  const [activeTab, setActiveTab] = useState<TabType>('users');
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!apiKey) return;
@@ -148,40 +140,7 @@ const AdminDashboard = (): JSX.Element => {
           </Button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'users'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <UserCog className="w-4 h-4" />
-              사용자 관리
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'analytics'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              데이터 분석
-            </div>
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'users' && (
-          <>
-            {/* Statistics Cards */}
+        {/* Statistics Cards */}
         {statistics && (
           <div className="grid grid-cols-3 gap-4">
             <Card className="p-6">
@@ -337,15 +296,6 @@ const AdminDashboard = (): JSX.Element => {
             </table>
           </div>
         </Card>
-          </>
-        )}
-
-        {activeTab === 'analytics' && (
-          <>
-            <SimpleFunnelDashboard />
-            {/* <RealTimeFunnelDashboard /> */}
-          </>
-        )}
       </div>
     </PageLayout>
   );
