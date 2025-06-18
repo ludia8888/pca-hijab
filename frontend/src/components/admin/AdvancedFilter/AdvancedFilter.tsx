@@ -12,7 +12,8 @@ import {
   Sparkles,
   Clock,
   Search,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Send
 } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
