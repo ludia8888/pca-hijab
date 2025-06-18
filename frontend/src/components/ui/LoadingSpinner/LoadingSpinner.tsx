@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/utils/cn';
 
 interface LoadingSpinnerProps {
@@ -7,7 +8,7 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export const LoadingSpinner = ({
+const LoadingSpinnerComponent = ({
   size = 'md',
   color = 'primary',
   label,
@@ -46,4 +47,6 @@ export const LoadingSpinner = ({
   );
 };
 
+// Memoize LoadingSpinner component
+export const LoadingSpinner = memo(LoadingSpinnerComponent);
 export default LoadingSpinner;

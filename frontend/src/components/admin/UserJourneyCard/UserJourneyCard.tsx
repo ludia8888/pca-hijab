@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { 
   User, 
   Calendar, 
@@ -28,7 +28,7 @@ interface UserJourneyCardProps {
   onViewDetail?: (user: UnifiedUserView) => void;
 }
 
-const UserJourneyCard: React.FC<UserJourneyCardProps> = ({
+const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
   user,
   onAction,
   isSelected = false,
@@ -134,9 +134,6 @@ const UserJourneyCard: React.FC<UserJourneyCardProps> = ({
     return actionMap[action] || { label: action, icon: Send, color: 'text-gray-600' };
   };
 
-  const priorityClasses = getPriorityClasses();
-  const journeyInfo = getJourneyInfo();
-  const progress = calculateProgress();
 
   // 컴팩트 뷰
   if (compact) {
@@ -408,4 +405,19 @@ const UserJourneyCard: React.FC<UserJourneyCardProps> = ({
   );
 };
 
-export default UserJourneyCard;
+// Memoize the component to prevent unnecessary re-renders
+export default memo(UserJourneyCardComponent, (prevProps, nextProps) => {
+  // Custom comparison function for deep equality check
+  return (
+    prevProps.user.id === nextProps.user.id &&
+    prevProps.user.journeyStatus === nextProps.user.journeyStatus &&
+    prevProps.user.priority === nextProps.user.priority &&
+    prevProps.user.insights.daysSinceLastActivity === nextProps.user.insights.daysSinceLastActivity &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.compact === nextProps.compact &&
+    // For callbacks, we assume they're stable (wrapped in useCallback)
+    prevProps.onAction === nextProps.onAction &&
+    prevProps.onSelect === nextProps.onSelect &&
+    prevProps.onViewDetail === nextProps.onViewDetail
+  );
+});

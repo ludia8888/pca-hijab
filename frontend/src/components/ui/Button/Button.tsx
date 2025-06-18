@@ -1,8 +1,8 @@
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 import { cn } from '@/utils/cn';
 import type { ButtonProps } from './Button.types';
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+const ButtonComponent = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       variant = 'primary',
@@ -114,6 +114,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   },
 );
 
-Button.displayName = 'Button';
+ButtonComponent.displayName = 'Button';
 
-export { Button };
+// Memoize Button component
+export const Button = memo(ButtonComponent);

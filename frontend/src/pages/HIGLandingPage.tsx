@@ -17,6 +17,7 @@ const HIGLandingPage = (): JSX.Element => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showFloatingCTA, setShowFloatingCTA] = useState(false);
 
   // Track landing page entry
   useEffect(() => {
@@ -35,9 +36,16 @@ const HIGLandingPage = (): JSX.Element => {
       const progress = Math.min(scrolled / maxScroll, 1);
       setScrollProgress(progress);
       setIsScrolled(scrolled > 20);
+      
+      // Show floating CTA when scrolled past hero section
+      if (heroRef.current) {
+        const heroBottom = heroRef.current.offsetTop + heroRef.current.offsetHeight;
+        setShowFloatingCTA(scrolled > heroBottom);
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -76,6 +84,19 @@ const HIGLandingPage = (): JSX.Element => {
         user_flow_step: 'form_validation'
       });
     }
+  };
+
+  const handleScrollToTop = (): void => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    // Track CTA click
+    trackEvent('floating_cta_click', {
+      action: 'scroll_to_top',
+      scroll_position: window.scrollY
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -368,6 +389,21 @@ const HIGLandingPage = (): JSX.Element => {
           transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       />
+
+      {/* Minimal Floating CTA */}
+      {showFloatingCTA && (
+        <button
+          onClick={handleScrollToTop}
+          className={styles.floatingButton}
+          aria-label="Scroll to top and begin analysis"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M7 14L12 9L17 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 9V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M5 5H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+      )}
     </div>
   );
 };

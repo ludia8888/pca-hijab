@@ -1,7 +1,7 @@
 // 새로운 사용자 중심 관리자 대시보드
 // 기존 테이블 중심에서 업무 흐름 중심으로 완전 재설계
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Calendar,
@@ -56,12 +56,12 @@ const AdminDashboard: React.FC = () => {
     clearError
   } = useAdminWorkflow();
 
-  const handleLogout = (): void => {
+  const handleLogout = useCallback((): void => {
     logout();
     navigate('/admin/login');
-  };
+  }, [logout, navigate]);
 
-  const handleViewAll = (category: string): void => {
+  const handleViewAll = useCallback((category: string): void => {
     trackEvent('admin_view_all', {
       category,
       user_flow_step: 'admin_view_all_clicked'
@@ -82,9 +82,9 @@ const AdminDashboard: React.FC = () => {
         resetFilters();
     }
     setActiveView('users');
-  };
+  }, [updateFilters, resetFilters, setActiveView]);
 
-  const handleUserAction = async (user: UnifiedUserView, action: AdminActionType, ...args: any[]): Promise<void> => {
+  const handleUserAction = useCallback(async (user: UnifiedUserView, action: AdminActionType, ...args: any[]): Promise<void> => {
     trackEvent('admin_user_action', {
       action,
       user_id: user.id,
@@ -94,9 +94,9 @@ const AdminDashboard: React.FC = () => {
     });
 
     await executeUserAction(user, action, ...args);
-  };
+  }, [executeUserAction]);
 
-  const handleBatchAction = async (action: AdminActionType): Promise<void> => {
+  const handleBatchAction = useCallback(async (action: AdminActionType): Promise<void> => {
     if (selectedUsers.size === 0) {
       addToast({
         type: 'warning',
@@ -113,7 +113,7 @@ const AdminDashboard: React.FC = () => {
     });
 
     await executeBatchAction(Array.from(selectedUsers), action);
-  };
+  }, [selectedUsers, addToast, executeBatchAction]);
 
   // Loading state
   if (isLoading && !error) {

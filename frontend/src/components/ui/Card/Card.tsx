@@ -1,8 +1,8 @@
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 import { cn } from '@/utils/cn';
 import type { CardProps } from './Card.types';
 
-const Card = forwardRef<HTMLDivElement, CardProps>(
+const CardComponent = forwardRef<HTMLDivElement, CardProps>(
   (
     {
       children,
@@ -67,6 +67,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
   },
 );
 
-Card.displayName = 'Card';
+CardComponent.displayName = 'Card';
 
-export { Card };
+// Memoize Card component
+export const Card = memo(CardComponent);
