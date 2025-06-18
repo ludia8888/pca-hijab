@@ -306,6 +306,9 @@ export class UserJourneyService {
       overall: totalUsers > 0 ? completedUsers / totalUsers : 0
     };
 
+    // 평균 완료 시간 계산 (시간 단위)
+    const averageTimeToComplete = this.calculateAverageCompletionTimes(userViews);
+
     // 퍼스널 컬러 분포 계산
     const personalColorDistribution = userViews.reduce((acc, user) => {
       if (user.personalColor) {
@@ -322,6 +325,12 @@ export class UserJourneyService {
       }
     });
 
+    // 인기 스타일 추출
+    const popularStyles = this.extractPopularStyles(userViews);
+
+    // 시간대별 활동 분석
+    const hourlyActivity = this.analyzeHourlyActivity(userViews);
+
     const alerts = {
       highAtRiskUsers: userViews.filter(u => u.insights.isAtRisk).length,
       stalledProcesses: userViews.filter(u => u.insights.hasStalled).length,
@@ -331,14 +340,13 @@ export class UserJourneyService {
       systemIssues: [] // 향후 시스템 모니터링 구현
     };
 
+    // 주간 비교 데이터 계산
+    const weekOverWeekChanges = this.calculateWeekOverWeekChanges(userViews);
+
     return {
       metrics: {
         conversionRates,
-        averageTimeToComplete: {
-          diagnosis: 24, // 임시값 - 실제 계산 로직 필요
-          recommendation: 48,
-          total: 72
-        },
+        averageTimeToComplete,
         volumes: {
           // 오늘 가입한 사용자 (가입일이 오늘)
           dailySignups: userViews.filter(u => {
@@ -366,14 +374,213 @@ export class UserJourneyService {
           pendingRecommendations: userViews.filter(u => 
             u.journeyStatus === 'recommendation_requested' || u.journeyStatus === 'recommendation_processing'
           ).length
-        }
+        },
+        weekOverWeekChanges
       },
       trends: {
         personalColorDistribution,
-        popularStyles: [], // 향후 구현
-        hourlyActivity: [] // 향후 구현
+        popularStyles,
+        hourlyActivity
       },
       alerts
+    };
+  }
+
+  /**
+   * 평균 완료 시간 계산
+   */
+  private static calculateAverageCompletionTimes(userViews: UnifiedUserView[]) {
+    // 가입 → 진단 시간 계산
+    const diagnosisTimes = userViews
+      .filter(u => u.timeline.diagnosisAt)
+      .map(u => {
+        const hours = (new Date(u.timeline.diagnosisAt!).getTime() - new Date(u.timeline.registeredAt).getTime()) / (1000 * 60 * 60);
+        return Math.max(0, hours); // 음수 방지
+      });
+    
+    const avgDiagnosisTime = diagnosisTimes.length > 0 
+      ? Math.round(diagnosisTimes.reduce((a, b) => a + b, 0) / diagnosisTimes.length)
+      : 24; // 기본값
+
+    // 추천 요청 → 완료 시간 계산
+    const recommendationTimes = userViews
+      .filter(u => u.timeline.recommendationRequestedAt && u.timeline.recommendationCompletedAt)
+      .map(u => {
+        const hours = (new Date(u.timeline.recommendationCompletedAt!).getTime() - new Date(u.timeline.recommendationRequestedAt!).getTime()) / (1000 * 60 * 60);
+        return Math.max(0, hours); // 음수 방지
+      });
+    
+    const avgRecommendationTime = recommendationTimes.length > 0 
+      ? Math.round(recommendationTimes.reduce((a, b) => a + b, 0) / recommendationTimes.length)
+      : 48; // 기본값
+
+    // 전체 프로세스 시간 (가입 → 추천 완료)
+    const totalTimes = userViews
+      .filter(u => u.timeline.recommendationCompletedAt)
+      .map(u => {
+        const hours = (new Date(u.timeline.recommendationCompletedAt!).getTime() - new Date(u.timeline.registeredAt).getTime()) / (1000 * 60 * 60);
+        return Math.max(0, hours); // 음수 방지
+      });
+    
+    const avgTotalTime = totalTimes.length > 0 
+      ? Math.round(totalTimes.reduce((a, b) => a + b, 0) / totalTimes.length)
+      : avgDiagnosisTime + avgRecommendationTime; // 기본값
+
+    return {
+      diagnosis: avgDiagnosisTime,
+      recommendation: avgRecommendationTime,
+      total: avgTotalTime
+    };
+  }
+
+  /**
+   * 인기 스타일 추출 및 트렌드 분석
+   */
+  private static extractPopularStyles(userViews: UnifiedUserView[]) {
+    // 스타일 카운트 집계
+    const styleCount: Record<string, number> = {};
+    const lastWeekStyleCount: Record<string, number> = {};
+    
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    userViews.forEach(user => {
+      if (user.recommendation?.preferences.style) {
+        user.recommendation.preferences.style.forEach(style => {
+          // 전체 카운트
+          styleCount[style] = (styleCount[style] || 0) + 1;
+          
+          // 지난주 카운트 (지난주에 요청된 추천만)
+          if (user.timeline.recommendationRequestedAt && new Date(user.timeline.recommendationRequestedAt) < oneWeekAgo) {
+            lastWeekStyleCount[style] = (lastWeekStyleCount[style] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    // 상위 10개 스타일 추출 및 트렌드 계산
+    const popularStyles = Object.entries(styleCount)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([style, count]) => {
+        const lastWeekCount = lastWeekStyleCount[style] || 0;
+        let trend: 'up' | 'down' | 'stable' = 'stable';
+        
+        if (count > lastWeekCount * 1.1) {
+          trend = 'up';
+        } else if (count < lastWeekCount * 0.9) {
+          trend = 'down';
+        }
+
+        return {
+          style,
+          count,
+          trend
+        };
+      });
+
+    return popularStyles;
+  }
+
+  /**
+   * 시간대별 활동 분석
+   */
+  private static analyzeHourlyActivity(userViews: UnifiedUserView[]) {
+    // 24시간 배열 초기화
+    const hourlyData = Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      signups: 0,
+      diagnoses: 0,
+      recommendations: 0
+    }));
+
+    userViews.forEach(user => {
+      // 가입 시간
+      const registrationHour = new Date(user.timeline.registeredAt).getHours();
+      hourlyData[registrationHour].signups++;
+
+      // 진단 시간
+      if (user.timeline.diagnosisAt) {
+        const diagnosisHour = new Date(user.timeline.diagnosisAt).getHours();
+        hourlyData[diagnosisHour].diagnoses++;
+      }
+
+      // 추천 요청 시간
+      if (user.timeline.recommendationRequestedAt) {
+        const recommendationHour = new Date(user.timeline.recommendationRequestedAt).getHours();
+        hourlyData[recommendationHour].recommendations++;
+      }
+    });
+
+    return hourlyData;
+  }
+
+  /**
+   * 주간 비교 데이터 계산
+   */
+  private static calculateWeekOverWeekChanges(userViews: UnifiedUserView[]) {
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    // 이번 주 데이터 (지난 7일)
+    const thisWeekViews = userViews.filter(u => {
+      const registeredAt = new Date(u.timeline.registeredAt);
+      return registeredAt >= oneWeekAgo && registeredAt <= now;
+    });
+
+    // 지난 주 데이터 (7-14일 전)
+    const lastWeekViews = userViews.filter(u => {
+      const registeredAt = new Date(u.timeline.registeredAt);
+      return registeredAt >= twoWeeksAgo && registeredAt < oneWeekAgo;
+    });
+
+    // 전환율 변화 계산
+    const thisWeekConversionRate = thisWeekViews.length > 0 
+      ? thisWeekViews.filter(u => u.recommendation?.status === 'completed').length / thisWeekViews.length 
+      : 0;
+    
+    const lastWeekConversionRate = lastWeekViews.length > 0 
+      ? lastWeekViews.filter(u => u.recommendation?.status === 'completed').length / lastWeekViews.length 
+      : 0;
+
+    const conversionRateChange = lastWeekConversionRate > 0 
+      ? Math.round(((thisWeekConversionRate - lastWeekConversionRate) / lastWeekConversionRate) * 100)
+      : 0;
+
+    // 일일 가입자 변화 계산
+    const thisWeekDailySignups = thisWeekViews.length / 7;
+    const lastWeekDailySignups = lastWeekViews.length / 7;
+    
+    const signupsChange = lastWeekDailySignups > 0 
+      ? Math.round(((thisWeekDailySignups - lastWeekDailySignups) / lastWeekDailySignups) * 100)
+      : 0;
+
+    // 평균 완료 시간 변화 계산
+    const thisWeekCompletionTimes = thisWeekViews
+      .filter(u => u.timeline.recommendationCompletedAt)
+      .map(u => (new Date(u.timeline.recommendationCompletedAt!).getTime() - new Date(u.timeline.registeredAt).getTime()) / (1000 * 60 * 60));
+    
+    const lastWeekCompletionTimes = lastWeekViews
+      .filter(u => u.timeline.recommendationCompletedAt)
+      .map(u => (new Date(u.timeline.recommendationCompletedAt!).getTime() - new Date(u.timeline.registeredAt).getTime()) / (1000 * 60 * 60));
+
+    const thisWeekAvgTime = thisWeekCompletionTimes.length > 0 
+      ? thisWeekCompletionTimes.reduce((a, b) => a + b, 0) / thisWeekCompletionTimes.length 
+      : 0;
+    
+    const lastWeekAvgTime = lastWeekCompletionTimes.length > 0 
+      ? lastWeekCompletionTimes.reduce((a, b) => a + b, 0) / lastWeekCompletionTimes.length 
+      : 0;
+
+    const completionTimeChange = lastWeekAvgTime > 0 
+      ? Math.round(((thisWeekAvgTime - lastWeekAvgTime) / lastWeekAvgTime) * 100)
+      : 0;
+
+    return {
+      conversionRate: conversionRateChange,
+      dailySignups: signupsChange,
+      completionTime: completionTimeChange
     };
   }
 }

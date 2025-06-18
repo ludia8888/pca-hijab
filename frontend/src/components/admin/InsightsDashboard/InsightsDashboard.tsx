@@ -9,7 +9,9 @@ import {
   CheckCircle,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
+  Sparkles,
+  LineChart
 } from 'lucide-react';
 import { Card } from '@/components/ui';
 import type { InsightsDashboard as InsightsDashboardType } from '@/types/admin';
@@ -254,6 +256,7 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="전체 전환율"
           value={insights.metrics.conversionRates.overall}
+          change={insights.metrics.weekOverWeekChanges?.conversionRate}
           icon={<Target className="w-6 h-6 text-white" />}
           color="bg-blue-500"
           format="percentage"
@@ -262,6 +265,7 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="일일 신규 가입"
           value={insights.metrics.volumes.dailySignups}
+          change={insights.metrics.weekOverWeekChanges?.dailySignups}
           icon={<Users className="w-6 h-6 text-white" />}
           color="bg-green-500"
         />
@@ -276,6 +280,7 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="평균 완료 시간"
           value={insights.metrics.averageTimeToComplete.total}
+          change={insights.metrics.weekOverWeekChanges?.completionTime}
           icon={<Activity className="w-6 h-6 text-white" />}
           color="bg-purple-500"
           format="time"
@@ -320,6 +325,121 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
           <PersonalColorDistribution />
           <AlertsCard />
         </div>
+      </div>
+
+      {/* 트렌드 분석 섹션 */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* 인기 스타일 */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            인기 스타일 TOP 10
+          </h3>
+          {insights.trends.popularStyles.length > 0 ? (
+            <div className="space-y-3">
+              {insights.trends.popularStyles.map((style, index) => (
+                <div key={style.style} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-gray-500 w-6">
+                      {index + 1}
+                    </span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {style.style}
+                    </span>
+                    {style.trend === 'up' && (
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                    )}
+                    {style.trend === 'down' && (
+                      <TrendingDown className="w-4 h-4 text-red-500" />
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    {style.count}명 선택
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">아직 스타일 데이터가 없습니다</p>
+            </div>
+          )}
+        </Card>
+
+        {/* 시간대별 활동 */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <LineChart className="w-5 h-5" />
+            시간대별 활동
+          </h3>
+          <div className="space-y-4">
+            {/* 시간대별 히트맵 형태로 표시 */}
+            <div className="grid grid-cols-12 gap-1">
+              {insights.trends.hourlyActivity.slice(0, 12).map((hour) => {
+                const total = hour.signups + hour.diagnoses + hour.recommendations;
+                const maxTotal = Math.max(...insights.trends.hourlyActivity.map(h => 
+                  h.signups + h.diagnoses + h.recommendations
+                ));
+                const intensity = maxTotal > 0 ? total / maxTotal : 0;
+                
+                return (
+                  <div key={hour.hour} className="text-center">
+                    <div 
+                      className="w-full h-12 rounded flex items-center justify-center text-xs font-medium"
+                      style={{
+                        backgroundColor: `rgba(79, 70, 229, ${intensity})`,
+                        color: intensity > 0.5 ? 'white' : 'black'
+                      }}
+                    >
+                      {total}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{hour.hour}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-12 gap-1">
+              {insights.trends.hourlyActivity.slice(12, 24).map((hour) => {
+                const total = hour.signups + hour.diagnoses + hour.recommendations;
+                const maxTotal = Math.max(...insights.trends.hourlyActivity.map(h => 
+                  h.signups + h.diagnoses + h.recommendations
+                ));
+                const intensity = maxTotal > 0 ? total / maxTotal : 0;
+                
+                return (
+                  <div key={hour.hour} className="text-center">
+                    <div 
+                      className="w-full h-12 rounded flex items-center justify-center text-xs font-medium"
+                      style={{
+                        backgroundColor: `rgba(79, 70, 229, ${intensity})`,
+                        color: intensity > 0.5 ? 'white' : 'black'
+                      }}
+                    >
+                      {total}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{hour.hour}</p>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* 범례 */}
+            <div className="flex items-center justify-center gap-4 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-200 rounded" />
+                <span className="text-xs text-gray-600">낮음</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-500 rounded" />
+                <span className="text-xs text-gray-600">보통</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-800 rounded" />
+                <span className="text-xs text-gray-600">높음</span>
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

@@ -121,6 +121,13 @@ export interface InsightsDashboard {
       dailyRecommendations: number;
       pendingRecommendations: number;
     };
+    
+    // 주간 비교 데이터
+    weekOverWeekChanges?: {
+      conversionRate: number;  // 전환율 변화 (%)
+      dailySignups: number;    // 일일 가입자 변화 (%)
+      completionTime: number;  // 평균 완료 시간 변화 (%)
+    };
   };
   
   trends: {
