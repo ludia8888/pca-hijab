@@ -77,6 +77,21 @@ const AnalyzingPage = (): JSX.Element => {
       // Store result
       setAnalysisResult(result);
       
+      // Save analysis result to backend
+      try {
+        if (sessionId) {
+          const { updateSession } = await import('@/services/api');
+          await updateSession(sessionId, {
+            analysisResult: result,
+            uploadedImageUrl: uploadedImage // Store image URL if available
+          });
+          console.log('Analysis result saved to backend');
+        }
+      } catch (saveError) {
+        console.error('Failed to save analysis result to backend:', saveError);
+        // Don't block user flow for backend save errors
+      }
+      
       // Wait for animation to complete
       setTimeout(() => {
         navigate(ROUTES.RESULT);

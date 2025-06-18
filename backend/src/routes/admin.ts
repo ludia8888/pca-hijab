@@ -176,13 +176,15 @@ router.get('/users', async (_req, res, next) => {
       return {
         id: session.id,
         instagramId: session.instagramId,
-        personalColor: recommendation?.personalColorResult?.personal_color_en || null,
-        personalColorKo: recommendation?.personalColorResult?.personal_color_ko || null,
-        uploadedImageUrl: recommendation?.uploadedImageUrl || null,
+        personalColor: session.analysisResult?.personal_color_en || recommendation?.personalColorResult?.personal_color_en || null,
+        personalColorKo: session.analysisResult?.personal_color_ko || recommendation?.personalColorResult?.personal_color_ko || null,
+        uploadedImageUrl: session.uploadedImageUrl || recommendation?.uploadedImageUrl || null,
         requestedAt: session.createdAt,
-        completedAt: recommendation?.status === 'completed' ? recommendation.updatedAt : null,
-        status: recommendation?.status || 'no_request',
-        hasRecommendation: !!recommendation
+        completedAt: session.analysisResult ? (session.updatedAt || session.createdAt) : 
+                    (recommendation?.status === 'completed' ? recommendation.updatedAt : null),
+        status: recommendation?.status || (session.analysisResult ? 'analysis_only' : 'no_analysis'),
+        hasRecommendation: !!recommendation,
+        hasAnalysis: !!session.analysisResult
       };
     });
     
