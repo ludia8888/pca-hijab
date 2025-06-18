@@ -85,12 +85,14 @@ export const trackEvent = (
         screen_resolution: `${screen.width}x${screen.height}`
       };
 
-      // TEMPORARY: Force debug mode for all events to see in DebugView
-      const finalParams = { ...eventParams, debug_mode: true };
+      // Add debug mode in development
+      const finalParams = addDebugMode(eventParams);
       
       window.gtag('event', eventName, finalParams);
 
-      console.log(`[GA4 Event] ${eventName}:`, finalParams);
+      if (import.meta.env.DEV) {
+        console.log(`[GA4 Event] ${eventName}:`, finalParams);
+      }
     }
   } catch (error) {
     console.warn('[GA4] Event tracking failed:', eventName, error);

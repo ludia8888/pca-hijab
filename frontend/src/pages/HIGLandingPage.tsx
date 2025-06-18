@@ -444,14 +444,28 @@ const HIGLandingPage = (): JSX.Element => {
             </button>
           ) : (
             /* Extended FAB with form - Auto-sizing */
-            <div 
+            <>
+              {/* Backdrop */}
+              <div 
+                className={styles.modalBackdrop}
+                onClick={() => {
+                  setIsFormExpanded(false);
+                  setInstagramId('');
+                  setError('');
+                  setIsValid(false);
+                }}
+                aria-hidden="true"
+              />
+              <div 
               className={styles.extendedFAB}
               id="color-analysis-form"
               role="dialog"
               aria-label="Color analysis form"
               aria-modal="false"
               style={{
-                bottom: keyboardHeight > 0 ? `${keyboardHeight + 20}px` : undefined
+                transform: keyboardHeight > 0 
+                  ? `translate(-50%, calc(-50% - ${keyboardHeight / 2}px))`
+                  : undefined
               }}
             >
               <div className={styles.extendedFABHeader}>
@@ -531,6 +545,7 @@ const HIGLandingPage = (): JSX.Element => {
                 )}
               </form>
             </div>
+            </>
           )}
         </div>
       )}

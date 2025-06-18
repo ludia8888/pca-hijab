@@ -200,6 +200,7 @@ const AdminDashboard: React.FC = () => {
             todaysWork={todaysWork}
             onUserAction={handleUserAction}
             onViewAll={handleViewAll}
+            onViewDetail={setSelectedUserForDetail}
           />
         )}
 
@@ -310,6 +311,7 @@ const AdminDashboard: React.FC = () => {
                       onAction={handleUserAction}
                       isSelected={selectedUsers.has(user.id)}
                       onSelect={toggleUserSelection}
+                      onViewDetail={setSelectedUserForDetail}
                     />
                   </div>
                 ))
@@ -318,6 +320,22 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 사용자 상세 모달 */}
+      {selectedUserForDetail && (
+        <UserDetailModal
+          user={selectedUserForDetail}
+          isOpen={!!selectedUserForDetail}
+          onClose={() => setSelectedUserForDetail(null)}
+          onAction={(user, action) => {
+            handleUserAction(user, action);
+            // 일부 액션의 경우 모달을 닫을 수 있음
+            if (['start_recommendation_process', 'complete_recommendation'].includes(action)) {
+              setSelectedUserForDetail(null);
+            }
+          }}
+        />
+      )}
     </PageLayout>
   );
 };

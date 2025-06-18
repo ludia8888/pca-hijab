@@ -16,12 +16,14 @@ interface TodaysWorkProps {
   todaysWork: TodaysWorkType;
   onUserAction: (user: UnifiedUserView, action: string) => void;
   onViewAll: (category: string) => void;
+  onViewDetail?: (user: UnifiedUserView) => void;
 }
 
 const TodaysWork: React.FC<TodaysWorkProps> = ({
   todaysWork,
   onUserAction,
-  onViewAll
+  onViewAll,
+  onViewDetail
 }) => {
   const WorkSection: React.FC<{
     title: string;
@@ -73,6 +75,7 @@ const TodaysWork: React.FC<TodaysWorkProps> = ({
               key={user.id}
               user={user}
               onAction={onUserAction}
+              onViewDetail={onViewDetail}
               compact
             />
           ))
