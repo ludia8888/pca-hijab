@@ -4,6 +4,7 @@ import { QueryProvider } from './hooks/QueryProvider'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { preloadEnvironment } from './utils/preload'
 import './index.css'
+import './styles/admin-theme.css'
 import App from './App.tsx'
 
 // Preload environment before rendering

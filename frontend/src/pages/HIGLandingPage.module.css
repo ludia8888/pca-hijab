@@ -1305,64 +1305,97 @@
   transition: opacity 0.2s ease;
 }
 
-/* Standard FAB - Optimized for performance */
+/* Apple-style FAB - SF Symbols inspired */
 .floatingFAB {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  /* Apple standard touch target */
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   border: none;
   cursor: pointer;
   
-  /* Simplified gradient for better performance */
+  /* Apple vibrancy with subtle gradient */
   background: 
     linear-gradient(135deg, 
-      rgba(147, 51, 234, 0.95) 0%, 
-      rgba(236, 72, 153, 0.9) 100%
+      rgba(0, 122, 255, 0.9) 0%, 
+      rgba(88, 86, 214, 0.85) 100%
     );
   
-  /* Simplified shadow */
+  /* Apple-style soft shadow */
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    0 2px 6px rgba(0, 0, 0, 0.1);
+    0 4px 24px rgba(0, 122, 255, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   
-  /* Fast transition */
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* Spring-loaded animation */
+  transition: all 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   /* Center content */
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 2px;
+  position: relative;
+  overflow: hidden;
   
-  /* Typography */
+  /* SF Pro typography */
   color: white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-weight: 500;
   
-  /* Touch target compliance */
+  /* Touch target */
   min-width: 44px;
   min-height: 44px;
   
-  /* Accessibility */
+  /* Focus state */
   outline: none;
   
-  /* Simplified glass effect */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Vibrancy effect */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-.floatingFAB:hover {
-  /* Simplified hover effect */
-  transform: scale(1.05);
-  box-shadow: 
-    0 6px 16px rgba(0, 0, 0, 0.18),
-    0 3px 8px rgba(0, 0, 0, 0.12);
+/* Apple-style ripple effect */
+.floatingFAB::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
 }
+
+.floatingFAB:active::before {
+  width: 100px;
+  height: 100px;
+}
+
+/* Hover state removed for performance
+.floatingFAB:hover {
+  transform: scale(1.08);
+  box-shadow: 
+    0 8px 32px rgba(0, 122, 255, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 122, 255, 0.95) 0%, 
+      rgba(88, 86, 214, 0.9) 100%
+    );
+} */
 
 .floatingFAB:active {
-  /* Material 3: Pressed state */
-  transform: scale(0.95);
-  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Apple-style pressed state */
+  transform: scale(0.92);
+  transition: transform 0.1s ease;
+  box-shadow: 
+    0 2px 8px rgba(0, 122, 255, 0.15),
+    0 1px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .floatingFAB:focus-visible {
@@ -1391,7 +1424,7 @@
   text-overflow: ellipsis;
 }
 
-/* Extended FAB - Center-aligned floating form */
+/* Extended FAB - Apple-style floating form */
 .extendedFAB {
   position: absolute;
   bottom: 80px;
@@ -1399,46 +1432,54 @@
   transform: translateX(-50%);
   min-width: 320px;
   max-width: 400px;
+  
+  /* Apple-style vibrancy with translucent material */
   background: 
     linear-gradient(145deg, 
-      rgba(255, 255, 255, 0.95) 0%,
-      rgba(248, 250, 252, 0.9) 100%
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(247, 249, 251, 0.8) 100%
     );
   
-  border-radius: 28px;
+  /* Apple corner radius */
+  border-radius: 20px;
   
-  /* Simplified shadow for better performance */
+  /* Apple-style shadow hierarchy */
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.08);
+    0 8px 40px rgba(0, 0, 0, 0.15),
+    0 4px 20px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   
-  /* Optimized glass effect */
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  /* Apple vibrancy effect */
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
   
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* Subtle border for definition */
+  border: 0.5px solid rgba(255, 255, 255, 0.5);
   
-  /* Simplified animation */
-  animation: fabSlideUp 0.25s ease-out;
+  /* Spring-loaded animation */
+  animation: appleSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   
   /* Layout */
   padding: 20px;
   
-  /* Typography */
-  font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-  color: rgba(0, 0, 0, 0.87);
+  /* SF Pro typography */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  color: rgba(0, 0, 0, 0.85);
   
   z-index: 51;
 }
 
-@keyframes fabSlideUp {
+@keyframes appleSlideUp {
   from {
-    transform: translateX(-50%) translateY(20px);
+    transform: translateX(-50%) translateY(30px) scale(0.95);
     opacity: 0;
+    filter: blur(8px);
   }
   to {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
     opacity: 1;
+    filter: blur(0);
   }
 }
 
@@ -1451,31 +1492,39 @@
 }
 
 .extendedFABTitle {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.4px;
   margin: 0;
-  color: rgba(0, 0, 0, 0.87);
+  color: rgba(0, 0, 0, 0.85);
+  /* SF Pro Display font characteristics */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
 }
 
 .extendedFABClose {
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
   border: none;
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.6);
+  /* Apple-style close button */
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.45);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
+  position: relative;
+  
+  /* Apple-style hit target */
+  outline: none;
 }
 
+/* Hover state removed for performance
 .extendedFABClose:hover {
   background: rgba(0, 0, 0, 0.08);
   color: rgba(0, 0, 0, 0.87);
-}
+} */
 
 .extendedFABClose:focus-visible {
   outline: 2px solid rgba(147, 51, 234, 0.5);
@@ -1497,31 +1546,40 @@
 
 .extendedFABInput {
   flex: 1;
-  padding: 12px 16px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  font-size: 16px; /* Prevent iOS zoom */
+  padding: 13px 18px;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  /* Apple-style input field */
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 17px; /* Apple standard */
   font-weight: 400;
-  color: rgba(0, 0, 0, 0.87);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.4px;
+  color: rgba(0, 0, 0, 0.85);
+  transition: all 0.2s ease;
+  
+  /* SF Pro Text for input */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   
   /* Minimum touch target */
   min-height: 44px;
   box-sizing: border-box;
+  
+  /* Subtle inner shadow */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .extendedFABInput::placeholder {
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(0, 0, 0, 0.35);
+  font-weight: 400;
 }
 
 .extendedFABInput:focus {
   outline: none;
-  border-color: rgba(147, 51, 234, 0.8);
-  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 122, 255, 0.5);
+  background: rgba(255, 255, 255, 0.9);
   box-shadow: 
-    0 0 0 3px rgba(147, 51, 234, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08);
+    0 0 0 3.5px rgba(0, 122, 255, 0.15),
+    inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .extendedFABSubmit {
@@ -1529,34 +1587,69 @@
   height: 44px;
   border-radius: 22px;
   border: none;
+  /* Apple blue gradient */
   background: 
-    linear-gradient(145deg, 
-      rgba(147, 51, 234, 0.95) 0%, 
-      rgba(236, 72, 153, 0.9) 100%
+    linear-gradient(135deg, 
+      rgba(0, 122, 255, 0.95) 0%, 
+      rgba(88, 86, 214, 0.9) 100%
     );
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
   
-  /* Material 3 elevation */
+  /* Apple-style button shadow */
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.14),
-    0 1px 10px rgba(0, 0, 0, 0.12);
+    0 2px 8px rgba(0, 122, 255, 0.2),
+    0 1px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+/* Apple-style ripple effect */
+.extendedFABSubmit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.extendedFABSubmit:active::before {
+  width: 80px;
+  height: 80px;
+}
+
+/* Hover state removed for performance
 .extendedFABSubmit:hover:not(:disabled) {
   transform: scale(1.05);
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 122, 255, 1) 0%, 
+      rgba(88, 86, 214, 0.95) 100%
+    );
   box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.16),
-    0 2px 12px rgba(0, 0, 0, 0.14);
+    0 4px 12px rgba(0, 122, 255, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+} */
+
+.extendedFABSubmit:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
 }
 
 .extendedFABSubmit:disabled {
-  background: rgba(0, 0, 0, 0.12);
-  color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.25);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -1577,15 +1670,22 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Error message */
+/* Error message - Apple style */
 .extendedFABError {
-  font-size: 14px;
-  color: rgba(211, 47, 47, 0.87);
-  margin: 4px 0 0 0;
-  padding: 8px 12px;
-  background: rgba(211, 47, 47, 0.08);
-  border-radius: 12px;
-  border-left: 3px solid rgba(211, 47, 47, 0.6);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.08px;
+  color: rgba(255, 59, 48, 0.9); /* Apple red */
+  margin: 8px 0 0 0;
+  padding: 10px 14px;
+  background: rgba(255, 59, 48, 0.08);
+  border-radius: 10px;
+  /* SF Pro Text for error messages */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  /* Subtle error indication */
+  box-shadow: 
+    0 1px 3px rgba(255, 59, 48, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 /* Responsive Design - Mobile First */
