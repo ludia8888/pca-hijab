@@ -14,13 +14,13 @@ import type { TodaysWork as TodaysWorkType, UnifiedUserView } from '@/types/admi
 
 interface TodaysWorkProps {
   todaysWork: TodaysWorkType;
-  onUserAction: (user: UnifiedUserView, action: string) => void;
+  onStatusChange?: (user: UnifiedUserView, newStatus: any) => void;
   onViewAll: (category: string) => void;
 }
 
 const TodaysWork: React.FC<TodaysWorkProps> = ({
   todaysWork,
-  onUserAction,
+  onStatusChange,
   onViewAll
 }) => {
   const WorkSection: React.FC<{
@@ -72,7 +72,7 @@ const TodaysWork: React.FC<TodaysWorkProps> = ({
             <UserJourneyCard
               key={user.id}
               user={user}
-              onAction={onUserAction}
+              onStatusChange={onStatusChange}
               compact
             />
           ))

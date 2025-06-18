@@ -14,14 +14,18 @@ import {
   MoreVertical,
   Instagram,
   Image,
-  ShirtIcon
+  ShirtIcon,
+  X
 } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import type { UnifiedUserView, AdminActionType } from '@/types/admin';
+import type { UnifiedUserView, UserJourneyStatus, Priority, MessageType } from '@/types/admin';
 
 interface UserJourneyCardProps {
   user: UnifiedUserView;
-  onAction: (user: UnifiedUserView, action: AdminActionType) => void;
+  onStatusChange?: (user: UnifiedUserView, newStatus: UserJourneyStatus) => void;
+  onPriorityChange?: (user: UnifiedUserView, newPriority: Priority) => void;
+  onMessageToggle?: (user: UnifiedUserView, messageType: MessageType, sent: boolean) => void;
+  onEscalatePriority?: () => void;
   isSelected?: boolean;
   onSelect?: (userId: string) => void;
   compact?: boolean;
@@ -30,7 +34,10 @@ interface UserJourneyCardProps {
 
 const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
   user,
-  onAction,
+  onStatusChange,
+  onPriorityChange,
+  onMessageToggle,
+  onEscalatePriority,
   isSelected = false,
   onSelect,
   compact = false,
@@ -96,48 +103,6 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
     return statusMap[user.journeyStatus] || statusMap['just_started'];
   }, [user.journeyStatus]);
 
-  // 액션 매핑
-  const getActionInfo = (action: AdminActionType) => {
-    const actionMap = {
-      'send_diagnosis_reminder': { 
-        label: '진단 독려', 
-        icon: MessageCircle, 
-        color: 'text-yellow-600 hover:text-yellow-700' 
-      },
-      'mark_offer_sent': { 
-        label: 'DM 발송 완료', 
-        icon: CheckCircle, 
-        color: 'text-blue-600 hover:text-blue-700' 
-      },
-      'mark_offer_not_sent': { 
-        label: 'DM 미발송', 
-        icon: X, 
-        color: 'text-gray-600 hover:text-gray-700' 
-      },
-      'start_recommendation_process': { 
-        label: '추천 시작', 
-        icon: Sparkles, 
-        color: 'text-purple-600 hover:text-purple-700' 
-      },
-      'complete_recommendation': { 
-        label: '추천 완료', 
-        icon: CheckCircle, 
-        color: 'text-green-600 hover:text-green-700' 
-      },
-      'send_reactivation_message': { 
-        label: '재활성화', 
-        icon: TrendingUp, 
-        color: 'text-indigo-600 hover:text-indigo-700' 
-      },
-      'add_note': { 
-        label: '노트', 
-        icon: MessageCircle, 
-        color: 'text-gray-600 hover:text-gray-700' 
-      }
-    };
-    
-    return actionMap[action] || { label: action, icon: Send, color: 'text-gray-600' };
-  };
 
 
   // 컴팩트 뷰
@@ -188,22 +153,22 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
             )}
             
             {/* 주요 액션 버튼 */}
-            {user.journeyStatus === 'recommendation_requested' && (
+            {user.journeyStatus === 'recommendation_requested' && onStatusChange && (
               <Button
                 size="sm"
                 className="action-suggested bg-purple-600 hover:bg-purple-700 text-white"
-                onClick={() => onAction(user, 'start_recommendation_process')}
+                onClick={() => onStatusChange(user, 'recommendation_processing')}
               >
                 <Sparkles className="w-3 h-3 mr-1" />
                 추천 시작
               </Button>
             )}
             
-            {user.journeyStatus === 'diagnosis_done' && (
+            {user.journeyStatus === 'diagnosis_done' && onStatusChange && (
               <Button
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => onAction(user, 'mark_offer_sent')}
+                onClick={() => onStatusChange(user, 'offer_sent')}
               >
                 <Send className="w-3 h-3 mr-1" />
                 DM 발송
@@ -360,18 +325,18 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
         {/* 액션 버튼들 */}
         <div className="flex flex-wrap gap-2">
           {/* DM 발송 상태 표시 및 토글 */}
-          {user.journeyStatus === 'diagnosis_done' && (
+          {user.journeyStatus === 'diagnosis_done' && onStatusChange && (
             <Button
               size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-              onClick={() => onAction(user, 'mark_offer_sent')}
+              onClick={() => onStatusChange(user, 'offer_sent')}
             >
               <Send className="w-4 h-4 mr-1" />
               DM 발송 완료로 표시
             </Button>
           )}
           
-          {user.journeyStatus === 'offer_sent' && (
+          {user.journeyStatus === 'offer_sent' && onStatusChange && (
             <div className="w-full space-y-2">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center justify-between">
@@ -382,7 +347,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => onAction(user, 'mark_offer_not_sent')}
+                    onClick={() => onStatusChange(user, 'diagnosis_done')}
                     className="text-gray-600 hover:text-gray-700"
                   >
                     <X className="w-4 h-4" />
@@ -393,25 +358,25 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
           )}
           
           {/* 주요 액션 */}
-          {user.journeyStatus === 'recommendation_requested' && (
+          {user.journeyStatus === 'recommendation_requested' && onStatusChange && (
             <Button
               size="sm"
               className="action-suggested bg-purple-600 hover:bg-purple-700 text-white flex-1"
-              onClick={() => onAction(user, 'start_recommendation_process')}
+              onClick={() => onStatusChange(user, 'recommendation_processing')}
             >
               <Sparkles className="w-4 h-4 mr-1" />
               추천 시작
             </Button>
           )}
           
-          {user.journeyStatus === 'diagnosis_done' && (
+          {user.journeyStatus === 'recommendation_processing' && onStatusChange && (
             <Button
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-              onClick={() => onAction(user, 'send_recommendation_offer')}
+              className="bg-green-600 hover:bg-green-700 text-white flex-1"
+              onClick={() => onStatusChange(user, 'recommendation_completed')}
             >
-              <ShirtIcon className="w-4 h-4 mr-1" />
-              추천 제안
+              <CheckCircle className="w-4 h-4 mr-1" />
+              추천 완료
             </Button>
           )}
 

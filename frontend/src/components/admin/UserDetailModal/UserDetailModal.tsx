@@ -20,20 +20,24 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import type { UnifiedUserView, AdminActionType } from '@/types/admin';
+import type { UnifiedUserView } from '@/types/admin';
 
 interface UserDetailModalProps {
   user: UnifiedUserView;
   isOpen: boolean;
   onClose: () => void;
-  onAction: (user: UnifiedUserView, action: AdminActionType, ...args: any[]) => void;
+  onStatusChange?: (user: UnifiedUserView, newStatus: any) => void;
+  onPriorityChange?: (user: UnifiedUserView, newPriority: any) => void;
+  onMessageToggle?: (user: UnifiedUserView, messageType: any, sent: boolean) => void;
 }
 
 const UserDetailModal: React.FC<UserDetailModalProps> = ({
   user,
   isOpen,
   onClose,
-  onAction
+  onStatusChange,
+  onPriorityChange,
+  onMessageToggle
 }) => {
   const [activeTab, setActiveTab] = useState<'timeline' | 'analysis' | 'notes'>('timeline');
   const [showActionMenu, setShowActionMenu] = useState(false);
@@ -404,7 +408,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                           <Button
                             size="sm"
                             className="mt-3"
-                            onClick={() => onAction(user, 'send_recommendation_offer')}
+                            onClick={() => onStatusChange?.(user, 'offer_sent')}
                           >
                             추천 서비스 제안하기
                           </Button>
@@ -449,7 +453,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                             
                             setIsSubmittingNote(true);
                             try {
-                              await onAction(user, 'add_note', noteContent, noteTags);
+                              await // onAction(user, 'add_note', noteContent, noteTags);
                               setNoteContent('');
                               setNoteTags([]);
                             } finally {
@@ -532,7 +536,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {user.journeyStatus === 'recommendation_requested' && (
                     <Button
                       onClick={() => {
-                        onAction(user, 'start_recommendation_process');
+                        // onAction(user, 'start_recommendation_process');
                         onClose();
                       }}
                       className="bg-purple-600 hover:bg-purple-700"
@@ -545,7 +549,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {user.journeyStatus === 'recommendation_processing' && (
                     <Button
                       onClick={() => {
-                        onAction(user, 'complete_recommendation');
+                        // onAction(user, 'complete_recommendation');
                         onClose();
                       }}
                       className="bg-green-600 hover:bg-green-700"
@@ -568,19 +572,19 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     {showActionMenu && (
                       <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                         <button
-                          onClick={() => onAction(user, 'send_diagnosis_reminder')}
+                          onClick={() => // onAction(user, 'send_diagnosis_reminder')}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           진단 독려 메시지
                         </button>
                         <button
-                          onClick={() => onAction(user, 'send_reactivation_message')}
+                          onClick={() => // onAction(user, 'send_reactivation_message')}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           재활성화 메시지
                         </button>
                         <button
-                          onClick={() => onAction(user, 'schedule_followup')}
+                          onClick={() => // onAction(user, 'schedule_followup')}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           팔로우업 예약
