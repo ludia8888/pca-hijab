@@ -38,8 +38,8 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
 }) => {
   const [showActions, setShowActions] = useState(false);
 
-  // 여정 진행률 계산
-  const calculateProgress = (): number => {
+  // Memoize expensive calculations
+  const progress = useMemo(() => {
     switch (user.journeyStatus) {
       case 'just_started': return 10;
       case 'diagnosis_pending': return 25;
@@ -49,10 +49,9 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
       case 'recommendation_completed': return 100;
       default: return 0;
     }
-  };
+  }, [user.journeyStatus]);
 
-  // 우선순위별 색상 클래스
-  const getPriorityClasses = () => {
+  const priorityClasses = useMemo(() => {
     switch (user.priority) {
       case 'urgent': 
         return {
@@ -79,10 +78,9 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
           pulse: ''
         };
     }
-  };
+  }, [user.priority]);
 
-  // 여정 상태 정보
-  const getJourneyInfo = () => {
+  const journeyInfo = useMemo(() => {
     const statusMap = {
       'just_started': { icon: User, label: '방금 가입', color: 'text-gray-600' },
       'diagnosis_pending': { icon: Clock, label: '진단 대기', color: 'text-yellow-600' },
@@ -94,7 +92,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
     };
     
     return statusMap[user.journeyStatus] || statusMap['just_started'];
-  };
+  }, [user.journeyStatus]);
 
   // 액션 매핑
   const getActionInfo = (action: AdminActionType) => {
