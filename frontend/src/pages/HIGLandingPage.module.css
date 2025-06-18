@@ -1293,43 +1293,451 @@
   }
 }
 
-/* Sticky CTA - Apple Glass Morphism Design */
-.stickyCTA {
+/* Floating CTA - Material 3 & Apple HIG 2025 Standards */
+/* Floating CTA Container - Fixed positioning with auto-hide */
+.floatingCTA {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 16px; /* Material 3: 16dp margin */
+  right: 16px; /* Material 3: 16dp margin */
   z-index: 50;
-  padding: 1rem 1.5rem 1.5rem;
-  /* Apple-style translucent glass background */
-  background: 
-    linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.15) 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      rgba(255, 255, 255, 0.1) 100%
-    );
-  /* Enhanced backdrop blur with vibrancy */
-  backdrop-filter: blur(40px) saturate(180%) brightness(120%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(120%);
-  
-  /* Apple-style borders with subtle transparency */
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  border-image: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0.1) 100%
-  ) 1;
-  
-  /* Refined glass shadow effects */
-  box-shadow: 
-    0 -8px 32px rgba(0, 0, 0, 0.12),
-    0 -2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-  
-  animation: slideUpGlass 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Material motion */
   transform: translateZ(0); /* GPU acceleration */
-  will-change: transform;
+  will-change: transform, opacity;
+}
+
+/* Auto-hide on scroll down */
+.floatingCTAHidden {
+  transform: translateY(100px) scale(0.8);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Standard FAB - 56dp circular button */
+.floatingFAB {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px; /* Material 3: Large shape */
+  border: none;
+  cursor: pointer;
+  
+  /* Material 3 elevation level 3 */
+  background: 
+    linear-gradient(145deg, 
+      rgba(147, 51, 234, 0.95) 0%, 
+      rgba(236, 72, 153, 0.9) 100%
+    );
+  
+  /* Material 3 shadow tokens */
+  box-shadow: 
+    0 6px 10px rgba(0, 0, 0, 0.14),
+    0 1px 18px rgba(0, 0, 0, 0.12),
+    0 3px 5px rgba(0, 0, 0, 0.2);
+  
+  /* Smooth transitions */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Center content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2px;
+  
+  /* Typography */
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+  
+  /* Touch target compliance - minimum 44x44pt */
+  min-width: 44px;
+  min-height: 44px;
+  
+  /* Accessibility */
+  outline: none;
+  
+  /* Glass effect for Apple platforms */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.floatingFAB:hover {
+  /* Material 3: Elevation level 4 on hover */
+  box-shadow: 
+    0 8px 12px rgba(0, 0, 0, 0.15),
+    0 4px 20px rgba(0, 0, 0, 0.13),
+    0 6px 6px rgba(0, 0, 0, 0.2);
+  
+  transform: scale(1.05);
+  
+  background: 
+    linear-gradient(145deg, 
+      rgba(147, 51, 234, 1) 0%, 
+      rgba(236, 72, 153, 0.95) 100%
+    );
+}
+
+.floatingFAB:active {
+  /* Material 3: Pressed state */
+  transform: scale(0.95);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floatingFAB:focus-visible {
+  /* WCAG 2.1 focus indicator */
+  outline: 3px solid rgba(147, 51, 234, 0.5);
+  outline-offset: 2px;
+}
+
+/* FAB Icon - 24dp standard size */
+.fabIcon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FAB Label - Always visible for accessibility */
+.fabLabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  line-height: 1;
+  margin-top: 1px;
+  white-space: nowrap;
+  max-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Extended FAB - Form container */
+.extendedFAB {
+  min-width: 320px;
+  max-width: 90vw;
+  background: 
+    linear-gradient(145deg, 
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(248, 250, 252, 0.9) 100%
+    );
+  
+  border-radius: 28px; /* Material 3: Extra large shape */
+  
+  /* Material 3 elevation level 2 */
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  
+  /* Glass morphism */
+  backdrop-filter: blur(40px) saturate(180%) brightness(110%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(110%);
+  
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  /* Animation */
+  animation: extendedFABAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Layout */
+  padding: 20px;
+  
+  /* Typography base */
+  font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+@keyframes extendedFABAppear {
+  from {
+    transform: scale(0.3) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Extended FAB Header */
+.extendedFABHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.extendedFABTitle {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.extendedFABClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.extendedFABClose:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.extendedFABClose:focus-visible {
+  outline: 2px solid rgba(147, 51, 234, 0.5);
+  outline-offset: 2px;
+}
+
+/* Extended FAB Form */
+.extendedFABForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.extendedFABInputGroup {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.extendedFABInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 16px; /* Prevent iOS zoom */
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Minimum touch target */
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.extendedFABInput::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.extendedFABInput:focus {
+  outline: none;
+  border-color: rgba(147, 51, 234, 0.8);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 0 0 3px rgba(147, 51, 234, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.extendedFABSubmit {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: none;
+  background: 
+    linear-gradient(145deg, 
+      rgba(147, 51, 234, 0.95) 0%, 
+      rgba(236, 72, 153, 0.9) 100%
+    );
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Material 3 elevation */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.14),
+    0 1px 10px rgba(0, 0, 0, 0.12);
+}
+
+.extendedFABSubmit:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.16),
+    0 2px 12px rgba(0, 0, 0, 0.14);
+}
+
+.extendedFABSubmit:disabled {
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.26);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading spinner */
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error message */
+.extendedFABError {
+  font-size: 14px;
+  color: rgba(211, 47, 47, 0.87);
+  margin: 4px 0 0 0;
+  padding: 8px 12px;
+  background: rgba(211, 47, 47, 0.08);
+  border-radius: 12px;
+  border-left: 3px solid rgba(211, 47, 47, 0.6);
+}
+
+/* Responsive Design - Mobile First */
+@media (max-width: 768px) {
+  .floatingCTA {
+    /* Mobile: 16px margin with safe area */
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
+  
+  .extendedFAB {
+    /* Mobile: Full width with margin */
+    min-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+    
+    /* Adjust position for mobile */
+    position: fixed;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+  
+  .extendedFABInputGroup {
+    /* Mobile: Stack on very small screens */
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .extendedFABSubmit {
+    /* Mobile: Full width submit button */
+    width: 100%;
+    height: 48px;
+    border-radius: 24px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .floatingFAB {
+    /* Slightly smaller on very small screens */
+    width: 52px;
+    height: 52px;
+  }
+  
+  .fabLabel {
+    font-size: 9px;
+  }
+  
+  .extendedFAB {
+    padding: 16px;
+  }
+  
+  .extendedFABTitle {
+    font-size: 16px;
+  }
+}
+
+/* Tablet and larger screens */
+@media (min-width: 769px) {
+  .floatingCTA {
+    /* Desktop: Position within content area */
+    bottom: 24px;
+    right: 24px;
+  }
+  
+  .extendedFAB {
+    /* Desktop: Fixed width, positioned relative to FAB */
+    min-width: 360px;
+    max-width: 400px;
+    
+    /* Position above and to the left of FAB */
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translateY(-80px);
+  }
+  
+  .extendedFABInputGroup {
+    /* Desktop: Keep horizontal layout */
+    flex-direction: row;
+  }
+  
+  .extendedFABSubmit {
+    /* Desktop: Circular submit button */
+    width: 44px;
+    border-radius: 22px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .floatingCTA {
+    bottom: 12px;
+    right: 12px;
+  }
+  
+  .extendedFAB {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    padding: 16px;
+  }
+  
+  .extendedFABHeader {
+    margin-bottom: 12px;
+  }
+  
+  .extendedFABTitle {
+    font-size: 16px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .floatingFAB {
+    border: 2px solid currentColor;
+  }
+  
+  .extendedFAB {
+    border: 2px solid rgba(0, 0, 0, 0.2);
+  }
+  
+  .extendedFABInput {
+    border: 2px solid rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .floatingFAB,
+  .extendedFAB,
+  .extendedFABSubmit,
+  .loadingSpinner {
+    animation: none;
+    transition: none;
+  }
+  
+  .floatingCTAHidden {
+    transition: opacity 0.1s linear;
+  }
 }
 
 @keyframes slideUpGlass {
@@ -2177,6 +2585,46 @@
     .stickyCancelButton:hover {
       background: rgba(0, 0, 0, 0.05);
       border-color: rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Light mode FAB adjustments */
+    .floatingFAB {
+      background: 
+        linear-gradient(145deg, 
+          rgba(147, 51, 234, 1) 0%, 
+          rgba(236, 72, 153, 0.95) 100%
+        );
+      
+      /* Enhanced contrast for light backgrounds */
+      box-shadow: 
+        0 6px 10px rgba(0, 0, 0, 0.16),
+        0 1px 18px rgba(0, 0, 0, 0.14),
+        0 3px 5px rgba(0, 0, 0, 0.22);
+    }
+    
+    .extendedFAB {
+      background: 
+        linear-gradient(145deg, 
+          rgba(255, 255, 255, 0.98) 0%,
+          rgba(248, 250, 252, 0.95) 100%
+        );
+      
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.12),
+        0 6px 20px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    
+    .extendedFABInput {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+    }
+    
+    .extendedFABInput:focus {
+      background: rgba(255, 255, 255, 1);
+      border-color: rgba(147, 51, 234, 0.8);
     }
   }
 }
