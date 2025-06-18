@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
 import { Button, Input, Card } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
+import { trackEvent, trackError, trackEngagement } from '@/utils/analytics';
 import { Lock } from 'lucide-react';
 
 const AdminLoginPage = (): JSX.Element => {
@@ -13,23 +14,63 @@ const AdminLoginPage = (): JSX.Element => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Track admin login page access
+  useEffect(() => {
+    trackEvent('admin_login_page_access', {
+      page: 'admin_login',
+      user_flow_step: 'admin_login_page_entered'
+    });
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    // Track login attempt
+    trackEvent('admin_login_attempt', {
+      page: 'admin_login',
+      api_key_length: apiKeyInput.length,
+      user_flow_step: 'admin_login_submitted'
+    });
+
+    trackEngagement('admin_login', 'login_attempt');
 
     try {
       // Verify API key with lightweight endpoint
       const isValid = await AdminAPI.verifyApiKey(apiKeyInput);
       
       if (isValid) {
+        // Track successful login
+        trackEvent('admin_login_success', {
+          page: 'admin_login',
+          user_flow_step: 'admin_login_successful'
+        });
+
         // If successful, save API key and navigate to dashboard
         setApiKey(apiKeyInput);
         navigate('/admin/dashboard');
       } else {
+        // Track failed login
+        trackEvent('admin_login_failed', {
+          page: 'admin_login',
+          failure_reason: 'invalid_api_key',
+          api_key_length: apiKeyInput.length,
+          user_flow_step: 'admin_login_failed'
+        });
+        
         setError('Invalid API key. Please try again.');
       }
-    } catch {
+    } catch (error) {
+      // Track login error
+      trackError('admin_login_error', error instanceof Error ? error.message : 'Unknown login error', 'admin_login');
+      trackEvent('admin_login_failed', {
+        page: 'admin_login',
+        failure_reason: 'api_error',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_flow_step: 'admin_login_error'
+      });
+      
       setError('Invalid API key. Please try again.');
     } finally {
       setIsLoading(false);
@@ -53,7 +94,27 @@ const AdminLoginPage = (): JSX.Element => {
               type="password"
               label="API Key"
               value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setApiKeyInput(value);
+                
+                // Track form interaction
+                if (value.length === 1 && apiKeyInput.length === 0) {
+                  // First character typed
+                  trackEvent('admin_form_interaction', {
+                    field_name: 'api_key',
+                    interaction_type: 'input_start',
+                    user_flow_step: 'admin_form_started'
+                  });
+                } else if (value.length >= 4 && value.length % 4 === 0) {
+                  // Track input progress every 4 characters
+                  trackEvent('admin_form_validation', {
+                    field_name: 'api_key',
+                    input_length: value.length,
+                    user_flow_step: 'admin_form_validation'
+                  });
+                }
+              }}
               placeholder="Enter admin API key"
               error={error}
               required

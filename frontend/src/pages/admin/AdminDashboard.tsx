@@ -4,6 +4,7 @@ import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
 import { Card, Button, LoadingSpinner } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
+import { trackEvent, trackError, trackEngagement } from '@/utils/analytics';
 import { 
   Users, 
   Clock, 
@@ -86,14 +87,45 @@ const AdminDashboard = (): JSX.Element => {
   const handleDeleteUser = async (user: User): Promise<void> => {
     if (!apiKey || !user) return;
     
+    // Track delete attempt
+    trackEvent('admin_action', {
+      action_type: 'user_delete_attempt',
+      user_id: user.id,
+      instagram_id: user.instagramId,
+      user_has_analysis: user.hasAnalysis,
+      user_has_recommendation: user.hasRecommendation,
+      user_flow_step: 'admin_user_deletion_initiated'
+    });
+
+    trackEngagement('admin_action', 'user_deletion');
+    
     try {
       await AdminAPI.deleteUser(apiKey, user.id);
+      
+      // Track successful deletion
+      trackEvent('admin_action_success', {
+        action_type: 'user_delete_success',
+        user_id: user.id,
+        instagram_id: user.instagramId,
+        user_flow_step: 'admin_user_deletion_completed'
+      });
+      
       // Refresh user list
       const usersResponse = await AdminAPI.getUsers(apiKey);
       setUsers(usersResponse.data);
       setUserToDelete(null);
     } catch (error) {
       console.error('Failed to delete user:', error);
+      
+      // Track deletion failure
+      trackError('admin_user_deletion_failed', error instanceof Error ? error.message : 'Unknown deletion error', 'admin_dashboard');
+      trackEvent('admin_action_failed', {
+        action_type: 'user_delete_failed',
+        user_id: user.id,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_flow_step: 'admin_user_deletion_failed'
+      });
+      
       alert('사용자 삭제에 실패했습니다.');
     }
   };
@@ -103,6 +135,14 @@ const AdminDashboard = (): JSX.Element => {
       navigate('/admin/login');
       return;
     }
+
+    // Track admin dashboard access
+    trackEvent('admin_dashboard_access', {
+      page: 'admin_dashboard',
+      active_tab: activeTab,
+      status_filter: statusFilter,
+      user_flow_step: 'admin_dashboard_loaded'
+    });
 
     loadData();
   }, [apiKey, statusFilter, activeTab, navigate, loadData]);
@@ -183,7 +223,14 @@ const AdminDashboard = (): JSX.Element => {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             <button
-              onClick={() => setActiveTab('recommendations')}
+              onClick={() => {
+                trackEvent('admin_tab_change', {
+                  from_tab: activeTab,
+                  to_tab: 'recommendations',
+                  user_flow_step: 'admin_tab_switched_to_recommendations'
+                });
+                setActiveTab('recommendations');
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'recommendations'
                   ? 'border-purple-500 text-purple-600'
@@ -194,7 +241,14 @@ const AdminDashboard = (): JSX.Element => {
               히잡 추천 관리
             </button>
             <button
-              onClick={() => setActiveTab('users')}
+              onClick={() => {
+                trackEvent('admin_tab_change', {
+                  from_tab: activeTab,
+                  to_tab: 'users',
+                  user_flow_step: 'admin_tab_switched_to_users'
+                });
+                setActiveTab('users');
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'users'
                   ? 'border-purple-500 text-purple-600'
@@ -275,7 +329,15 @@ const AdminDashboard = (): JSX.Element => {
                 key={status}
                 variant={statusFilter === status ? 'primary' : 'ghost'}
                 size="sm"
-                onClick={() => setStatusFilter(status)}
+                onClick={() => {
+                  trackEvent('admin_filter_change', {
+                    from_filter: statusFilter,
+                    to_filter: status,
+                    tab: activeTab,
+                    user_flow_step: 'admin_filter_changed'
+                  });
+                  setStatusFilter(status);
+                }}
               >
                 {status === 'all' ? '전체 히잡 추천' : status === 'pending' ? '추천 대기중' : status === 'processing' ? '처리 중' : '추천 완료'}
               </Button>
@@ -478,7 +540,17 @@ const AdminDashboard = (): JSX.Element => {
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:text-red-700"
-                            onClick={() => setUserToDelete(user)}
+                            onClick={() => {
+                              trackEvent('admin_button_click', {
+                                button_name: 'delete_user',
+                                user_id: user.id,
+                                instagram_id: user.instagramId,
+                                user_has_analysis: user.hasAnalysis,
+                                user_has_recommendation: user.hasRecommendation,
+                                user_flow_step: 'admin_delete_button_clicked'
+                              });
+                              setUserToDelete(user);
+                            }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -507,14 +579,30 @@ const AdminDashboard = (): JSX.Element => {
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="ghost"
-                  onClick={() => setUserToDelete(null)}
+                  onClick={() => {
+                    trackEvent('admin_modal_action', {
+                      action_type: 'delete_cancel',
+                      user_id: userToDelete.id,
+                      instagram_id: userToDelete.instagramId,
+                      user_flow_step: 'admin_delete_cancelled'
+                    });
+                    setUserToDelete(null);
+                  }}
                 >
                   취소
                 </Button>
                 <Button
                   variant="primary"
                   className="bg-red-600 hover:bg-red-700"
-                  onClick={() => handleDeleteUser(userToDelete)}
+                  onClick={() => {
+                    trackEvent('admin_modal_action', {
+                      action_type: 'delete_confirm',
+                      user_id: userToDelete.id,
+                      instagram_id: userToDelete.instagramId,
+                      user_flow_step: 'admin_delete_confirmed'
+                    });
+                    handleDeleteUser(userToDelete);
+                  }}
                 >
                   삭제
                 </Button>

@@ -26,13 +26,19 @@ export const initializeGA4 = (): void => {
       ad_personalization: 'denied'
     });
 
-    // Enhanced config
-    window.gtag('config', GA_MEASUREMENT_ID, {
+    // Enhanced config with conditional debug mode
+    const config: Record<string, any> = {
       send_page_view: false,
       allow_google_signals: true,
-      cookie_flags: 'SameSite=None;Secure',
-      debug_mode: import.meta.env.DEV
-    });
+      cookie_flags: 'SameSite=None;Secure'
+    };
+
+    // Add debug_mode only in development (not false, just omit it in production)
+    if (import.meta.env.DEV) {
+      config.debug_mode = true;
+    }
+
+    window.gtag('config', GA_MEASUREMENT_ID, config);
 
     // Set custom dimensions
     window.gtag('set', {
@@ -65,19 +71,28 @@ export const trackPageView = (path: string, title?: string): void => {
   }
 };
 
-// Core event tracking function with error handling
+// Core event tracking function with error handling and conditional debug mode
 export const trackEvent = (
   eventName: string,
   parameters?: Record<string, any>
 ): void => {
   try {
     if (typeof window.gtag !== 'undefined') {
-      window.gtag('event', eventName, {
+      const eventParams = {
         ...parameters,
         timestamp: new Date().toISOString(),
         user_agent: navigator.userAgent,
         screen_resolution: `${screen.width}x${screen.height}`
-      });
+      };
+
+      // Add debug mode in development
+      const finalParams = addDebugMode(eventParams);
+      
+      window.gtag('event', eventName, finalParams);
+
+      if (import.meta.env.DEV) {
+        console.log(`[GA4 Event] ${eventName}:`, finalParams);
+      }
     }
   } catch (error) {
     console.warn('[GA4] Event tracking failed:', eventName, error);
@@ -312,5 +327,30 @@ export const debugGA4 = (): void => {
     console.log('[GA4 Debug] DataLayer:', window.dataLayer);
     console.log('[GA4 Debug] Measurement ID:', GA_MEASUREMENT_ID);
     console.log('[GA4 Debug] Environment:', import.meta.env.DEV ? 'Development' : 'Production');
+    console.log('[GA4 Debug] Debug Mode:', import.meta.env.DEV ? 'Enabled' : 'Disabled');
   }
+};
+
+// Helper function to add debug mode to events in development
+const addDebugMode = (params: Record<string, any>): Record<string, any> => {
+  if (import.meta.env.DEV) {
+    return { ...params, debug_mode: true };
+  }
+  return params;
+};
+
+// Enhanced event tracking with debug mode for critical events
+export const trackCriticalEvent = (eventName: string, parameters: Record<string, any>): void => {
+  if (typeof window.gtag !== 'undefined') {
+    // Always add debug mode for critical events (even in production for important tracking)
+    const debugParams = { ...parameters, debug_mode: true };
+    window.gtag('event', eventName, debugParams);
+
+    if (import.meta.env.DEV) {
+      console.log(`[GA4 Critical Event] ${eventName}:`, debugParams);
+    }
+  }
+
+  // Also track with Vercel Analytics
+  VercelAnalytics.trackEvent(eventName, parameters);
 };
