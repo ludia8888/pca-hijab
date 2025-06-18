@@ -1,5 +1,5 @@
 // Google Analytics 4 Event Tracking Utilities - Complete Implementation
-import { VercelAnalytics } from './vercelAnalytics';
+import { VercelAnalytics, trackVercelEvent } from './vercelAnalytics';
 
 declare global {
   interface Window {
@@ -377,5 +377,5 @@ export const trackCriticalEvent = (eventName: string, parameters: Record<string,
   }
 
   // Also track with Vercel Analytics
-  VercelAnalytics.trackEvent(eventName, parameters);
+  trackVercelEvent(eventName, parameters);
 };
