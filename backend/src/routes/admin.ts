@@ -152,4 +152,84 @@ router.get('/statistics', async (_req, res, next) => {
   }
 });
 
+// GET /api/admin/users - Get all users/sessions
+router.get('/users', async (_req, res, next) => {
+  try {
+    if (!db.getAllSessions) {
+      throw new AppError(501, 'User management not available with current database');
+    }
+    
+    const sessions = await db.getAllSessions();
+    const recommendations = await db.getAllRecommendations();
+    
+    // Create a map of sessionId to recommendation for easy lookup
+    const sessionRecommendationMap = new Map<string, Recommendation>();
+    recommendations.forEach(rec => {
+      if (rec.sessionId) {
+        sessionRecommendationMap.set(rec.sessionId, rec);
+      }
+    });
+    
+    // Transform sessions to user-friendly format with recommendation data
+    const users = sessions.map(session => {
+      const recommendation = sessionRecommendationMap.get(session.id);
+      return {
+        id: session.id,
+        instagramId: session.instagramId,
+        personalColor: recommendation?.personalColorResult?.personal_color_en || null,
+        personalColorKo: recommendation?.personalColorResult?.personal_color_ko || null,
+        uploadedImageUrl: recommendation?.uploadedImageUrl || null,
+        requestedAt: session.createdAt,
+        completedAt: recommendation?.status === 'completed' ? recommendation.updatedAt : null,
+        status: recommendation?.status || 'no_request',
+        hasRecommendation: !!recommendation
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: users,
+      total: users.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/users/:userId - Delete a user/session
+router.delete('/users/:userId', async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!db.deleteSession) {
+      throw new AppError(501, 'User deletion not available with current database');
+    }
+    
+    // Get session info before deletion
+    const session = await db.getSession(userId);
+    if (!session) {
+      throw new AppError(404, '사용자를 찾을 수 없습니다');
+    }
+    
+    // Delete the session (this will also delete associated recommendations)
+    const deleted = await db.deleteSession(userId);
+    
+    if (deleted) {
+      console.info(`User ${userId} (${session.instagramId}) deleted by admin`);
+      res.json({
+        success: true,
+        message: '사용자가 삭제되었습니다',
+        deletedUser: {
+          id: userId,
+          instagramId: session.instagramId
+        }
+      });
+    } else {
+      throw new AppError(500, '사용자 삭제에 실패했습니다');
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 export const adminRouter = router;

@@ -78,6 +78,23 @@ class InMemoryDatabase {
     this.sessions.clear();
     this.recommendations.clear();
   }
+
+  // Delete a specific session
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const existed = this.sessions.has(sessionId);
+    if (existed) {
+      this.sessions.delete(sessionId);
+      // Also delete associated recommendations
+      const recommendations = Array.from(this.recommendations.values());
+      for (const rec of recommendations) {
+        if (rec.sessionId === sessionId) {
+          this.recommendations.delete(rec.id);
+        }
+      }
+      console.info(`Session ${sessionId} and associated data deleted`);
+    }
+    return existed;
+  }
 }
 
 // Database interface to ensure consistency
@@ -93,6 +110,7 @@ interface Database {
   // Debug methods
   getAllSessions?(): Promise<Session[]>;
   clearAllData?(): Promise<void>;
+  deleteSession?(sessionId: string): Promise<boolean>;
 }
 
 // Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory
