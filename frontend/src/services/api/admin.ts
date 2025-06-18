@@ -25,6 +25,24 @@ interface RecommendationsResponse {
   offset: number;
 }
 
+interface User {
+  id: string;
+  instagramId: string;
+  personalColor: string | null;
+  personalColorKo: string | null;
+  uploadedImageUrl: string | null;
+  requestedAt: string;
+  completedAt: string | null;
+  status: string;
+  hasRecommendation: boolean;
+}
+
+interface UsersResponse {
+  success: boolean;
+  data: User[];
+  total: number;
+}
+
 export class AdminAPI {
   /**
    * Verify admin API key
@@ -113,5 +131,30 @@ export class AdminAPI {
       }
     );
     return response.data.data;
+  }
+
+  /**
+   * Get all users
+   */
+  static async getUsers(apiKey: string): Promise<UsersResponse> {
+    const response = await apiClient.get<UsersResponse>(
+      '/admin/users',
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Delete a user
+   */
+  static async deleteUser(apiKey: string, userId: string): Promise<void> {
+    await apiClient.delete(
+      `/admin/users/${userId}`,
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
   }
 }

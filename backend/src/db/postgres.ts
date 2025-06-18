@@ -76,6 +76,44 @@ export class PostgresDatabase {
     };
   }
 
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const client = await pool.connect();
+    
+    try {
+      // Start transaction
+      await client.query('BEGIN');
+      
+      // First, delete all recommendations associated with this session
+      const deleteRecommendationsQuery = `
+        DELETE FROM recommendations
+        WHERE session_id = $1
+      `;
+      await client.query(deleteRecommendationsQuery, [sessionId]);
+      
+      // Then, delete the session itself
+      const deleteSessionQuery = `
+        DELETE FROM sessions
+        WHERE id = $1
+        RETURNING id
+      `;
+      const result = await client.query(deleteSessionQuery, [sessionId]);
+      
+      // Commit transaction
+      await client.query('COMMIT');
+      
+      // Return true if a session was deleted, false otherwise
+      return result.rowCount > 0;
+    } catch (error) {
+      // Rollback transaction on error
+      await client.query('ROLLBACK');
+      console.error('Error deleting session:', error);
+      throw error;
+    } finally {
+      // Release the client back to the pool
+      client.release();
+    }
+  }
+
   // Recommendations
   async createRecommendation(
     data: Omit<Recommendation, 'id' | 'createdAt' | 'updatedAt'>

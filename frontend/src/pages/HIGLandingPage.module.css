@@ -44,7 +44,7 @@
       rgba(255, 198, 120, 0.1) 270deg,
       rgba(120, 119, 198, 0.1) 360deg
     );
-  filter: blur(80px) saturate(150%);
+  filter: blur(40px) saturate(150%);
   mix-blend-mode: screen;
   /* Removed infinite animation to prevent flashing */
   /* animation: liquidFlow 25s cubic-bezier(0.4, 0, 0.2, 1) infinite; */
@@ -60,15 +60,15 @@
 @keyframes liquidFlow {
   0%, 100% {
     transform: scale(1) rotate(0deg) translate3d(0, 0, 0);
-    filter: blur(80px) saturate(150%) hue-rotate(0deg);
+    filter: blur(40px) saturate(150%) hue-rotate(0deg);
   }
   25% {
     transform: scale(1.2) rotate(45deg) translate3d(10%, -10%, 0);
-    filter: blur(100px) saturate(180%) hue-rotate(20deg);
+    filter: blur(50px) saturate(180%) hue-rotate(20deg);
   }
   50% {
     transform: scale(0.9) rotate(90deg) translate3d(-10%, 10%, 0);
-    filter: blur(60px) saturate(120%) hue-rotate(-20deg);
+    filter: blur(30px) saturate(120%) hue-rotate(-20deg);
   }
   75% {
     transform: scale(1.15) rotate(135deg) translate3d(5%, 5%, 0);
@@ -83,7 +83,7 @@
   }
   25% {
     transform: scale(0.95) rotate(-60deg) translate3d(-15%, 5%, 0);
-    filter: blur(100px) saturate(140%) hue-rotate(-30deg);
+    filter: blur(50px) saturate(140%) hue-rotate(-30deg);
   }
   50% {
     transform: scale(1.25) rotate(-120deg) translate3d(15%, -5%, 0);
@@ -178,7 +178,7 @@
   background: 
     radial-gradient(circle at 30% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 30%);
-  filter: blur(60px) brightness(1.2);
+  filter: blur(30px) brightness(1.2);
   /* Removed infinite animations to prevent flashing */
   /* animation: 
     floatSlow 25s cubic-bezier(0.4, 0, 0.2, 1) infinite,
@@ -191,7 +191,7 @@
   background: 
     radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.12) 0%, transparent 40%),
     radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 30%);
-  filter: blur(80px) brightness(1.1);
+  filter: blur(40px) brightness(1.1);
   /* Removed infinite animations to prevent flashing */
   /* animation: 
     floatMedium 20s cubic-bezier(0.4, 0, 0.2, 1) infinite reverse,
@@ -209,7 +209,7 @@
       rgba(59, 130, 246, 0.05) 240deg,
       rgba(147, 51, 234, 0.05) 360deg
     );
-  filter: blur(100px) brightness(1.05);
+  filter: blur(50px) brightness(1.05);
   /* Removed infinite animations to prevent flashing */
   /* animation: 
     floatFast 15s cubic-bezier(0.4, 0, 0.2, 1) infinite,
@@ -336,8 +336,8 @@
     linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
     radial-gradient(ellipse at top left, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
     radial-gradient(ellipse at bottom right, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   box-shadow: 
@@ -733,10 +733,11 @@
 .lightOrb1, .lightOrb2, .lightOrb3 {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(50px);
   pointer-events: none;
   /* Removed orbit animation to prevent flashing */
   /* animation: orbitFloat 20s ease-in-out infinite; */
+  transform: translateZ(0); /* GPU acceleration */
 }
 
 .lightOrb1 {
@@ -786,8 +787,10 @@
   position: relative;
   height: 380px;
   transform-style: preserve-3d;
-  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
+  will-change: transform;
+  transform: translateZ(0); /* GPU acceleration */
 }
 
 /* Glass Layers for Depth */
@@ -858,16 +861,13 @@
       rgba(236, 72, 153, 0.05) 50%,
       rgba(59, 130, 246, 0.03) 100%
     );
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   border-radius: 32px;
   border: 1px solid rgba(147, 51, 234, 0.2);
   box-shadow: 
     0 0 0 1px rgba(236, 72, 153, 0.15),
-    inset 0 1px 2px rgba(147, 51, 234, 0.2),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.1),
-    0 20px 40px -10px rgba(0, 0, 0, 0.3),
-    0 50px 100px -20px rgba(147, 51, 234, 0.2);
+    0 20px 40px -10px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   transform: translateZ(0);
 }
@@ -975,7 +975,7 @@
       rgba(147, 51, 234, 0.15) 0%,
       transparent 50%
     );
-  filter: blur(60px);
+  filter: blur(30px);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;

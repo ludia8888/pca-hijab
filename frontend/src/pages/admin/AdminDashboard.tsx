@@ -10,7 +10,9 @@ import {
   CheckCircle, 
   AlertCircle,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Trash2,
+  ShirtIcon
 } from 'lucide-react';
 import type { Recommendation } from '@/types';
 
@@ -31,13 +33,28 @@ interface Statistics {
   }>;
 }
 
+interface User {
+  id: string;
+  instagramId: string;
+  personalColor: string | null;
+  personalColorKo: string | null;
+  uploadedImageUrl: string | null;
+  requestedAt: string;
+  completedAt: string | null;
+  status: string;
+  hasRecommendation: boolean;
+}
+
 const AdminDashboard = (): JSX.Element => {
   const navigate = useNavigate();
   const { apiKey, logout } = useAdminStore();
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'processing' | 'completed'>('all');
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'users'>('recommendations');
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!apiKey) return;
@@ -52,12 +69,33 @@ const AdminDashboard = (): JSX.Element => {
       const params = statusFilter === 'all' ? {} : { status: statusFilter };
       const response = await AdminAPI.getRecommendations(apiKey, params);
       setRecommendations(response.recommendations);
+
+      // Load all users if on users tab
+      if (activeTab === 'users') {
+        const usersResponse = await AdminAPI.getUsers(apiKey);
+        setUsers(usersResponse.data);
+      }
     } catch {
       // Handle error silently, data will remain as loading state
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, statusFilter]);
+  }, [apiKey, statusFilter, activeTab]);
+
+  const handleDeleteUser = async (user: User): Promise<void> => {
+    if (!apiKey || !user) return;
+    
+    try {
+      await AdminAPI.deleteUser(apiKey, user.id);
+      // Refresh user list
+      const usersResponse = await AdminAPI.getUsers(apiKey);
+      setUsers(usersResponse.data);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('사용자 삭제에 실패했습니다.');
+    }
+  };
 
   useEffect(() => {
     if (!apiKey) {
@@ -66,7 +104,7 @@ const AdminDashboard = (): JSX.Element => {
     }
 
     loadData();
-  }, [apiKey, statusFilter, navigate, loadData]);
+  }, [apiKey, statusFilter, activeTab, navigate, loadData]);
 
   const handleLogout = (): void => {
     logout();
@@ -140,47 +178,78 @@ const AdminDashboard = (): JSX.Element => {
           </Button>
         </div>
 
-        {/* Statistics Cards */}
-        {statistics && (
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">추천 대기중</p>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {statistics.byStatus.pending}명
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">히잡 추천 요청한 사용자</p>
-                </div>
-                <Clock className="w-8 h-8 text-yellow-400" />
-              </div>
-            </Card>
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('recommendations')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'recommendations'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <ShirtIcon className="w-4 h-4 inline-block mr-2" />
+              히잡 추천 관리
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Users className="w-4 h-4 inline-block mr-2" />
+              전체 사용자 관리
+            </button>
+          </nav>
+        </div>
 
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">추천 완료</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {statistics.byStatus.completed}명
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">히잡 추천까지 완료</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-400" />
-              </div>
-            </Card>
+        {/* Tab Content */}
+        {activeTab === 'recommendations' ? (
+          <>
+            {/* Statistics Cards */}
+            {statistics && (
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">추천 대기중</p>
+                      <p className="text-2xl font-bold text-yellow-600">
+                        {statistics.byStatus.pending}명
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">히잡 추천 요청한 사용자</p>
+                    </div>
+                    <Clock className="w-8 h-8 text-yellow-400" />
+                  </div>
+                </Card>
 
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">총 추천 요청</p>
-                  <p className="text-2xl font-bold">{statistics.total}명</p>
-                  <p className="text-xs text-gray-500 mt-1">전체 히잡 추천 사용자</p>
-                </div>
-                <Users className="w-8 h-8 text-gray-400" />
+                <Card className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">추천 완료</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {statistics.byStatus.completed}명
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">히잡 추천까지 완료</p>
+                    </div>
+                    <CheckCircle className="w-8 h-8 text-green-400" />
+                  </div>
+                </Card>
+
+                <Card className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">총 추천 요청</p>
+                      <p className="text-2xl font-bold">{statistics.total}명</p>
+                      <p className="text-xs text-gray-500 mt-1">전체 히잡 추천 사용자</p>
+                    </div>
+                    <Users className="w-8 h-8 text-gray-400" />
+                  </div>
+                </Card>
               </div>
-            </Card>
-          </div>
-        )}
+            )}
 
         {/* User Type Info Banner */}
         <Card className="p-4 bg-blue-50 border-blue-200">
@@ -216,86 +285,242 @@ const AdminDashboard = (): JSX.Element => {
           </div>
         </div>
 
-        {/* Recommendations Table */}
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    사용자 유형
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    인스타그램 ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    퍼스널 컬러
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    선호 사항
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    추천 상태
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    요청일
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    작업
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {recommendations.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        <Users className="w-3 h-3" />
+            {/* Recommendations Table */}
+            <Card className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        사용자 유형
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        인스타그램 ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        퍼스널 컬러
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        선호 사항
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        추천 상태
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        요청일
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        작업
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {recommendations.map((rec) => (
+                      <tr key={rec.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <Users className="w-3 h-3" />
+                            히잡 추천
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            @{rec.instagramId}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPersonalColorClass(rec.personalColorResult.personal_color_en)}`}>
+                            {rec.personalColorResult.personal_color_en}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            <p>스타일: {rec.userPreferences.style?.join(', ') || rec.userPreferences.fitStyle?.join(', ') || '-'}</p>
+                            <p className="text-gray-500">가격대: {rec.userPreferences.priceRange || '-'}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(rec.status)}`}>
+                            {getStatusIcon(rec.status)}
+                            {rec.status === 'pending' ? '대기 중' : rec.status === 'processing' ? '처리 중' : '완료'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(rec.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin/recommendations/${rec.id}`)}
+                            className="flex items-center gap-1"
+                          >
+                            보기
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
+        ) : (
+          /* Users Tab Content */
+          <>
+            {/* User Statistics */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">전체 사용자</p>
+                    <p className="text-2xl font-bold">{users.length}명</p>
+                    <p className="text-xs text-gray-500 mt-1">퍼스널 컬러 진단 받은 모든 사용자</p>
+                  </div>
+                  <Users className="w-8 h-8 text-blue-400" />
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">진단 완료</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {users.filter(u => u.personalColor).length}명
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">컬러 진단이 완료된 사용자</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">히잡 추천 요청</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {users.filter(u => u.hasRecommendation).length}명
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">히잡 추천까지 요청한 사용자</p>
+                  </div>
+                  <ShirtIcon className="w-8 h-8 text-purple-400" />
+                </div>
+              </Card>
+            </div>
+
+            {/* Users Table */}
+            <Card className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        인스타그램 ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        퍼스널 컬러
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        상태
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        가입일
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         히잡 추천
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        @{rec.instagramId}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPersonalColorClass(rec.personalColorResult.personal_color_en)}`}>
-                        {rec.personalColorResult.personal_color_en}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        <p>스타일: {rec.userPreferences.style?.join(', ') || rec.userPreferences.fitStyle?.join(', ') || '-'}</p>
-                        <p className="text-gray-500">가격대: {rec.userPreferences.priceRange || '-'}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(rec.status)}`}>
-                        {getStatusIcon(rec.status)}
-                        {rec.status === 'pending' ? '대기 중' : rec.status === 'processing' ? '처리 중' : '완료'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(rec.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/admin/recommendations/${rec.id}`)}
-                        className="flex items-center gap-1"
-                      >
-                        보기
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        작업
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr key={user.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            @{user.instagramId}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {user.personalColor ? (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPersonalColorClass(user.personalColor)}`}>
+                              {user.personalColor}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            user.personalColor ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {user.personalColor ? '진단 완료' : '진단 전'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.requestedAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {user.hasRecommendation ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              <ShirtIcon className="w-3 h-3" />
+                              요청함
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => setUserToDelete(user)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {userToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                사용자 삭제 확인
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                정말로 <strong>@{userToDelete.instagramId}</strong> 사용자를 삭제하시겠습니까?
+                <br />
+                이 작업은 되돌릴 수 없습니다.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="ghost"
+                  onClick={() => setUserToDelete(null)}
+                >
+                  취소
+                </Button>
+                <Button
+                  variant="primary"
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => handleDeleteUser(userToDelete)}
+                >
+                  삭제
+                </Button>
+              </div>
+            </Card>
           </div>
-        </Card>
+        )}
       </div>
     </PageLayout>
   );
