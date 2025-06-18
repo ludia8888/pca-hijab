@@ -9,6 +9,15 @@ const router = Router();
 // Apply admin authentication to all routes
 router.use(authenticateAdmin);
 
+// GET /api/admin/verify - Verify admin API key
+router.get('/verify', (_req, res) => {
+  // If we reach here, the API key is valid (authenticated by middleware)
+  res.json({
+    success: true,
+    message: 'API key is valid'
+  });
+});
+
 // GET /api/admin/recommendations - Get all recommendations with filters
 router.get('/recommendations', async (req, res, next) => {
   try {

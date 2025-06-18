@@ -26,6 +26,24 @@ interface RecommendationsResponse {
 }
 
 export class AdminAPI {
+  /**
+   * Verify admin API key
+   */
+  static async verifyApiKey(apiKey: string): Promise<boolean> {
+    try {
+      const response = await apiClient.get<{ success: boolean }>(
+        '/admin/verify',
+        {
+          headers: this.getAuthHeaders(apiKey)
+        }
+      );
+      return response.data.success;
+    } catch {
+      return false;
+    }
+  }
+
+  
   private static getAuthHeaders(apiKey: string): Record<string, string> {
     return {
       'x-api-key': apiKey

@@ -19,12 +19,16 @@ const AdminLoginPage = (): JSX.Element => {
     setIsLoading(true);
 
     try {
-      // Test API key by fetching statistics
-      await AdminAPI.getStatistics(apiKeyInput);
+      // Verify API key with lightweight endpoint
+      const isValid = await AdminAPI.verifyApiKey(apiKeyInput);
       
-      // If successful, save API key and navigate to dashboard
-      setApiKey(apiKeyInput);
-      navigate('/admin/dashboard');
+      if (isValid) {
+        // If successful, save API key and navigate to dashboard
+        setApiKey(apiKeyInput);
+        navigate('/admin/dashboard');
+      } else {
+        setError('Invalid API key. Please try again.');
+      }
     } catch {
       setError('Invalid API key. Please try again.');
     } finally {
