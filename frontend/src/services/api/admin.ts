@@ -250,4 +250,17 @@ export class AdminAPI {
       }
     );
   }
+
+  /**
+   * Get unified dashboard data
+   */
+  static async getDashboardData(apiKey: string): Promise<{ users: any[], total: number }> {
+    const response = await apiClient.get<{ success: boolean; data: { users: any[], total: number } }>(
+      '/admin/dashboard/data',
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+    return response.data.data;
+  }
 }

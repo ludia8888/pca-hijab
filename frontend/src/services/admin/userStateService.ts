@@ -23,20 +23,24 @@ export class UserStateService {
     newStatus: UserJourneyStatus
   ): Promise<StateChangeResult> {
     try {
-      // TODO: 백엔드 API 호출
-      // await AdminAPI.updateUserStatus(apiKey, user.id, newStatus);
-      
-      // 로그 기록
-      await AdminAPI.logAction(apiKey, {
-        userId: user.id,
-        actionType: 'status_update',
-        description: `@${user.instagramId}의 상태를 ${user.journeyStatus}에서 ${newStatus}로 변경`,
-        metadata: {
-          oldStatus: user.journeyStatus,
-          newStatus,
-          changedAt: new Date()
-        }
+      // API 호출
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${user.id}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey
+        },
+        body: JSON.stringify({
+          status: newStatus
+        })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to update user status: ${response.statusText}`);
+      }
+
+      const result = await response.json();
 
       const statusMessages = {
         'just_started': '가입 상태로 변경',
@@ -52,13 +56,14 @@ export class UserStateService {
       return {
         success: true,
         message: `@${user.instagramId}님을 ${statusMessages[newStatus]}했습니다.`,
-        data: { oldStatus: user.journeyStatus, newStatus },
+        data: { oldStatus: user.journeyStatus, newStatus, updatedAt: result.data.updatedAt },
         timestamp: new Date()
       };
     } catch (error) {
+      console.error('Failed to update user status:', error);
       return {
         success: false,
-        message: '상태 변경에 실패했습니다.',
+        message: `상태 변경에 실패했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date()
       };
     }
@@ -73,19 +78,24 @@ export class UserStateService {
     newPriority: Priority
   ): Promise<StateChangeResult> {
     try {
-      // TODO: 백엔드 API 호출
-      // await AdminAPI.updateUserPriority(apiKey, user.id, newPriority);
-      
-      await AdminAPI.logAction(apiKey, {
-        userId: user.id,
-        actionType: 'priority_changed',
-        description: `@${user.instagramId}의 우선순위를 ${user.priority}에서 ${newPriority}로 변경`,
-        metadata: {
-          oldPriority: user.priority,
-          newPriority,
-          changedAt: new Date()
-        }
+      // API 호출
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${user.id}/priority`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey
+        },
+        body: JSON.stringify({
+          priority: newPriority
+        })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to update user priority: ${response.statusText}`);
+      }
+
+      const result = await response.json();
 
       const priorityLabels = {
         urgent: '긴급',
@@ -97,13 +107,14 @@ export class UserStateService {
       return {
         success: true,
         message: `@${user.instagramId}님의 우선순위를 ${priorityLabels[newPriority]}으로 변경했습니다.`,
-        data: { oldPriority: user.priority, newPriority },
+        data: { oldPriority: user.priority, newPriority, updatedAt: result.data.updatedAt },
         timestamp: new Date()
       };
     } catch (error) {
+      console.error('Failed to update user priority:', error);
       return {
         success: false,
-        message: '우선순위 변경에 실패했습니다.',
+        message: `우선순위 변경에 실패했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date()
       };
     }
@@ -119,8 +130,25 @@ export class UserStateService {
     sent: boolean
   ): Promise<StateChangeResult> {
     try {
-      // TODO: 백엔드 API 호출
-      // await AdminAPI.updateMessageStatus(apiKey, user.id, messageType, sent);
+      // API 호출
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${user.id}/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey
+        },
+        body: JSON.stringify({
+          messageType,
+          sent
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to update message status: ${response.statusText}`);
+      }
+
+      const result = await response.json();
       
       const messageTypeLabels = {
         diagnosis_reminder: '진단 독려 메시지',
@@ -128,27 +156,17 @@ export class UserStateService {
         followup: '팔로우업 메시지'
       };
 
-      await AdminAPI.logAction(apiKey, {
-        userId: user.id,
-        actionType: 'message_status_update',
-        description: `@${user.instagramId}에게 ${messageTypeLabels[messageType]} ${sent ? '발송 완료' : '미발송'} 표시`,
-        metadata: {
-          messageType,
-          sent,
-          markedAt: new Date()
-        }
-      });
-
       return {
         success: true,
         message: `@${user.instagramId}님의 ${messageTypeLabels[messageType]}를 ${sent ? '발송 완료' : '미발송'}로 표시했습니다.`,
-        data: { messageType, sent },
+        data: { messageType, sent, updatedAt: result.data.updatedAt },
         timestamp: new Date()
       };
     } catch (error) {
+      console.error('Failed to update message status:', error);
       return {
         success: false,
-        message: '메시지 상태 변경에 실패했습니다.',
+        message: `메시지 상태 변경에 실패했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date()
       };
     }

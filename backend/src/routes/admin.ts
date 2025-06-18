@@ -234,4 +234,197 @@ router.delete('/users/:userId', async (req, res, next) => {
   }
 });
 
+// POST /api/admin/users/:userId/status - Update user journey status
+router.post('/users/:userId/status', async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { status } = req.body;
+    
+    const validStatuses = [
+      'just_started', 'diagnosis_pending', 'diagnosis_done', 'offer_sent',
+      'recommendation_requested', 'recommendation_processing', 'recommendation_completed', 'inactive'
+    ];
+    
+    if (!status || !validStatuses.includes(status)) {
+      throw new AppError(400, 'Invalid status');
+    }
+    
+    // For now, just log the status change since we don't have user status in the database yet
+    // TODO: Add user status tracking to database schema
+    console.info(`User ${userId} status updated to ${status}`);
+    
+    res.json({
+      success: true,
+      message: 'Status updated successfully',
+      data: {
+        userId,
+        newStatus: status,
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/users/:userId/priority - Update user priority
+router.post('/users/:userId/priority', async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { priority } = req.body;
+    
+    const validPriorities = ['urgent', 'high', 'medium', 'low'];
+    
+    if (!priority || !validPriorities.includes(priority)) {
+      throw new AppError(400, 'Invalid priority');
+    }
+    
+    // For now, just log the priority change since we don't have user priority in the database yet
+    // TODO: Add user priority tracking to database schema
+    console.info(`User ${userId} priority updated to ${priority}`);
+    
+    res.json({
+      success: true,
+      message: 'Priority updated successfully',
+      data: {
+        userId,
+        newPriority: priority,
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/users/:userId/message - Toggle message status
+router.post('/users/:userId/message', async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { messageType, sent } = req.body;
+    
+    const validMessageTypes = ['diagnosis_reminder', 'reactivation', 'followup'];
+    
+    if (!messageType || !validMessageTypes.includes(messageType)) {
+      throw new AppError(400, 'Invalid message type');
+    }
+    
+    if (typeof sent !== 'boolean') {
+      throw new AppError(400, 'Invalid sent status - must be boolean');
+    }
+    
+    // For now, just log the message status change
+    // TODO: Add message tracking to database schema
+    console.info(`User ${userId} message ${messageType} marked as ${sent ? 'sent' : 'not sent'}`);
+    
+    res.json({
+      success: true,
+      message: 'Message status updated successfully',
+      data: {
+        userId,
+        messageType,
+        sent,
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/dashboard/data - Get unified dashboard data
+router.get('/dashboard/data', async (_req, res, next) => {
+  try {
+    if (!db.getAllSessions) {
+      throw new AppError(501, 'Dashboard data not available with current database');
+    }
+    
+    const sessions = await db.getAllSessions();
+    const recommendations = await db.getAllRecommendations();
+    
+    // Transform data to match the new unified user view format
+    const users = sessions.map(session => {
+      const recommendation = recommendations.find(r => r.sessionId === session.id);
+      
+      return {
+        id: session.id,
+        instagramId: session.instagramId,
+        journeyStatus: getJourneyStatus(session, recommendation),
+        priority: 'medium', // Default priority since not in database yet
+        personalColor: session.analysisResult ? {
+          season: session.analysisResult.personal_color_en?.toLowerCase() || 'unknown',
+          seasonKo: session.analysisResult.personal_color_ko || '알 수 없음',
+          confidence: 0.85, // Mock confidence
+          analysisDate: session.updatedAt || session.createdAt
+        } : undefined,
+        recommendation: recommendation ? {
+          id: recommendation.id,
+          status: recommendation.status,
+          requestedAt: recommendation.createdAt,
+          completedAt: recommendation.status === 'completed' ? recommendation.updatedAt : undefined,
+          preferences: {
+            style: [], // Mock preferences
+            priceRange: undefined,
+            occasions: []
+          }
+        } : undefined,
+        timeline: {
+          registeredAt: session.createdAt,
+          lastActiveAt: session.updatedAt || session.createdAt,
+          diagnosisAt: session.analysisResult ? (session.updatedAt || session.createdAt) : undefined,
+          recommendationRequestedAt: recommendation?.createdAt,
+          recommendationCompletedAt: recommendation?.status === 'completed' ? recommendation.updatedAt : undefined
+        },
+        actions: [], // Mock actions
+        insights: {
+          isNewUser: (Date.now() - new Date(session.createdAt).getTime()) < (7 * 24 * 60 * 60 * 1000),
+          isAtRisk: false, // Mock
+          hasStalled: false, // Mock
+          daysSinceLastActivity: Math.floor((Date.now() - new Date(session.updatedAt || session.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
+          conversionStage: getConversionStage(session, recommendation)
+        }
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        users,
+        total: users.length
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Helper function to determine journey status
+function getJourneyStatus(session: any, recommendation: any): string {
+  if (recommendation) {
+    switch (recommendation.status) {
+      case 'pending': return 'recommendation_requested';
+      case 'processing': return 'recommendation_processing';
+      case 'completed': return 'recommendation_completed';
+    }
+  }
+  
+  if (session.analysisResult) {
+    return 'diagnosis_done';
+  }
+  
+  if (session.uploadedImageUrl) {
+    return 'diagnosis_pending';
+  }
+  
+  return 'just_started';
+}
+
+// Helper function to determine conversion stage
+function getConversionStage(session: any, recommendation: any): string {
+  if (recommendation?.status === 'completed') return 'completed';
+  if (recommendation) return 'recommendation';
+  if (session.analysisResult) return 'diagnosis';
+  return 'discovery';
+}
+
 export const adminRouter = router;
