@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminStore } from '@/store/useAdminStore';
-import { UserJourneyService, ActionExecutionService } from '@/services/admin';
+import { UserJourneyService } from '@/services/admin';
+import { UserStateService, type MessageType } from '@/services/admin/userStateService';
 import { useToast } from '@/components/ui';
 import type { 
   UnifiedUserView, 
@@ -267,101 +268,255 @@ export const useAdminWorkflow = () => {
     return filtered;
   }, [state.userViews, state.filters]);
 
-  // 사용자 액션 실행
-  const executeUserAction = useCallback(async (
-    user: UnifiedUserView, 
-    action: AdminActionType,
-    ...args: any[]
+  // 여정 상태 변경
+  const updateUserStatus = useCallback(async (
+    user: UnifiedUserView,
+    newStatus: UserJourneyStatus
   ) => {
     if (!apiKey) return;
 
-    // 확인이 필요한 액션인지 체크
-    if (ActionExecutionService.requiresConfirmation(action)) {
-      const confirmMessage = ActionExecutionService.getConfirmationMessage(user, action);
-      if (confirmMessage) {
-        // TODO: 확인 모달 표시
-        console.log('Confirmation required:', confirmMessage);
-      }
-    }
-
     try {
-      // 액션 실행
-      const result = await ActionExecutionService.executeAction(user, action, apiKey, ...args);
+      const result = await UserStateService.updateJourneyStatus(apiKey, user, newStatus);
       
       if (result.success) {
         addToast({
           type: 'success',
-          title: '액션 성공',
+          title: '상태 변경 완료',
           message: result.message
         });
-        
-        // 데이터 새로고침
         await loadData();
       } else {
         addToast({
           type: 'error',
-          title: '액션 실패',
+          title: '상태 변경 실패',
           message: result.message
         });
       }
-      
-      return result;
     } catch (error) {
-      console.error('Failed to execute user action:', error);
+      console.error('Failed to update user status:', error);
       addToast({
         type: 'error',
-        title: '액션 실행 실패',
-        message: '사용자 액션 실행에 실패했습니다.'
+        title: '상태 변경 실패',
+        message: '사용자 상태 변경에 실패했습니다.'
       });
     }
   }, [apiKey, addToast, loadData]);
 
-  // 배치 액션 실행
-  const executeBatchAction = useCallback(async (
-    userIds: string[], 
-    action: AdminActionType
+  // 우선순위 변경
+  const updateUserPriority = useCallback(async (
+    user: UnifiedUserView,
+    newPriority: Priority
+  ) => {
+    if (!apiKey) return;
+
+    try {
+      const result = await UserStateService.updatePriority(apiKey, user, newPriority);
+      
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: '우선순위 변경 완료',
+          message: result.message
+        });
+        await loadData();
+      } else {
+        addToast({
+          type: 'error',
+          title: '우선순위 변경 실패',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update user priority:', error);
+      addToast({
+        type: 'error',
+        title: '우선순위 변경 실패',
+        message: '우선순위 변경에 실패했습니다.'
+      });
+    }
+  }, [apiKey, addToast, loadData]);
+
+  // 메시지 발송 상태 토글
+  const toggleMessageStatus = useCallback(async (
+    user: UnifiedUserView,
+    messageType: MessageType,
+    sent: boolean
+  ) => {
+    if (!apiKey) return;
+
+    try {
+      const result = await UserStateService.toggleMessageSent(apiKey, user, messageType, sent);
+      
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: '메시지 상태 변경 완료',
+          message: result.message
+        });
+        await loadData();
+      } else {
+        addToast({
+          type: 'error',
+          title: '메시지 상태 변경 실패',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle message status:', error);
+      addToast({
+        type: 'error',
+        title: '메시지 상태 변경 실패',
+        message: '메시지 상태 변경에 실패했습니다.'
+      });
+    }
+  }, [apiKey, addToast, loadData]);
+
+  // 일괄 상태 변경
+  const batchUpdateStatus = useCallback(async (
+    userIds: string[],
+    newStatus: UserJourneyStatus
   ) => {
     if (!apiKey || userIds.length === 0) return;
 
     try {
-      // 선택된 사용자들에 대해 배치 액션 실행
       const selectedUsers = state.userViews.filter(user => userIds.includes(user.id));
+      const result = await UserStateService.batchUpdateJourneyStatus(apiKey, selectedUsers, newStatus);
       
-      const result = await ActionExecutionService.executeBatchAction(
-        selectedUsers,
-        action,
-        apiKey
-      );
-
       if (result.successful > 0) {
         addToast({
           type: 'success',
-          title: '배치 액션 완료',
+          title: '일괄 상태 변경 완료',
           message: `${result.successful}명 성공, ${result.failed}명 실패`
         });
       } else {
         addToast({
           type: 'error',
-          title: '배치 액션 실패',
-          message: `모든 액션이 실패했습니다. (${result.failed}명)`
+          title: '일괄 상태 변경 실패',
+          message: `모든 변경이 실패했습니다. (${result.failed}명)`
         });
       }
-
-      // 데이터 새로고침
+      
       await loadData();
-
-      // 선택 해제
       setState(prev => ({ ...prev, selectedUsers: new Set() }));
-
+      
     } catch (error) {
-      console.error('Failed to execute batch action:', error);
+      console.error('Failed to batch update status:', error);
       addToast({
         type: 'error',
-        title: '배치 액션 실패',
-        message: '배치 액션 실행에 실패했습니다.'
+        title: '일괄 상태 변경 실패',
+        message: '일괄 상태 변경에 실패했습니다.'
       });
     }
-  }, [apiKey, state.userViews, loadData, addToast]);
+  }, [apiKey, addToast, loadData, state.userViews]);
+
+  // 일괄 우선순위 변경
+  const batchUpdatePriority = useCallback(async (
+    userIds: string[],
+    newPriority: Priority
+  ) => {
+    if (!apiKey || userIds.length === 0) return;
+
+    try {
+      const selectedUsers = state.userViews.filter(user => userIds.includes(user.id));
+      const result = await UserStateService.batchUpdatePriority(apiKey, selectedUsers, newPriority);
+      
+      if (result.successful > 0) {
+        addToast({
+          type: 'success',
+          title: '일괄 우선순위 변경 완료',
+          message: `${result.successful}명 성공, ${result.failed}명 실패`
+        });
+      } else {
+        addToast({
+          type: 'error',
+          title: '일괄 우선순위 변경 실패',
+          message: `모든 변경이 실패했습니다. (${result.failed}명)`
+        });
+      }
+      
+      await loadData();
+      setState(prev => ({ ...prev, selectedUsers: new Set() }));
+      
+    } catch (error) {
+      console.error('Failed to batch update priority:', error);
+      addToast({
+        type: 'error',
+        title: '일괄 우선순위 변경 실패',
+        message: '일괄 우선순위 변경에 실패했습니다.'
+      });
+    }
+  }, [apiKey, addToast, loadData, state.userViews]);
+
+  // 일괄 메시지 상태 변경
+  const batchToggleMessage = useCallback(async (
+    userIds: string[],
+    messageType: MessageType,
+    sent: boolean
+  ) => {
+    if (!apiKey || userIds.length === 0) return;
+
+    try {
+      const selectedUsers = state.userViews.filter(user => userIds.includes(user.id));
+      const result = await UserStateService.batchToggleMessageSent(apiKey, selectedUsers, messageType, sent);
+      
+      if (result.successful > 0) {
+        addToast({
+          type: 'success',
+          title: '일괄 메시지 상태 변경 완료',
+          message: `${result.successful}명 성공, ${result.failed}명 실패`
+        });
+      } else {
+        addToast({
+          type: 'error',
+          title: '일괄 메시지 상태 변경 실패',
+          message: `모든 변경이 실패했습니다. (${result.failed}명)`
+        });
+      }
+      
+      await loadData();
+      setState(prev => ({ ...prev, selectedUsers: new Set() }));
+      
+    } catch (error) {
+      console.error('Failed to batch toggle message:', error);
+      addToast({
+        type: 'error',
+        title: '일괄 메시지 상태 변경 실패',
+        message: '일괄 메시지 상태 변경에 실패했습니다.'
+      });
+    }
+  }, [apiKey, addToast, loadData, state.userViews]);
+
+  // 우선순위 한 단계 올리기
+  const escalateUserPriority = useCallback(async (user: UnifiedUserView) => {
+    if (!apiKey) return;
+
+    try {
+      const result = await UserStateService.escalatePriority(apiKey, user);
+      
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: '우선순위 상향 완료',
+          message: result.message
+        });
+        await loadData();
+      } else {
+        addToast({
+          type: 'error',
+          title: '우선순위 상향 실패',
+          message: result.message
+        });
+      }
+    } catch (error) {
+      console.error('Failed to escalate user priority:', error);
+      addToast({
+        type: 'error',
+        title: '우선순위 상향 실패',
+        message: '우선순위 상향에 실패했습니다.'
+      });
+    }
+  }, [apiKey, addToast, loadData]);
+
 
   // 뷰 변경
   const setActiveView = useCallback((view: AdminWorkflowState['activeView']) => {
@@ -453,10 +608,15 @@ export const useAdminWorkflow = () => {
     ...state,
     filteredUserViews: filteredUserViews(),
 
-    // 액션
+    // 상태 변경 함수들
     loadData,
-    executeUserAction,
-    executeBatchAction,
+    updateUserStatus,
+    updateUserPriority,
+    escalateUserPriority,
+    toggleMessageStatus,
+    batchUpdateStatus,
+    batchUpdatePriority,
+    batchToggleMessage,
     setActiveView,
     updateFilters,
     resetFilters,

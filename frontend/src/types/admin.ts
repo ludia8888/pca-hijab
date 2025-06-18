@@ -160,31 +160,28 @@ export interface InsightsDashboard {
   };
 }
 
-// 액션 컨텍스트 - 관리자가 수행할 수 있는 의미 있는 액션들
-export interface ActionContext {
+// 상태 변경 컨텍스트 - 관리자가 변경할 수 있는 상태들
+export interface StateChangeContext {
   user: UnifiedUserView;
-  availableActions: AdminActionType[];
-  suggestedAction?: AdminActionType;
-  actionReason?: string;
+  availableStatusChanges: UserJourneyStatus[];
+  availablePriorities: Priority[];
+  availableMessageTypes: MessageType[];
+  suggestedStatusChange?: UserJourneyStatus;
+  changeReason?: string;
 }
 
-export type AdminActionType = 
-  | 'send_diagnosis_reminder'      // 진단 독려 메시지
-  | 'mark_offer_sent'             // 추천 제안 DM 발송 완료 표시
-  | 'mark_offer_not_sent'         // 추천 제안 DM 미발송으로 표시
-  | 'start_recommendation_process' // 추천 작업 시작
-  | 'complete_recommendation'      // 추천 완료 처리
-  | 'send_reactivation_message'    // 재활성화 메시지
-  | 'mark_as_inactive'            // 비활성 처리
-  | 'escalate_priority'           // 우선순위 상향
-  | 'add_note'                    // 관리자 노트 추가
-  | 'schedule_followup'           // 팔로우업 스케줄링
-  ;
+// 더 이상 액션이 아닌 단순한 상태 변경과 메시지 타입
+export type MessageType = 'diagnosis_reminder' | 'reactivation' | 'followup';
 
-// 배치 액션 컨텍스트
-export interface BatchActionContext {
+// 노트나 팔로우업 같은 실제 데이터 입력이 필요한 경우만 액션으로 남김
+export type RealActionType = 'add_note' | 'schedule_followup';
+
+// 배치 상태 변경 컨텍스트
+export interface BatchStateChangeContext {
   selectedUsers: UnifiedUserView[];
-  availableBatchActions: AdminActionType[];
+  availableBatchStatusChanges: UserJourneyStatus[];
+  availableBatchPriorities: Priority[];
+  availableBatchMessageTypes: MessageType[];
   estimatedTime: number;
   potentialImpact: string;
 }

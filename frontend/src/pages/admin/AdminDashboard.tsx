@@ -42,10 +42,15 @@ const AdminDashboard: React.FC = () => {
     filteredUserViews,
     error,
 
-    // 액션
+    // 상태 변경 함수들
     loadData,
-    executeUserAction,
-    executeBatchAction,
+    updateUserStatus,
+    updateUserPriority,
+    escalateUserPriority,
+    toggleMessageStatus,
+    batchUpdateStatus,
+    batchUpdatePriority,
+    batchToggleMessage,
     setActiveView,
     updateFilters,
     resetFilters,
@@ -84,36 +89,80 @@ const AdminDashboard: React.FC = () => {
     setActiveView('users');
   }, [updateFilters, resetFilters, setActiveView]);
 
-  const handleUserAction = useCallback(async (user: UnifiedUserView, action: AdminActionType, ...args: any[]): Promise<void> => {
-    trackEvent('admin_user_action', {
-      action,
+  const handleStatusChange = useCallback(async (user: UnifiedUserView, newStatus: UserJourneyStatus): Promise<void> => {
+    trackEvent('admin_status_change', {
       user_id: user.id,
       instagram_id: user.instagramId,
-      journey_status: user.journeyStatus,
-      user_flow_step: 'admin_user_action_executed'
+      old_status: user.journeyStatus,
+      new_status: newStatus,
+      user_flow_step: 'admin_status_changed'
     });
 
-    await executeUserAction(user, action, ...args);
-  }, [executeUserAction]);
+    await updateUserStatus(user, newStatus);
+  }, [updateUserStatus]);
 
-  const handleBatchAction = useCallback(async (action: AdminActionType): Promise<void> => {
+  const handlePriorityChange = useCallback(async (user: UnifiedUserView, newPriority: Priority): Promise<void> => {
+    trackEvent('admin_priority_change', {
+      user_id: user.id,
+      instagram_id: user.instagramId,
+      old_priority: user.priority,
+      new_priority: newPriority,
+      user_flow_step: 'admin_priority_changed'
+    });
+
+    await updateUserPriority(user, newPriority);
+  }, [updateUserPriority]);
+
+  const handleMessageToggle = useCallback(async (user: UnifiedUserView, messageType: 'diagnosis_reminder' | 'reactivation' | 'followup', sent: boolean): Promise<void> => {
+    trackEvent('admin_message_toggle', {
+      user_id: user.id,
+      instagram_id: user.instagramId,
+      message_type: messageType,
+      sent,
+      user_flow_step: 'admin_message_toggled'
+    });
+
+    await toggleMessageStatus(user, messageType, sent);
+  }, [toggleMessageStatus]);
+
+  const handleBatchStatusChange = useCallback(async (newStatus: UserJourneyStatus): Promise<void> => {
     if (selectedUsers.size === 0) {
       addToast({
         type: 'warning',
         title: '사용자 선택 필요',
-        message: '액션을 실행할 사용자를 선택해주세요.'
+        message: '상태를 변경할 사용자를 선택해주세요.'
       });
       return;
     }
 
-    trackEvent('admin_batch_action', {
-      action,
+    trackEvent('admin_batch_status_change', {
+      new_status: newStatus,
       user_count: selectedUsers.size,
-      user_flow_step: 'admin_batch_action_executed'
+      user_flow_step: 'admin_batch_status_changed'
     });
 
-    await executeBatchAction(Array.from(selectedUsers), action);
-  }, [selectedUsers, addToast, executeBatchAction]);
+    await batchUpdateStatus(Array.from(selectedUsers), newStatus);
+  }, [selectedUsers, addToast, batchUpdateStatus]);
+
+  const handleBatchMessageToggle = useCallback(async (messageType: 'diagnosis_reminder' | 'reactivation' | 'followup', sent: boolean): Promise<void> => {
+    if (selectedUsers.size === 0) {
+      addToast({
+        type: 'warning',
+        title: '사용자 선택 필요',
+        message: '메시지 상태를 변경할 사용자를 선택해주세요.'
+      });
+      return;
+    }
+
+    trackEvent('admin_batch_message_toggle', {
+      message_type: messageType,
+      sent,
+      user_count: selectedUsers.size,
+      user_flow_step: 'admin_batch_message_toggled'
+    });
+
+    await batchToggleMessage(Array.from(selectedUsers), messageType, sent);
+  }, [selectedUsers, addToast, batchToggleMessage]);
 
   // Loading state
   if (isLoading && !error) {
@@ -244,7 +293,7 @@ const AdminDashboard: React.FC = () => {
         {activeView === 'today' && todaysWork && (
           <TodaysWork
             todaysWork={todaysWork}
-            onUserAction={handleUserAction}
+            onStatusChange={handleStatusChange}
             onViewAll={handleViewAll}
           />
         )}
@@ -283,42 +332,52 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {/* DM 발송 상태 토글 */}
+                  {/* 상태 변경 버튼들 */}
                   {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'diagnosis_done') && (
                     <Button
                       size="sm"
-                      onClick={() => handleBatchAction('mark_offer_sent')}
+                      onClick={() => handleBatchStatusChange('offer_sent')}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
-                      DM 발송 완료로 표시
+                      DM 발송됨으로 변경
                     </Button>
                   )}
                   
                   {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'offer_sent') && (
                     <Button
                       size="sm"
-                      onClick={() => handleBatchAction('mark_offer_not_sent')}
+                      onClick={() => handleBatchStatusChange('diagnosis_done')}
                       variant="outline"
                       className="border-gray-300"
                     >
-                      DM 미발송으로 변경
+                      진단완료로 되돌리기
+                    </Button>
+                  )}
+                  
+                  {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'recommendation_requested') && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleBatchStatusChange('recommendation_processing')}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      추천 작업 시작
                     </Button>
                   )}
                   
                   <Button
                     size="sm"
-                    onClick={() => handleBatchAction('send_diagnosis_reminder')}
+                    onClick={() => handleBatchMessageToggle('diagnosis_reminder', true)}
                     className="bg-yellow-600 hover:bg-yellow-700 text-white"
                   >
-                    진단 독려 메시지
+                    진단 독려 발송됨
                   </Button>
                   
                   <Button
                     size="sm"
-                    onClick={() => handleBatchAction('add_note')}
-                    variant="ghost"
+                    onClick={() => handleBatchMessageToggle('reactivation', true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
                   >
-                    노트 추가
+                    재활성화 발송됨
                   </Button>
                 </div>
               </div>
@@ -359,7 +418,10 @@ const AdminDashboard: React.FC = () => {
                     )}
                     <UserJourneyCard
                       user={user}
-                      onAction={handleUserAction}
+                      onStatusChange={handleStatusChange}
+                      onPriorityChange={handlePriorityChange}
+                      onMessageToggle={handleMessageToggle}
+                      onEscalatePriority={() => escalateUserPriority(user)}
                       isSelected={selectedUsers.has(user.id)}
                       onSelect={toggleUserSelection}
                       onViewDetail={() => setSelectedUserForDetail(user)}
@@ -378,7 +440,9 @@ const AdminDashboard: React.FC = () => {
           user={selectedUserForDetail}
           isOpen={!!selectedUserForDetail}
           onClose={() => setSelectedUserForDetail(null)}
-          onAction={handleUserAction}
+          onStatusChange={handleStatusChange}
+          onPriorityChange={handlePriorityChange}
+          onMessageToggle={handleMessageToggle}
         />
       )}
       </ErrorBoundary>
