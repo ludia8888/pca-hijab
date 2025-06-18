@@ -8,12 +8,11 @@ import { trackAIAnalysis, trackEvent } from '@/utils/analytics';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { uploadedFile, instagramId, setAnalysisResult } = useAppStore();
+  const { uploadedFile, instagramId, sessionId, uploadedImage, setAnalysisResult } = useAppStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStartTime, setAnalysisStartTime] = useState<number>(0);
 
   // Redirect if no image or instagram ID
   useEffect(() => {
@@ -55,7 +54,6 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Track analysis start
       const startTime = Date.now();
-      setAnalysisStartTime(startTime);
       
       // Call AI API
       const result = await analyzeImage(uploadedFile);

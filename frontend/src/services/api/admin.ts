@@ -35,6 +35,7 @@ interface User {
   completedAt: string | null;
   status: string;
   hasRecommendation: boolean;
+  hasAnalysis: boolean;
 }
 
 interface UsersResponse {
