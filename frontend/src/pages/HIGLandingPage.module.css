@@ -241,7 +241,7 @@
 /* Hero Content */
 .heroContent {
   position: relative;
-  z-index: 20;
+  z-index: 100;
   max-width: 800px;
   margin: 0 auto;
   text-align: center;
@@ -264,6 +264,8 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  position: relative;
+  z-index: 9999;
 }
 
 .titleLine2 {
