@@ -67,6 +67,10 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
+    // Mirror the image horizontally (flip)
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+
     // Draw video frame to canvas
     context.drawImage(video, 0, 0);
 
@@ -132,6 +136,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps): JSX.E
           <video
             ref={videoRef}
             className={`max-w-full max-h-full ${isLoading || error ? 'hidden' : ''}`}
+            style={{ transform: 'scaleX(-1)' }}
             playsInline
             muted
           />
