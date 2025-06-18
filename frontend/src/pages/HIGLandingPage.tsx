@@ -19,8 +19,6 @@ const HIGLandingPage = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [isFormExpanded, setIsFormExpanded] = useState(false);
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const lastScrollY = useRef(0);
 
   // Track landing page entry
   useEffect(() => {
@@ -31,7 +29,7 @@ const HIGLandingPage = (): JSX.Element => {
     });
   }, []);
 
-  // Track scroll progress and direction for floating CTA behavior
+  // Track scroll progress for floating CTA visibility
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY;
@@ -40,12 +38,7 @@ const HIGLandingPage = (): JSX.Element => {
       setScrollProgress(progress);
       setIsScrolled(scrolled > 20);
       
-      // Detect scroll direction for auto-hide behavior
-      const isScrollingDown = scrolled > lastScrollY.current;
-      setIsScrollingDown(isScrollingDown && scrolled > 100);
-      lastScrollY.current = scrolled;
-      
-      // Show sticky CTA when user scrolls past hero section
+      // Show floating CTA when user scrolls past hero section
       const heroHeight = heroRef.current?.offsetHeight || 0;
       setShowStickyCTA(scrolled > heroHeight * 0.8);
     };
@@ -368,9 +361,7 @@ const HIGLandingPage = (): JSX.Element => {
       {/* Floating CTA - Material 3 & Apple HIG Compliant */}
       {showStickyCTA && (
         <div 
-          className={`${styles.floatingCTA} ${
-            isScrollingDown && !isFormExpanded ? styles.floatingCTAHidden : ''
-          }`}
+          className={styles.floatingCTA}
           role="region"
           aria-label="Quick access to color analysis"
         >

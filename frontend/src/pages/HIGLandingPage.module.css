@@ -1294,47 +1294,39 @@
 }
 
 /* Floating CTA - Material 3 & Apple HIG 2025 Standards */
-/* Floating CTA Container - Standard FAB positioning */
+/* Floating CTA Container - Center bottom positioning */
 .floatingCTA {
   position: fixed;
-  bottom: 24px; /* Standard FAB margin */
-  right: 24px; /* Standard FAB margin */
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 50;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateZ(0);
-  will-change: transform, opacity;
+  /* Remove performance-heavy transitions */
+  transition: opacity 0.2s ease;
 }
 
-/* Auto-hide on scroll down */
-.floatingCTAHidden {
-  transform: translateY(100px) scale(0.8);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Standard FAB - 56dp circular button */
+/* Standard FAB - Optimized for performance */
 .floatingFAB {
   width: 56px;
   height: 56px;
-  border-radius: 16px; /* Material 3: Large shape */
+  border-radius: 16px;
   border: none;
   cursor: pointer;
   
-  /* Material 3 elevation level 3 */
+  /* Simplified gradient for better performance */
   background: 
-    linear-gradient(145deg, 
+    linear-gradient(135deg, 
       rgba(147, 51, 234, 0.95) 0%, 
       rgba(236, 72, 153, 0.9) 100%
     );
   
-  /* Material 3 shadow tokens */
+  /* Simplified shadow */
   box-shadow: 
-    0 6px 10px rgba(0, 0, 0, 0.14),
-    0 1px 18px rgba(0, 0, 0, 0.12),
-    0 3px 5px rgba(0, 0, 0, 0.2);
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.1);
   
-  /* Smooth transitions */
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Fast transition */
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   
   /* Center content */
   display: flex;
@@ -1347,32 +1339,24 @@
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
   
-  /* Touch target compliance - minimum 44x44pt */
+  /* Touch target compliance */
   min-width: 44px;
   min-height: 44px;
   
   /* Accessibility */
   outline: none;
   
-  /* Glass effect for Apple platforms */
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* Simplified glass effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .floatingFAB:hover {
-  /* Material 3: Elevation level 4 on hover */
-  box-shadow: 
-    0 8px 12px rgba(0, 0, 0, 0.15),
-    0 4px 20px rgba(0, 0, 0, 0.13),
-    0 6px 6px rgba(0, 0, 0, 0.2);
-  
+  /* Simplified hover effect */
   transform: scale(1.05);
-  
-  background: 
-    linear-gradient(145deg, 
-      rgba(147, 51, 234, 1) 0%, 
-      rgba(236, 72, 153, 0.95) 100%
-    );
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.18),
+    0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
 .floatingFAB:active {
@@ -1407,11 +1391,12 @@
   text-overflow: ellipsis;
 }
 
-/* Extended FAB - Floating form container */
+/* Extended FAB - Center-aligned floating form */
 .extendedFAB {
   position: absolute;
-  bottom: 80px; /* Position above the FAB */
-  right: 0;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
   min-width: 320px;
   max-width: 400px;
   background: 
@@ -1422,39 +1407,37 @@
   
   border-radius: 28px;
   
-  /* Enhanced elevation for floating effect */
+  /* Simplified shadow for better performance */
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.16),
-    0 4px 16px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08);
   
-  /* Glass morphism */
-  backdrop-filter: blur(40px) saturate(180%) brightness(110%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(110%);
+  /* Optimized glass effect */
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   
   border: 1px solid rgba(255, 255, 255, 0.3);
   
-  /* Animation */
-  animation: extendedFABAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Simplified animation */
+  animation: fabSlideUp 0.25s ease-out;
   
   /* Layout */
   padding: 20px;
   
-  /* Typography base */
+  /* Typography */
   font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
   color: rgba(0, 0, 0, 0.87);
   
-  /* Ensure it floats above content */
   z-index: 51;
 }
 
-@keyframes extendedFABAppear {
+@keyframes fabSlideUp {
   from {
-    transform: scale(0.3) translateY(20px);
+    transform: translateX(-50%) translateY(20px);
     opacity: 0;
   }
   to {
-    transform: scale(1) translateY(0);
+    transform: translateX(-50%) translateY(0);
     opacity: 1;
   }
 }
@@ -1608,21 +1591,20 @@
 /* Responsive Design - Mobile First */
 @media (max-width: 768px) {
   .floatingCTA {
-    /* Mobile: Standard margins with safe area */
+    /* Mobile: Center bottom with safe area */
     bottom: calc(20px + env(safe-area-inset-bottom));
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%);
   }
   
   .extendedFAB {
-    /* Mobile: Positioned above FAB, right-aligned */
+    /* Mobile: Center-aligned above FAB */
     position: absolute;
     bottom: 80px;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
     min-width: 280px;
     max-width: calc(100vw - 40px);
-    
-    /* Ensure it doesn't go off-screen */
-    transform: translateX(calc(-100% + 56px));
   }
   
   .extendedFABInputGroup {
@@ -1643,24 +1625,15 @@
 @media (max-width: 480px) {
   .floatingCTA {
     bottom: calc(16px + env(safe-area-inset-bottom));
-    right: 16px;
-  }
-  
-  .floatingFAB {
-    /* Standard size maintained for touch accessibility */
-    width: 56px;
-    height: 56px;
-  }
-  
-  .fabLabel {
-    font-size: 9px;
+    left: 50%;
+    transform: translateX(-50%);
   }
   
   .extendedFAB {
     min-width: 260px;
+    max-width: calc(100vw - 32px);
     padding: 16px;
-    /* Adjust position for smaller screens */
-    transform: translateX(calc(-100% + 56px + 8px));
+    transform: translateX(-50%);
   }
   
   .extendedFABTitle {
@@ -1671,21 +1644,20 @@
 /* Tablet and larger screens */
 @media (min-width: 769px) {
   .floatingCTA {
-    /* Desktop: Standard FAB positioning */
+    /* Desktop: Center bottom positioning */
     bottom: 32px;
-    right: 32px;
+    left: 50%;
+    transform: translateX(-50%);
   }
   
   .extendedFAB {
-    /* Desktop: Position above and to the left of FAB */
+    /* Desktop: Center-aligned above FAB */
     position: absolute;
     bottom: 80px;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
     min-width: 360px;
     max-width: 400px;
-    
-    /* Slide in from the right edge of FAB */
-    transform: translateX(calc(-100% + 56px));
   }
   
   .extendedFABInputGroup {
@@ -1705,17 +1677,17 @@
 @media (max-width: 768px) and (orientation: landscape) {
   .floatingCTA {
     bottom: 16px;
-    right: 16px;
+    left: 50%;
+    transform: translateX(-50%);
   }
   
   .extendedFAB {
-    /* Position above FAB in landscape */
+    /* Center-aligned in landscape */
     bottom: 80px;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
     min-width: 300px;
     padding: 16px;
-    /* Adjust transform for landscape */
-    transform: translateX(calc(-100% + 56px + 4px));
   }
   
   .extendedFABHeader {
@@ -1759,14 +1731,13 @@
 @media (prefers-reduced-motion: reduce) {
   .floatingFAB,
   .extendedFAB,
-  .extendedFABSubmit,
-  .loadingSpinner {
+  .extendedFABSubmit {
     animation: none;
     transition: none;
   }
   
-  .floatingCTAHidden {
-    transition: opacity 0.1s linear;
+  .loadingSpinner {
+    animation: none;
   }
 }
 
