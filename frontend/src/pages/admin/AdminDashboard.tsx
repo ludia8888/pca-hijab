@@ -388,7 +388,7 @@ const AdminDashboard = (): JSX.Element => {
                   <div>
                     <p className="text-sm text-gray-600">진단 완료</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {users.filter(u => u.personalColor).length}명
+                      {users.filter(u => u.hasAnalysis).length}명
                     </p>
                     <p className="text-xs text-gray-500 mt-1">컬러 진단이 완료된 사용자</p>
                   </div>
@@ -455,9 +455,9 @@ const AdminDashboard = (): JSX.Element => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            user.personalColor ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            user.hasAnalysis ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {user.personalColor ? '진단 완료' : '진단 전'}
+                            {user.hasAnalysis ? '진단 완료' : '진단 전'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -17,8 +17,9 @@ const HIGLandingPage = (): JSX.Element => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
 
-  // Track scroll progress for depth effects
+  // Track scroll progress for depth effects and sticky CTA
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY;
@@ -26,6 +27,10 @@ const HIGLandingPage = (): JSX.Element => {
       const progress = Math.min(scrolled / maxScroll, 1);
       setScrollProgress(progress);
       setIsScrolled(scrolled > 20);
+      
+      // Show sticky CTA when user scrolls past hero section
+      const heroHeight = heroRef.current?.offsetHeight || 0;
+      setShowStickyCTA(scrolled > heroHeight * 0.8);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
