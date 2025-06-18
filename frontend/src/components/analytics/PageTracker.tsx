@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { trackPageView } from '@/utils/analytics';
+import { trackPageView, initializeScrollTracking, trackPerformance, debugGA4 } from '@/utils/analytics';
 
 interface PageTrackerProps {
   children: React.ReactNode;
@@ -8,6 +8,8 @@ interface PageTrackerProps {
 
 export const PageTracker = ({ children }: PageTrackerProps): JSX.Element => {
   let location;
+  const scrollCleanupRef = useRef<(() => void) | null>(null);
+  const navigationStartRef = useRef<number>(Date.now());
   
   try {
     location = useLocation();
@@ -19,14 +21,49 @@ export const PageTracker = ({ children }: PageTrackerProps): JSX.Element => {
   useEffect(() => {
     if (!location) return;
     
+    const navigationEnd = Date.now();
+    const navigationDuration = navigationEnd - navigationStartRef.current;
+    
     // Track page view on route change
     const pageName = getPageName(location.pathname);
-    trackPageView(location.pathname);
+    trackPageView(location.pathname, `${pageName} | PCA Hijab`);
+    
+    // Track navigation performance
+    trackPerformance('page_navigation_time', navigationDuration, location.pathname);
     
     // Update document title for better tracking
     if (pageName) {
       document.title = `${pageName} | PCA Hijab`;
     }
+
+    // Initialize scroll tracking for this page
+    if (scrollCleanupRef.current) {
+      scrollCleanupRef.current();
+    }
+    scrollCleanupRef.current = initializeScrollTracking(location.pathname);
+
+    // Track Core Web Vitals if available
+    if ('web-vitals' in window) {
+      // This would work with web-vitals library if installed
+      trackPerformance('page_loaded', Date.now() - navigationStartRef.current, location.pathname);
+    }
+
+    // Debug in development
+    if (import.meta.env.DEV) {
+      console.log(`[PageTracker] Page changed to: ${location.pathname} (${pageName})`);
+      debugGA4();
+    }
+
+    // Update navigation start time for next page
+    navigationStartRef.current = Date.now();
+
+    // Cleanup scroll tracking on unmount
+    return () => {
+      if (scrollCleanupRef.current) {
+        scrollCleanupRef.current();
+        scrollCleanupRef.current = null;
+      }
+    };
   }, [location]);
 
   return <>{children}</>;
@@ -35,20 +72,32 @@ export const PageTracker = ({ children }: PageTrackerProps): JSX.Element => {
 // Helper function to get readable page names
 const getPageName = (pathname: string): string => {
   const pageMap: Record<string, string> = {
-    '/': 'Home',
-    '/upload': 'Upload Photo',
-    '/analyzing': 'Analyzing',
-    '/result': 'Analysis Result',
-    '/recommendation': 'Hijab Preferences',
-    '/completion': 'Completion',
+    '/': 'Landing Page',
+    '/upload': 'Photo Upload',
+    '/analyzing': 'AI Analysis in Progress',
+    '/result': 'Personal Color Result',
+    '/recommendation': 'Hijab Recommendation Request',
+    '/completion': 'Flow Completion',
     '/admin/login': 'Admin Login',
     '/admin/dashboard': 'Admin Dashboard',
+    '/privacy': 'Privacy Policy',
+    '/terms': 'Terms of Service',
+    '/about': 'About PCA Hijab',
+    '/contact': 'Contact Us',
+    '/error': 'Error Page',
+    '/404': 'Page Not Found'
   };
 
   // Handle dynamic routes
   if (pathname.startsWith('/admin/recommendations/')) {
+    return 'Admin Recommendation Detail';
+  }
+  if (pathname.startsWith('/admin/users/')) {
     return 'Admin User Detail';
   }
+  if (pathname.startsWith('/result/')) {
+    return 'Shared Result View';
+  }
 
-  return pageMap[pathname] || 'Unknown Page';
+  return pageMap[pathname] || `Unknown Page (${pathname})`;
 };

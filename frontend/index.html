@@ -1,14 +1,32 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Analytics 4 (gtag.js) - Enhanced setup for SPA -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JXPF7BL260"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-JXPF7BL260');
+      // Enhanced GA4 config for SPA
+      gtag('config', 'G-JXPF7BL260', {
+        send_page_view: false,  // SPA에서는 수동으로 페이지뷰 전송
+        allow_google_signals: true,
+        allow_ad_personalization_signals: true,
+        cookie_flags: 'SameSite=None;Secure',
+        custom_map: {
+          custom_parameter_1: 'personal_color_type',
+          custom_parameter_2: 'user_flow_step'
+        }
+      });
+
+      // Performance measurement
+      gtag('config', 'G-JXPF7BL260', {
+        custom_map: {
+          'custom_parameter_3': 'load_time',
+          'custom_parameter_4': 'interaction_delay'
+        }
+      });
     </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />

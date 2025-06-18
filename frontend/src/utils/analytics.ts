@@ -1,63 +1,150 @@
-// Google Analytics 4 Event Tracking Utilities
+// Google Analytics 4 Event Tracking Utilities - Complete Implementation
 import { VercelAnalytics } from './vercelAnalytics';
 
 declare global {
   interface Window {
     gtag: (
-      command: 'config' | 'event' | 'js' | 'set',
+      command: 'config' | 'event' | 'js' | 'set' | 'consent',
       targetId: string,
       config?: Record<string, any>
     ) => void;
+    dataLayer: any[];
   }
 }
 
-// GA4 Measurement ID
+// GA4 Measurement ID from environment variables
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID || 'G-JXPF7BL260';
 
-// Initialize GA4 - 기본 초기화만 유지
+// Enhanced GA4 initialization
 export const initializeGA4 = (): void => {
   if (typeof window.gtag !== 'undefined') {
-    window.gtag('config', GA_MEASUREMENT_ID);
+    // Set default consent state (GDPR compliance)
+    window.gtag('consent', 'default', {
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied'
+    });
+
+    // Enhanced config
+    window.gtag('config', GA_MEASUREMENT_ID, {
+      send_page_view: false,
+      allow_google_signals: true,
+      cookie_flags: 'SameSite=None;Secure',
+      debug_mode: import.meta.env.DEV
+    });
+
+    // Set custom dimensions
+    window.gtag('set', {
+      custom_map: {
+        'custom_parameter_1': 'personal_color_type',
+        'custom_parameter_2': 'user_flow_step',
+        'custom_parameter_3': 'processing_time_ms',
+        'custom_parameter_4': 'confidence_score'
+      }
+    });
+
+    console.log('[GA4] Initialized with ID:', GA_MEASUREMENT_ID);
   }
 };
 
-// 기본 페이지뷰만 유지
-export const trackPageView = (path: string): void => {
+// Enhanced page view tracking for SPA
+export const trackPageView = (path: string, title?: string): void => {
   if (typeof window.gtag !== 'undefined') {
     window.gtag('event', 'page_view', {
+      page_location: window.location.href,
       page_path: path,
+      page_title: title || document.title,
+      engagement_time_msec: 100
     });
+
+    // Also track with Vercel Analytics
+    if (path === '/') {
+      VercelAnalytics.pageView('landing');
+    }
   }
 };
 
-// 기본 이벤트 트래킹 함수만 유지
+// Core event tracking function with error handling
 export const trackEvent = (
   eventName: string,
   parameters?: Record<string, any>
 ): void => {
-  if (typeof window.gtag !== 'undefined') {
-    window.gtag('event', eventName, parameters);
+  try {
+    if (typeof window.gtag !== 'undefined') {
+      window.gtag('event', eventName, {
+        ...parameters,
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+        screen_resolution: `${screen.width}x${screen.height}`
+      });
+    }
+  } catch (error) {
+    console.warn('[GA4] Event tracking failed:', eventName, error);
   }
 };
 
-// Vercel Analytics만 유지된 트래킹 함수들
+// ============================================================================
+// ENHANCED GA4 + VERCEL ANALYTICS - DUAL TRACKING SYSTEM
+// ============================================================================
+
+// 1. USER JOURNEY TRACKING
 export const trackSessionStart = (instagramId: string): void => {
+  // GA4 tracking
+  trackEvent('session_start', {
+    event_category: 'engagement',
+    instagram_id: instagramId,
+    user_flow_step: 'session_start',
+    session_id: `session_${Date.now()}`,
+    device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+  });
+
+  // Vercel Analytics tracking
   VercelAnalytics.sessionStart(instagramId);
 };
 
-export const trackImageUpload = (success: boolean, fileSize?: number, fileType?: string): void => {
+// 2. IMAGE UPLOAD TRACKING
+export const trackImageUpload = (success: boolean, fileSize?: number, fileType?: string, errorReason?: string): void => {
+  // GA4 tracking
+  trackEvent('image_upload', {
+    event_category: 'user_action',
+    success: success,
+    file_size_mb: fileSize ? Math.round(fileSize / (1024 * 1024) * 100) / 100 : undefined,
+    file_type: fileType,
+    error_reason: success ? undefined : errorReason,
+    user_flow_step: 'image_upload',
+    upload_method: 'drag_drop_or_click'
+  });
+
+  // Vercel Analytics tracking
   if (success && fileSize && fileType) {
     VercelAnalytics.imageUpload(fileSize, fileType);
   }
 };
 
+// 3. AI ANALYSIS TRACKING
 export const trackAIAnalysis = (result: {
   personalColorType: string;
   season: string;
   tone: string;
   confidence: number;
   processingTime?: number;
+  analysisId?: string;
 }): void => {
+  // GA4 tracking with enhanced metrics
+  trackEvent('ai_analysis_complete', {
+    event_category: 'conversion',
+    personal_color_type: result.personalColorType,
+    season: result.season,
+    tone: result.tone,
+    confidence_score: Math.round(result.confidence * 100),
+    processing_time_ms: result.processingTime || 0,
+    analysis_id: result.analysisId,
+    user_flow_step: 'analysis_complete',
+    analysis_quality: result.confidence > 0.8 ? 'high' : result.confidence > 0.6 ? 'medium' : 'low'
+  });
+
+  // Vercel Analytics tracking
   VercelAnalytics.analysisComplete({
     personalColorType: result.personalColorType,
     season: result.season,
@@ -67,94 +154,163 @@ export const trackAIAnalysis = (result: {
   });
 };
 
-export const trackRecommendationRequest = (instagramId: string, personalColorType: string): void => {
-  VercelAnalytics.recommendationRequest(instagramId, personalColorType);
-};
-
-export const trackResultDownload = (personalColor: string): void => {
-  VercelAnalytics.resultShare('download');
-};
-
-// GA4 커스텀 이벤트들은 주석처리
-/*
-// Track session start
-export const trackSessionStart = (instagramId: string): void => {
-  trackEvent('session_start', {
-    event_category: 'engagement',
-    instagram_id: instagramId,
-  });
-};
-
-// Track image upload
-export const trackImageUpload = (success: boolean, fileSize?: number, fileType?: string): void => {
-  trackEvent('image_upload', {
-    event_category: 'user_action',
-    success: success,
-  });
-};
-
-// Track AI analysis
-export const trackAIAnalysis = (result: {
-  personalColorType: string;
-  season: string;
-  tone: string;
-  confidence: number;
-  processingTime?: number;
-}): void => {
-  trackEvent('ai_analysis_complete', {
-    event_category: 'conversion',
-    personal_color: result.personalColorType,
-    confidence: result.confidence,
-  });
-};
-
-// Track preference submission
+// 4. PREFERENCE SUBMISSION TRACKING
 export const trackPreferenceSubmit = (preferences: {
   style?: string[];
   priceRange?: string;
   material?: string[];
   occasion?: string[];
+  fitStyle?: string[];
 }): void => {
   trackEvent('preference_submit', {
     event_category: 'user_action',
     style_count: preferences.style?.length || 0,
+    fit_style_count: preferences.fitStyle?.length || 0,
     price_range: preferences.priceRange,
     material_count: preferences.material?.length || 0,
     occasion_count: preferences.occasion?.length || 0,
+    user_flow_step: 'preferences_submit',
+    total_selections: (preferences.style?.length || 0) + 
+                     (preferences.fitStyle?.length || 0) + 
+                     (preferences.material?.length || 0) + 
+                     (preferences.occasion?.length || 0)
   });
 };
 
-// Track recommendation request
+// 5. RECOMMENDATION REQUEST TRACKING
 export const trackRecommendationRequest = (instagramId: string, personalColorType: string): void => {
+  // GA4 tracking
   trackEvent('recommendation_request', {
     event_category: 'conversion',
     instagram_id: instagramId,
     personal_color_type: personalColorType,
+    user_flow_step: 'recommendation_request',
+    value: 1  // Conversion value
   });
+
+  // Vercel Analytics tracking
+  VercelAnalytics.recommendationRequest(instagramId, personalColorType);
 };
 
-// Track result download
-export const trackResultDownload = (personalColor: string): void => {
+// 6. RESULT DOWNLOAD/SHARE TRACKING
+export const trackResultDownload = (personalColor: string, downloadType: 'image' | 'pdf' = 'image'): void => {
+  // GA4 tracking
   trackEvent('result_download', {
-    event_category: 'user_action',
+    event_category: 'engagement',
     personal_color: personalColor,
+    download_type: downloadType,
+    user_flow_step: 'result_download',
+    value: 1
   });
+
+  // Vercel Analytics tracking
+  VercelAnalytics.resultShare('download');
 };
 
-// Track flow completion
-export const trackFlowCompletion = (duration: number): void => {
+// 7. FLOW COMPLETION TRACKING
+export const trackFlowCompletion = (duration: number, completionType: 'full_flow' | 'analysis_only' = 'full_flow'): void => {
   trackEvent('flow_complete', {
     event_category: 'conversion',
-    value: 1,
+    completion_type: completionType,
     duration_seconds: Math.round(duration / 1000),
+    user_flow_step: 'flow_complete',
+    value: completionType === 'full_flow' ? 2 : 1
   });
 };
 
-// Track drop-off
-export const trackDropOff = (step: string): void => {
+// 8. DROP-OFF TRACKING
+export const trackDropOff = (step: string, reason?: string): void => {
   trackEvent('drop_off', {
-    event_category: 'user_action',
-    step: step,
+    event_category: 'user_behavior',
+    drop_off_step: step,
+    drop_off_reason: reason,
+    user_flow_step: step
   });
 };
-*/
+
+// 9. ERROR TRACKING
+export const trackError = (errorType: string, errorMessage: string, errorStep: string): void => {
+  trackEvent('error_encountered', {
+    event_category: 'error',
+    error_type: errorType,
+    error_message: errorMessage,
+    error_step: errorStep,
+    user_flow_step: errorStep
+  });
+};
+
+// 10. PERFORMANCE TRACKING
+export const trackPerformance = (metric: string, value: number, step: string): void => {
+  trackEvent('performance_metric', {
+    event_category: 'performance',
+    metric_name: metric,
+    metric_value: Math.round(value),
+    performance_step: step,
+    user_flow_step: step
+  });
+};
+
+// 11. USER ENGAGEMENT TRACKING
+export const trackEngagement = (action: string, target: string, duration?: number): void => {
+  trackEvent('user_engagement', {
+    event_category: 'engagement',
+    engagement_action: action,
+    engagement_target: target,
+    engagement_duration: duration ? Math.round(duration) : undefined
+  });
+};
+
+// 12. SCROLL DEPTH TRACKING
+export const trackScrollDepth = (depth: number, page: string): void => {
+  trackEvent('scroll_depth', {
+    event_category: 'engagement',
+    scroll_depth_percent: depth,
+    page_path: page,
+    user_flow_step: 'content_engagement'
+  });
+};
+
+// ============================================================================
+// SCROLL DEPTH TRACKING UTILITY
+// ============================================================================
+
+let scrollDepthMarkers: Set<number> = new Set();
+
+export const initializeScrollTracking = (pagePath: string): void => {
+  scrollDepthMarkers.clear();
+  
+  const handleScroll = (): void => {
+    const scrollPercent = Math.round(
+      ((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100
+    );
+
+    // Track at 25%, 50%, 75%, 90% marks
+    const markers = [25, 50, 75, 90];
+    markers.forEach(marker => {
+      if (scrollPercent >= marker && !scrollDepthMarkers.has(marker)) {
+        scrollDepthMarkers.add(marker);
+        trackScrollDepth(marker, pagePath);
+      }
+    });
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  
+  // Cleanup function
+  return () => {
+    window.removeEventListener('scroll', handleScroll);
+    scrollDepthMarkers.clear();
+  };
+};
+
+// ============================================================================
+// DEBUG UTILITIES
+// ============================================================================
+
+export const debugGA4 = (): void => {
+  if (typeof window.gtag !== 'undefined') {
+    console.log('[GA4 Debug] DataLayer:', window.dataLayer);
+    console.log('[GA4 Debug] Measurement ID:', GA_MEASUREMENT_ID);
+    console.log('[GA4 Debug] Environment:', import.meta.env.DEV ? 'Development' : 'Production');
+  }
+};

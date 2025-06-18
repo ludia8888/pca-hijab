@@ -59,10 +59,14 @@ router.patch('/:sessionId', async (req, res, next) => {
     }
     
     // Update session with new data
-    const updatedSession = await db.updateSession(sessionId, {
+    const updatedSession = await db.updateSession?.(sessionId, {
       uploadedImageUrl,
       analysisResult
     });
+    
+    if (!updatedSession) {
+      throw new AppError(500, 'Failed to update session');
+    }
     
     console.info(`Session ${sessionId} updated with analysis result`);
     

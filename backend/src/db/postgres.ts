@@ -58,7 +58,7 @@ export class PostgresDatabase {
 
   async getSession(sessionId: string): Promise<Session | undefined> {
     const query = `
-      SELECT id, instagram_id, created_at
+      SELECT id, instagram_id, uploaded_image_url, analysis_result, created_at, updated_at
       FROM sessions
       WHERE id = $1
     `;
@@ -69,10 +69,115 @@ export class PostgresDatabase {
       return undefined;
     }
     
+    const row = result.rows[0];
+    let analysisResult: PersonalColorResult | undefined;
+    
+    if (row.analysis_result) {
+      if (typeof row.analysis_result === 'string') {
+        analysisResult = JSON.parse(row.analysis_result);
+      } else {
+        analysisResult = row.analysis_result as PersonalColorResult;
+      }
+    }
+    
     return {
-      id: result.rows[0].id,
-      instagramId: result.rows[0].instagram_id,
-      createdAt: result.rows[0].created_at,
+      id: row.id,
+      instagramId: row.instagram_id,
+      uploadedImageUrl: row.uploaded_image_url,
+      analysisResult,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  async getAllSessions(): Promise<Session[]> {
+    const query = `
+      SELECT id, instagram_id, uploaded_image_url, analysis_result, created_at, updated_at
+      FROM sessions
+      ORDER BY created_at DESC
+    `;
+    
+    const result = await pool.query(query);
+    
+    return result.rows.map(row => {
+      let analysisResult: PersonalColorResult | undefined;
+      
+      if (row.analysis_result) {
+        if (typeof row.analysis_result === 'string') {
+          analysisResult = JSON.parse(row.analysis_result);
+        } else {
+          analysisResult = row.analysis_result as PersonalColorResult;
+        }
+      }
+      
+      return {
+        id: row.id,
+        instagramId: row.instagram_id,
+        uploadedImageUrl: row.uploaded_image_url,
+        analysisResult,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    });
+  }
+
+  async updateSession(
+    sessionId: string, 
+    updateData: { uploadedImageUrl?: string; analysisResult?: PersonalColorResult }
+  ): Promise<Session | undefined> {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    let paramIndex = 1;
+    
+    if (updateData.uploadedImageUrl !== undefined) {
+      fields.push(`uploaded_image_url = $${paramIndex++}`);
+      values.push(updateData.uploadedImageUrl);
+    }
+    
+    if (updateData.analysisResult !== undefined) {
+      fields.push(`analysis_result = $${paramIndex++}`);
+      values.push(JSON.stringify(updateData.analysisResult));
+    }
+    
+    if (fields.length === 0) {
+      // No fields to update, return the existing session
+      return this.getSession(sessionId);
+    }
+    
+    fields.push(`updated_at = NOW()`);
+    values.push(sessionId);
+    
+    const query = `
+      UPDATE sessions
+      SET ${fields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, instagram_id, uploaded_image_url, analysis_result, created_at, updated_at
+    `;
+    
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    let analysisResult: PersonalColorResult | undefined;
+    
+    if (row.analysis_result) {
+      if (typeof row.analysis_result === 'string') {
+        analysisResult = JSON.parse(row.analysis_result);
+      } else {
+        analysisResult = row.analysis_result as PersonalColorResult;
+      }
+    }
+    
+    return {
+      id: row.id,
+      instagramId: row.instagram_id,
+      uploadedImageUrl: row.uploaded_image_url,
+      analysisResult,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
     };
   }
 
@@ -102,7 +207,7 @@ export class PostgresDatabase {
       await client.query('COMMIT');
       
       // Return true if a session was deleted, false otherwise
-      return result.rowCount > 0;
+      return (result.rowCount ?? 0) > 0;
     } catch (error) {
       // Rollback transaction on error
       await client.query('ROLLBACK');
@@ -122,8 +227,8 @@ export class PostgresDatabase {
     
     const query = `
       INSERT INTO recommendations 
-      (id, session_id, instagram_id, personal_color_result, user_preferences, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      (id, session_id, instagram_id, personal_color_result, user_preferences, uploaded_image_url, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
     
@@ -133,6 +238,7 @@ export class PostgresDatabase {
       data.instagramId,
       JSON.stringify(data.personalColorResult),
       JSON.stringify(data.userPreferences),
+      data.uploadedImageUrl || null,
       data.status || 'pending',
     ]);
     
@@ -202,6 +308,7 @@ export class PostgresDatabase {
     instagram_id: string;
     personal_color_result: unknown;
     user_preferences: unknown;
+    uploaded_image_url?: string;
     status: string;
     created_at: Date;
     updated_at: Date;
@@ -228,6 +335,7 @@ export class PostgresDatabase {
       instagramId: row.instagram_id,
       personalColorResult,
       userPreferences,
+      uploadedImageUrl: row.uploaded_image_url,
       status: row.status as Recommendation['status'],
       createdAt: row.created_at,
       updatedAt: row.updated_at,

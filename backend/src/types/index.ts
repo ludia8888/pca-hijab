@@ -10,6 +10,7 @@ export interface Session {
 export interface PersonalColorResult {
   personal_color: string;
   personal_color_en: 'spring' | 'summer' | 'autumn' | 'winter';
+  personal_color_ko?: string;
   tone: string;
   tone_en: 'warm' | 'cool';
   details: {
@@ -49,6 +50,7 @@ export interface Recommendation {
   instagramId: string;
   personalColorResult: PersonalColorResult;
   userPreferences: UserPreferences;
+  uploadedImageUrl?: string;
   status: 'pending' | 'processing' | 'completed';
   createdAt: Date;
   updatedAt: Date;
