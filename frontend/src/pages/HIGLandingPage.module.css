@@ -1397,39 +1397,15 @@
   text-overflow: ellipsis;
 }
 
-/* Modal Backdrop */
-.modalBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 50;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 /* Extended FAB - Minimal Glassmorphism Modal */
 .extendedFAB {
   position: fixed;
-  /* Center positioning with constraints */
-  top: 50%;
+  /* Position above keyboard on mobile */
+  bottom: calc(80px + env(keyboard-inset-height, 0px));
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   width: calc(100vw - 32px);
   max-width: 360px;
-  
-  /* Maximum height to prevent overlap with header */
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
   
   /* Glassmorphism effect */
   background: rgba(255, 255, 255, 0.08);
@@ -1459,17 +1435,17 @@
   
   z-index: 51;
   
-  /* Handle virtual keyboard with transform */
-  transition: transform 0.3s ease-out;
+  /* Handle virtual keyboard */
+  transition: bottom 0.3s ease-out;
 }
 
 @keyframes slideUpMinimal {
   from {
-    transform: translate(-50%, -45%);
+    transform: translateX(-50%) translateY(20px);
     opacity: 0;
   }
   to {
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%) translateY(0);
     opacity: 1;
   }
 }
@@ -1661,12 +1637,16 @@
   }
   
   .extendedFAB {
-    /* Mobile: Keep centered positioning */
+    /* Mobile: Fixed positioning with keyboard awareness */
+    position: fixed;
+    bottom: calc(80px + env(keyboard-inset-height, 0px));
+    left: 50%;
+    transform: translateX(-50%);
     width: calc(100vw - 32px);
-    max-width: 340px;
+    max-width: 360px;
     
-    /* Adjust max height for mobile screens */
-    max-height: calc(100vh - 120px);
+    /* Adjust when keyboard is shown */
+    transition: bottom 0.3s ease-out;
   }
   
   .extendedFABInputGroup {
@@ -1692,8 +1672,10 @@
   }
   
   .extendedFAB {
+    min-width: 260px;
+    max-width: calc(100vw - 32px);
     padding: 16px;
-    max-height: calc(100vh - 100px);
+    transform: translateX(-50%);
   }
   
   .extendedFABTitle {
@@ -1710,7 +1692,15 @@
     transform: translateX(-50%);
   }
   
-  /* Desktop: Keep default centered positioning */
+  .extendedFAB {
+    /* Desktop: Fixed positioning for consistency */
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 360px;
+    max-width: 400px;
+  }
   
   .extendedFABInputGroup {
     /* Desktop: Horizontal layout */
