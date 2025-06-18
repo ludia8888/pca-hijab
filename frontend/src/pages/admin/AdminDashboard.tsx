@@ -8,7 +8,7 @@ import {
   BarChart3,
   Users,
   LogOut,
-  Settings,
+  RefreshCw,
   Bell,
   Search,
   Filter
@@ -192,8 +192,9 @@ const AdminDashboard: React.FC = () => {
               size="sm"
               onClick={loadData}
               disabled={isLoading}
+              className={isLoading ? 'animate-spin' : ''}
             >
-              <Settings className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4" />
             </Button>
             
             {/* 로그아웃 */}
