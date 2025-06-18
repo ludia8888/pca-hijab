@@ -44,6 +44,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
       case 'just_started': return 10;
       case 'diagnosis_pending': return 25;
       case 'diagnosis_done': return 50;
+      case 'offer_sent': return 60;
       case 'recommendation_requested': return 70;
       case 'recommendation_processing': return 85;
       case 'recommendation_completed': return 100;
@@ -85,6 +86,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
       'just_started': { icon: User, label: '방금 가입', color: 'text-gray-600' },
       'diagnosis_pending': { icon: Clock, label: '진단 대기', color: 'text-yellow-600' },
       'diagnosis_done': { icon: CheckCircle, label: '진단 완료', color: 'text-green-600' },
+      'offer_sent': { icon: Send, label: 'DM 발송됨', color: 'text-blue-600' },
       'recommendation_requested': { icon: Target, label: '추천 요청', color: 'text-blue-600' },
       'recommendation_processing': { icon: Sparkles, label: '추천 작업 중', color: 'text-purple-600' },
       'recommendation_completed': { icon: CheckCircle, label: '추천 완료', color: 'text-green-600' },
@@ -102,10 +104,15 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
         icon: MessageCircle, 
         color: 'text-yellow-600 hover:text-yellow-700' 
       },
-      'send_recommendation_offer': { 
-        label: '추천 제안', 
-        icon: ShirtIcon, 
+      'mark_offer_sent': { 
+        label: 'DM 발송 완료', 
+        icon: CheckCircle, 
         color: 'text-blue-600 hover:text-blue-700' 
+      },
+      'mark_offer_not_sent': { 
+        label: 'DM 미발송', 
+        icon: X, 
+        color: 'text-gray-600 hover:text-gray-700' 
       },
       'start_recommendation_process': { 
         label: '추천 시작', 
@@ -180,7 +187,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
               </span>
             )}
             
-            {/* 추천 액션 */}
+            {/* 주요 액션 버튼 */}
             {user.journeyStatus === 'recommendation_requested' && (
               <Button
                 size="sm"
@@ -190,6 +197,24 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
                 <Sparkles className="w-3 h-3 mr-1" />
                 추천 시작
               </Button>
+            )}
+            
+            {user.journeyStatus === 'diagnosis_done' && (
+              <Button
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => onAction(user, 'mark_offer_sent')}
+              >
+                <Send className="w-3 h-3 mr-1" />
+                DM 발송
+              </Button>
+            )}
+            
+            {user.journeyStatus === 'offer_sent' && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full flex items-center gap-1">
+                <Send className="w-3 h-3" />
+                DM 발송됨
+              </span>
             )}
           </div>
         </div>
@@ -334,6 +359,39 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
 
         {/* 액션 버튼들 */}
         <div className="flex flex-wrap gap-2">
+          {/* DM 발송 상태 표시 및 토글 */}
+          {user.journeyStatus === 'diagnosis_done' && (
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+              onClick={() => onAction(user, 'mark_offer_sent')}
+            >
+              <Send className="w-4 h-4 mr-1" />
+              DM 발송 완료로 표시
+            </Button>
+          )}
+          
+          {user.journeyStatus === 'offer_sent' && (
+            <div className="w-full space-y-2">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Send className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-700">추천 제안 DM 발송됨</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onAction(user, 'mark_offer_not_sent')}
+                    className="text-gray-600 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* 주요 액션 */}
           {user.journeyStatus === 'recommendation_requested' && (
             <Button

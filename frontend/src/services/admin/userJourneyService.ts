@@ -253,10 +253,18 @@ export class UserJourneyService {
         break;
 
       case 'diagnosis_done':
-        availableActions.push('send_recommendation_offer', 'add_note');
+        availableActions.push('mark_offer_sent', 'add_note');
         if (user.insights.isAtRisk) {
-          suggestedAction = 'send_recommendation_offer';
-          actionReason = '진단만 받고 추천 요청을 안 했습니다. 마케팅 기회입니다.';
+          suggestedAction = 'mark_offer_sent';
+          actionReason = '진단만 받고 추천 요청을 안 했습니다. DM을 발송하고 상태를 변경하세요.';
+        }
+        break;
+
+      case 'offer_sent':
+        availableActions.push('mark_offer_not_sent', 'send_reactivation_message', 'add_note');
+        if (user.insights.daysSinceLastActivity > 7) {
+          suggestedAction = 'send_reactivation_message';
+          actionReason = '추천 제안 후 반응이 없습니다. 재활성화가 필요합니다.';
         }
         break;
 

@@ -5,6 +5,7 @@ export type UserJourneyStatus =
   | 'just_started'      // 방금 가입, 아직 진단 안함
   | 'diagnosis_pending' // 이미지 업로드했지만 진단 대기 중
   | 'diagnosis_done'    // 진단 완료, 추천 요청 안함
+  | 'offer_sent'        // 추천 제안 DM 발송됨
   | 'recommendation_requested' // 추천 요청함
   | 'recommendation_processing' // 추천 작업 중
   | 'recommendation_completed'  // 추천 완료 (DM 발송됨)
@@ -169,7 +170,8 @@ export interface ActionContext {
 
 export type AdminActionType = 
   | 'send_diagnosis_reminder'      // 진단 독려 메시지
-  | 'send_recommendation_offer'    // 추천 서비스 제안
+  | 'mark_offer_sent'             // 추천 제안 DM 발송 완료 표시
+  | 'mark_offer_not_sent'         // 추천 제안 DM 미발송으로 표시
   | 'start_recommendation_process' // 추천 작업 시작
   | 'complete_recommendation'      // 추천 완료 처리
   | 'send_reactivation_message'    // 재활성화 메시지

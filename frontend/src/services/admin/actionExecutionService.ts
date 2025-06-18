@@ -56,31 +56,33 @@ const actionExecutors: Record<AdminActionType, ActionExecutor> = {
       `@${user.instagramId}님에게 퍼스널 컬러 진단을 독려하는 메시지를 보내시겠습니까?`
   },
 
-  send_recommendation_offer: {
-    type: 'send_recommendation_offer',
+  mark_offer_sent: {
+    type: 'mark_offer_sent',
     execute: async (user, apiKey) => {
       try {
+        // TODO: 백엔드 API 호출하여 상태를 offer_sent로 변경
         await AdminAPI.logAction(apiKey, {
           userId: user.id,
-          actionType: 'send_recommendation_offer',
-          description: `@${user.instagramId}에게 히잡 추천 서비스 제안`,
+          actionType: 'mark_offer_sent',
+          description: `@${user.instagramId}에게 히잡 추천 서비스 DM 발송 완료 표시`,
           metadata: {
             personalColor: user.personalColor?.season,
             daysSinceDiagnosis: user.timeline.diagnosisAt ? 
-              Math.floor((Date.now() - new Date(user.timeline.diagnosisAt).getTime()) / (1000 * 60 * 60 * 24)) : 0
+              Math.floor((Date.now() - new Date(user.timeline.diagnosisAt).getTime()) / (1000 * 60 * 60 * 24)) : 0,
+            markedAt: new Date()
           }
         });
 
         return {
           success: true,
-          message: '히잡 추천 서비스 제안 메시지가 발송되었습니다.',
-          data: { estimatedResponseTime: '24-48시간' },
+          message: `@${user.instagramId}님을 DM 발송 완료 상태로 변경했습니다.`,
+          data: { newStatus: 'offer_sent' },
           timestamp: new Date()
         };
       } catch (error) {
         return {
           success: false,
-          message: '제안 메시지 발송에 실패했습니다.',
+          message: 'DM 발송 상태 변경에 실패했습니다.',
           error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         };
@@ -88,7 +90,42 @@ const actionExecutors: Record<AdminActionType, ActionExecutor> = {
     },
     validate: (user) => user.journeyStatus === 'diagnosis_done' && !!user.personalColor,
     confirmationMessage: (user) => 
-      `@${user.instagramId}님에게 맞춤 히잡 추천 서비스를 제안하시겠습니까?`
+      `@${user.instagramId}님에게 DM을 발송하셨나요? 발송 완료로 표시하시겠습니까?`
+  },
+
+  mark_offer_not_sent: {
+    type: 'mark_offer_not_sent',
+    execute: async (user, apiKey) => {
+      try {
+        // TODO: 백엔드 API 호출하여 상태를 diagnosis_done으로 되돌림
+        await AdminAPI.logAction(apiKey, {
+          userId: user.id,
+          actionType: 'mark_offer_not_sent',
+          description: `@${user.instagramId}의 DM 발송 상태를 미발송으로 변경`,
+          metadata: {
+            personalColor: user.personalColor?.season,
+            revertedAt: new Date()
+          }
+        });
+
+        return {
+          success: true,
+          message: `@${user.instagramId}님을 DM 미발송 상태로 변경했습니다.`,
+          data: { newStatus: 'diagnosis_done' },
+          timestamp: new Date()
+        };
+      } catch (error) {
+        return {
+          success: false,
+          message: 'DM 미발송 상태 변경에 실패했습니다.',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date()
+        };
+      }
+    },
+    validate: (user) => user.journeyStatus === 'offer_sent',
+    confirmationMessage: (user) => 
+      `@${user.instagramId}님의 DM 발송 상태를 취소하시겠습니까?`
   },
 
   start_recommendation_process: {

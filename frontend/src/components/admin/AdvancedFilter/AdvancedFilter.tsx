@@ -105,6 +105,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
     { value: 'just_started', label: '방금 가입', icon: <User className="w-4 h-4" />, color: 'text-gray-600' },
     { value: 'diagnosis_pending', label: '진단 대기', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-600' },
     { value: 'diagnosis_done', label: '진단 완료', icon: <Sparkles className="w-4 h-4" />, color: 'text-green-600' },
+    { value: 'offer_sent', label: 'DM 발송됨', icon: <Send className="w-4 h-4" />, color: 'text-blue-600' },
     { value: 'recommendation_requested', label: '추천 요청', icon: <Target className="w-4 h-4" />, color: 'text-blue-600' },
     { value: 'recommendation_processing', label: '추천 작업 중', icon: <Sparkles className="w-4 h-4" />, color: 'text-purple-600' },
     { value: 'recommendation_completed', label: '추천 완료', icon: <Target className="w-4 h-4" />, color: 'text-green-600' },

@@ -282,20 +282,36 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleBatchAction('send_recommendation_offer')}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    추천 제안 발송
-                  </Button>
+                  {/* DM 발송 상태 토글 */}
+                  {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'diagnosis_done') && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleBatchAction('mark_offer_sent')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      DM 발송 완료로 표시
+                    </Button>
+                  )}
+                  
+                  {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'offer_sent') && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleBatchAction('mark_offer_not_sent')}
+                      variant="outline"
+                      className="border-gray-300"
+                    >
+                      DM 미발송으로 변경
+                    </Button>
+                  )}
+                  
                   <Button
                     size="sm"
                     onClick={() => handleBatchAction('send_diagnosis_reminder')}
-                    className="bg-yellow-600 hover:bg-yellow-700"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white"
                   >
                     진단 독려 메시지
                   </Button>
+                  
                   <Button
                     size="sm"
                     onClick={() => handleBatchAction('add_note')}
