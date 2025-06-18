@@ -1292,3 +1292,195 @@
     color: rgba(0, 0, 0, 0.4);
   }
 }
+
+/* Sticky CTA - Fixed bottom when scrolling */
+.stickyCTA {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 1rem 1.5rem 1.5rem;
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(20, 20, 30, 0.9) 100%
+    );
+  backdrop-filter: blur(30px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 -8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateZ(0); /* GPU acceleration */
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.stickyContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.stickyText {
+  flex: 1;
+  min-width: 0;
+}
+
+.stickyText h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.stickyText p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.stickyForm {
+  flex: none;
+  min-width: 300px;
+}
+
+.stickyInputGroup {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.stickyInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.stickyInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stickyInput:focus {
+  outline: none;
+  border-color: rgba(147, 51, 234, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 0 0 3px rgba(147, 51, 234, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stickyButton {
+  flex: none;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, 
+    #9333ea 0%, 
+    #ec4899 100%
+  );
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 14px rgba(147, 51, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.stickyButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 20px rgba(147, 51, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.stickyButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.stickyButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.stickyError {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.75rem;
+  backdrop-filter: blur(10px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .stickyCTA {
+    padding: 1rem;
+  }
+  
+  .stickyContent {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .stickyText {
+    text-align: center;
+  }
+  
+  .stickyText h3 {
+    font-size: 1rem;
+  }
+  
+  .stickyText p {
+    font-size: 0.8rem;
+  }
+  
+  .stickyForm {
+    min-width: auto;
+  }
+  
+  .stickyInputGroup {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .stickyInput,
+  .stickyButton {
+    width: 100%;
+  }
+}

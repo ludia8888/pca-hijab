@@ -302,6 +302,40 @@ const HIGLandingPage = (): JSX.Element => {
         </div>
       </section>
 
+      {/* Sticky CTA - Appears when scrolling past hero */}
+      {showStickyCTA && (
+        <div className={styles.stickyCTA}>
+          <div className={styles.stickyContent}>
+            <div className={styles.stickyText}>
+              <h3>Ready to discover your colors?</h3>
+              <p>Start your personal color analysis now</p>
+            </div>
+            <form onSubmit={handleSubmit} className={styles.stickyForm}>
+              <div className={styles.stickyInputGroup}>
+                <input
+                  type="text"
+                  value={instagramId}
+                  onChange={(e) => handleIdChange(e.target.value)}
+                  placeholder="Instagram ID"
+                  className={styles.stickyInput}
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={!isValid || isLoading}
+                  className={styles.stickyButton}
+                >
+                  {isLoading ? 'Starting...' : 'Begin Analysis'}
+                </button>
+              </div>
+              {error && (
+                <p className={styles.stickyError}>{error}</p>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Footer - Minimal presence */}
       <footer className={styles.footer}>
         <p className={styles.footerText}>
