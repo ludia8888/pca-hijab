@@ -6,3 +6,5 @@ export * from './DemoNotice';
 export * from './PrivacyNotice';
 export * from './PrivacyPopup';
 export * from './PrivacyAssurance';
+export * from './Toast';
+export * from './ConfirmModal';

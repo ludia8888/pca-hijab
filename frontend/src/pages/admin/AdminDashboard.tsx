@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '@/store/useAdminStore';
 import { AdminAPI } from '@/services/api/admin';
-import { Card, Button, LoadingSpinner } from '@/components/ui';
+import { Card, Button, LoadingSpinner, useToast, ConfirmModal } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { trackEvent, trackError, trackEngagement } from '@/utils/analytics';
 import { 
@@ -59,6 +59,16 @@ const AdminDashboard = (): JSX.Element => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<'none' | 'delete' | 'process' | 'complete'>('none');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    type: 'deleteUser' | 'bulkDelete' | 'statusUpdate' | null;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, type: null, title: '', message: '', onConfirm: () => {} });
+  
+  const { addToast } = useToast();
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!apiKey) return;
@@ -116,6 +126,12 @@ const AdminDashboard = (): JSX.Element => {
       const usersResponse = await AdminAPI.getUsers(apiKey);
       setUsers(usersResponse.data);
       setUserToDelete(null);
+      
+      addToast({
+        type: 'success',
+        title: '삭제 완료',
+        message: `@${user.instagramId} 사용자가 삭제되었습니다.`
+      });
     } catch (error) {
       console.error('Failed to delete user:', error);
       
@@ -128,7 +144,11 @@ const AdminDashboard = (): JSX.Element => {
         user_flow_step: 'admin_user_deletion_failed'
       });
       
-      alert('사용자 삭제에 실패했습니다.');
+      addToast({
+        type: 'error',
+        title: '삭제 실패',
+        message: '사용자 삭제에 실패했습니다. 다시 시도해주세요.'
+      });
     }
   };
 
@@ -158,6 +178,12 @@ const AdminDashboard = (): JSX.Element => {
       
       // Refresh recommendations list
       loadData();
+      
+      addToast({
+        type: 'success',
+        title: '상태 업데이트 완료',
+        message: `추천 상태가 ${newStatus === 'processing' ? '처리 중' : '완료'}으로 변경되었습니다.`
+      });
     } catch (error) {
       console.error('Failed to update status:', error);
       
@@ -171,7 +197,11 @@ const AdminDashboard = (): JSX.Element => {
         user_flow_step: 'admin_status_update_failed'
       });
       
-      alert('상태 업데이트에 실패했습니다.');
+      addToast({
+        type: 'error',
+        title: '상태 업데이트 실패',
+        message: '상태 업데이트에 실패했습니다. 다시 시도해주세요.'
+      });
     }
   };
 
@@ -249,6 +279,13 @@ const AdminDashboard = (): JSX.Element => {
       setSelectedItems(new Set());
       setBulkAction('none');
       loadData();
+      
+      const actionText = action === 'delete' ? '삭제' : action === 'process' ? '처리 시작' : '완료 처리';
+      addToast({
+        type: 'success',
+        title: '일괄 작업 완료',
+        message: `${selectedItems.size}개 항목의 ${actionText}가 완료되었습니다.`
+      });
     } catch (error) {
       console.error('Bulk action failed:', error);
       
@@ -262,7 +299,11 @@ const AdminDashboard = (): JSX.Element => {
         user_flow_step: 'admin_bulk_action_failed'
       });
 
-      alert('일괄 작업에 실패했습니다.');
+      addToast({
+        type: 'error',
+        title: '일괄 작업 실패',
+        message: '일괄 작업에 실패했습니다. 다시 시도해주세요.'
+      });
     }
   };
 
@@ -502,7 +543,16 @@ const AdminDashboard = (): JSX.Element => {
                           item_count: selectedItems.size,
                           user_flow_step: 'admin_bulk_process_clicked'
                         });
-                        handleBulkAction('process');
+                        setConfirmModalState({
+                          isOpen: true,
+                          type: 'statusUpdate',
+                          title: '일괄 처리 시작',
+                          message: `선택된 ${selectedItems.size}개 추천을 처리 중 상태로 변경하시겠습니까?`,
+                          onConfirm: () => {
+                            setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                            handleBulkAction('process');
+                          }
+                        });
                       }}
                     >
                       일괄 처리 시작
@@ -517,7 +567,16 @@ const AdminDashboard = (): JSX.Element => {
                           item_count: selectedItems.size,
                           user_flow_step: 'admin_bulk_complete_clicked'
                         });
-                        handleBulkAction('complete');
+                        setConfirmModalState({
+                          isOpen: true,
+                          type: 'statusUpdate',
+                          title: '일괄 완료 처리',
+                          message: `선택된 ${selectedItems.size}개 추천을 완료 상태로 변경하시겠습니까?`,
+                          onConfirm: () => {
+                            setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                            handleBulkAction('complete');
+                          }
+                        });
                       }}
                     >
                       일괄 완료 처리
@@ -535,7 +594,16 @@ const AdminDashboard = (): JSX.Element => {
                         item_count: selectedItems.size,
                         user_flow_step: 'admin_bulk_delete_clicked'
                       });
-                      handleBulkAction('delete');
+                      setConfirmModalState({
+                        isOpen: true,
+                        type: 'bulkDelete',
+                        title: '일괄 삭제 확인',
+                        message: `정말로 선택된 ${selectedItems.size}개 사용자를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+                        onConfirm: () => {
+                          setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                          handleBulkAction('delete');
+                        }
+                      });
                     }}
                   >
                     일괄 삭제
@@ -838,7 +906,16 @@ const AdminDashboard = (): JSX.Element => {
                                 user_has_recommendation: user.hasRecommendation,
                                 user_flow_step: 'admin_delete_button_clicked'
                               });
-                              setUserToDelete(user);
+                              setConfirmModalState({
+                                isOpen: true,
+                                type: 'deleteUser',
+                                title: '사용자 삭제 확인',
+                                message: `정말로 @${user.instagramId} 사용자를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+                                onConfirm: () => {
+                                  setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+                                  handleDeleteUser(user);
+                                }
+                              });
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -853,52 +930,18 @@ const AdminDashboard = (): JSX.Element => {
           </>
         )}
 
-        {/* Delete Confirmation Modal */}
-        {userToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="max-w-md w-full p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                사용자 삭제 확인
-              </h3>
-              <p className="text-sm text-gray-500 mb-6">
-                정말로 <strong>@{userToDelete.instagramId}</strong> 사용자를 삭제하시겠습니까?
-                <br />
-                이 작업은 되돌릴 수 없습니다.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    trackEvent('admin_modal_action', {
-                      action_type: 'delete_cancel',
-                      user_id: userToDelete.id,
-                      instagram_id: userToDelete.instagramId,
-                      user_flow_step: 'admin_delete_cancelled'
-                    });
-                    setUserToDelete(null);
-                  }}
-                >
-                  취소
-                </Button>
-                <Button
-                  variant="primary"
-                  className="bg-red-600 hover:bg-red-700"
-                  onClick={() => {
-                    trackEvent('admin_modal_action', {
-                      action_type: 'delete_confirm',
-                      user_id: userToDelete.id,
-                      instagram_id: userToDelete.instagramId,
-                      user_flow_step: 'admin_delete_confirmed'
-                    });
-                    handleDeleteUser(userToDelete);
-                  }}
-                >
-                  삭제
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
+        {/* Confirm Modal */}
+        <ConfirmModal
+          isOpen={confirmModalState.isOpen}
+          type={confirmModalState.type === 'deleteUser' || confirmModalState.type === 'bulkDelete' ? 'danger' : 'info'}
+          title={confirmModalState.title}
+          message={confirmModalState.message}
+          confirmText={confirmModalState.type === 'deleteUser' || confirmModalState.type === 'bulkDelete' ? '삭제' : '확인'}
+          cancelText="취소"
+          onConfirm={confirmModalState.onConfirm}
+          onCancel={() => setConfirmModalState(prev => ({ ...prev, isOpen: false }))}
+          isLoading={isDeleting}
+        />
       </div>
     </PageLayout>
   );

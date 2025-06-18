@@ -1294,14 +1294,14 @@
 }
 
 /* Floating CTA - Material 3 & Apple HIG 2025 Standards */
-/* Floating CTA Container - Fixed positioning with auto-hide */
+/* Floating CTA Container - Standard FAB positioning */
 .floatingCTA {
   position: fixed;
-  bottom: 16px; /* Material 3: 16dp margin */
-  right: 16px; /* Material 3: 16dp margin */
+  bottom: 24px; /* Standard FAB margin */
+  right: 24px; /* Standard FAB margin */
   z-index: 50;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Material motion */
-  transform: translateZ(0); /* GPU acceleration */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
   will-change: transform, opacity;
 }
 
@@ -1407,22 +1407,25 @@
   text-overflow: ellipsis;
 }
 
-/* Extended FAB - Form container */
+/* Extended FAB - Floating form container */
 .extendedFAB {
+  position: absolute;
+  bottom: 80px; /* Position above the FAB */
+  right: 0;
   min-width: 320px;
-  max-width: 90vw;
+  max-width: 400px;
   background: 
     linear-gradient(145deg, 
       rgba(255, 255, 255, 0.95) 0%,
       rgba(248, 250, 252, 0.9) 100%
     );
   
-  border-radius: 28px; /* Material 3: Extra large shape */
+  border-radius: 28px;
   
-  /* Material 3 elevation level 2 */
+  /* Enhanced elevation for floating effect */
   box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.16),
-    0 3px 6px rgba(0, 0, 0, 0.23),
+    0 8px 32px rgba(0, 0, 0, 0.16),
+    0 4px 16px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   
   /* Glass morphism */
@@ -1440,6 +1443,9 @@
   /* Typography base */
   font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
   color: rgba(0, 0, 0, 0.87);
+  
+  /* Ensure it floats above content */
+  z-index: 51;
 }
 
 @keyframes extendedFABAppear {
@@ -1602,26 +1608,25 @@
 /* Responsive Design - Mobile First */
 @media (max-width: 768px) {
   .floatingCTA {
-    /* Mobile: 16px margin with safe area */
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    right: 16px;
+    /* Mobile: Standard margins with safe area */
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    right: 20px;
   }
   
   .extendedFAB {
-    /* Mobile: Full width with margin */
-    min-width: calc(100vw - 32px);
-    max-width: calc(100vw - 32px);
+    /* Mobile: Positioned above FAB, right-aligned */
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    min-width: 280px;
+    max-width: calc(100vw - 40px);
     
-    /* Adjust position for mobile */
-    position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    right: 16px;
-    left: 16px;
-    width: auto;
+    /* Ensure it doesn't go off-screen */
+    transform: translateX(calc(-100% + 56px));
   }
   
   .extendedFABInputGroup {
-    /* Mobile: Stack on very small screens */
+    /* Mobile: Stack vertically */
     flex-direction: column;
     gap: 12px;
   }
@@ -1636,10 +1641,15 @@
 
 /* Small mobile devices */
 @media (max-width: 480px) {
+  .floatingCTA {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
+  
   .floatingFAB {
-    /* Slightly smaller on very small screens */
-    width: 52px;
-    height: 52px;
+    /* Standard size maintained for touch accessibility */
+    width: 56px;
+    height: 56px;
   }
   
   .fabLabel {
@@ -1647,7 +1657,10 @@
   }
   
   .extendedFAB {
+    min-width: 260px;
     padding: 16px;
+    /* Adjust position for smaller screens */
+    transform: translateX(calc(-100% + 56px + 8px));
   }
   
   .extendedFABTitle {
@@ -1658,31 +1671,32 @@
 /* Tablet and larger screens */
 @media (min-width: 769px) {
   .floatingCTA {
-    /* Desktop: Position within content area */
-    bottom: 24px;
-    right: 24px;
+    /* Desktop: Standard FAB positioning */
+    bottom: 32px;
+    right: 32px;
   }
   
   .extendedFAB {
-    /* Desktop: Fixed width, positioned relative to FAB */
+    /* Desktop: Position above and to the left of FAB */
+    position: absolute;
+    bottom: 80px;
+    right: 0;
     min-width: 360px;
     max-width: 400px;
     
-    /* Position above and to the left of FAB */
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    transform: translateY(-80px);
+    /* Slide in from the right edge of FAB */
+    transform: translateX(calc(-100% + 56px));
   }
   
   .extendedFABInputGroup {
-    /* Desktop: Keep horizontal layout */
+    /* Desktop: Horizontal layout */
     flex-direction: row;
   }
   
   .extendedFABSubmit {
-    /* Desktop: Circular submit button */
+    /* Desktop: Circular button */
     width: 44px;
+    height: 44px;
     border-radius: 22px;
   }
 }
@@ -1690,15 +1704,18 @@
 /* Landscape mobile optimization */
 @media (max-width: 768px) and (orientation: landscape) {
   .floatingCTA {
-    bottom: 12px;
-    right: 12px;
+    bottom: 16px;
+    right: 16px;
   }
   
   .extendedFAB {
-    bottom: 12px;
-    right: 12px;
-    left: 12px;
+    /* Position above FAB in landscape */
+    bottom: 80px;
+    right: 0;
+    min-width: 300px;
     padding: 16px;
+    /* Adjust transform for landscape */
+    transform: translateX(calc(-100% + 56px + 4px));
   }
   
   .extendedFABHeader {
@@ -1707,6 +1724,19 @@
   
   .extendedFABTitle {
     font-size: 16px;
+  }
+  
+  .extendedFABInputGroup {
+    /* Horizontal layout in landscape */
+    flex-direction: row;
+    gap: 8px;
+  }
+  
+  .extendedFABSubmit {
+    /* Compact button in landscape */
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
   }
 }
 
