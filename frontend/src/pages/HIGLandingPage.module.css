@@ -1293,7 +1293,7 @@
   }
 }
 
-/* Sticky CTA - Fixed bottom when scrolling */
+/* Sticky CTA - Apple Glass Morphism Design */
 .stickyCTA {
   position: fixed;
   bottom: 0;
@@ -1301,28 +1301,52 @@
   right: 0;
   z-index: 50;
   padding: 1rem 1.5rem 1.5rem;
+  /* Apple-style translucent glass background */
   background: 
     linear-gradient(135deg, 
-      rgba(0, 0, 0, 0.85) 0%,
-      rgba(20, 20, 30, 0.9) 100%
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.1) 100%
     );
-  backdrop-filter: blur(30px) saturate(180%);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  /* Enhanced backdrop blur with vibrancy */
+  backdrop-filter: blur(40px) saturate(180%) brightness(120%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(120%);
+  
+  /* Apple-style borders with subtle transparency */
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-image: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  ) 1;
+  
+  /* Refined glass shadow effects */
   box-shadow: 
-    0 -8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    0 -8px 32px rgba(0, 0, 0, 0.12),
+    0 -2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  
+  animation: slideUpGlass 0.6s cubic-bezier(0.32, 0.72, 0, 1);
   transform: translateZ(0); /* GPU acceleration */
+  will-change: transform;
 }
 
-@keyframes slideUp {
+@keyframes slideUpGlass {
   from {
-    transform: translateY(100%);
+    transform: translateY(100%) scale(0.95);
     opacity: 0;
+    backdrop-filter: blur(0px) saturate(100%) brightness(100%);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.01);
+    opacity: 0.8;
+    backdrop-filter: blur(20px) saturate(140%) brightness(110%);
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
+    backdrop-filter: blur(40px) saturate(180%) brightness(120%);
   }
 }
 
@@ -1343,16 +1367,21 @@
 .stickyText h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #ffffff;
+  /* Dynamic text color based on background */
+  color: rgba(0, 0, 0, 0.95);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
   margin: 0 0 0.25rem 0;
   line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 .stickyText p {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(0, 0, 0, 0.65);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
   margin: 0;
   line-height: 1.4;
+  font-weight: 400;
 }
 
 .stickyForm {
@@ -1369,56 +1398,103 @@
 .stickyInput {
   flex: 1;
   min-width: 0;
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  color: #ffffff;
+  padding: 0.875rem 1.125rem;
+  /* Apple-style glass input */
+  background: 
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.15) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  color: rgba(0, 0, 0, 0.9);
   font-size: 0.875rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  
+  /* Subtle inner shadow for depth */
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.05);
+  
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .stickyInput::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .stickyInput:focus {
   outline: none;
-  border-color: rgba(147, 51, 234, 0.6);
-  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(147, 51, 234, 0.7);
+  background: 
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.25) 100%
+    );
   box-shadow: 
-    0 0 0 3px rgba(147, 51, 234, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.15);
+    0 0 0 4px rgba(147, 51, 234, 0.15),
+    inset 0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 4px 20px rgba(147, 51, 234, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(25px) saturate(160%);
+  -webkit-backdrop-filter: blur(25px) saturate(160%);
 }
 
 .stickyButton {
   flex: none;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, 
-    #9333ea 0%, 
-    #ec4899 100%
-  );
-  border: none;
-  border-radius: 12px;
+  padding: 0.875rem 1.75rem;
+  /* Apple-style glass button with vibrant gradient */
+  background: 
+    linear-gradient(135deg, 
+      rgba(147, 51, 234, 0.9) 0%, 
+      rgba(236, 72, 153, 0.85) 50%,
+      rgba(59, 130, 246, 0.9) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Apple-style button shadows */
   box-shadow: 
-    0 4px 14px rgba(147, 51, 234, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 4px 16px rgba(147, 51, 234, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   position: relative;
   overflow: hidden;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.01em;
 }
 
 .stickyButton:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.02);
+  background: 
+    linear-gradient(135deg, 
+      rgba(147, 51, 234, 0.95) 0%, 
+      rgba(236, 72, 153, 0.9) 50%,
+      rgba(59, 130, 246, 0.95) 100%
+    );
   box-shadow: 
-    0 6px 20px rgba(147, 51, 234, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 8px 25px rgba(147, 51, 234, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(25px) saturate(160%);
+  -webkit-backdrop-filter: blur(25px) saturate(160%);
 }
 
 .stickyButton:active:not(:disabled) {
@@ -1437,13 +1513,24 @@
   left: 0;
   right: 0;
   margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
-  color: #fca5a5;
+  padding: 0.6rem 0.875rem;
+  /* Apple-style glass error background */
+  background: 
+    linear-gradient(135deg,
+      rgba(239, 68, 68, 0.15) 0%,
+      rgba(220, 38, 38, 0.1) 100%
+    );
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  color: rgba(185, 28, 28, 0.9);
   font-size: 0.75rem;
-  backdrop-filter: blur(10px);
+  font-weight: 500;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 
+    0 2px 8px rgba(239, 68, 68, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
 /* Mobile Responsive */
@@ -1482,5 +1569,51 @@
   .stickyInput,
   .stickyButton {
     width: 100%;
+  }
+}
+
+/* Light Mode Sticky CTA Adjustments */
+@media (prefers-color-scheme: light) {
+  .stickyCTA {
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(248, 250, 252, 0.7) 50%,
+        rgba(255, 255, 255, 0.85) 100%
+      );
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 
+      0 -8px 32px rgba(0, 0, 0, 0.08),
+      0 -2px 8px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .stickyInput {
+    background: 
+      linear-gradient(135deg,
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(248, 250, 252, 0.4) 100%
+      );
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 
+      inset 0 1px 3px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .stickyInput:focus {
+    border-color: rgba(147, 51, 234, 0.6);
+    background: 
+      linear-gradient(135deg,
+        rgba(255, 255, 255, 0.7) 0%,
+        rgba(248, 250, 252, 0.5) 100%
+      );
+    box-shadow: 
+      0 0 0 4px rgba(147, 51, 234, 0.08),
+      inset 0 1px 3px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 4px 20px rgba(147, 51, 234, 0.06),
+      0 2px 8px rgba(0, 0, 0, 0.04);
   }
 }
