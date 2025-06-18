@@ -15,13 +15,7 @@ const HIGLandingPage = (): JSX.Element => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [velocity, setVelocity] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const animationFrame = useRef<number>();
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Track scroll progress for depth effects
@@ -38,44 +32,7 @@ const HIGLandingPage = (): JSX.Element => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track mouse for parallax and physics-based tilt
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      
-      // Calculate velocity for momentum effects
-      const vx = e.clientX - lastMousePos.current.x;
-      const vy = e.clientY - lastMousePos.current.y;
-      setVelocity({ x: vx, y: vy });
-      
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
-      setMousePosition({ x, y });
-      
-      // Physics-based tilt for cards
-      if (ctaRef.current) {
-        const rect = ctaRef.current.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const tiltX = ((e.clientY - centerY) / window.innerHeight) * 15;
-        const tiltY = ((e.clientX - centerX) / window.innerWidth) * -15;
-        setTilt({ x: tiltX, y: tiltY });
-      }
-    };
-    
-    const handleMouseLeave = () => {
-      // Spring back animation
-      setTilt({ x: 0, y: 0 });
-      setVelocity({ x: 0, y: 0 });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  // Removed mouse tracking for cleaner interface
 
   const handleIdChange = (value: string): void => {
     const cleanedValue = value.replace('@', '').toLowerCase();
@@ -127,51 +84,9 @@ const HIGLandingPage = (): JSX.Element => {
       {/* Hero Section - Content First */}
       <section ref={heroRef} className={styles.hero}>
         {/* Depth Layers */}
-        <div 
-          className={styles.depthLayer1}
-          style={{
-            transform: `
-              translate3d(
-                ${mousePosition.x * 15 + velocity.x * 0.5}px, 
-                ${mousePosition.y * 15 + velocity.y * 0.5}px,
-                -100px
-              ) 
-              scale(${1 + Math.abs(velocity.x) * 0.001})
-            `,
-            '--depth': '-100px',
-            '--blur': '60px',
-          } as React.CSSProperties}
-        />
-        <div 
-          className={styles.depthLayer2}
-          style={{
-            transform: `
-              translate3d(
-                ${mousePosition.x * 25 + velocity.x * 0.3}px, 
-                ${mousePosition.y * 25 + velocity.y * 0.3}px,
-                -50px
-              )
-              scale(${1 + Math.abs(velocity.y) * 0.001})
-            `,
-            '--depth': '-50px',
-            '--blur': '80px',
-          } as React.CSSProperties}
-        />
-        <div 
-          className={styles.depthLayer3}
-          style={{
-            transform: `
-              translate3d(
-                ${mousePosition.x * 35 + velocity.x * 0.2}px, 
-                ${mousePosition.y * 35 + velocity.y * 0.2}px,
-                0px
-              )
-              scale(${1 + Math.abs(velocity.x + velocity.y) * 0.0005})
-            `,
-            '--depth': '0px',
-            '--blur': '100px',
-          } as React.CSSProperties}
-        />
+        <div className={styles.depthLayer1} />
+        <div className={styles.depthLayer2} />
+        <div className={styles.depthLayer3} />
 
         <div className={styles.heroContent}>
           {/* Clarity - Clear hierarchy */}
@@ -185,23 +100,8 @@ const HIGLandingPage = (): JSX.Element => {
             Discover your unique color palette through advanced AI technology.
           </p>
 
-          {/* Interactive CTA Card with physics */}
-          <div 
-            ref={ctaRef}
-            className={styles.ctaCard}
-            style={{
-              transform: `
-                perspective(1000px)
-                rotateX(${tilt.x}deg)
-                rotateY(${tilt.y}deg)
-                translateZ(20px)
-                scale(${1 + Math.abs(velocity.x + velocity.y) * 0.0001})
-              `,
-              transition: tilt.x === 0 && tilt.y === 0 
-                ? 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)' 
-                : 'none',
-            }}
-          >
+          {/* CTA Card */}
+          <div className={styles.ctaCard}>
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.inputGroup}>
                 <input
@@ -301,17 +201,6 @@ const HIGLandingPage = (): JSX.Element => {
             {/* Upload Card - Floating left */}
             <div 
               className={`${styles.processCard} ${styles.cardUpload}`}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.setProperty('--mouse-x', '50%');
-                e.currentTarget.style.setProperty('--mouse-y', '50%');
-              }}
             >
               {/* Glass layers */}
               <div className={styles.glassLayer1} />
@@ -332,24 +221,11 @@ const HIGLandingPage = (): JSX.Element => {
                 </div>
                 <div className={styles.stepBadge}>01</div>
               </div>
-              {/* Refraction effect */}
-              <div className={styles.refractionLayer} />
             </div>
 
             {/* Analyze Card - Center elevated */}
             <div 
               className={`${styles.processCard} ${styles.cardAnalyze}`}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.setProperty('--mouse-x', '50%');
-                e.currentTarget.style.setProperty('--mouse-y', '50%');
-              }}
             >
               <div className={styles.glassLayer1} />
               <div className={styles.glassLayer2} />
@@ -376,17 +252,6 @@ const HIGLandingPage = (): JSX.Element => {
             {/* Receive Card - Floating right */}
             <div 
               className={`${styles.processCard} ${styles.cardReceive}`}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.setProperty('--mouse-x', '50%');
-                e.currentTarget.style.setProperty('--mouse-y', '50%');
-              }}
             >
               <div className={styles.glassLayer1} />
               <div className={styles.glassLayer2} />

@@ -135,9 +135,7 @@
   transition: opacity 0.3s ease;
 }
 
-.logo:hover {
-  opacity: 1;
-}
+/* Removed logo hover effect */
 
 .logoMark {
   font-size: 1.5rem;
@@ -354,19 +352,7 @@
   transform: translateX(-100%) skewX(-45deg);
 }
 
-.ctaCard:hover {
-  transform: translateY(-4px) translateZ(20px) rotateX(2deg);
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    0 10px 20px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.ctaCard:hover::before {
-  opacity: 1;
-  transform: translateX(100%) skewX(-45deg);
-}
+/* Removed ctaCard hover effects */
 
 /* Form Elements */
 .form {
@@ -467,13 +453,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.submitButton:hover:not(:disabled) {
-  transform: translateY(-2px) translateZ(10px) scale(1.02);
-  box-shadow: 
-    0 12px 36px rgba(236, 72, 153, 0.5),
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
+/* Removed submitButton hover effect */
 
 .submitButton:active:not(:disabled) {
   transform: translateY(1px) translateZ(-5px) scale(0.98);
@@ -506,10 +486,7 @@
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.submitButton:hover:not(:disabled) .buttonGlow {
-  transform: translate(-50%, -50%) scale(2);
-  opacity: 1;
-}
+/* Removed submitButton glow hover effect */
 
 /* Features Section - Depth through layering */
 .features {
@@ -572,22 +549,9 @@
   transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.featureCard:hover .featureGlass {
-  transform: translateY(-8px) translateZ(30px) rotateX(-5deg) rotateY(2deg);
-  background: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%),
-    radial-gradient(ellipse at top right, rgba(147, 51, 234, 0.08) 0%, transparent 50%);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.25),
-    0 10px 20px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-}
+/* Removed featureGlass hover effect */
 
-.featureCard:hover .featureGlass::before {
-  transform: translateX(100%);
-}
+/* Removed featureGlass::before hover effect */
 
 .featureIcon {
   display: inline-flex;
@@ -602,10 +566,7 @@
   transition: all 0.3s ease;
 }
 
-.featureCard:hover .featureIcon {
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.08);
-}
+/* Removed featureIcon hover effect */
 
 .iconSymbol {
   font-weight: 200;
@@ -989,49 +950,7 @@
   }
 }
 
-/* Hover Effects */
-.processCard:hover {
-  transform: translateZ(80px) translateY(-8px) scale(1.02);
-}
-
-.processCard:hover .glassContent {
-  background: 
-    linear-gradient(135deg, 
-      rgba(147, 51, 234, 0.12) 0%,
-      rgba(236, 72, 153, 0.08) 50%,
-      rgba(59, 130, 246, 0.06) 100%
-    );
-  border-color: rgba(147, 51, 234, 0.35);
-  box-shadow: 
-    0 0 0 1px rgba(236, 72, 153, 0.25),
-    inset 0 1px 2px rgba(147, 51, 234, 0.3),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.05),
-    0 30px 60px -10px rgba(0, 0, 0, 0.4),
-    0 60px 120px -20px rgba(147, 51, 234, 0.3);
-}
-
-.processCard:hover .refractionLayer {
-  opacity: 1;
-}
-
-.processCard:hover .iconGlass {
-  transform: scale(1.1) rotate(-5deg);
-  box-shadow: 
-    inset 0 2px 4px rgba(236, 72, 153, 0.4),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.05),
-    0 12px 32px rgba(147, 51, 234, 0.4);
-}
-
-.processCard:hover .cardTitle {
-  font-variation-settings: 'wght' 800, 'wdth' 100;
-  background: linear-gradient(135deg, rgba(236, 72, 153, 1) 0%, rgba(147, 51, 234, 1) 100%);
-  filter: drop-shadow(0 2px 6px rgba(147, 51, 234, 0.4));
-}
-
-.processCard:hover .cardDescription {
-  color: rgba(147, 51, 234, 0.95);
-  font-variation-settings: 'wght' 450, 'wdth' 100;
-}
+/* Removed all hover effects for cleaner interface */
 
 /* Pulse Ring for Analyze Card */
 .pulseRing {
