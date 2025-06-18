@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+// Force rebuild to fix Send icon import issue
 import {
   Filter,
   X,
