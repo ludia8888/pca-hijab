@@ -137,7 +137,7 @@ export const trackImageUpload = (success: boolean, fileSize?: number, fileType?:
   }
 };
 
-// 3. AI ANALYSIS TRACKING
+// 3. AI ANALYSIS TRACKING (Critical Event)
 export const trackAIAnalysis = (result: {
   personalColorType: string;
   season: string;
@@ -146,8 +146,8 @@ export const trackAIAnalysis = (result: {
   processingTime?: number;
   analysisId?: string;
 }): void => {
-  // GA4 tracking with enhanced metrics
-  trackEvent('ai_analysis_complete', {
+  // Use critical event tracking for AI analysis completion (always has debug_mode: true)
+  trackCriticalEvent('ai_analysis_complete', {
     event_category: 'conversion',
     personal_color_type: result.personalColorType,
     season: result.season,
@@ -222,14 +222,16 @@ export const trackResultDownload = (personalColor: string, downloadType: 'image'
   VercelAnalytics.resultShare('download');
 };
 
-// 7. FLOW COMPLETION TRACKING
-export const trackFlowCompletion = (duration: number, completionType: 'full_flow' | 'analysis_only' = 'full_flow'): void => {
-  trackEvent('flow_complete', {
+// 7. FLOW COMPLETION TRACKING (Critical Event)
+export const trackFlowCompletion = (instagramId?: string, personalColor?: string): void => {
+  trackCriticalEvent('flow_complete', {
     event_category: 'conversion',
-    completion_type: completionType,
-    duration_seconds: Math.round(duration / 1000),
+    completion_type: 'full_flow',
+    instagram_id: instagramId,
+    personal_color: personalColor,
     user_flow_step: 'flow_complete',
-    value: completionType === 'full_flow' ? 2 : 1
+    value: 2,
+    currency: 'USD'
   });
 };
 
@@ -327,13 +329,36 @@ export const debugGA4 = (): void => {
     console.log('[GA4 Debug] DataLayer:', window.dataLayer);
     console.log('[GA4 Debug] Measurement ID:', GA_MEASUREMENT_ID);
     console.log('[GA4 Debug] Environment:', import.meta.env.DEV ? 'Development' : 'Production');
-    console.log('[GA4 Debug] Debug Mode:', import.meta.env.DEV ? 'Enabled' : 'Disabled');
+    console.log('[GA4 Debug] Debug Mode:', import.meta.env.DEV || import.meta.env.VITE_GA4_DEBUG_MODE === 'true' ? 'Enabled' : 'Disabled');
+    console.log('[GA4 Debug] Last 5 DataLayer Events:', window.dataLayer?.slice(-5));
   }
 };
 
-// Helper function to add debug mode to events in development
-const addDebugMode = (params: Record<string, any>): Record<string, any> => {
+// Test function to send a test event (for debugging purposes)
+export const sendTestEvent = (): void => {
   if (import.meta.env.DEV) {
+    trackEvent('debug_test_event', {
+      event_category: 'debug',
+      test_parameter: 'test_value',
+      timestamp: Date.now(),
+      debug_mode: true
+    });
+    console.log('[GA4 Debug] Test event sent');
+  }
+};
+
+// Function to enable debug mode for specific events
+export const trackDebugEvent = (eventName: string, parameters: Record<string, any>): void => {
+  if (typeof window.gtag !== 'undefined') {
+    window.gtag('event', eventName, { ...parameters, debug_mode: true });
+    console.log(`[GA4 Debug Event] ${eventName}:`, parameters);
+  }
+};
+
+// Helper function to add debug mode to events in development or when forced
+const addDebugMode = (params: Record<string, any>): Record<string, any> => {
+  const shouldDebug = import.meta.env.DEV || import.meta.env.VITE_GA4_DEBUG_MODE === 'true';
+  if (shouldDebug) {
     return { ...params, debug_mode: true };
   }
   return params;

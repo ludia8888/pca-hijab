@@ -57,6 +57,8 @@ const AdminDashboard = (): JSX.Element => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'processing' | 'completed'>('all');
   const [activeTab, setActiveTab] = useState<'recommendations' | 'users'>('recommendations');
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<'none' | 'delete' | 'process' | 'complete'>('none');
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!apiKey) return;
@@ -127,6 +129,140 @@ const AdminDashboard = (): JSX.Element => {
       });
       
       alert('사용자 삭제에 실패했습니다.');
+    }
+  };
+
+  const handleStatusUpdate = async (recommendationId: string, newStatus: Recommendation['status']): Promise<void> => {
+    if (!apiKey) return;
+    
+    // Track status update attempt
+    trackEvent('admin_action', {
+      action_type: 'status_update_attempt',
+      recommendation_id: recommendationId,
+      new_status: newStatus,
+      user_flow_step: 'admin_status_update_initiated'
+    });
+
+    trackEngagement('admin_action', 'status_update');
+    
+    try {
+      await AdminAPI.updateRecommendationStatus(apiKey, recommendationId, newStatus);
+      
+      // Track successful status update
+      trackEvent('admin_action_success', {
+        action_type: 'status_update_success',
+        recommendation_id: recommendationId,
+        new_status: newStatus,
+        user_flow_step: 'admin_status_update_completed'
+      });
+      
+      // Refresh recommendations list
+      loadData();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      
+      // Track status update failure
+      trackError('admin_status_update_failed', error instanceof Error ? error.message : 'Unknown status update error', 'admin_dashboard');
+      trackEvent('admin_action_failed', {
+        action_type: 'status_update_failed',
+        recommendation_id: recommendationId,
+        new_status: newStatus,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_flow_step: 'admin_status_update_failed'
+      });
+      
+      alert('상태 업데이트에 실패했습니다.');
+    }
+  };
+
+  const handleSelectItem = (itemId: string, checked: boolean): void => {
+    const newSelected = new Set(selectedItems);
+    if (checked) {
+      newSelected.add(itemId);
+    } else {
+      newSelected.delete(itemId);
+    }
+    setSelectedItems(newSelected);
+
+    // Track selection
+    trackEvent('admin_selection', {
+      action_type: checked ? 'item_selected' : 'item_deselected',
+      item_id: itemId,
+      total_selected: newSelected.size,
+      tab: activeTab,
+      user_flow_step: 'admin_item_selection_changed'
+    });
+  };
+
+  const handleSelectAll = (checked: boolean): void => {
+    const items = activeTab === 'recommendations' ? recommendations : users;
+    const newSelected = checked ? new Set(items.map(item => item.id)) : new Set<string>();
+    setSelectedItems(newSelected);
+
+    // Track select all
+    trackEvent('admin_selection', {
+      action_type: checked ? 'select_all' : 'deselect_all',
+      total_selected: newSelected.size,
+      tab: activeTab,
+      user_flow_step: 'admin_select_all_changed'
+    });
+  };
+
+  const handleBulkAction = async (action: typeof bulkAction): Promise<void> => {
+    if (selectedItems.size === 0) return;
+
+    // Track bulk action attempt
+    trackEvent('admin_bulk_action', {
+      action_type: action,
+      item_count: selectedItems.size,
+      tab: activeTab,
+      user_flow_step: 'admin_bulk_action_initiated'
+    });
+
+    trackEngagement('admin_action', 'bulk_action');
+
+    try {
+      if (action === 'delete' && activeTab === 'users') {
+        // Bulk delete users
+        const deletePromises = Array.from(selectedItems).map(userId => 
+          AdminAPI.deleteUser(apiKey!, userId)
+        );
+        await Promise.all(deletePromises);
+      } else if ((action === 'process' || action === 'complete') && activeTab === 'recommendations') {
+        // Bulk status update for recommendations
+        const newStatus = action === 'process' ? 'processing' as const : 'completed' as const;
+        const updatePromises = Array.from(selectedItems).map(recId => 
+          AdminAPI.updateRecommendationStatus(apiKey!, recId, newStatus)
+        );
+        await Promise.all(updatePromises);
+      }
+
+      // Track successful bulk action
+      trackEvent('admin_bulk_action_success', {
+        action_type: action,
+        item_count: selectedItems.size,
+        tab: activeTab,
+        user_flow_step: 'admin_bulk_action_completed'
+      });
+
+      // Clear selection and refresh data
+      setSelectedItems(new Set());
+      setBulkAction('none');
+      loadData();
+    } catch (error) {
+      console.error('Bulk action failed:', error);
+      
+      // Track bulk action failure
+      trackError('admin_bulk_action_failed', error instanceof Error ? error.message : 'Unknown bulk action error', 'admin_dashboard');
+      trackEvent('admin_bulk_action_failed', {
+        action_type: action,
+        item_count: selectedItems.size,
+        tab: activeTab,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        user_flow_step: 'admin_bulk_action_failed'
+      });
+
+      alert('일괄 작업에 실패했습니다.');
     }
   };
 
@@ -230,6 +366,7 @@ const AdminDashboard = (): JSX.Element => {
                   user_flow_step: 'admin_tab_switched_to_recommendations'
                 });
                 setActiveTab('recommendations');
+                setSelectedItems(new Set()); // Clear selection when switching tabs
               }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'recommendations'
@@ -248,6 +385,7 @@ const AdminDashboard = (): JSX.Element => {
                   user_flow_step: 'admin_tab_switched_to_users'
                 });
                 setActiveTab('users');
+                setSelectedItems(new Set()); // Clear selection when switching tabs
               }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'users'
@@ -321,7 +459,7 @@ const AdminDashboard = (): JSX.Element => {
         </Card>
 
 
-        {/* Filter Tabs */}
+        {/* Filter Tabs and Bulk Actions */}
         <div className="flex justify-between items-center">
           <div className="flex space-x-2">
             {(['pending', 'completed', 'all'] as const).map((status) => (
@@ -337,15 +475,81 @@ const AdminDashboard = (): JSX.Element => {
                     user_flow_step: 'admin_filter_changed'
                   });
                   setStatusFilter(status);
+                  setSelectedItems(new Set()); // Clear selection when filter changes
                 }}
               >
                 {status === 'all' ? '전체 히잡 추천' : status === 'pending' ? '추천 대기중' : status === 'processing' ? '처리 중' : '추천 완료'}
               </Button>
             ))}
           </div>
-          <div className="text-sm text-gray-500">
-            히잡 추천 요청 사용자 목록
-          </div>
+          
+          {/* Bulk Actions */}
+          {selectedItems.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">
+                {selectedItems.size}개 선택됨
+              </span>
+              <div className="flex space-x-2">
+                {activeTab === 'recommendations' && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600"
+                      onClick={() => {
+                        trackEvent('admin_bulk_button_click', {
+                          action_type: 'bulk_process',
+                          item_count: selectedItems.size,
+                          user_flow_step: 'admin_bulk_process_clicked'
+                        });
+                        handleBulkAction('process');
+                      }}
+                    >
+                      일괄 처리 시작
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-green-600"
+                      onClick={() => {
+                        trackEvent('admin_bulk_button_click', {
+                          action_type: 'bulk_complete',
+                          item_count: selectedItems.size,
+                          user_flow_step: 'admin_bulk_complete_clicked'
+                        });
+                        handleBulkAction('complete');
+                      }}
+                    >
+                      일괄 완료 처리
+                    </Button>
+                  </>
+                )}
+                {activeTab === 'users' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600"
+                    onClick={() => {
+                      trackEvent('admin_bulk_button_click', {
+                        action_type: 'bulk_delete',
+                        item_count: selectedItems.size,
+                        user_flow_step: 'admin_bulk_delete_clicked'
+                      });
+                      handleBulkAction('delete');
+                    }}
+                  >
+                    일괄 삭제
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {selectedItems.size === 0 && (
+            <div className="text-sm text-gray-500">
+              {activeTab === 'recommendations' ? '히잡 추천 요청 사용자 목록' : '전체 사용자 목록'}
+            </div>
+          )}
         </div>
 
             {/* Recommendations Table */}
@@ -354,6 +558,14 @@ const AdminDashboard = (): JSX.Element => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={recommendations.length > 0 && recommendations.every(rec => selectedItems.has(rec.id))}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         사용자 유형
                       </th>
@@ -379,7 +591,15 @@ const AdminDashboard = (): JSX.Element => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {recommendations.map((rec) => (
-                      <tr key={rec.id} className="hover:bg-gray-50">
+                      <tr key={rec.id} className={`hover:bg-gray-50 ${selectedItems.has(rec.id) ? 'bg-purple-50' : ''}`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(rec.id)}
+                            onChange={(e) => handleSelectItem(rec.id, e.target.checked)}
+                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                             <Users className="w-3 h-3" />
@@ -412,15 +632,68 @@ const AdminDashboard = (): JSX.Element => {
                           {new Date(rec.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/admin/recommendations/${rec.id}`)}
-                            className="flex items-center gap-1"
-                          >
-                            보기
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                trackEvent('admin_button_click', {
+                                  button_name: 'view_recommendation',
+                                  recommendation_id: rec.id,
+                                  instagram_id: rec.instagramId,
+                                  status: rec.status,
+                                  personal_color: rec.personalColorResult.personal_color_en,
+                                  user_flow_step: 'admin_recommendation_view_clicked'
+                                });
+                                navigate(`/admin/recommendations/${rec.id}`);
+                              }}
+                              className="flex items-center gap-1"
+                            >
+                              보기
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                            
+                            {/* Status Update Button */}
+                            {rec.status === 'pending' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-blue-600 hover:text-blue-700"
+                                onClick={() => {
+                                  trackEvent('admin_button_click', {
+                                    button_name: 'process_recommendation',
+                                    recommendation_id: rec.id,
+                                    instagram_id: rec.instagramId,
+                                    current_status: rec.status,
+                                    user_flow_step: 'admin_recommendation_process_clicked'
+                                  });
+                                  handleStatusUpdate(rec.id, 'processing');
+                                }}
+                              >
+                                처리 시작
+                              </Button>
+                            )}
+                            
+                            {rec.status === 'processing' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-green-600 hover:text-green-700"
+                                onClick={() => {
+                                  trackEvent('admin_button_click', {
+                                    button_name: 'complete_recommendation',
+                                    recommendation_id: rec.id,
+                                    instagram_id: rec.instagramId,
+                                    current_status: rec.status,
+                                    user_flow_step: 'admin_recommendation_complete_clicked'
+                                  });
+                                  handleStatusUpdate(rec.id, 'completed');
+                                }}
+                              >
+                                완료 처리
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -479,6 +752,14 @@ const AdminDashboard = (): JSX.Element => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={users.length > 0 && users.every(user => selectedItems.has(user.id))}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         인스타그램 ID
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -500,7 +781,15 @@ const AdminDashboard = (): JSX.Element => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
+                      <tr key={user.id} className={`hover:bg-gray-50 ${selectedItems.has(user.id) ? 'bg-blue-50' : ''}`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(user.id)}
+                            onChange={(e) => handleSelectItem(user.id, e.target.checked)}
+                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             @{user.instagramId}

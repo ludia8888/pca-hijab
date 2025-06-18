@@ -8,25 +8,29 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      // Enhanced GA4 config for SPA
-      gtag('config', 'G-JXPF7BL260', {
+      // Enhanced GA4 config for SPA with conditional debug mode
+      const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      const ga4Config = {
         send_page_view: false,  // SPA에서는 수동으로 페이지뷰 전송
         allow_google_signals: true,
         allow_ad_personalization_signals: true,
         cookie_flags: 'SameSite=None;Secure',
         custom_map: {
           custom_parameter_1: 'personal_color_type',
-          custom_parameter_2: 'user_flow_step'
+          custom_parameter_2: 'user_flow_step',
+          custom_parameter_3: 'load_time',
+          custom_parameter_4: 'interaction_delay'
         }
-      });
+      };
 
-      // Performance measurement
-      gtag('config', 'G-JXPF7BL260', {
-        custom_map: {
-          'custom_parameter_3': 'load_time',
-          'custom_parameter_4': 'interaction_delay'
-        }
-      });
+      // Add debug_mode only in development (omit in production)
+      if (isDevMode) {
+        ga4Config.debug_mode = true;
+        console.log('[GA4] Debug mode enabled for development');
+      }
+
+      gtag('config', 'G-JXPF7BL260', ga4Config);
     </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
