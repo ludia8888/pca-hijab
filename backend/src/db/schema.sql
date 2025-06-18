@@ -4,7 +4,10 @@
 CREATE TABLE IF NOT EXISTS sessions (
     id VARCHAR(50) PRIMARY KEY,
     instagram_id VARCHAR(30) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    uploaded_image_url TEXT,
+    analysis_result JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create index on instagram_id for faster lookups
@@ -17,6 +20,7 @@ CREATE TABLE IF NOT EXISTS recommendations (
     instagram_id VARCHAR(30) NOT NULL,
     personal_color_result JSONB NOT NULL,
     user_preferences JSONB NOT NULL,
+    uploaded_image_url TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -37,8 +41,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Trigger to automatically update updated_at
+-- Trigger to automatically update updated_at for recommendations
 CREATE TRIGGER update_recommendations_updated_at 
     BEFORE UPDATE ON recommendations 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger to automatically update updated_at for sessions
+CREATE TRIGGER update_sessions_updated_at 
+    BEFORE UPDATE ON sessions 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();

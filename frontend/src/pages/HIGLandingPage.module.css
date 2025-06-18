@@ -1355,8 +1355,9 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 2rem;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .stickyText {
@@ -1622,6 +1623,116 @@
   opacity: 0.3;
 }
 
+/* Collapsed Button - Minimalist floating button */
+.stickyCollapsedButton {
+  padding: 1rem 2rem;
+  background: 
+    linear-gradient(145deg, 
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.1) 30%,
+      rgba(255, 255, 255, 0.05) 70%,
+      rgba(255, 255, 255, 0.15) 100%
+    );
+  border: 1px solid;
+  border-image: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.3) 100%
+  ) 1;
+  border-radius: 32px;
+  color: rgba(0, 0, 0, 0.9);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  backdrop-filter: blur(40px) saturate(180%) brightness(110%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(110%);
+  
+  box-shadow: 
+    0 8px 32px rgba(255, 255, 255, 0.1),
+    0 16px 64px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  letter-spacing: -0.01em;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  
+  position: relative;
+  overflow: hidden;
+}
+
+.stickyCollapsedButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+}
+
+.stickyCollapsedButton:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: 
+    linear-gradient(145deg, 
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.15) 30%,
+      rgba(255, 255, 255, 0.08) 70%,
+      rgba(255, 255, 255, 0.25) 100%
+    );
+  box-shadow: 
+    0 12px 48px rgba(255, 255, 255, 0.15),
+    0 24px 96px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.stickyCollapsedButton:active {
+  transform: translateY(0) scale(1.02);
+}
+
+/* Button Group for expanded state */
+.stickyButtonGroup {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.stickyCancelButton {
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+}
+
+.stickyCancelButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.stickyCancelButton:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .stickyError {
   position: absolute;
   top: 100%;
@@ -1740,6 +1851,26 @@
     border-radius: 16px;
     font-size: 0.875rem;
     text-align: center;
+  }
+  
+  /* Mobile collapsed button */
+  .stickyCollapsedButton {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    border-radius: 28px;
+    min-height: 52px;
+  }
+  
+  .stickyButtonGroup {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .stickyCancelButton,
+  .stickyButtonGroup .stickyButton {
+    width: 100%;
+    min-height: 48px;
   }
 }
 
@@ -1992,6 +2123,60 @@
           rgba(255, 255, 255, 0.9) 0%,
           rgba(248, 250, 252, 0.7) 100%
         );
+    }
+    
+    /* Light mode collapsed button */
+    .stickyCollapsedButton {
+      background: 
+        linear-gradient(145deg, 
+          rgba(255, 255, 255, 0.7) 0%,
+          rgba(255, 255, 255, 0.4) 30%,
+          rgba(255, 255, 255, 0.3) 70%,
+          rgba(255, 255, 255, 0.6) 100%
+        );
+      border-image: linear-gradient(145deg, 
+        rgba(0, 0, 0, 0.15) 0%,
+        rgba(0, 0, 0, 0.08) 50%,
+        rgba(0, 0, 0, 0.12) 100%
+      ) 1;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.06),
+        0 16px 64px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    .stickyCollapsedButton::before {
+      background: linear-gradient(180deg, 
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+      );
+    }
+    
+    .stickyCollapsedButton:hover {
+      background: 
+        linear-gradient(145deg, 
+          rgba(255, 255, 255, 0.9) 0%,
+          rgba(255, 255, 255, 0.5) 30%,
+          rgba(255, 255, 255, 0.4) 70%,
+          rgba(255, 255, 255, 0.8) 100%
+        );
+      box-shadow: 
+        0 12px 48px rgba(0, 0, 0, 0.08),
+        0 24px 96px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    }
+    
+    .stickyCancelButton {
+      border-color: rgba(0, 0, 0, 0.15);
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .stickyCancelButton:hover {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.2);
     }
   }
 }

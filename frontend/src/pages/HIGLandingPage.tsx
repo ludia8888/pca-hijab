@@ -18,6 +18,7 @@ const HIGLandingPage = (): JSX.Element => {
   const heroRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
+  const [isFormExpanded, setIsFormExpanded] = useState(false);
 
   // Track landing page entry
   useEffect(() => {
@@ -361,32 +362,72 @@ const HIGLandingPage = (): JSX.Element => {
       {showStickyCTA && (
         <div className={styles.stickyCTA}>
           <div className={styles.stickyContent}>
-            <div className={styles.stickyText}>
-              <h3>Ready to discover your colors?</h3>
-              <p>Start your personal color analysis now</p>
-            </div>
-            <form onSubmit={handleSubmit} className={styles.stickyForm}>
-              <div className={styles.stickyInputGroup}>
-                <input
-                  type="text"
-                  value={instagramId}
-                  onChange={(e) => handleIdChange(e.target.value)}
-                  placeholder="Instagram ID"
-                  className={styles.stickyInput}
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={!isValid || isLoading}
-                  className={styles.stickyButton}
-                >
-                  {isLoading ? 'Starting...' : 'Begin Analysis'}
-                </button>
-              </div>
-              {error && (
-                <p className={styles.stickyError}>{error}</p>
-              )}
-            </form>
+            {!isFormExpanded ? (
+              /* Collapsed state - just the button */
+              <button
+                onClick={() => {
+                  setIsFormExpanded(true);
+                  // Track CTA expansion
+                  trackEvent('sticky_cta_expand', {
+                    interaction_type: 'button_click',
+                    user_flow_step: 'sticky_cta_expanded'
+                  });
+                }}
+                className={styles.stickyCollapsedButton}
+              >
+                Begin Analysis
+              </button>
+            ) : (
+              /* Expanded state - full form */
+              <>
+                <div className={styles.stickyText}>
+                  <h3>Ready to discover your colors?</h3>
+                  <p>Enter your Instagram ID to start</p>
+                </div>
+                <form onSubmit={handleSubmit} className={styles.stickyForm}>
+                  <div className={styles.stickyInputGroup}>
+                    <input
+                      type="text"
+                      value={instagramId}
+                      onChange={(e) => handleIdChange(e.target.value)}
+                      placeholder="Instagram ID"
+                      className={styles.stickyInput}
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                    <div className={styles.stickyButtonGroup}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFormExpanded(false);
+                          setInstagramId('');
+                          setError('');
+                          setIsValid(false);
+                          // Track CTA collapse
+                          trackEvent('sticky_cta_collapse', {
+                            interaction_type: 'cancel_button',
+                            user_flow_step: 'sticky_cta_collapsed'
+                          });
+                        }}
+                        className={styles.stickyCancelButton}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!isValid || isLoading}
+                        className={styles.stickyButton}
+                      >
+                        {isLoading ? 'Starting...' : 'Begin'}
+                      </button>
+                    </div>
+                  </div>
+                  {error && (
+                    <p className={styles.stickyError}>{error}</p>
+                  )}
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
