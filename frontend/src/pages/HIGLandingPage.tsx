@@ -278,77 +278,164 @@ const HIGLandingPage = (): JSX.Element => {
         </div>
       </section>
 
-      {/* Process Section - Visual hierarchy */}
+      {/* Process Section - Liquid Glass Experience */}
       <section className={styles.process}>
-        <h2 className={styles.processTitle}>Simple Process</h2>
+        {/* Floating glass title */}
+        <div className={styles.processTitleContainer}>
+          <h2 className={styles.processTitle}>
+            <span className={styles.titleGlass}>Simple</span>
+            <span className={styles.titleRefraction}>Process</span>
+          </h2>
+          <p className={styles.processSubtitle}>Three steps to discover your colors</p>
+        </div>
         
-        <div className={styles.processSteps}>
-          <div 
-            className={styles.processStep}
-            onMouseMove={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const x = ((e.clientX - rect.left) / rect.width) * 100;
-              const y = ((e.clientY - rect.top) / rect.height) * 100;
-              e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-              e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.setProperty('--mouse-x', '50%');
-              e.currentTarget.style.setProperty('--mouse-y', '50%');
-            }}
-          >
-            <div className={styles.stepNumber}>01</div>
-            <div className={styles.stepContent}>
-              <h4 className={styles.stepTitle}>Upload</h4>
-              <p className={styles.stepText}>Clear photo with natural lighting</p>
+        {/* 3D Glass Cards Container */}
+        <div className={styles.processContainer}>
+          {/* Ambient light orbs */}
+          <div className={styles.lightOrb1} />
+          <div className={styles.lightOrb2} />
+          <div className={styles.lightOrb3} />
+          
+          {/* Glass cards with unique layouts */}
+          <div className={styles.processGrid}>
+            {/* Upload Card - Floating left */}
+            <div 
+              className={`${styles.processCard} ${styles.cardUpload}`}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.setProperty('--mouse-x', '50%');
+                e.currentTarget.style.setProperty('--mouse-y', '50%');
+              }}
+            >
+              {/* Glass layers */}
+              <div className={styles.glassLayer1} />
+              <div className={styles.glassLayer2} />
+              <div className={styles.glassContent}>
+                <div className={styles.iconContainer}>
+                  <div className={styles.iconGlass}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M7 10L12 5L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M12 5V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className={styles.cardText}>
+                  <h3 className={styles.cardTitle}>Upload</h3>
+                  <p className={styles.cardDescription}>Clear photo with natural lighting</p>
+                </div>
+                <div className={styles.stepBadge}>01</div>
+              </div>
+              {/* Refraction effect */}
+              <div className={styles.refractionLayer} />
+            </div>
+
+            {/* Analyze Card - Center elevated */}
+            <div 
+              className={`${styles.processCard} ${styles.cardAnalyze}`}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.setProperty('--mouse-x', '50%');
+                e.currentTarget.style.setProperty('--mouse-y', '50%');
+              }}
+            >
+              <div className={styles.glassLayer1} />
+              <div className={styles.glassLayer2} />
+              <div className={styles.glassContent}>
+                <div className={styles.iconContainer}>
+                  <div className={styles.iconGlass}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className={styles.cardText}>
+                  <h3 className={styles.cardTitle}>Analyze</h3>
+                  <p className={styles.cardDescription}>AI processes your unique features</p>
+                </div>
+                <div className={styles.stepBadge}>02</div>
+                {/* Animated pulse ring */}
+                <div className={styles.pulseRing} />
+              </div>
+              <div className={styles.refractionLayer} />
+            </div>
+
+            {/* Receive Card - Floating right */}
+            <div 
+              className={`${styles.processCard} ${styles.cardReceive}`}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.setProperty('--mouse-x', '50%');
+                e.currentTarget.style.setProperty('--mouse-y', '50%');
+              }}
+            >
+              <div className={styles.glassLayer1} />
+              <div className={styles.glassLayer2} />
+              <div className={styles.glassContent}>
+                <div className={styles.iconContainer}>
+                  <div className={styles.iconGlass}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 11L12 14L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M21 12V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className={styles.cardText}>
+                  <h3 className={styles.cardTitle}>Receive</h3>
+                  <p className={styles.cardDescription}>Get your personalized color guide</p>
+                </div>
+                <div className={styles.stepBadge}>03</div>
+              </div>
+              <div className={styles.refractionLayer} />
             </div>
           </div>
 
-          <div className={styles.processConnector} />
-
-          <div 
-            className={styles.processStep}
-            onMouseMove={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const x = ((e.clientX - rect.left) / rect.width) * 100;
-              const y = ((e.clientY - rect.top) / rect.height) * 100;
-              e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-              e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.setProperty('--mouse-x', '50%');
-              e.currentTarget.style.setProperty('--mouse-y', '50%');
-            }}
-          >
-            <div className={styles.stepNumber}>02</div>
-            <div className={styles.stepContent}>
-              <h4 className={styles.stepTitle}>Analyze</h4>
-              <p className={styles.stepText}>AI processes your unique features</p>
-            </div>
-          </div>
-
-          <div className={styles.processConnector} />
-
-          <div 
-            className={styles.processStep}
-            onMouseMove={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const x = ((e.clientX - rect.left) / rect.width) * 100;
-              const y = ((e.clientY - rect.top) / rect.height) * 100;
-              e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-              e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.setProperty('--mouse-x', '50%');
-              e.currentTarget.style.setProperty('--mouse-y', '50%');
-            }}
-          >
-            <div className={styles.stepNumber}>03</div>
-            <div className={styles.stepContent}>
-              <h4 className={styles.stepTitle}>Receive</h4>
-              <p className={styles.stepText}>Get your personalized color guide</p>
-            </div>
-          </div>
+          {/* Liquid flow connectors */}
+          <svg className={styles.flowConnectors} viewBox="0 0 800 400" fill="none">
+            <path 
+              className={styles.flowPath1}
+              d="M 150 200 Q 250 150 350 200"
+              stroke="url(#flowGradient1)"
+              strokeWidth="2"
+              strokeDasharray="5 5"
+            />
+            <path 
+              className={styles.flowPath2}
+              d="M 450 200 Q 550 150 650 200"
+              stroke="url(#flowGradient2)"
+              strokeWidth="2"
+              strokeDasharray="5 5"
+            />
+            <defs>
+              <linearGradient id="flowGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(236, 72, 153, 0.3)" />
+                <stop offset="100%" stopColor="rgba(147, 51, 234, 0.3)" />
+              </linearGradient>
+              <linearGradient id="flowGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(147, 51, 234, 0.3)" />
+                <stop offset="100%" stopColor="rgba(59, 130, 246, 0.3)" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
       </section>
 
