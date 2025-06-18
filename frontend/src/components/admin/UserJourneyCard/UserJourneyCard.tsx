@@ -386,7 +386,10 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onAction(user, 'add_note')}
+                onClick={() => {
+                  // TODO: Implement note adding functionality
+                  console.log('Add note for user:', user.id);
+                }}
                 className="text-gray-600"
               >
                 <MessageCircle className="w-4 h-4 mr-1" />
@@ -437,7 +440,9 @@ export default memo(UserJourneyCardComponent, (prevProps, nextProps) => {
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.compact === nextProps.compact &&
     // For callbacks, we assume they're stable (wrapped in useCallback)
-    prevProps.onAction === nextProps.onAction &&
+    prevProps.onStatusChange === nextProps.onStatusChange &&
+    prevProps.onPriorityChange === nextProps.onPriorityChange &&
+    prevProps.onMessageToggle === nextProps.onMessageToggle &&
     prevProps.onSelect === nextProps.onSelect &&
     prevProps.onViewDetail === nextProps.onViewDetail
   );

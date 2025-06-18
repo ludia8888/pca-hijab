@@ -453,7 +453,8 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                             
                             setIsSubmittingNote(true);
                             try {
-                              await // onAction(user, 'add_note', noteContent, noteTags);
+                              // TODO: Implement note adding functionality
+                              console.log('Add note:', noteContent, noteTags);
                               setNoteContent('');
                               setNoteTags([]);
                             } finally {
@@ -536,7 +537,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {user.journeyStatus === 'recommendation_requested' && (
                     <Button
                       onClick={() => {
-                        // onAction(user, 'start_recommendation_process');
+                        onStatusChange?.(user, 'recommendation_processing');
                         onClose();
                       }}
                       className="bg-purple-600 hover:bg-purple-700"
@@ -549,7 +550,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {user.journeyStatus === 'recommendation_processing' && (
                     <Button
                       onClick={() => {
-                        // onAction(user, 'complete_recommendation');
+                        onStatusChange?.(user, 'recommendation_completed');
                         onClose();
                       }}
                       className="bg-green-600 hover:bg-green-700"
@@ -572,19 +573,28 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     {showActionMenu && (
                       <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                         <button
-                          onClick={() => // onAction(user, 'send_diagnosis_reminder')}
+                          onClick={() => {
+                            onMessageToggle?.(user, 'diagnosis_reminder', true);
+                            setShowActionMenu(false);
+                          }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           진단 독려 메시지
                         </button>
                         <button
-                          onClick={() => // onAction(user, 'send_reactivation_message')}
+                          onClick={() => {
+                            onMessageToggle?.(user, 'reactivation', true);
+                            setShowActionMenu(false);
+                          }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           재활성화 메시지
                         </button>
                         <button
-                          onClick={() => // onAction(user, 'schedule_followup')}
+                          onClick={() => {
+                            onMessageToggle?.(user, 'followup', true);
+                            setShowActionMenu(false);
+                          }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           팔로우업 예약
