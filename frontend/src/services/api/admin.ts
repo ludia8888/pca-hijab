@@ -158,4 +158,66 @@ export class AdminAPI {
       }
     );
   }
+
+  /**
+   * Log admin action
+   */
+  static async logAction(apiKey: string, action: {
+    userId: string;
+    actionType: string;
+    description: string;
+    metadata?: any;
+  }): Promise<void> {
+    await apiClient.post(
+      '/admin/actions',
+      action,
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+  }
+
+  /**
+   * Update user status
+   */
+  static async updateUserStatus(apiKey: string, userId: string, status: string): Promise<void> {
+    await apiClient.patch(
+      `/admin/users/${userId}/status`,
+      { status },
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+  }
+
+  /**
+   * Update user priority
+   */
+  static async updateUserPriority(apiKey: string, userId: string, priority: string): Promise<void> {
+    await apiClient.patch(
+      `/admin/users/${userId}/priority`,
+      { priority },
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+  }
+
+  /**
+   * Schedule followup
+   */
+  static async scheduleFollowup(apiKey: string, followup: {
+    userId: string;
+    scheduledDate: Date;
+    type: string;
+    notes?: string;
+  }): Promise<void> {
+    await apiClient.post(
+      '/admin/followups',
+      followup,
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+  }
 }

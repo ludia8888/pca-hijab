@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminStore } from '@/store/useAdminStore';
-import { UserJourneyService } from '@/services/admin/userJourneyService';
+import { UserJourneyService, ActionExecutionService } from '@/services/admin';
 import { useToast } from '@/components/ui';
 import type { 
   UnifiedUserView, 
@@ -114,70 +114,37 @@ export const useAdminWorkflow = () => {
   ) => {
     if (!apiKey) return;
 
-    try {
-      // 액션에 따른 실제 처리
-      switch (action) {
-        case 'start_recommendation_process':
-          // 추천 상태를 processing으로 변경
-          if (user.recommendation) {
-            // AdminAPI.updateRecommendationStatus 호출
-            addToast({
-              type: 'success',
-              title: '추천 처리 시작',
-              message: `@${user.instagramId}의 히잡 추천 작업을 시작했습니다.`
-            });
-          }
-          break;
-
-        case 'complete_recommendation':
-          // 추천 완료 처리
-          if (user.recommendation) {
-            addToast({
-              type: 'success',
-              title: '추천 완료',
-              message: `@${user.instagramId}의 히잡 추천이 완료되었습니다.`
-            });
-          }
-          break;
-
-        case 'send_recommendation_offer':
-          // 추천 서비스 제안 메시지 (실제로는 외부 시스템과 연동)
-          addToast({
-            type: 'info',
-            title: '추천 제안 발송',
-            message: `@${user.instagramId}에게 히잡 추천 서비스를 제안했습니다.`
-          });
-          break;
-
-        case 'send_diagnosis_reminder':
-          // 진단 독려 메시지
-          addToast({
-            type: 'info',
-            title: '진단 독려 발송',
-            message: `@${user.instagramId}에게 퍼스널 컬러 진단 독려 메시지를 발송했습니다.`
-          });
-          break;
-
-        case 'add_note':
-          // 관리자 노트 추가 (실제로는 모달 열기)
-          addToast({
-            type: 'info',
-            title: '노트 추가',
-            message: '관리자 노트를 추가하는 기능을 구현 예정입니다.'
-          });
-          break;
-
-        default:
-          addToast({
-            type: 'info',
-            title: '액션 실행',
-            message: `${action} 액션을 실행했습니다.`
-          });
+    // 확인이 필요한 액션인지 체크
+    if (ActionExecutionService.requiresConfirmation(action)) {
+      const confirmMessage = ActionExecutionService.getConfirmationMessage(user, action);
+      if (confirmMessage) {
+        // TODO: 확인 모달 표시
+        console.log('Confirmation required:', confirmMessage);
       }
+    }
 
-      // 데이터 새로고침
-      await loadData();
-
+    try {
+      // 액션 실행
+      const result = await ActionExecutionService.executeAction(user, action, apiKey);
+      
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: '액션 성공',
+          message: result.message
+        });
+        
+        // 데이터 새로고침
+        await loadData();
+      } else {
+        addToast({
+          type: 'error',
+          title: '액션 실패',
+          message: result.message
+        });
+      }
+      
+      return result;
     } catch (error) {
       console.error('Failed to execute user action:', error);
       addToast({
@@ -199,16 +166,28 @@ export const useAdminWorkflow = () => {
       // 선택된 사용자들에 대해 배치 액션 실행
       const selectedUsers = state.userViews.filter(user => userIds.includes(user.id));
       
-      // 병렬로 액션 실행
-      await Promise.all(
-        selectedUsers.map(user => executeUserAction(user, action))
+      const result = await ActionExecutionService.executeBatchAction(
+        selectedUsers,
+        action,
+        apiKey
       );
 
-      addToast({
-        type: 'success',
-        title: '배치 액션 완료',
-        message: `${selectedUsers.length}명의 사용자에 대해 ${action} 액션을 실행했습니다.`
-      });
+      if (result.successful > 0) {
+        addToast({
+          type: 'success',
+          title: '배치 액션 완료',
+          message: `${result.successful}명 성공, ${result.failed}명 실패`
+        });
+      } else {
+        addToast({
+          type: 'error',
+          title: '배치 액션 실패',
+          message: `모든 액션이 실패했습니다. (${result.failed}명)`
+        });
+      }
+
+      // 데이터 새로고침
+      await loadData();
 
       // 선택 해제
       setState(prev => ({ ...prev, selectedUsers: new Set() }));
@@ -221,7 +200,7 @@ export const useAdminWorkflow = () => {
         message: '배치 액션 실행에 실패했습니다.'
       });
     }
-  }, [apiKey, state.userViews, executeUserAction, addToast]);
+  }, [apiKey, state.userViews, loadData, addToast]);
 
   // 뷰 변경
   const setActiveView = useCallback((view: AdminWorkflowState['activeView']) => {

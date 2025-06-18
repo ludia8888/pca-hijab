@@ -25,6 +25,7 @@ interface UserJourneyCardProps {
   isSelected?: boolean;
   onSelect?: (userId: string) => void;
   compact?: boolean;
+  onViewDetail?: (user: UnifiedUserView) => void;
 }
 
 const UserJourneyCard: React.FC<UserJourneyCardProps> = ({
@@ -32,7 +33,8 @@ const UserJourneyCard: React.FC<UserJourneyCardProps> = ({
   onAction,
   isSelected = false,
   onSelect,
-  compact = false
+  compact = false,
+  onViewDetail
 }) => {
   const [showActions, setShowActions] = useState(false);
 
@@ -373,14 +375,17 @@ const UserJourneyCard: React.FC<UserJourneyCardProps> = ({
                 노트
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-600"
-              >
-                <ArrowRight className="w-4 h-4 mr-1" />
-                상세
-              </Button>
+              {onViewDetail && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600"
+                  onClick={() => onViewDetail(user)}
+                >
+                  <ArrowRight className="w-4 h-4 mr-1" />
+                  상세
+                </Button>
+              )}
             </>
           )}
         </div>

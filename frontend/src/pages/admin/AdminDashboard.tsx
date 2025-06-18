@@ -15,15 +15,17 @@ import {
 } from 'lucide-react';
 import { Button, LoadingSpinner, useToast } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
-import { TodaysWork, InsightsDashboard, UserJourneyCard } from '@/components/admin';
+import { TodaysWork, InsightsDashboard, UserJourneyCard, UserDetailModal } from '@/components/admin';
 import { useAdminStore } from '@/store/useAdminStore';
 import { useAdminWorkflow } from '@/hooks/useAdminWorkflow';
 import { trackEvent } from '@/utils/analytics';
+import type { UnifiedUserView } from '@/types/admin';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAdminStore();
   const { addToast } = useToast();
+  const [selectedUserForDetail, setSelectedUserForDetail] = React.useState<UnifiedUserView | null>(null);
   
   const {
     // 상태

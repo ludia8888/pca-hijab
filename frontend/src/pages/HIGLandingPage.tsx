@@ -19,6 +19,7 @@ const HIGLandingPage = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [isFormExpanded, setIsFormExpanded] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Track landing page entry
   useEffect(() => {
@@ -46,6 +47,45 @@ const HIGLandingPage = (): JSX.Element => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle virtual keyboard on mobile
+  useEffect(() => {
+    if (!isFormExpanded) return;
+
+    const handleResize = () => {
+      // Detect keyboard by checking viewport height change
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+      const screenHeight = window.screen.height;
+      const keyboardVisible = currentHeight < screenHeight * 0.75;
+      
+      if (keyboardVisible) {
+        const kbHeight = screenHeight - currentHeight;
+        setKeyboardHeight(kbHeight);
+      } else {
+        setKeyboardHeight(0);
+      }
+    };
+
+    // Visual Viewport API for better mobile keyboard detection
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
+    } else {
+      window.addEventListener('resize', handleResize);
+    }
+
+    // Initial check
+    handleResize();
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
+      } else {
+        window.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [isFormExpanded]);
 
 
   const handleIdChange = (value: string): void => {
@@ -410,6 +450,9 @@ const HIGLandingPage = (): JSX.Element => {
               role="dialog"
               aria-label="Color analysis form"
               aria-modal="false"
+              style={{
+                bottom: keyboardHeight > 0 ? `${keyboardHeight + 20}px` : undefined
+              }}
             >
               <div className={styles.extendedFABHeader}>
                 <h3 className={styles.extendedFABTitle}>Start Your Analysis</h3>
