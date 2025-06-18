@@ -17,34 +17,69 @@ const CompletionPage = (): JSX.Element => {
   // Redirect if no required data
   useEffect(() => {
     if (!instagramId || !analysisResult) {
+      // Track drop-off if user arrives without proper data
+      trackDropOff('completion_page', 'missing_required_data');
       navigate(ROUTES.HOME);
     } else {
-      // Track recommendation request and flow completion
+      // Track successful page entry
+      trackEvent('page_enter', {
+        page: 'completion',
+        user_flow_step: 'completion_page_entered',
+        personal_color: analysisResult.personal_color_en,
+        instagram_id: instagramId
+      });
+
+      // Track recommendation request and flow completion with enhanced data
       trackRecommendationRequest(instagramId, analysisResult.personal_color_en);
+      
+      trackFlowCompletion(instagramId, analysisResult.personal_color_en);
       
       trackEvent('flow_complete', {
         instagram_id: instagramId,
         personal_color: analysisResult.personal_color_en,
-        completion_time: 0 // We don't have the actual time here
+        confidence_score: Math.round((analysisResult.confidence || 0) * 100),
+        user_flow_step: 'full_flow_completed',
+        completion_timestamp: new Date().toISOString()
+      });
+
+      // Track high-value conversion event
+      trackEvent('conversion', {
+        event_category: 'conversion',
+        conversion_type: 'recommendation_request_submitted',
+        value: 1,
+        currency: 'USD',
+        personal_color: analysisResult.personal_color_en
       });
     }
   }, [instagramId, analysisResult, navigate]);
 
   const handleShare = async (): Promise<void> => {
     try {
-      // Track share button click
+      // Track share button click with enhanced data
       trackEvent('button_click', {
         button_name: 'share_app',
-        page: 'completion'
+        page: 'completion',
+        user_flow_step: 'app_share_initiated',
+        personal_color: analysisResult?.personal_color_en
       });
+
+      trackEngagement('share', 'app_promotion');
       
       await shareOrCopy({
         title: 'Hijab Personal Color Analysis',
         text: `Get AI personal color analysis and personalized hijab recommendations!`,
         url: window.location.origin,
       });
-    } catch {
-      // Sharing failed silently, copy was likely used instead
+
+      // Track successful share
+      trackEvent('share_complete', {
+        shared_content: 'app_promotion',
+        share_location: 'completion_page',
+        personal_color: analysisResult?.personal_color_en
+      });
+    } catch (error) {
+      // Track share failure
+      trackError('app_share_failed', error instanceof Error ? error.message : 'Unknown share error', 'completion_page');
     }
   };
 
@@ -52,27 +87,51 @@ const CompletionPage = (): JSX.Element => {
     if (!analysisResult || !instagramId) return;
     
     try {
-      // Track save result button click
+      // Track save result button click with enhanced data
       trackEvent('button_click', {
         button_name: 'save_result_image',
-        page: 'completion'
+        page: 'completion',
+        user_flow_step: 'completion_image_save_initiated',
+        personal_color: analysisResult.personal_color_en
       });
+
+      trackEngagement('download', 'completion_result_image');
       
       // Generate the beautiful enhanced result card
       const blob = await generateResultCard(analysisResult, instagramId);
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `hijab_personal_color_${timestamp}.jpg`;
       downloadResultCard(blob, filename);
-    } catch {
+
+      // Track successful download
+      trackEvent('download_complete', {
+        downloaded_content: 'completion_result_image',
+        personal_color: analysisResult.personal_color_en,
+        file_format: 'jpg',
+        download_location: 'completion_page'
+      });
+    } catch (error) {
+      const errorMessage = `Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`;
       alert('Failed to save image. Please try again.');
+      trackError('completion_image_save_failed', error instanceof Error ? error.message : 'Unknown download error', 'completion_page');
     }
   };
 
   const handleGoHome = (): void => {
-    // Track go home button click
+    // Track go home button click with enhanced data
     trackEvent('button_click', {
       button_name: 'go_home',
-      page: 'completion'
+      page: 'completion',
+      user_flow_step: 'session_reset_initiated',
+      personal_color: analysisResult?.personal_color_en
+    });
+
+    // Track session end
+    trackEvent('session_end', {
+      end_location: 'completion_page',
+      session_completed: true,
+      personal_color: analysisResult?.personal_color_en,
+      instagram_id: instagramId
     });
     
     reset();

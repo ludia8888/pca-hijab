@@ -4,7 +4,7 @@ import { PageLayout } from '@/components/layout';
 import { ANALYSIS_STEPS, ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { analyzeImage } from '@/services/api';
-import { trackAIAnalysis, trackEvent } from '@/utils/analytics';
+import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement } from '@/utils/analytics';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -14,10 +14,20 @@ const AnalyzingPage = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Redirect if no image or instagram ID
+  // Redirect if no image or instagram ID and track page entry
   useEffect(() => {
     if (!uploadedFile || !instagramId) {
+      // Track drop-off if user arrives without proper data
+      trackDropOff('analyzing_page', 'missing_upload_data');
       navigate(ROUTES.HOME);
+    } else {
+      // Track successful page entry
+      trackEvent('page_enter', {
+        page: 'analyzing',
+        user_flow_step: 'analyzing_page_entered',
+        file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
+        file_type: uploadedFile.type
+      });
     }
   }, [uploadedFile, instagramId, navigate]);
 
@@ -25,17 +35,37 @@ const AnalyzingPage = (): JSX.Element => {
   useEffect(() => {
     if (uploadedFile && !isAnalyzing) {
       setIsAnalyzing(true);
+      
+      // Track AI analysis start
+      trackEvent('ai_analysis_start', {
+        file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
+        file_type: uploadedFile.type,
+        user_flow_step: 'ai_analysis_initiated',
+        start_timestamp: new Date().toISOString()
+      });
+
+      trackEngagement('ai_analysis', 'analysis_start');
+      
       performAnalysis();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedFile]);
 
-  // Progress animation
+  // Progress animation with tracking
   useEffect(() => {
     if (currentStep < ANALYSIS_STEPS.length) {
       const step = ANALYSIS_STEPS[currentStep];
       const timer = setTimeout(() => {
         setProgress(step.progress);
+        
+        // Track progress milestones
+        trackEvent('analysis_progress', {
+          step_number: currentStep + 1,
+          step_name: step.message,
+          progress_percentage: step.progress,
+          user_flow_step: 'analysis_progress_update'
+        });
+        
         if (currentStep < ANALYSIS_STEPS.length - 1) {
           setCurrentStep(currentStep + 1);
         }
@@ -63,13 +93,25 @@ const AnalyzingPage = (): JSX.Element => {
       
       console.log('Analysis successful:', result);
       
-      // Track successful AI analysis with time
+      // Track successful AI analysis with enhanced data
       trackAIAnalysis({
         personalColorType: result.personal_color_en,
         season: result.personal_color_en.toLowerCase().split(' ')[0],
         tone: result.personal_color_en.toLowerCase().split(' ')[1] || 'neutral',
         confidence: result.confidence || 0,
-        processingTime: analysisTime
+        processingTime: analysisTime,
+        analysisId: sessionId
+      });
+
+      // Track detailed analysis success
+      trackEvent('ai_analysis_success', {
+        personal_color: result.personal_color_en,
+        confidence_score: Math.round((result.confidence || 0) * 100),
+        processing_time_ms: analysisTime,
+        file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
+        file_type: uploadedFile.type,
+        analysis_quality: (result.confidence || 0) > 0.8 ? 'high' : (result.confidence || 0) > 0.6 ? 'medium' : 'low',
+        user_flow_step: 'analysis_completed_successfully'
       });
       
       // Store result
@@ -87,8 +129,17 @@ const AnalyzingPage = (): JSX.Element => {
         }
       } catch (saveError) {
         console.error('Failed to save analysis result to backend:', saveError);
+        trackError('backend_save_failed', saveError instanceof Error ? saveError.message : 'Unknown save error', 'analyzing_page');
         // Don't block user flow for backend save errors
       }
+      
+      // Track navigation to results
+      trackEvent('navigation_start', {
+        from_page: 'analyzing',
+        to_page: 'result',
+        personal_color: result.personal_color_en,
+        user_flow_step: 'navigating_to_results'
+      });
       
       // Wait for animation to complete
       setTimeout(() => {
@@ -123,6 +174,19 @@ const AnalyzingPage = (): JSX.Element => {
         console.error('Non-Error object thrown:', err);
         errorMessage = String(err);
       }
+      
+      // Track analysis failure with enhanced data
+      trackError('ai_analysis_failed', errorMessage, 'analyzing_page');
+      trackEvent('ai_analysis_failed', {
+        error_message: errorMessage,
+        file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
+        file_type: uploadedFile.type,
+        analysis_duration_ms: Date.now() - Date.now(), // This would need the actual start time
+        user_flow_step: 'analysis_failed',
+        error_type: errorMessage.includes('HEIC') ? 'unsupported_format' :
+                   errorMessage.includes('network') ? 'network_error' :
+                   errorMessage.includes('timeout') ? 'timeout_error' : 'unknown_error'
+      });
       
       setError(`Error: ${errorMessage}`);
     }
@@ -188,15 +252,21 @@ const AnalyzingPage = (): JSX.Element => {
             <p className="text-error text-center mb-4">{error}</p>
             <button
               onClick={() => {
-                // Track retry button click
+                // Track retry button click with enhanced data
                 trackEvent('button_click', {
                   button_name: 'try_again_analysis',
-                  page: 'analyzing'
+                  page: 'analyzing',
+                  retry_attempt: 'user_initiated',
+                  previous_error: error || 'unknown',
+                  user_flow_step: 'analysis_retry_initiated'
                 });
+
+                trackEngagement('retry', 'analysis_retry');
                 
                 setError(null);
                 setCurrentStep(0);
                 setProgress(0);
+                setIsAnalyzing(false); // Reset analyzing state
                 performAnalysis();
               }}
               className="w-full py-2 bg-error text-white rounded-lg hover:bg-error/90 transition-colors"

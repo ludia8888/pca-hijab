@@ -1732,46 +1732,102 @@
       0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
-  /* Light mode button adjustments for better visibility */
+  /* Light mode glassmorphism button adjustments */
   .stickyButton {
     background: 
-      linear-gradient(135deg, 
-        rgba(0, 0, 0, 0.06) 0%, 
-        rgba(0, 0, 0, 0.03) 50%,
-        rgba(0, 0, 0, 0.05) 100%
+      linear-gradient(145deg, 
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(255, 255, 255, 0.3) 30%,
+        rgba(255, 255, 255, 0.2) 70%,
+        rgba(255, 255, 255, 0.5) 100%
       );
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-image: linear-gradient(145deg, 
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.08) 50%,
+      rgba(0, 0, 0, 0.12) 100%
+    ) 1;
     color: rgba(0, 0, 0, 0.9);
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.04),
+      0 8px 32px rgba(0, 0, 0, 0.02),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  }
+
+  .stickyButton::before {
+    background: linear-gradient(180deg, 
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+  }
+
+  .stickyButton::after {
+    background: 
+      radial-gradient(ellipse at top left, 
+        rgba(255, 255, 255, 0.6) 0%,
+        transparent 50%
+      ),
+      radial-gradient(ellipse at bottom right, 
+        rgba(255, 255, 255, 0.4) 0%,
+        transparent 50%
+      );
   }
 
   .stickyButton:hover:not(:disabled) {
     background: 
-      linear-gradient(135deg, 
-        rgba(0, 0, 0, 0.08) 0%, 
-        rgba(0, 0, 0, 0.04) 50%,
-        rgba(0, 0, 0, 0.07) 100%
+      linear-gradient(145deg, 
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 0.4) 30%,
+        rgba(255, 255, 255, 0.3) 70%,
+        rgba(255, 255, 255, 0.7) 100%
       );
-    border-color: rgba(0, 0, 0, 0.18);
+    border-image: linear-gradient(145deg, 
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.18) 100%
+    ) 1;
+    box-shadow: 
+      0 6px 30px rgba(0, 0, 0, 0.06),
+      0 12px 48px rgba(0, 0, 0, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.6);
   }
 
   .stickyButton:active:not(:disabled) {
     background: 
-      linear-gradient(135deg, 
-        rgba(0, 0, 0, 0.04) 0%, 
-        rgba(0, 0, 0, 0.02) 50%,
-        rgba(0, 0, 0, 0.03) 100%
+      linear-gradient(145deg, 
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.2) 30%,
+        rgba(255, 255, 255, 0.15) 70%,
+        rgba(255, 255, 255, 0.35) 100%
       );
+    box-shadow: 
+      0 2px 12px rgba(0, 0, 0, 0.03),
+      0 4px 24px rgba(0, 0, 0, 0.02),
+      inset 0 2px 4px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
 
   .stickyButton:disabled {
     background: 
-      linear-gradient(135deg, 
-        rgba(0, 0, 0, 0.02) 0%, 
-        rgba(0, 0, 0, 0.01) 50%,
-        rgba(0, 0, 0, 0.015) 100%
+      linear-gradient(145deg, 
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.15) 30%,
+        rgba(255, 255, 255, 0.1) 70%,
+        rgba(255, 255, 255, 0.25) 100%
       );
-    border-color: rgba(0, 0, 0, 0.06);
+    border-image: linear-gradient(145deg, 
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.04) 50%,
+      rgba(0, 0, 0, 0.06) 100%
+    ) 1;
     color: rgba(0, 0, 0, 0.4);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.02),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
   }
 }
