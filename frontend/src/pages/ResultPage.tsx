@@ -394,12 +394,12 @@ const ResultPage = (): JSX.Element => {
             transform: 'translateX(-50%)'
           }}
         >
-          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs px-2 py-1.5 rounded-xl shadow-xl flex items-center gap-1 whitespace-nowrap animate-bounce pointer-events-auto">
-            <span className="text-sm">✨</span>
+          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[11.5px] sm:text-[13.8px] px-1.5 py-1 rounded-lg shadow-xl flex items-center gap-0.5 whitespace-nowrap animate-bounce pointer-events-auto">
+            <span className="text-[14px]">✨</span>
             <span className="font-medium">Save result!</span>
             <button
               onClick={() => setShowDownloadHint(false)}
-              className="ml-1 text-white/80 hover:text-white text-sm leading-none"
+              className="ml-0.5 text-white/80 hover:text-white text-[14px] leading-none"
             >
               ×
             </button>
