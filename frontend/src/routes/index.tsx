@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import { ProtectedAdminRoute } from '@/components/auth/ProtectedAdminRoute';
 
 // Lazy load pages for code splitting
-const IntroPage = lazy(() => import('@/pages/IntroPage'));
+const ModernLandingPage = lazy(() => import('@/pages/ModernLandingPage'));
 const UploadPage = lazy(() => import('@/pages/UploadPage'));
 const AnalyzingPage = lazy(() => import('@/pages/AnalyzingPage'));
 const ResultPage = lazy(() => import('@/pages/ResultPage'));
@@ -55,7 +55,7 @@ const router = createBrowserRouter([
     path: ROUTES.HOME,
     element: (
       <Suspense fallback={<PageLoader />}>
-        <IntroPage />
+        <ModernLandingPage />
       </Suspense>
     ),
     errorElement: <RouteErrorBoundary />,
