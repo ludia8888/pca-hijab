@@ -26,10 +26,6 @@ const actionExecutors: Record<AdminActionType, ActionExecutor> = {
     type: 'send_diagnosis_reminder',
     execute: async (user, apiKey) => {
       try {
-        // 실제 구현에서는 Instagram API나 메시징 서비스와 연동
-        // 현재는 시뮬레이션
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         // 액션 로그 저장
         await AdminAPI.logAction(apiKey, {
           userId: user.id,
@@ -64,8 +60,6 @@ const actionExecutors: Record<AdminActionType, ActionExecutor> = {
     type: 'send_recommendation_offer',
     execute: async (user, apiKey) => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         await AdminAPI.logAction(apiKey, {
           userId: user.id,
           actionType: 'send_recommendation_offer',
@@ -202,7 +196,6 @@ const actionExecutors: Record<AdminActionType, ActionExecutor> = {
     type: 'send_reactivation_message',
     execute: async (user, apiKey) => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
         
         const reactivationType = user.personalColor ? 'post_diagnosis' : 'post_signup';
         
@@ -371,7 +364,8 @@ export class ActionExecutionService {
   static async executeAction(
     user: UnifiedUserView,
     action: AdminActionType,
-    apiKey: string
+    apiKey: string,
+    ...args: any[]
   ): Promise<ActionExecutionResult> {
     const executor = actionExecutors[action];
     
@@ -396,7 +390,7 @@ export class ActionExecutionService {
 
     // 액션 실행
     try {
-      const result = await executor.execute(user, apiKey);
+      const result = await executor.execute(user, apiKey, ...args);
       
       // 성공 시 이벤트 발생 (선택적)
       if (result.success) {

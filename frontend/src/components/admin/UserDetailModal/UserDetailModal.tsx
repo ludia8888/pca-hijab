@@ -26,7 +26,7 @@ interface UserDetailModalProps {
   user: UnifiedUserView;
   isOpen: boolean;
   onClose: () => void;
-  onAction: (user: UnifiedUserView, action: AdminActionType) => void;
+  onAction: (user: UnifiedUserView, action: AdminActionType, ...args: any[]) => void;
 }
 
 const UserDetailModal: React.FC<UserDetailModalProps> = ({
@@ -37,6 +37,9 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'timeline' | 'analysis' | 'notes'>('timeline');
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [noteContent, setNoteContent] = useState('');
+  const [noteTags, setNoteTags] = useState<string[]>([]);
+  const [isSubmittingNote, setIsSubmittingNote] = useState(false);
 
   if (!isOpen) return null;
 
@@ -416,18 +419,69 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <div className="space-y-4">
                   {/* 노트 입력 */}
                   <Card className="p-4">
-                    <div className="flex gap-3">
+                    <div className="space-y-3">
                       <textarea
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
                         placeholder="관리자 노트를 입력하세요..."
-                        className="flex-1 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                         rows={3}
+                        disabled={isSubmittingNote}
                       />
-                      <Button
-                        onClick={() => onAction(user, 'add_note')}
-                        className="self-end"
-                      >
-                        <Send className="w-4 h-4" />
-                      </Button>
+                      
+                      <div className="flex items-center justify-between">
+                        <input
+                          type="text"
+                          placeholder="태그 추가 (Enter로 구분)"
+                          className="flex-1 mr-3 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                              setNoteTags([...noteTags, e.currentTarget.value.trim()]);
+                              e.currentTarget.value = '';
+                            }
+                          }}
+                          disabled={isSubmittingNote}
+                        />
+                        
+                        <Button
+                          onClick={async () => {
+                            if (!noteContent.trim()) return;
+                            
+                            setIsSubmittingNote(true);
+                            try {
+                              await onAction(user, 'add_note', noteContent, noteTags);
+                              setNoteContent('');
+                              setNoteTags([]);
+                            } finally {
+                              setIsSubmittingNote(false);
+                            }
+                          }}
+                          disabled={!noteContent.trim() || isSubmittingNote}
+                          className="flex-shrink-0"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      {noteTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {noteTags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                            >
+                              <Tag className="w-3 h-3" />
+                              {tag}
+                              <button
+                                onClick={() => setNoteTags(noteTags.filter((_, i) => i !== index))}
+                                className="ml-1 hover:text-purple-900"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </Card>
 

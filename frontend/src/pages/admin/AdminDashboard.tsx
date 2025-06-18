@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { Button, LoadingSpinner, useToast } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
-import { TodaysWork, InsightsDashboard, UserJourneyCard, UserDetailModal } from '@/components/admin';
+import { TodaysWork, InsightsDashboard, UserJourneyCard, UserDetailModal, AdvancedFilter } from '@/components/admin';
+import AdminLoadingState from '@/components/admin/AdminLoadingState';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useAdminStore } from '@/store/useAdminStore';
 import { useAdminWorkflow } from '@/hooks/useAdminWorkflow';
 import { trackEvent } from '@/utils/analytics';
-import type { UnifiedUserView } from '@/types/admin';
+import type { UnifiedUserView, AdminActionType } from '@/types/admin';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -36,7 +38,9 @@ const AdminDashboard: React.FC = () => {
     activeView,
     selectedUsers,
     filters,
+    filterExpanded,
     filteredUserViews,
+    error,
 
     // 액션
     loadData,
@@ -44,8 +48,12 @@ const AdminDashboard: React.FC = () => {
     executeBatchAction,
     setActiveView,
     updateFilters,
+    resetFilters,
+    toggleFilterExpanded,
     toggleUserSelection,
-    toggleSelectAll
+    toggleSelectAll,
+    retry,
+    clearError
   } = useAdminWorkflow();
 
   const handleLogout = (): void => {
@@ -62,21 +70,21 @@ const AdminDashboard: React.FC = () => {
     // 해당 카테고리에 맞는 필터 설정 후 사용자 뷰로 전환
     switch (category) {
       case 'newRecommendationRequests':
-        updateFilters({ status: 'recommendation_requested', priority: 'urgent' });
+        updateFilters({ journeyStatuses: ['recommendation_requested'], priorities: ['urgent'] });
         break;
       case 'stalledProcesses':
-        updateFilters({ status: 'all', priority: 'all' });
+        updateFilters({ riskFlags: { isAtRisk: false, hasStalled: true, isNewUser: false } });
         break;
       case 'diagnoseOnlyUsers':
-        updateFilters({ status: 'diagnosis_done' });
+        updateFilters({ journeyStatuses: ['diagnosis_done'] });
         break;
       default:
-        updateFilters({ status: 'all', priority: 'all' });
+        resetFilters();
     }
     setActiveView('users');
   };
 
-  const handleUserAction = async (user: any, action: string): Promise<void> => {
+  const handleUserAction = async (user: UnifiedUserView, action: AdminActionType, ...args: any[]): Promise<void> => {
     trackEvent('admin_user_action', {
       action,
       user_id: user.id,
@@ -85,10 +93,10 @@ const AdminDashboard: React.FC = () => {
       user_flow_step: 'admin_user_action_executed'
     });
 
-    await executeUserAction(user, action);
+    await executeUserAction(user, action, ...args);
   };
 
-  const handleBatchAction = async (action: string): Promise<void> => {
+  const handleBatchAction = async (action: AdminActionType): Promise<void> => {
     if (selectedUsers.size === 0) {
       addToast({
         type: 'warning',
@@ -107,11 +115,47 @@ const AdminDashboard: React.FC = () => {
     await executeBatchAction(Array.from(selectedUsers), action);
   };
 
-  if (isLoading) {
+  // Loading state
+  if (isLoading && !error) {
+    return (
+      <PageLayout>
+        <AdminLoadingState />
+      </PageLayout>
+    );
+  }
+
+  // Error state
+  if (error && !isLoading) {
     return (
       <PageLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <LoadingSpinner size="lg" />
+          <div className="text-center space-y-4">
+            <div className="text-red-500 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              데이터를 불러올 수 없습니다
+            </h2>
+            <p className="text-gray-600">
+              네트워크 연결을 확인하고 다시 시도해주세요.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={() => retry()}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                다시 시도
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+              >
+                로그아웃
+              </Button>
+            </div>
+          </div>
         </div>
       </PageLayout>
     );
@@ -119,7 +163,8 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-7xl mx-auto p-4 space-y-6">
+      <ErrorBoundary onError={(error) => console.error('Admin Dashboard Error:', error)}>
+        <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* 헤더 */}
         <div className="flex justify-between items-center">
           <div>
@@ -209,51 +254,34 @@ const AdminDashboard: React.FC = () => {
 
         {activeView === 'users' && (
           <div className="space-y-6">
-            {/* 필터 및 검색 */}
-            <div className="flex flex-col lg:flex-row gap-4 justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="인스타그램 ID 검색..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-                
-                <select
-                  value={filters.priority}
-                  onChange={(e) => updateFilters({ priority: e.target.value as any })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="all">모든 우선순위</option>
-                  <option value="urgent">긴급</option>
-                  <option value="high">높음</option>
-                  <option value="medium">보통</option>
-                  <option value="low">낮음</option>
-                </select>
-                
-                <select
-                  value={filters.status}
-                  onChange={(e) => updateFilters({ status: e.target.value as any })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="all">모든 상태</option>
-                  <option value="just_started">방금 가입</option>
-                  <option value="diagnosis_pending">진단 대기</option>
-                  <option value="diagnosis_done">진단 완료</option>
-                  <option value="recommendation_requested">추천 요청됨</option>
-                  <option value="recommendation_processing">추천 작업 중</option>
-                  <option value="recommendation_completed">추천 완료</option>
-                </select>
-              </div>
+            {/* 고급 필터 */}
+            <AdvancedFilter
+              filters={filters}
+              onFiltersChange={updateFilters}
+              onReset={resetFilters}
+              userCount={filteredUserViews.length}
+              isExpanded={filterExpanded}
+              onToggleExpanded={toggleFilterExpanded}
+            />
 
-              {/* 배치 액션 */}
-              {selectedUsers.size > 0 && (
+            {/* 배치 액션 (선택된 사용자가 있을 때만 표시) */}
+            {selectedUsers.size > 0 && (
+              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm font-medium text-purple-900">
                     {selectedUsers.size}명 선택됨
                   </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={toggleSelectAll}
+                    className="text-purple-600 hover:text-purple-700"
+                  >
+                    선택 해제
+                  </Button>
+                </div>
+                
+                <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     onClick={() => handleBatchAction('send_recommendation_offer')}
@@ -263,14 +291,21 @@ const AdminDashboard: React.FC = () => {
                   </Button>
                   <Button
                     size="sm"
+                    onClick={() => handleBatchAction('send_diagnosis_reminder')}
+                    className="bg-yellow-600 hover:bg-yellow-700"
+                  >
+                    진단 독려 메시지
+                  </Button>
+                  <Button
+                    size="sm"
                     onClick={() => handleBatchAction('add_note')}
                     variant="ghost"
                   >
                     노트 추가
                   </Button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* 사용자 목록 헤더 */}
             <div className="flex items-center justify-between">
@@ -310,6 +345,7 @@ const AdminDashboard: React.FC = () => {
                       onAction={handleUserAction}
                       isSelected={selectedUsers.has(user.id)}
                       onSelect={toggleUserSelection}
+                      onViewDetail={() => setSelectedUserForDetail(user)}
                     />
                   </div>
                 ))
@@ -318,6 +354,17 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* 사용자 상세 모달 */}
+      {selectedUserForDetail && (
+        <UserDetailModal
+          user={selectedUserForDetail}
+          isOpen={!!selectedUserForDetail}
+          onClose={() => setSelectedUserForDetail(null)}
+          onAction={handleUserAction}
+        />
+      )}
+      </ErrorBoundary>
     </PageLayout>
   );
 };

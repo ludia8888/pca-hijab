@@ -8,3 +8,4 @@ export * from './PrivacyPopup';
 export * from './PrivacyAssurance';
 export * from './Toast';
 export * from './ConfirmModal';
+export { default as ActionLoader } from './ActionLoader';

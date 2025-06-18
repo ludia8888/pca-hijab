@@ -17,9 +17,6 @@ const HIGLandingPage = (): JSX.Element => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showStickyCTA, setShowStickyCTA] = useState(false);
-  const [isFormExpanded, setIsFormExpanded] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Track landing page entry
   useEffect(() => {
@@ -30,7 +27,7 @@ const HIGLandingPage = (): JSX.Element => {
     });
   }, []);
 
-  // Track scroll progress for floating CTA visibility
+  // Track scroll progress
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY;
@@ -38,54 +35,11 @@ const HIGLandingPage = (): JSX.Element => {
       const progress = Math.min(scrolled / maxScroll, 1);
       setScrollProgress(progress);
       setIsScrolled(scrolled > 20);
-      
-      // Show floating CTA when user scrolls past hero section
-      const heroHeight = heroRef.current?.offsetHeight || 0;
-      setShowStickyCTA(scrolled > heroHeight * 0.8);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Handle virtual keyboard on mobile
-  useEffect(() => {
-    if (!isFormExpanded) return;
-
-    const handleResize = () => {
-      // Detect keyboard by checking viewport height change
-      const currentHeight = window.visualViewport?.height || window.innerHeight;
-      const screenHeight = window.screen.height;
-      const keyboardVisible = currentHeight < screenHeight * 0.75;
-      
-      if (keyboardVisible) {
-        const kbHeight = screenHeight - currentHeight;
-        setKeyboardHeight(kbHeight);
-      } else {
-        setKeyboardHeight(0);
-      }
-    };
-
-    // Visual Viewport API for better mobile keyboard detection
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
-    } else {
-      window.addEventListener('resize', handleResize);
-    }
-
-    // Initial check
-    handleResize();
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
-      } else {
-        window.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [isFormExpanded]);
 
 
   const handleIdChange = (value: string): void => {
@@ -398,142 +352,6 @@ const HIGLandingPage = (): JSX.Element => {
         </div>
       </section>
 
-      {/* Floating CTA - Material 3 & Apple HIG Compliant */}
-      {showStickyCTA && (
-        <div 
-          className={styles.floatingCTA}
-          role="region"
-          aria-label="Quick access to color analysis"
-        >
-          {!isFormExpanded ? (
-            /* Collapsed FAB - 56dp/pt standard size */
-            <button
-              onClick={() => {
-                setIsFormExpanded(true);
-                // Track FAB expansion with enhanced analytics
-                trackEvent('floating_fab_expand', {
-                  interaction_type: 'fab_click',
-                  scroll_position: window.scrollY,
-                  user_flow_step: 'fab_expanded_to_form'
-                });
-              }}
-              className={styles.floatingFAB}
-              aria-label="Begin personal color analysis"
-              aria-expanded="false"
-              aria-controls="color-analysis-form"
-            >
-              <svg 
-                width="24" 
-                height="24" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                className={styles.fabIcon}
-                aria-hidden="true"
-              >
-                <path 
-                  d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" 
-                  fill="currentColor"
-                />
-                <path 
-                  d="M19 15L19.68 17.84L22 18.5L19.68 19.16L19 22L18.32 19.16L16 18.5L18.32 17.84L19 15Z" 
-                  fill="currentColor" 
-                  opacity="0.7"
-                />
-              </svg>
-              <span className={styles.fabLabel}>Begin Analysis</span>
-            </button>
-          ) : (
-            /* Extended FAB with form - Auto-sizing */
-            <div 
-              className={styles.extendedFAB}
-              id="color-analysis-form"
-              role="dialog"
-              aria-label="Color analysis form"
-              aria-modal="false"
-              style={{
-                bottom: keyboardHeight > 0 ? `${keyboardHeight + 20}px` : undefined
-              }}
-            >
-              <div className={styles.extendedFABHeader}>
-                <h3 className={styles.extendedFABTitle}>Start Your Analysis</h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFormExpanded(false);
-                    setInstagramId('');
-                    setError('');
-                    setIsValid(false);
-                    // Track FAB collapse
-                    trackEvent('floating_fab_collapse', {
-                      interaction_type: 'close_button',
-                      had_input: instagramId.length > 0,
-                      user_flow_step: 'fab_collapsed_from_form'
-                    });
-                  }}
-                  className={styles.extendedFABClose}
-                  aria-label="Close form"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path 
-                      d="M18 6L6 18M6 6L18 18" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className={styles.extendedFABForm}>
-                <div className={styles.extendedFABInputGroup}>
-                  <input
-                    type="text"
-                    value={instagramId}
-                    onChange={(e) => handleIdChange(e.target.value)}
-                    placeholder="Enter Instagram ID"
-                    className={styles.extendedFABInput}
-                    disabled={isLoading}
-                    autoFocus
-                    aria-describedby={error ? 'fab-error' : undefined}
-                    autoComplete="username"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!isValid || isLoading}
-                    className={styles.extendedFABSubmit}
-                    aria-label={isLoading ? 'Creating session...' : 'Start color analysis'}
-                  >
-                    {isLoading ? (
-                      <div className={styles.loadingSpinner} aria-hidden="true" />
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path 
-                          d="M5 12H19M19 12L12 5M19 12L12 19" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                
-                {error && (
-                  <p 
-                    id="fab-error" 
-                    className={styles.extendedFABError}
-                    role="alert"
-                    aria-live="polite"
-                  >
-                    {error}
-                  </p>
-                )}
-              </form>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Footer - Minimal presence */}
       <footer className={styles.footer}>

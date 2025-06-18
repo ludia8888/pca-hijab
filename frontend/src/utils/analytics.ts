@@ -85,12 +85,14 @@ export const trackEvent = (
         screen_resolution: `${screen.width}x${screen.height}`
       };
 
-      // TEMPORARY: Force debug mode for all events to see in DebugView
-      const finalParams = { ...eventParams, debug_mode: true };
+      // Add debug mode in development
+      const finalParams = addDebugMode(eventParams);
       
       window.gtag('event', eventName, finalParams);
 
-      console.log(`[GA4 Event] ${eventName}:`, finalParams);
+      if (import.meta.env.DEV) {
+        console.log(`[GA4 Event] ${eventName}:`, finalParams);
+      }
     }
   } catch (error) {
     console.warn('[GA4] Event tracking failed:', eventName, error);
@@ -355,7 +357,12 @@ export const trackDebugEvent = (eventName: string, parameters: Record<string, an
 
 // Helper function to add debug mode to events in development or when forced
 const addDebugMode = (params: Record<string, any>): Record<string, any> => {
-  const shouldDebug = import.meta.env.DEV || import.meta.env.VITE_GA4_DEBUG_MODE === 'true';
+  // Enable debug mode for: development, forced via env, or special query parameter
+  const shouldDebug = 
+    import.meta.env.DEV || 
+    import.meta.env.VITE_GA4_DEBUG_MODE === 'true' ||
+    window.location.search.includes('ga_debug=1');
+    
   if (shouldDebug) {
     return { ...params, debug_mode: true };
   }

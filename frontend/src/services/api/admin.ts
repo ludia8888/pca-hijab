@@ -169,12 +169,42 @@ export class AdminAPI {
     metadata?: any;
   }): Promise<void> {
     await apiClient.post(
-      '/admin/actions',
+      '/admin/actions/log',
       action,
       {
         headers: this.getAuthHeaders(apiKey)
       }
     );
+  }
+
+  /**
+   * Add note to user
+   */
+  static async addUserNote(apiKey: string, userId: string, note: {
+    content: string;
+    tags?: string[];
+  }): Promise<any> {
+    const response = await apiClient.post(
+      `/admin/users/${userId}/notes`,
+      note,
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+    return response.data.data;
+  }
+
+  /**
+   * Get user notes
+   */
+  static async getUserNotes(apiKey: string, userId: string): Promise<any[]> {
+    const response = await apiClient.get(
+      `/admin/users/${userId}/notes`,
+      {
+        headers: this.getAuthHeaders(apiKey)
+      }
+    );
+    return response.data.data;
   }
 
   /**
