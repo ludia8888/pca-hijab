@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout';
 import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
@@ -41,6 +41,8 @@ const ResultPage = (): JSX.Element => {
   const navigate = useNavigate();
   const { analysisResult, instagramId, uploadedImage } = useAppStore();
   const [showDownloadHint, setShowDownloadHint] = useState(true);
+  const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
   
   // Auto hide download hint after 10 seconds
   useEffect(() => {
@@ -50,6 +52,28 @@ const ResultPage = (): JSX.Element => {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Update button position when component mounts or window resizes
+  useEffect(() => {
+    const updateButtonPosition = () => {
+      if (saveButtonRef.current && showDownloadHint) {
+        const rect = saveButtonRef.current.getBoundingClientRect();
+        setButtonPosition({
+          top: rect.bottom + window.scrollY + 10, // 10px below button
+          left: rect.left + rect.width / 2 + window.scrollX // Center horizontally
+        });
+      }
+    };
+
+    updateButtonPosition();
+    window.addEventListener('resize', updateButtonPosition);
+    window.addEventListener('scroll', updateButtonPosition);
+
+    return () => {
+      window.removeEventListener('resize', updateButtonPosition);
+      window.removeEventListener('scroll', updateButtonPosition);
+    };
+  }, [showDownloadHint]);
 
   // Track AI analysis completion when result is available
   useEffect(() => {
@@ -181,6 +205,7 @@ const ResultPage = (): JSX.Element => {
                       </svg>
                     </button>
                     <button
+                      ref={saveButtonRef}
                       onClick={handleSaveImage}
                       className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all relative"
                       aria-label="Save"
@@ -359,20 +384,27 @@ const ResultPage = (): JSX.Element => {
           </button>
         </div>
       </div>
-      {/* Floating Hint Popup - positioned independently */}
-      {showDownloadHint && (
-        <div className="fixed top-32 right-6 z-[9999] pointer-events-none">
-          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 whitespace-nowrap animate-bounce pointer-events-auto">
-            <span className="text-lg">✨</span>
-            <span className="font-medium">Save your result card!</span>
+      {/* Floating Hint Popup - positioned relative to save button */}
+      {showDownloadHint && buttonPosition && (
+        <div 
+          className="fixed z-[9999] pointer-events-none"
+          style={{
+            top: `${buttonPosition.top}px`,
+            left: `${buttonPosition.left}px`,
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs px-2 py-1.5 rounded-xl shadow-xl flex items-center gap-1 whitespace-nowrap animate-bounce pointer-events-auto">
+            <span className="text-sm">✨</span>
+            <span className="font-medium">Save result!</span>
             <button
               onClick={() => setShowDownloadHint(false)}
-              className="ml-2 text-white/80 hover:text-white text-lg leading-none"
+              className="ml-1 text-white/80 hover:text-white text-sm leading-none"
             >
               ×
             </button>
-            {/* Arrow pointing to the general save area */}
-            <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-purple-600" />
+            {/* Arrow pointing up to save button */}
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[4px] border-b-purple-600" />
           </div>
         </div>
       )}
