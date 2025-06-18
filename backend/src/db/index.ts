@@ -23,6 +23,20 @@ class InMemoryDatabase {
     return this.sessions.get(sessionId);
   }
 
+  async updateSession(sessionId: string, updates: Partial<Pick<Session, 'uploadedImageUrl' | 'analysisResult'>>): Promise<Session | undefined> {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      const updatedSession = {
+        ...session,
+        ...updates,
+        updatedAt: new Date()
+      };
+      this.sessions.set(sessionId, updatedSession);
+      return updatedSession;
+    }
+    return undefined;
+  }
+
   // Recommendations
   async createRecommendation(data: Omit<Recommendation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Recommendation> {
     const recommendationId = `rec_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -101,6 +115,7 @@ class InMemoryDatabase {
 interface Database {
   createSession(instagramId: string): Promise<Session>;
   getSession(sessionId: string): Promise<Session | undefined>;
+  updateSession?(sessionId: string, updates: Partial<Pick<Session, 'uploadedImageUrl' | 'analysisResult'>>): Promise<Session | undefined>;
   createRecommendation(data: Omit<Recommendation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Recommendation>;
   getRecommendation(recommendationId: string): Promise<Recommendation | undefined>;
   updateRecommendationStatus(recommendationId: string, status: Recommendation['status']): Promise<Recommendation | undefined>;

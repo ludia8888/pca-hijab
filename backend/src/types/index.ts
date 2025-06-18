@@ -1,7 +1,10 @@
 export interface Session {
   id: string;
   instagramId: string;
+  uploadedImageUrl?: string;
+  analysisResult?: PersonalColorResult;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface PersonalColorResult {

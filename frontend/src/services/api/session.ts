@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { PersonalColorResult } from '@/types';
 
 export interface SessionResponse {
   success: boolean;
@@ -7,6 +8,20 @@ export interface SessionResponse {
     sessionId: string;
     instagramId: string;
   };
+}
+
+export interface SessionDetails {
+  id: string;
+  instagramId: string;
+  uploadedImageUrl?: string;
+  analysisResult?: PersonalColorResult;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SessionUpdateData {
+  uploadedImageUrl?: string;
+  analysisResult?: PersonalColorResult;
 }
 
 export class SessionAPI {
@@ -25,17 +40,30 @@ export class SessionAPI {
   /**
    * Get session details
    * @param sessionId - Session ID
-   * @returns Promise<{ success: boolean; data: { id: string; instagramId: string; createdAt: string } }>
+   * @returns Promise<{ success: boolean; data: SessionDetails }>
    */
   static async getSession(sessionId: string): Promise<{
     success: boolean;
-    data: {
-      id: string;
-      instagramId: string;
-      createdAt: string;
-    };
+    data: SessionDetails;
   }> {
     const response = await apiClient.get(`/sessions/${sessionId}`);
+    return response.data;
+  }
+
+  /**
+   * Update session with analysis results and/or uploaded image URL
+   * @param sessionId - Session ID
+   * @param updateData - Data to update (uploadedImageUrl and/or analysisResult)
+   * @returns Promise<{ success: boolean; data: SessionDetails }>
+   */
+  static async updateSession(
+    sessionId: string,
+    updateData: SessionUpdateData
+  ): Promise<{
+    success: boolean;
+    data: SessionDetails;
+  }> {
+    const response = await apiClient.patch(`/sessions/${sessionId}`, updateData);
     return response.data;
   }
 }

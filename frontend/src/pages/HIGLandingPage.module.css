@@ -137,9 +137,7 @@
   transition: opacity 0.3s ease;
 }
 
-.logo:hover {
-  opacity: 1;
-}
+/* Removed logo hover effect */
 
 .logoMark {
   font-size: 1.5rem;
@@ -295,10 +293,6 @@
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.titleAccent:hover {
-  background-position: -100% 0;
-  transform: scale(1.02);
-}
 
 /* Optional: Add a subtle glow effect around "for Hijab" */
 .titleAccent::before {
@@ -367,19 +361,7 @@
   transform: translateX(-100%) skewX(-45deg);
 }
 
-.ctaCard:hover {
-  transform: translateY(-2px) translateZ(20px);
-  box-shadow: 
-    0 12px 48px rgba(147, 51, 234, 0.25),
-    0 4px 16px rgba(0, 0, 0, 0.15),
-    inset 0 2px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -2px 0 rgba(255, 255, 255, 0.1);
-}
 
-.ctaCard:hover::before {
-  opacity: 1;
-  transform: translateX(100%) skewX(-45deg);
-}
 
 /* Form Elements */
 .form {
@@ -407,11 +389,6 @@
   -webkit-appearance: none;
 }
 
-.input:hover:not(:focus):not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
 
 .input::placeholder {
   color: rgba(255, 255, 255, 0.4);
@@ -486,14 +463,6 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.submitButton:hover:not(:disabled) {
-  transform: translateY(-2px) translateZ(10px) scale(1.02);
-  box-shadow: 
-    0 8px 32px rgba(236, 72, 153, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 2px 0 rgba(255, 255, 255, 0.3);
-  background: linear-gradient(135deg, #e11d7a 0%, #7e3bd4 100%);
-}
 
 .submitButton:active:not(:disabled) {
   transform: translateY(1px) translateZ(-5px) scale(0.98);
@@ -526,10 +495,6 @@
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.submitButton:hover:not(:disabled) .buttonGlow {
-  transform: translate(-50%, -50%) scale(1.5);
-  opacity: 0.3;
-}
 
 /* Features Section - Depth through layering */
 .features {
@@ -592,22 +557,7 @@
   transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.featureCard:hover .featureGlass {
-  transform: translateY(-4px) translateZ(30px) scale(1.02);
-  box-shadow: 
-    0 8px 48px rgba(147, 51, 234, 0.15),
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 2px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.1);
-  background: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%),
-    radial-gradient(ellipse at top right, rgba(147, 51, 234, 0.1) 0%, transparent 50%);
-  border-color: rgba(255, 255, 255, 0.15);
-}
 
-.featureCard:hover .featureGlass::before {
-  transform: translateX(100%);
-}
 
 .featureIcon {
   display: inline-flex;
@@ -622,13 +572,6 @@
   transition: all 0.3s ease;
 }
 
-.featureCard:hover .featureIcon {
-  transform: scale(1.1) rotate(5deg);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 0 24px rgba(147, 51, 234, 0.3),
-    inset 0 0 12px rgba(255, 255, 255, 0.1);
-}
 
 .iconSymbol {
   font-weight: 200;
@@ -636,10 +579,6 @@
   transition: all 0.3s ease;
 }
 
-.featureCard:hover .iconSymbol {
-  opacity: 1;
-  transform: scale(1.1);
-}
 
 .featureTitle {
   font-size: 1.25rem;
@@ -813,15 +752,6 @@
   transform: translateZ(-10px);
 }
 
-.processCard:hover .glassLayer1 {
-  transform: translateZ(-20px) scale(1.02);
-  background: 
-    linear-gradient(135deg, 
-      rgba(147, 51, 234, 0.08) 0%,
-      rgba(236, 72, 153, 0.05) 100%
-    );
-  border-color: rgba(236, 72, 153, 0.25);
-}
 
 .glassLayer2 {
   background: 
@@ -835,15 +765,6 @@
   opacity: 0.5;
 }
 
-.processCard:hover .glassLayer2 {
-  transform: translateZ(-15px) scale(1.01);
-  opacity: 0.8;
-  background: 
-    radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-      rgba(147, 51, 234, 0.12) 0%,
-      transparent 60%
-    );
-}
 
 /* Glass Content Container */
 .glassContent {
@@ -959,12 +880,6 @@
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.processCard:hover .stepBadge {
-  transform: translateZ(60px) scale(1.1) rotate(360deg);
-  background: rgba(236, 72, 153, 0.2);
-  border-color: rgba(236, 72, 153, 0.5);
-  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
-}
 
 /* Refraction Layer */
 .refractionLayer {
@@ -988,9 +903,6 @@
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.cardUpload:hover {
-  transform: translateZ(60px) translateY(10px) rotateY(-10deg) scale(1.05) !important;
-}
 
 .cardAnalyze {
   transform: translateZ(60px) translateY(-10px);
@@ -998,9 +910,6 @@
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.cardAnalyze:hover {
-  transform: translateZ(100px) translateY(-20px) scale(1.08) !important;
-}
 
 .cardReceive {
   transform: translateZ(30px) translateY(20px) rotateY(5deg);
@@ -1008,9 +917,6 @@
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.cardReceive:hover {
-  transform: translateZ(60px) translateY(10px) rotateY(10deg) scale(1.05) !important;
-}
 
 @keyframes floatLeft {
   0% {
@@ -1063,48 +969,11 @@
 }
 
 /* Process Card Hover Effects */
-.processCard:hover {
-  transform: translateZ(50px) scale(1.05) !important;
-}
 
-.processCard:hover .glassContent {
-  background: 
-    linear-gradient(135deg, 
-      rgba(147, 51, 234, 0.12) 0%,
-      rgba(236, 72, 153, 0.08) 50%,
-      rgba(59, 130, 246, 0.05) 100%
-    );
-  box-shadow: 
-    0 0 0 2px rgba(236, 72, 153, 0.25),
-    inset 0 2px 4px rgba(147, 51, 234, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.15),
-    0 30px 60px -15px rgba(0, 0, 0, 0.4),
-    0 80px 160px -30px rgba(147, 51, 234, 0.3);
-  border-color: rgba(236, 72, 153, 0.4);
-}
 
-.processCard:hover .refractionLayer {
-  opacity: 1;
-}
 
-.processCard:hover .iconGlass {
-  transform: scale(1.15) rotate(-10deg);
-  box-shadow: 
-    inset 0 4px 8px rgba(236, 72, 153, 0.4),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-    0 12px 32px rgba(147, 51, 234, 0.4);
-}
 
-.processCard:hover .cardTitle {
-  font-weight: 800;
-  font-variation-settings: 'wght' 800, 'wdth' 100;
-}
 
-.processCard:hover .cardDescription {
-  color: rgba(236, 72, 153, 0.9);
-  font-weight: 500;
-  font-variation-settings: 'wght' 500, 'wdth' 100;
-}
 
 /* Pulse Ring for Analyze Card */
 .pulseRing {
@@ -1172,9 +1041,6 @@
   transition: color 0.3s ease;
 }
 
-.footerText:hover {
-  color: rgba(255, 255, 255, 0.6);
-}
 
 /* Progress Indicator */
 .progressIndicator {

@@ -46,4 +46,33 @@ router.get('/:sessionId', async (req, res, next) => {
   }
 });
 
+// PATCH /api/sessions/:sessionId - Update session with analysis result
+router.patch('/:sessionId', async (req, res, next) => {
+  try {
+    const { sessionId } = req.params;
+    const { uploadedImageUrl, analysisResult } = req.body;
+    
+    // Verify session exists
+    const session = await db.getSession(sessionId);
+    if (!session) {
+      throw new AppError(404, 'Session not found');
+    }
+    
+    // Update session with new data
+    const updatedSession = await db.updateSession(sessionId, {
+      uploadedImageUrl,
+      analysisResult
+    });
+    
+    console.info(`Session ${sessionId} updated with analysis result`);
+    
+    res.json({
+      success: true,
+      data: updatedSession
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export const sessionRouter = router;

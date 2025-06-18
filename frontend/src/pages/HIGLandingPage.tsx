@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
@@ -17,12 +17,6 @@ const HIGLandingPage = (): JSX.Element => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [velocity, setVelocity] = useState({ x: 0, y: 0 });
-  const processCardsRef = useRef<HTMLDivElement>(null);
-  const ctaCardRef = useRef<HTMLDivElement>(null);
-  const lastMousePos = useRef({ x: 0, y: 0 });
 
   // Track scroll progress for depth effects
   useEffect(() => {
@@ -38,43 +32,6 @@ const HIGLandingPage = (): JSX.Element => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track mouse for parallax and physics-based tilt
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth) * 100;
-      const y = (e.clientY / window.innerHeight) * 100;
-      
-      // Calculate velocity for momentum effects
-      const vx = e.clientX - lastMousePos.current.x;
-      const vy = e.clientY - lastMousePos.current.y;
-      setVelocity({ x: vx, y: vy });
-      
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
-      setMousePosition({ x, y });
-      
-      // Physics-based tilt for cards
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      
-      if (ctaCardRef.current) {
-        const tiltX = ((e.clientY - centerY) / window.innerHeight) * 15;
-        const tiltY = ((e.clientX - centerX) / window.innerWidth) * -15;
-        setTilt({ x: tiltX, y: tiltY });
-      }
-    };
-
-    const handleMouseLeave = () => {
-      setTilt({ x: 0, y: 0 });
-      setVelocity({ x: 0, y: 0 });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
 
   const handleIdChange = (value: string): void => {
     const cleanedValue = value.replace('@', '').toLowerCase();
@@ -126,24 +83,9 @@ const HIGLandingPage = (): JSX.Element => {
       {/* Hero Section - Content First */}
       <section ref={heroRef} className={styles.hero}>
         {/* Depth Layers */}
-        <div 
-          className={styles.depthLayer1}
-          style={{
-            transform: `translateZ(-100px) translateX(${mousePosition.x * 0.05}px) translateY(${mousePosition.y * 0.05}px)`
-          }}
-        />
-        <div 
-          className={styles.depthLayer2}
-          style={{
-            transform: `translateZ(-50px) translateX(${mousePosition.x * 0.03}px) translateY(${mousePosition.y * 0.03}px)`
-          }}
-        />
-        <div 
-          className={styles.depthLayer3}
-          style={{
-            transform: `translateZ(0px) translateX(${mousePosition.x * 0.01}px) translateY(${mousePosition.y * 0.01}px)`
-          }}
-        />
+        <div className={styles.depthLayer1} />
+        <div className={styles.depthLayer2} />
+        <div className={styles.depthLayer3} />
 
         <div className={styles.heroContent}>
           {/* Clarity - Clear hierarchy */}
@@ -158,14 +100,7 @@ const HIGLandingPage = (): JSX.Element => {
           </p>
 
           {/* CTA Card */}
-          <div 
-            ref={ctaCardRef}
-            className={styles.ctaCard}
-            style={{
-              transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(10px)`,
-              transition: 'transform 0.1s ease-out'
-            }}
-          >
+          <div className={styles.ctaCard}>
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.inputGroup}>
                 <input
@@ -263,20 +198,7 @@ const HIGLandingPage = (): JSX.Element => {
           {/* Glass cards with unique layouts */}
           <div className={styles.processGrid}>
             {/* Upload Card - Floating left */}
-            <div 
-              className={`${styles.processCard} ${styles.cardUpload}`}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.setProperty('--mouse-x', '50%');
-                e.currentTarget.style.setProperty('--mouse-y', '50%');
-              }}
-            >
+            <div className={`${styles.processCard} ${styles.cardUpload}`}>
               {/* Glass layers */}
               <div className={styles.glassLayer1} />
               <div className={styles.glassLayer2} />
@@ -299,20 +221,7 @@ const HIGLandingPage = (): JSX.Element => {
             </div>
 
             {/* Analyze Card - Center elevated */}
-            <div 
-              className={`${styles.processCard} ${styles.cardAnalyze}`}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.setProperty('--mouse-x', '50%');
-                e.currentTarget.style.setProperty('--mouse-y', '50%');
-              }}
-            >
+            <div className={`${styles.processCard} ${styles.cardAnalyze}`}>
               <div className={styles.glassLayer1} />
               <div className={styles.glassLayer2} />
               <div className={styles.glassContent}>
@@ -336,20 +245,7 @@ const HIGLandingPage = (): JSX.Element => {
             </div>
 
             {/* Receive Card - Floating right */}
-            <div 
-              className={`${styles.processCard} ${styles.cardReceive}`}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
-                e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.setProperty('--mouse-x', '50%');
-                e.currentTarget.style.setProperty('--mouse-y', '50%');
-              }}
-            >
+            <div className={`${styles.processCard} ${styles.cardReceive}`}>
               <div className={styles.glassLayer1} />
               <div className={styles.glassLayer2} />
               <div className={styles.glassContent}>
