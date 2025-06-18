@@ -283,7 +283,20 @@ const HIGLandingPage = (): JSX.Element => {
         <h2 className={styles.processTitle}>Simple Process</h2>
         
         <div className={styles.processSteps}>
-          <div className={styles.processStep}>
+          <div 
+            className={styles.processStep}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+              e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.setProperty('--mouse-x', '50%');
+              e.currentTarget.style.setProperty('--mouse-y', '50%');
+            }}
+          >
             <div className={styles.stepNumber}>01</div>
             <div className={styles.stepContent}>
               <h4 className={styles.stepTitle}>Upload</h4>
@@ -293,7 +306,20 @@ const HIGLandingPage = (): JSX.Element => {
 
           <div className={styles.processConnector} />
 
-          <div className={styles.processStep}>
+          <div 
+            className={styles.processStep}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+              e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.setProperty('--mouse-x', '50%');
+              e.currentTarget.style.setProperty('--mouse-y', '50%');
+            }}
+          >
             <div className={styles.stepNumber}>02</div>
             <div className={styles.stepContent}>
               <h4 className={styles.stepTitle}>Analyze</h4>
@@ -303,7 +329,20 @@ const HIGLandingPage = (): JSX.Element => {
 
           <div className={styles.processConnector} />
 
-          <div className={styles.processStep}>
+          <div 
+            className={styles.processStep}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+              e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.setProperty('--mouse-x', '50%');
+              e.currentTarget.style.setProperty('--mouse-y', '50%');
+            }}
+          >
             <div className={styles.stepNumber}>03</div>
             <div className={styles.stepContent}>
               <h4 className={styles.stepTitle}>Receive</h4>

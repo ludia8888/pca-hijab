@@ -627,140 +627,338 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* Process Section - Apple-inspired glass morphism with enhanced contrast */
+/* Process Section - Apple Liquid Glass Design Language */
 .process {
   position: relative;
   padding: 8rem 2rem;
   z-index: 10;
   transform-style: preserve-3d;
-  perspective: 1500px;
-  /* Subtle background to improve contrast */
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+  perspective: 2000px;
+  perspective-origin: 50% 50%;
+  /* Spatial lighting gradient for depth */
+  background: 
+    radial-gradient(ellipse at 50% -20%, rgba(147, 51, 234, 0.03) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 50%, rgba(236, 72, 153, 0.02) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
+}
+
+/* Dynamic lighting overlay that responds to scroll */
+.process::before {
+  content: '';
+  position: absolute;
+  inset: -50% -50% -50% -50%;
+  background: 
+    conic-gradient(from 180deg at 50% 50%, 
+      transparent 0deg,
+      rgba(255, 255, 255, 0.02) 45deg,
+      transparent 90deg,
+      rgba(255, 255, 255, 0.01) 135deg,
+      transparent 180deg
+    );
+  animation: spatialRotate 30s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spatialRotate {
+  to { transform: rotate(360deg); }
 }
 
 .processTitle {
   font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 600;
+  font-weight: 700;
+  font-variation-settings: 'wght' 700, 'wdth' 100;
   text-align: center;
-  letter-spacing: -0.03em;
-  margin-bottom: 5rem;
-  /* Enhanced gradient for better visibility */
-  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%);
+  letter-spacing: -0.04em;
+  margin-bottom: 6rem;
+  /* Liquid metal text effect */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  /* Subtle text shadow for depth */
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  /* Refractive text shadow */
+  filter: 
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.5))
+    drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.1))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transform: translateZ(50px);
 }
 
 .processSteps {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2rem;
+  transform-style: preserve-3d;
 }
 
+/* Liquid Glass Card with Refraction */
 .processStep {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 3rem;
-  padding: 2.5rem 3rem;
-  margin: 0.5rem 0;
-  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  gap: 3.5rem;
+  padding: 3rem 4rem;
+  margin: 0;
+  /* Physics-based entrance animation */
+  animation: liquidDrop 1.2s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-style: preserve-3d;
-  position: relative;
-  /* Glass morphism card effect */
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  transform: translateZ(0);
+  will-change: transform;
+  
+  /* Liquid glass material */
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.02) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  
+  /* Refractive borders */
+  border: 1px solid transparent;
+  border-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.2) 100%
+  ) 1;
+  border-radius: 32px;
+  
+  /* Multi-layer shadows for depth */
   box-shadow: 
-    0 4px 30px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Outer glow */
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    /* Surface reflection */
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.1),
+    /* Depth shadow */
+    0 20px 40px -20px rgba(0, 0, 0, 0.5),
+    0 40px 80px -40px rgba(147, 51, 234, 0.2);
+  
+  overflow: hidden;
 }
 
+/* Liquid refraction overlay */
+.processStep::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: 
+    radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 40%
+    );
+  filter: blur(40px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Animated liquid surface */
+.processStep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 40%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.03) 60%,
+      transparent 100%
+    );
+  transform: translateX(-100%);
+  transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.processStep:hover::before {
+  opacity: 1;
+}
+
+.processStep:hover::after {
+  transform: translateX(100%);
+}
+
+/* Physics-based hover with inertia */
 .processStep:hover {
-  transform: translateY(-4px) scale(1.01);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateZ(40px) translateY(-4px) rotateX(2deg);
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+  border-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.3) 100%
+  ) 1;
   box-shadow: 
-    0 8px 40px rgba(147, 51, 234, 0.1),
-    0 0 60px rgba(147, 51, 234, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.05),
+    0 30px 60px -20px rgba(0, 0, 0, 0.6),
+    0 50px 100px -40px rgba(147, 51, 234, 0.3);
 }
 
-.processStep:nth-child(1) { animation-delay: 0.1s; }
-.processStep:nth-child(3) { animation-delay: 0.2s; }
-.processStep:nth-child(5) { animation-delay: 0.3s; }
+/* Staggered animations with elastic timing */
+.processStep:nth-child(1) { 
+  animation-delay: 0.1s;
+  transform: translateZ(10px);
+}
+.processStep:nth-child(3) { 
+  animation-delay: 0.2s;
+  transform: translateZ(20px);
+}
+.processStep:nth-child(5) { 
+  animation-delay: 0.3s;
+  transform: translateZ(30px);
+}
 
-@keyframes fadeInUp {
-  from {
+@keyframes liquidDrop {
+  0% {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(-60px) translateZ(-100px) scale(0.9);
+    filter: blur(10px);
   }
-  to {
+  50% {
+    opacity: 0.5;
+    filter: blur(5px);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0) scale(1);
+    filter: blur(0);
   }
 }
 
+/* Glass sphere number with light refraction */
 .stepNumber {
+  position: relative;
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: 2.25rem;
+  font-weight: 300;
+  font-variation-settings: 'wght' 300, 'wdth' 100;
   font-variant-numeric: tabular-nums;
-  /* Gradient background for numbers */
-  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
-  border-radius: 24px;
-  color: #ffffff;
+  
+  /* Glass sphere effect */
+  background: 
+    radial-gradient(circle at 30% 30%, 
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.1) 30%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 100%
+    ),
+    linear-gradient(135deg, 
+      rgba(236, 72, 153, 0.3) 0%,
+      rgba(147, 51, 234, 0.3) 50%,
+      rgba(59, 130, 246, 0.3) 100%
+    );
+  backdrop-filter: blur(20px) brightness(1.2);
+  -webkit-backdrop-filter: blur(20px) brightness(1.2);
+  
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.95);
+  
+  /* Refractive glass edges */
   box-shadow: 
-    0 8px 16px rgba(236, 72, 153, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+    /* Inner light */
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+    /* Glass thickness */
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    /* Outer glow */
+    0 8px 32px rgba(147, 51, 234, 0.3),
+    0 16px 48px rgba(147, 51, 234, 0.2);
+  
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateZ(20px);
 }
 
+/* Light refraction on hover */
 .processStep:hover .stepNumber {
-  transform: scale(1.05) rotate(-2deg);
+  transform: translateZ(40px) scale(1.1) rotate(10deg);
+  font-variation-settings: 'wght' 400, 'wdth' 100;
+  background: 
+    radial-gradient(circle at 40% 40%, 
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.15) 30%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 100%
+    ),
+    linear-gradient(135deg, 
+      rgba(236, 72, 153, 0.4) 0%,
+      rgba(147, 51, 234, 0.4) 50%,
+      rgba(59, 130, 246, 0.4) 100%
+    );
   box-shadow: 
-    0 12px 24px rgba(236, 72, 153, 0.4),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 12px 40px rgba(147, 51, 234, 0.4),
+    0 20px 60px rgba(147, 51, 234, 0.3);
 }
 
 .stepContent {
   flex: 1;
   padding: 0;
   border: none;
+  transform: translateZ(10px);
 }
 
+/* Variable weight typography */
 .stepTitle {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.5rem;
-  color: #ffffff;
-  /* Text shadow for better readability */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-variation-settings: 'wght' 600, 'wdth' 100;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+  color: rgba(255, 255, 255, 0.95);
+  /* Subtle depth */
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.processStep:hover .stepTitle {
+  font-variation-settings: 'wght' 700, 'wdth' 100;
+  color: rgba(255, 255, 255, 1);
 }
 
 .stepText {
   font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
   font-weight: 400;
-  /* Subtle text shadow */
+  font-variation-settings: 'wght' 400, 'wdth' 100;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.processStep:hover .stepText {
+  color: rgba(255, 255, 255, 0.85);
+  font-variation-settings: 'wght' 450, 'wdth' 100;
 }
 
 .processConnector {
-  display: none; /* Remove connectors for cleaner card-based design */
+  display: none;
 }
 
 /* Footer - Minimal */
