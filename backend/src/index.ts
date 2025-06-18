@@ -3,6 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
+
+// Load environment variables FIRST before any other imports
+dotenv.config();
+
 import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
 import { adminRouter } from './routes/admin';
@@ -11,9 +15,6 @@ import { debugRouter } from './routes/debug';
 import { errorHandler } from './middleware/errorHandler';
 import { db } from './db';
 // import { initializeGA4Client } from './services/ga4';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;

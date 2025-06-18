@@ -97,6 +97,8 @@ interface Database {
 
 // Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory
 const usePostgres = !!process.env.DATABASE_URL;
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('DATABASE_URL length:', process.env.DATABASE_URL?.length);
 
 export const db: Database = usePostgres ? postgresDb : new InMemoryDatabase();
 
