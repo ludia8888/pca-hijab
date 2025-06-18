@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { ROUTES } from '@/utils/constants';
 import { lazy, Suspense } from 'react';
 import { ProtectedAdminRoute } from '@/components/auth/ProtectedAdminRoute';
+import RootLayout from '@/components/layout/RootLayout';
 
 // Lazy load pages for code splitting
 const HIGLandingPage = lazy(() => import('@/pages/HIGLandingPage'));
@@ -52,101 +53,98 @@ const RouteErrorBoundary = (): JSX.Element => (
 // Router configuration
 const router = createBrowserRouter([
   {
-    path: ROUTES.HOME,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <HIGLandingPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: ROUTES.UPLOAD,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <UploadPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: ROUTES.ANALYZING,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AnalyzingPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: ROUTES.RESULT,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ResultPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: ROUTES.RECOMMENDATION,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <RecommendationPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: ROUTES.COMPLETION,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <CompletionPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  
-  // Admin routes
-  {
-    path: '/admin/login',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AdminLoginPage />
-      </Suspense>
-    ),
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: '/admin',
-    element: <ProtectedAdminRoute />,
+    path: '/',
+    element: <RootLayout />,
     errorElement: <RouteErrorBoundary />,
     children: [
       {
-        path: 'dashboard',
+        path: ROUTES.HOME,
         element: (
           <Suspense fallback={<PageLoader />}>
-            <AdminDashboard />
+            <HIGLandingPage />
           </Suspense>
         ),
       },
       {
-        path: 'recommendations/:id',
+        path: ROUTES.UPLOAD,
         element: (
           <Suspense fallback={<PageLoader />}>
-            <AdminRecommendationDetail />
+            <UploadPage />
           </Suspense>
         ),
       },
       {
-        path: '',
-        element: <Navigate to="/admin/dashboard" replace />,
+        path: ROUTES.ANALYZING,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <AnalyzingPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.RESULT,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ResultPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.RECOMMENDATION,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <RecommendationPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.COMPLETION,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <CompletionPage />
+          </Suspense>
+        ),
+      },
+      // Admin routes
+      {
+        path: '/admin/login',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <AdminLoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin',
+        element: <ProtectedAdminRoute />,
+        children: [
+          {
+            path: 'dashboard',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminDashboard />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'recommendations/:id',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminRecommendationDetail />
+              </Suspense>
+            ),
+          },
+          {
+            path: '',
+            element: <Navigate to="/admin/dashboard" replace />,
+          },
+        ],
+      },
+      {
+        path: '*',
+        element: <Navigate to={ROUTES.HOME} replace />,
       },
     ],
-  },
-  
-  {
-    path: '*',
-    element: <Navigate to={ROUTES.HOME} replace />,
   },
 ]);
 
