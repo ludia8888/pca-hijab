@@ -31,25 +31,42 @@ app.use(compression());
 // Parse CLIENT_URL for multiple origins
 const allowedOrigins = process.env.CLIENT_URL 
   ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-  : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'https://noorai-ashy.vercel.app', 'https://pca-hijab.vercel.app'];
+  : [
+      'http://localhost:3000', 
+      'http://localhost:5173', 
+      'http://localhost:5174', 
+      'https://noorai-ashy.vercel.app', 
+      'https://pca-hijab.vercel.app',
+      'https://noorai.vercel.app',
+      'https://pca-hijab-frontend.vercel.app'
+    ];
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or postman)
     if (!origin) return callback(null, true);
     
+    // Allow specific origins
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else if (origin.includes('vercel.app')) {
-      // Allow any Vercel preview deployments
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+    
+    // Allow any Vercel deployment (production and preview)
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    console.warn(`CORS: Blocked origin ${origin}`);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['Content-Length', 'Content-Type'],
   maxAge: 86400 // 24 hours
 }));
@@ -57,10 +74,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Handle preflight requests for all routes
-app.options('*', (_req: Request, res: Response) => {
-  res.header('Access-Control-Allow-Origin', '*');
+app.options('*', (req: Request, res: Response) => {
+  const origin = req.headers.origin;
+  if (origin && (origin.includes('vercel.app') || origin.includes('localhost') || allowedOrigins.includes(origin))) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.sendStatus(204);
 });
 
