@@ -4,7 +4,7 @@ import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
-import { trackSessionStart } from '@/utils/analytics';
+import { trackSessionStart, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import styles from './HIGLandingPage.module.css';
 
 const HIGLandingPage = (): JSX.Element => {
@@ -18,6 +18,15 @@ const HIGLandingPage = (): JSX.Element => {
   const heroRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
+
+  // Track landing page entry
+  useEffect(() => {
+    trackEvent('page_enter', {
+      page: 'landing',
+      user_flow_step: 'landing_page_entered',
+      entry_type: 'initial_visit'
+    });
+  }, []);
 
   // Track scroll progress for depth effects and sticky CTA
   useEffect(() => {
@@ -42,6 +51,17 @@ const HIGLandingPage = (): JSX.Element => {
     const cleanedValue = value.replace('@', '').toLowerCase();
     setInstagramId(cleanedValue);
     
+    // Track form interaction
+    if (cleanedValue.length === 1) {
+      // First character typed
+      trackEngagement('form_start', 'instagram_id_input');
+      trackEvent('form_interaction', {
+        field_name: 'instagram_id',
+        interaction_type: 'input_start',
+        user_flow_step: 'form_started'
+      });
+    }
+    
     if (cleanedValue.length === 0) {
       setError('');
       setIsValid(false);
@@ -51,6 +71,16 @@ const HIGLandingPage = (): JSX.Element => {
     const valid = validateInstagramId(cleanedValue);
     setIsValid(valid);
     setError(valid ? '' : 'Please enter a valid Instagram ID');
+
+    // Track validation result
+    if (cleanedValue.length >= 3) { // Only track after meaningful input
+      trackEvent('form_validation', {
+        field_name: 'instagram_id',
+        is_valid: valid,
+        input_length: cleanedValue.length,
+        user_flow_step: 'form_validation'
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -58,13 +88,38 @@ const HIGLandingPage = (): JSX.Element => {
     if (!isValid || isLoading) return;
 
     setIsLoading(true);
+    
+    // Track form submission attempt
+    trackEvent('form_submit', {
+      form_name: 'instagram_id_form',
+      instagram_id_length: instagramId.length,
+      user_flow_step: 'session_creation_started',
+      submit_type: 'form_submit'
+    });
+
     try {
       const response = await SessionAPI.createSession(instagramId);
       setSessionData(response.data.sessionId, response.data.instagramId);
+      
+      // Track successful session creation with enhanced data
       trackSessionStart(instagramId);
+      trackEvent('session_create_success', {
+        session_id: response.data.sessionId,
+        instagram_id: instagramId,
+        user_flow_step: 'session_created_successfully'
+      });
+
       navigate(ROUTES.UPLOAD);
-    } catch {
+    } catch (error) {
       setError('Failed to create session. Please try again.');
+      
+      // Track session creation failure
+      trackError('session_creation_failed', error instanceof Error ? error.message : 'Unknown session error', 'landing_page');
+      trackEvent('form_submit_failed', {
+        form_name: 'instagram_id_form',
+        error_type: 'session_creation_failed',
+        user_flow_step: 'session_creation_failed'
+      });
     } finally {
       setIsLoading(false);
     }

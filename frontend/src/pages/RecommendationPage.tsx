@@ -7,7 +7,7 @@ import { useAppStore } from '@/store';
 import { RecommendationAPI } from '@/services/api';
 import type { UserPreferences } from '@/types';
 import DebugInfo from '@/components/debug/DebugInfo';
-import { trackEvent } from '@/utils/analytics';
+import { trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 
 const RecommendationPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -21,10 +21,20 @@ const RecommendationPage = (): JSX.Element => {
     additionalNotes: '',
   });
 
-  // Redirect if no analysis result
+  // Redirect if no analysis result and track page entry
   useEffect(() => {
     if (!analysisResult || !instagramId) {
+      // Track drop-off if user arrives without proper data
+      trackDropOff('recommendation_page', 'missing_analysis_data');
       navigate(ROUTES.HOME);
+    } else {
+      // Track successful page entry with personal color context
+      trackEvent('page_enter', {
+        page: 'recommendation',
+        user_flow_step: 'recommendation_page_entered',
+        personal_color: analysisResult.personal_color_en,
+        confidence_score: Math.round((analysisResult.confidence || 0) * 100)
+      });
     }
   }, [analysisResult, instagramId, navigate]);
 
@@ -87,12 +97,22 @@ const RecommendationPage = (): JSX.Element => {
 
   const handleOptionClick = (value: string): void => {
     const field = currentStepData.field as keyof UserPreferences;
+    const isCurrentlySelected = currentStepData.multiple
+      ? (formData[field] as string[]).includes(value)
+      : formData[field] === value;
     
-    // Track preference selection
-    trackEvent('button_click', {
-      button_name: `preference_${field}_${value}`,
+    // Track preference selection with enhanced data
+    trackEvent('preference_selection', {
+      preference_type: field,
+      selected_value: value,
+      selection_action: isCurrentlySelected ? 'deselect' : 'select',
+      step_number: currentStep + 1,
+      step_name: currentStepData.title,
+      user_flow_step: `preference_${field}_selected`,
       page: 'recommendation'
     });
+
+    trackEngagement('form_interaction', `${field}_preference_selection`);
     
     if (currentStepData.multiple) {
       const currentValues = formData[field] as string[];
@@ -106,6 +126,15 @@ const RecommendationPage = (): JSX.Element => {
   };
 
   const handleNext = (): void => {
+    // Track step progression
+    trackEvent('step_progression', {
+      from_step: currentStep + 1,
+      to_step: currentStep + 2,
+      step_name: currentStepData.title,
+      completed_selections: getCurrentStepSelections(),
+      user_flow_step: 'step_progressed_forward'
+    });
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -116,7 +145,30 @@ const RecommendationPage = (): JSX.Element => {
 
   const handleBack = (): void => {
     if (currentStep > 0) {
+      // Track backward navigation
+      trackEvent('step_progression', {
+        from_step: currentStep + 1,
+        to_step: currentStep,
+        step_name: currentStepData?.title || 'additional_notes',
+        navigation_direction: 'backward',
+        user_flow_step: 'step_progressed_backward'
+      });
+
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Helper function to get current step selections for tracking
+  const getCurrentStepSelections = (): string => {
+    if (currentStep >= steps.length) return 'additional_notes';
+    
+    const field = currentStepData.field as keyof UserPreferences;
+    const value = formData[field];
+    
+    if (currentStepData.multiple) {
+      return (value as string[]).join(',');
+    } else {
+      return value as string;
     }
   };
 
@@ -127,14 +179,22 @@ const RecommendationPage = (): JSX.Element => {
       // Store preferences
       setUserPreferences(formData);
       
-      // Track preference submission
+      // Track comprehensive preference submission
       trackEvent('preference_submit', {
         style: formData.style.join(','),
+        style_count: formData.style.length,
         price_range: formData.priceRange,
         material: formData.material.join(','),
+        material_count: formData.material.length,
         occasion: formData.occasion.join(','),
-        has_notes: formData.additionalNotes !== ''
+        occasion_count: formData.occasion.length,
+        has_notes: formData.additionalNotes !== '',
+        notes_length: formData.additionalNotes.length,
+        personal_color: analysisResult.personal_color_en,
+        user_flow_step: 'preferences_submitted'
       });
+
+      trackEngagement('form_submit', 'recommendation_preferences');
       
       // Submit recommendation request
       const response = await RecommendationAPI.submitRecommendation({
@@ -144,14 +204,23 @@ const RecommendationPage = (): JSX.Element => {
       });
 
       if (response.success) {
+        // Track successful recommendation request
+        trackEvent('recommendation_request_success', {
+          personal_color: analysisResult.personal_color_en,
+          instagram_id: instagramId,
+          preference_completeness: calculatePreferenceCompleteness(),
+          user_flow_step: 'recommendation_request_submitted'
+        });
+
         // Navigate to completion page
         navigate(ROUTES.COMPLETION);
       } else {
-        // Handle error case
+        // Handle API error response
+        trackError('recommendation_request_failed', 'API returned unsuccessful response', 'recommendation_page');
         alert('Failed to submit request. Please try again.');
       }
     } catch (error: any) {
-      // Handle network error
+      // Handle network error with enhanced tracking
       console.error('Submission error:', error);
       console.error('Error type:', typeof error);
       console.error('Error properties:', Object.keys(error));
@@ -165,8 +234,29 @@ const RecommendationPage = (): JSX.Element => {
         errorMessage = error;
       }
       
+      trackError('recommendation_submit_error', errorMessage, 'recommendation_page');
+      trackEvent('form_submit_failed', {
+        form_name: 'recommendation_preferences',
+        error_type: 'network_error',
+        error_message: errorMessage,
+        user_flow_step: 'recommendation_submit_failed'
+      });
+      
       alert(`Error: ${errorMessage}. Please check your connection and try again.`);
     }
+  };
+
+  // Helper function to calculate preference completeness
+  const calculatePreferenceCompleteness = (): number => {
+    let filledFields = 0;
+    let totalFields = 4; // style, priceRange, material, occasion
+    
+    if (formData.style.length > 0) filledFields++;
+    if (formData.priceRange !== '') filledFields++;
+    if (formData.material.length > 0) filledFields++;
+    if (formData.occasion.length > 0) filledFields++;
+    
+    return Math.round((filledFields / totalFields) * 100);
   };
 
   const isCurrentStepValid = (): boolean => {

@@ -6,7 +6,7 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
-import { trackRecommendationRequest, trackEvent } from '@/utils/analytics';
+import { trackRecommendationRequest, trackEvent, trackEngagement, trackError, trackDropOff, trackFlowCompletion } from '@/utils/analytics';
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();

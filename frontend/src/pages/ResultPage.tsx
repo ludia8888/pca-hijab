@@ -6,7 +6,7 @@ import { useAppStore } from '@/store';
 import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
-import { trackAIAnalysis, trackEvent, trackResultDownload } from '@/utils/analytics';
+import { trackAIAnalysis, trackEvent, trackResultDownload, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -92,10 +92,21 @@ const ResultPage = (): JSX.Element => {
   // Redirect if no analysis result
   useEffect(() => {
     if (!analysisResult || !instagramId) {
+      // Track drop-off if user arrives without proper data
+      trackDropOff('result_page', 'missing_analysis_data');
+      
       // Only redirect in production, show mock in development
       if (process.env.NODE_ENV !== 'development') {
         navigate(ROUTES.HOME);
       }
+    } else {
+      // Track successful result page access
+      trackEvent('page_enter', {
+        page: 'result',
+        user_flow_step: 'result_page_entered',
+        personal_color: analysisResult.personal_color_en,
+        confidence_score: Math.round((analysisResult.confidence || 0) * 100)
+      });
     }
   }, [analysisResult, instagramId, navigate]);
 
@@ -121,32 +132,65 @@ const ResultPage = (): JSX.Element => {
 
   const handleShare = async (): Promise<void> => {
     try {
-      // Track share button click
+      // Track share button click with enhanced data
       trackEvent('button_click', {
         button_name: 'share_result',
-        page: 'result'
+        page: 'result',
+        personal_color: result.personal_color_en,
+        confidence_score: Math.round((result.confidence || 0) * 100),
+        user_flow_step: 'result_shared'
       });
+
+      trackEngagement('share', 'result_page_content');
       
       await shareOrCopy({
         title: 'Hijab Personal Color Analysis Results',
         text: `My personal color is ${seasonInfo.en}!`,
         url: window.location.href,
       });
-    } catch {
-      // Sharing failed silently, copy was likely used instead
+
+      // Track successful share
+      trackEvent('share_complete', {
+        shared_content: 'personal_color_result',
+        personal_color: result.personal_color_en
+      });
+    } catch (error) {
+      // Track share failure
+      trackError('share_failed', error instanceof Error ? error.message : 'Unknown share error', 'result_page');
     }
   };
 
   const handleSaveImage = async (): Promise<void> => {
     try {
-      // Track download button click
-      trackResultDownload(result.personal_color_en);
+      // Track download button click with enhanced data
+      trackEvent('button_click', {
+        button_name: 'save_result_image',
+        page: 'result',
+        personal_color: result.personal_color_en,
+        confidence_score: Math.round((result.confidence || 0) * 100),
+        user_flow_step: 'result_downloaded'
+      });
+
+      trackEngagement('download', 'result_image');
+      trackResultDownload(result.personal_color_en, 'image');
       
       const blob = await generateResultCard(result, instagramId || 'user');
       const filename = `hijab_color_${result.personal_color_en.replace(' ', '_')}_${Date.now()}.jpg`;
       downloadResultCard(blob, filename);
+
+      // Track successful download
+      trackEvent('download_complete', {
+        downloaded_content: 'personal_color_result_image',
+        personal_color: result.personal_color_en,
+        file_format: 'jpg'
+      });
+
+      // Hide download hint after successful download
+      setShowDownloadHint(false);
     } catch (error) {
-      alert(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = `Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      alert(errorMessage);
+      trackError('image_download_failed', error instanceof Error ? error.message : 'Unknown download error', 'result_page');
     }
   };
 

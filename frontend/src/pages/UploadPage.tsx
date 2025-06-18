@@ -7,7 +7,7 @@ import { Button, Card, PrivacyPopup, PrivacyAssurance } from '@/components/ui';
 import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
 import { PersonalColorAPI } from '@/services/api/personalColor';
-import { trackImageUpload, trackEvent } from '@/utils/analytics';
+import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -21,7 +21,15 @@ const UploadPage = (): JSX.Element => {
   // Redirect if no Instagram ID
   useEffect(() => {
     if (!instagramId) {
+      trackDropOff('upload_page', 'no_instagram_id');
       navigate(ROUTES.HOME);
+    } else {
+      // Track successful page entry
+      trackEvent('page_enter', {
+        page: 'upload',
+        user_flow_step: 'upload_page_entered',
+        has_instagram_id: true
+      });
     }
   }, [instagramId, navigate]);
 
@@ -47,8 +55,9 @@ const UploadPage = (): JSX.Element => {
   const handleImageError = (error: string): void => {
     setError(error);
     
-    // Track image upload failure
-    trackImageUpload(false);
+    // Track image upload failure with detailed error
+    trackImageUpload(false, undefined, undefined, error);
+    trackError('image_upload_error', error, 'upload_page');
   };
 
   const handleAnalyze = async (): Promise<void> => {
@@ -58,11 +67,16 @@ const UploadPage = (): JSX.Element => {
       setIsCompressing(true);
       setLoading(true);
 
-      // Track AI analysis start
+      // Track AI analysis start with enhanced data
       trackEvent('button_click', {
         button_name: 'analyze_my_colors',
-        page: 'upload'
+        page: 'upload',
+        file_size_mb: Math.round(selectedFile.size / (1024 * 1024) * 100) / 100,
+        file_type: selectedFile.type,
+        user_flow_step: 'analysis_button_clicked'
       });
+
+      trackEngagement('button_click', 'analyze_my_colors_button');
 
       // Compress image before storing
       const compressedFile = await compressImage(selectedFile);
@@ -72,8 +86,10 @@ const UploadPage = (): JSX.Element => {
       
       // Navigate to analysis page
       navigate(ROUTES.ANALYZING);
-    } catch {
-      setError('An error occurred while processing the image. Please try again.');
+    } catch (error) {
+      const errorMessage = 'An error occurred while processing the image. Please try again.';
+      setError(errorMessage);
+      trackError('image_compression_error', error instanceof Error ? error.message : 'Unknown error', 'upload_page');
     } finally {
       setIsCompressing(false);
       setLoading(false);
