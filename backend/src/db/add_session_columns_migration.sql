@@ -25,6 +25,4 @@ CREATE TRIGGER update_sessions_updated_at
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
--- Verify the changes
-\d sessions;
-\d recommendations;
+-- Migration completed successfully
