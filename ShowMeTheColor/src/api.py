@@ -22,17 +22,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "https://noorai-ashy.vercel.app",
-        "https://pca-hijab.vercel.app",
-        "https://noor.ai",
-        "https://www.noor.ai",
-        "https://pca-hijab-*.vercel.app",
-        "https://*.vercel.app"
-    ],
+    allow_origins=["*"],  # Allow all origins for debugging
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["Content-Type", "Authorization", "x-api-key", "Accept", "Origin"],
@@ -58,8 +48,10 @@ async def options_analyze():
         content={"message": "OK"},
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key"
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, Accept, Origin, Cache-Control, X-Requested-With",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "3600"
         }
     )
 
@@ -165,7 +157,15 @@ async def analyze_personal_color(
                 'analysis_details': result
             }
         
-        return response
+        # Return response with explicit CORS headers
+        return JSONResponse(
+            content=response,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key"
+            }
+        )
         
     except HTTPException:
         raise
