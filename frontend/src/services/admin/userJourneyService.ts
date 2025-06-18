@@ -296,8 +296,9 @@ export class UserJourneyService {
     const totalUsers = userViews.length;
     const diagnosisUsers = userViews.filter(u => u.personalColor).length;
     const recommendationUsers = userViews.filter(u => u.recommendation).length;
-    const completedUsers = userViews.filter(u => u.journeyStatus === 'recommendation_completed').length;
+    const completedUsers = userViews.filter(u => u.recommendation?.status === 'completed').length;
 
+    // 전환율 계산 - 단계별 전환율
     const conversionRates = {
       signupToDiagnosis: totalUsers > 0 ? diagnosisUsers / totalUsers : 0,
       diagnosisToRecommendation: diagnosisUsers > 0 ? recommendationUsers / diagnosisUsers : 0,
@@ -339,15 +340,31 @@ export class UserJourneyService {
           total: 72
         },
         volumes: {
-          dailySignups: userViews.filter(u => u.insights.daysSinceLastActivity === 0).length,
-          dailyDiagnoses: userViews.filter(u => 
-            u.personalColor && u.insights.daysSinceLastActivity === 0
-          ).length,
-          dailyRecommendations: userViews.filter(u => 
-            u.recommendation && u.insights.daysSinceLastActivity === 0
-          ).length,
+          // 오늘 가입한 사용자 (가입일이 오늘)
+          dailySignups: userViews.filter(u => {
+            const daysSinceRegistration = Math.floor(
+              (Date.now() - new Date(u.timeline.registeredAt).getTime()) / (1000 * 60 * 60 * 24)
+            );
+            return daysSinceRegistration === 0;
+          }).length,
+          // 오늘 진단을 받은 사용자
+          dailyDiagnoses: userViews.filter(u => {
+            if (!u.timeline.diagnosisAt) return false;
+            const daysSinceDiagnosis = Math.floor(
+              (Date.now() - new Date(u.timeline.diagnosisAt).getTime()) / (1000 * 60 * 60 * 24)
+            );
+            return daysSinceDiagnosis === 0;
+          }).length,
+          // 오늘 추천 완료된 사용자
+          dailyRecommendations: userViews.filter(u => {
+            if (!u.timeline.recommendationCompletedAt) return false;
+            const daysSinceCompletion = Math.floor(
+              (Date.now() - new Date(u.timeline.recommendationCompletedAt).getTime()) / (1000 * 60 * 60 * 24)
+            );
+            return daysSinceCompletion === 0;
+          }).length,
           pendingRecommendations: userViews.filter(u => 
-            u.journeyStatus === 'recommendation_requested'
+            u.journeyStatus === 'recommendation_requested' || u.journeyStatus === 'recommendation_processing'
           ).length
         }
       },

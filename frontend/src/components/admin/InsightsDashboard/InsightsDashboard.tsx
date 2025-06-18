@@ -254,7 +254,6 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="전체 전환율"
           value={insights.metrics.conversionRates.overall}
-          change={5.2}
           icon={<Target className="w-6 h-6 text-white" />}
           color="bg-blue-500"
           format="percentage"
@@ -263,7 +262,6 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="일일 신규 가입"
           value={insights.metrics.volumes.dailySignups}
-          change={12.3}
           icon={<Users className="w-6 h-6 text-white" />}
           color="bg-green-500"
         />
@@ -271,7 +269,6 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="대기 중인 추천"
           value={insights.metrics.volumes.pendingRecommendations}
-          change={-8.1}
           icon={<Clock className="w-6 h-6 text-white" />}
           color="bg-yellow-500"
         />
@@ -279,7 +276,6 @@ const InsightsDashboard: React.FC<InsightsDashboardProps> = ({ insights }) => {
         <MetricCard
           title="평균 완료 시간"
           value={insights.metrics.averageTimeToComplete.total}
-          change={-15.4}
           icon={<Activity className="w-6 h-6 text-white" />}
           color="bg-purple-500"
           format="time"
