@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { authenticateAdmin } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
-import type { Recommendation } from '../types';
+import type { Recommendation, JourneyStatus, Priority } from '../types';
 
 const router = Router();
 
@@ -249,15 +249,36 @@ router.post('/users/:userId/status', async (req, res, next) => {
       throw new AppError(400, 'Invalid status');
     }
     
-    // For now, just log the status change since we don't have user status in the database yet
-    // TODO: Add user status tracking to database schema
-    console.info(`User ${userId} status updated to ${status}`);
+    // Get current status for logging
+    const session = await db.getSession(userId);
+    if (!session) {
+      throw new AppError(404, 'User not found');
+    }
+    
+    // Update in database
+    const updated = await (db as any).updateJourneyStatus(userId, status);
+    if (!updated) {
+      throw new AppError(500, 'Failed to update status');
+    }
+    
+    // Log the action
+    await (db as any).addAdminAction(
+      userId,
+      'status_update',
+      {
+        old_status: session.journeyStatus || 'unknown',
+        new_status: status
+      }
+    );
+    
+    console.info(`User ${userId} status updated from ${session.journeyStatus} to ${status}`);
     
     res.json({
       success: true,
       message: 'Status updated successfully',
       data: {
         userId,
+        oldStatus: session.journeyStatus,
         newStatus: status,
         updatedAt: new Date().toISOString()
       }
@@ -279,15 +300,36 @@ router.post('/users/:userId/priority', async (req, res, next) => {
       throw new AppError(400, 'Invalid priority');
     }
     
-    // For now, just log the priority change since we don't have user priority in the database yet
-    // TODO: Add user priority tracking to database schema
-    console.info(`User ${userId} priority updated to ${priority}`);
+    // Get current priority for logging
+    const session = await db.getSession(userId);
+    if (!session) {
+      throw new AppError(404, 'User not found');
+    }
+    
+    // Update in database
+    const updated = await (db as any).updatePriority(userId, priority);
+    if (!updated) {
+      throw new AppError(500, 'Failed to update priority');
+    }
+    
+    // Log the action
+    await (db as any).addAdminAction(
+      userId,
+      'priority_update',
+      {
+        old_priority: session.priority || 'medium',
+        new_priority: priority
+      }
+    );
+    
+    console.info(`User ${userId} priority updated from ${session.priority} to ${priority}`);
     
     res.json({
       success: true,
       message: 'Priority updated successfully',
       data: {
         userId,
+        oldPriority: session.priority,
         newPriority: priority,
         updatedAt: new Date().toISOString()
       }
@@ -313,8 +355,30 @@ router.post('/users/:userId/message', async (req, res, next) => {
       throw new AppError(400, 'Invalid sent status - must be boolean');
     }
     
-    // For now, just log the message status change
-    // TODO: Add message tracking to database schema
+    // Verify session exists
+    const session = await db.getSession(userId);
+    if (!session) {
+      throw new AppError(404, 'User not found');
+    }
+    
+    // Record message if sent is true
+    if (sent) {
+      const recorded = await (db as any).recordMessageSent(userId, messageType);
+      if (!recorded) {
+        throw new AppError(500, 'Failed to record message');
+      }
+    }
+    
+    // Log the action
+    await (db as any).addAdminAction(
+      userId,
+      'message_status_update',
+      {
+        message_type: messageType,
+        sent
+      }
+    );
+    
     console.info(`User ${userId} message ${messageType} marked as ${sent ? 'sent' : 'not sent'}`);
     
     res.json({
@@ -333,64 +397,67 @@ router.post('/users/:userId/message', async (req, res, next) => {
 });
 
 // GET /api/admin/dashboard/data - Get unified dashboard data
-router.get('/dashboard/data', async (_req, res, next) => {
+router.get('/dashboard/data', async (req, res, next) => {
   try {
-    if (!db.getAllSessions) {
-      throw new AppError(501, 'Dashboard data not available with current database');
-    }
+    // Get unified user view from database
+    const users = await (db as any).getUnifiedUserView();
     
-    const sessions = await db.getAllSessions();
-    const recommendations = await db.getAllRecommendations();
-    
-    // Transform data to match the new unified user view format
-    const users = sessions.map(session => {
-      const recommendation = recommendations.find(r => r.sessionId === session.id);
+    // Transform data to match the frontend unified user view format
+    const transformedUsers = await Promise.all(users.map(async (user: any) => {
+      // Get admin actions for this user
+      const actions = await (db as any).getAdminActions(user.id);
       
       return {
-        id: session.id,
-        instagramId: session.instagramId,
-        journeyStatus: getJourneyStatus(session, recommendation),
-        priority: 'medium', // Default priority since not in database yet
-        personalColor: session.analysisResult ? {
-          season: session.analysisResult.personal_color_en?.toLowerCase() || 'unknown',
-          seasonKo: session.analysisResult.personal_color_ko || '알 수 없음',
-          confidence: 0.85, // Mock confidence
-          analysisDate: session.updatedAt || session.createdAt
+        id: user.id,
+        instagramId: user.instagram_id,
+        journeyStatus: user.journey_status || 'just_started',
+        priority: user.priority || 'medium',
+        personalColor: user.analysis_result ? {
+          season: user.analysis_result.personal_color_en?.toLowerCase() || 'unknown',
+          seasonKo: user.analysis_result.personal_color_ko || '알 수 없음',
+          confidence: user.analysis_result.confidence || 0.85,
+          analysisDate: user.analysis_result ? user.last_active_at : undefined
         } : undefined,
-        recommendation: recommendation ? {
-          id: recommendation.id,
-          status: recommendation.status,
-          requestedAt: recommendation.createdAt,
-          completedAt: recommendation.status === 'completed' ? recommendation.updatedAt : undefined,
+        recommendation: user.recommendation_id ? {
+          id: user.recommendation_id,
+          status: user.recommendation_status,
+          requestedAt: user.recommendation_requested_at,
+          completedAt: user.recommendation_status === 'completed' ? user.recommendation_updated_at : undefined,
           preferences: {
-            style: [], // Mock preferences
+            style: [],
             priceRange: undefined,
             occasions: []
           }
         } : undefined,
         timeline: {
-          registeredAt: session.createdAt,
-          lastActiveAt: session.updatedAt || session.createdAt,
-          diagnosisAt: session.analysisResult ? (session.updatedAt || session.createdAt) : undefined,
-          recommendationRequestedAt: recommendation?.createdAt,
-          recommendationCompletedAt: recommendation?.status === 'completed' ? recommendation.updatedAt : undefined
+          registeredAt: user.registered_at,
+          lastActiveAt: user.last_active_at,
+          diagnosisAt: user.analysis_result ? user.last_active_at : undefined,
+          recommendationRequestedAt: user.recommendation_requested_at,
+          recommendationCompletedAt: user.recommendation_status === 'completed' ? user.recommendation_updated_at : undefined
         },
-        actions: [], // Mock actions
+        actions: actions.map(action => ({
+          id: action.id,
+          type: action.action_type,
+          description: `${action.action_type}: ${JSON.stringify(action.action_details)}`,
+          performedAt: action.performed_at,
+          performedBy: action.performed_by
+        })),
         insights: {
-          isNewUser: (Date.now() - new Date(session.createdAt).getTime()) < (7 * 24 * 60 * 60 * 1000),
-          isAtRisk: false, // Mock
-          hasStalled: false, // Mock
-          daysSinceLastActivity: Math.floor((Date.now() - new Date(session.updatedAt || session.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-          conversionStage: getConversionStage(session, recommendation)
+          isNewUser: user.is_new_user,
+          isAtRisk: user.journey_status === 'diagnosis_done' && !user.recommendation_id && user.days_since_last_activity > 3,
+          hasStalled: user.journey_status === 'recommendation_requested' && user.days_since_last_activity > 7,
+          daysSinceLastActivity: parseInt(user.days_since_last_activity) || 0,
+          conversionStage: getConversionStage(user, { status: user.recommendation_status })
         }
       };
-    });
+    }));
     
     res.json({
       success: true,
       data: {
-        users,
-        total: users.length
+        users: transformedUsers,
+        total: transformedUsers.length
       }
     });
   } catch (error) {

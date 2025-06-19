@@ -3,9 +3,25 @@ export interface Session {
   instagramId: string;
   uploadedImageUrl?: string;
   analysisResult?: PersonalColorResult;
+  journeyStatus?: JourneyStatus;
+  priority?: Priority;
+  offerSentAt?: Date;
+  notes?: string[];
   createdAt: Date;
   updatedAt?: Date;
 }
+
+export type JourneyStatus = 
+  | 'just_started'
+  | 'diagnosis_pending'
+  | 'diagnosis_done'
+  | 'offer_sent'
+  | 'recommendation_requested'
+  | 'recommendation_processing'
+  | 'recommendation_completed'
+  | 'inactive';
+
+export type Priority = 'urgent' | 'high' | 'medium' | 'low';
 
 export interface PersonalColorResult {
   personal_color: string;

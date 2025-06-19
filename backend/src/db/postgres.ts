@@ -43,22 +43,26 @@ export class PostgresDatabase {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     const query = `
-      INSERT INTO sessions (id, instagram_id)
-      VALUES ($1, $2)
-      RETURNING id, instagram_id, created_at
+      INSERT INTO sessions (id, instagram_id, journey_status, priority)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, instagram_id, journey_status, priority, created_at
     `;
     
-    const result = await pool.query(query, [sessionId, instagramId]);
+    const result = await pool.query(query, [sessionId, instagramId, 'just_started', 'medium']);
     return {
       id: result.rows[0].id,
       instagramId: result.rows[0].instagram_id,
+      journeyStatus: result.rows[0].journey_status,
+      priority: result.rows[0].priority,
       createdAt: result.rows[0].created_at,
     };
   }
 
   async getSession(sessionId: string): Promise<Session | undefined> {
     const query = `
-      SELECT id, instagram_id, uploaded_image_url, analysis_result, created_at, updated_at
+      SELECT id, instagram_id, uploaded_image_url, analysis_result, 
+             journey_status, priority, offer_sent_at, notes,
+             created_at, updated_at
       FROM sessions
       WHERE id = $1
     `;
@@ -345,6 +349,154 @@ export class PostgresDatabase {
   // Close database connection
   async close(): Promise<void> {
     await pool.end();
+  }
+
+  // Admin Features - Journey Status and Priority Management
+  async updateJourneyStatus(sessionId: string, status: string): Promise<boolean> {
+    const query = `
+      UPDATE sessions 
+      SET journey_status = $1, updated_at = NOW()
+      WHERE id = $2
+    `;
+    
+    try {
+      const result = await pool.query(query, [status, sessionId]);
+      
+      // If status is 'offer_sent', update offer_sent_at
+      if (status === 'offer_sent' && result.rowCount && result.rowCount > 0) {
+        await pool.query(
+          'UPDATE sessions SET offer_sent_at = NOW() WHERE id = $1',
+          [sessionId]
+        );
+      }
+      
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Failed to update journey status:', error);
+      return false;
+    }
+  }
+
+  async updatePriority(sessionId: string, priority: string): Promise<boolean> {
+    const query = `
+      UPDATE sessions 
+      SET priority = $1, updated_at = NOW()
+      WHERE id = $2
+    `;
+    
+    try {
+      const result = await pool.query(query, [priority, sessionId]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Failed to update priority:', error);
+      return false;
+    }
+  }
+
+  async recordMessageSent(
+    sessionId: string, 
+    messageType: string, 
+    sentBy: string = 'admin'
+  ): Promise<boolean> {
+    const query = `
+      INSERT INTO message_history (session_id, message_type, sent_by)
+      VALUES ($1, $2, $3)
+    `;
+    
+    try {
+      await pool.query(query, [sessionId, messageType, sentBy]);
+      return true;
+    } catch (error) {
+      console.error('Failed to record message sent:', error);
+      return false;
+    }
+  }
+
+  async addAdminAction(
+    sessionId: string,
+    actionType: string,
+    actionDetails: any,
+    performedBy: string = 'admin'
+  ): Promise<boolean> {
+    const query = `
+      INSERT INTO admin_actions (session_id, action_type, action_details, performed_by)
+      VALUES ($1, $2, $3, $4)
+    `;
+    
+    try {
+      await pool.query(query, [sessionId, actionType, JSON.stringify(actionDetails), performedBy]);
+      return true;
+    } catch (error) {
+      console.error('Failed to add admin action:', error);
+      return false;
+    }
+  }
+
+  async getAdminActions(sessionId: string): Promise<any[]> {
+    const query = `
+      SELECT * FROM admin_actions
+      WHERE session_id = $1
+      ORDER BY performed_at DESC
+    `;
+    
+    try {
+      const result = await pool.query(query, [sessionId]);
+      return result.rows;
+    } catch (error) {
+      console.error('Failed to get admin actions:', error);
+      return [];
+    }
+  }
+
+  async getMessageHistory(sessionId: string): Promise<any[]> {
+    const query = `
+      SELECT * FROM message_history
+      WHERE session_id = $1
+      ORDER BY sent_at DESC
+    `;
+    
+    try {
+      const result = await pool.query(query, [sessionId]);
+      return result.rows;
+    } catch (error) {
+      console.error('Failed to get message history:', error);
+      return [];
+    }
+  }
+
+  // Get unified user view for admin dashboard
+  async getUnifiedUserView(): Promise<any[]> {
+    const query = `
+      SELECT 
+        s.id,
+        s.instagram_id,
+        s.journey_status,
+        s.priority,
+        s.created_at as registered_at,
+        s.updated_at as last_active_at,
+        s.analysis_result,
+        s.offer_sent_at,
+        r.id as recommendation_id,
+        r.status as recommendation_status,
+        r.created_at as recommendation_requested_at,
+        r.updated_at as recommendation_updated_at,
+        CASE 
+          WHEN s.created_at > CURRENT_TIMESTAMP - INTERVAL '7 days' THEN true
+          ELSE false
+        END as is_new_user,
+        EXTRACT(days FROM (CURRENT_TIMESTAMP - s.updated_at)) as days_since_last_activity
+      FROM sessions s
+      LEFT JOIN recommendations r ON s.id = r.session_id
+      ORDER BY s.updated_at DESC
+    `;
+    
+    try {
+      const result = await pool.query(query);
+      return result.rows;
+    } catch (error) {
+      console.error('Failed to get unified user view:', error);
+      return [];
+    }
   }
 }
 
