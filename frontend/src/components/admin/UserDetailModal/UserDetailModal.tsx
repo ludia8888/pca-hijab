@@ -401,17 +401,28 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     </Card>
                   ) : (
                     <Card className="p-6 bg-gray-50">
-                      <div className="text-center">
+                      <div className="text-center space-y-4">
                         <ShirtIcon className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                         <p className="text-gray-600">아직 히잡 추천을 요청하지 않았습니다</p>
                         {user.personalColor && (
-                          <Button
-                            size="sm"
-                            className="mt-3"
-                            onClick={() => onStatusChange?.(user, 'offer_sent')}
-                          >
-                            추천 서비스 제안하기
-                          </Button>
+                          <div className="flex justify-center">
+                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={user.journeyStatus === 'offer_sent'}
+                                onChange={(e) => {
+                                  onStatusChange?.(user, e.target.checked ? 'offer_sent' : 'diagnosis_done');
+                                }}
+                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                              />
+                              <div className="flex items-center gap-2">
+                                <Send className={`w-4 h-4 ${user.journeyStatus === 'offer_sent' ? 'text-blue-600' : 'text-gray-400'}`} />
+                                <span className={`text-sm font-medium ${user.journeyStatus === 'offer_sent' ? 'text-blue-700' : 'text-gray-600'}`}>
+                                  추천 서비스 제안 DM 발송됨
+                                </span>
+                              </div>
+                            </label>
+                          </div>
                         )}
                       </div>
                     </Card>

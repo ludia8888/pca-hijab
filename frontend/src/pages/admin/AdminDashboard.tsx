@@ -406,7 +406,18 @@ const AdminDashboard: React.FC = () => {
                   {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'recommendation_requested') && (
                     <Button
                       size="sm"
-                      onClick={() => handleBatchStatusChange('recommendation_processing')}
+                      onClick={() => {
+                        trackEvent('button_click', {
+                          button_name: 'admin_batch_start_recommendation',
+                          page: 'admin_dashboard',
+                          action: 'batch_status_change',
+                          new_status: 'recommendation_processing',
+                          user_count: selectedUsers.size,
+                          user_flow_step: 'admin_batch_recommendation_started'
+                        });
+                        
+                        handleBatchStatusChange('recommendation_processing');
+                      }}
                       className="bg-purple-600 hover:bg-purple-700 text-white"
                     >
                       추천 작업 시작
