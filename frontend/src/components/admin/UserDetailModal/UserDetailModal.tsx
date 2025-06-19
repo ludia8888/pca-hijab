@@ -432,99 +432,11 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
               {activeTab === 'notes' && (
                 <div className="space-y-4">
-                  {/* 노트 입력 */}
-                  <Card className="p-4">
-                    <div className="space-y-3">
-                      <textarea
-                        value={noteContent}
-                        onChange={(e) => setNoteContent(e.target.value)}
-                        placeholder="관리자 노트를 입력하세요..."
-                        className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        rows={3}
-                        disabled={isSubmittingNote}
-                      />
-                      
-                      <div className="flex items-center justify-between">
-                        <input
-                          type="text"
-                          placeholder="태그 추가 (Enter로 구분)"
-                          className="flex-1 mr-3 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                              setNoteTags([...noteTags, e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                            }
-                          }}
-                          disabled={isSubmittingNote}
-                        />
-                        
-                        <Button
-                          onClick={async () => {
-                            if (!noteContent.trim()) return;
-                            
-                            setIsSubmittingNote(true);
-                            try {
-                              // TODO: Implement note adding functionality
-                              console.log('Add note:', noteContent, noteTags);
-                              setNoteContent('');
-                              setNoteTags([]);
-                            } finally {
-                              setIsSubmittingNote(false);
-                            }
-                          }}
-                          disabled={!noteContent.trim() || isSubmittingNote}
-                          className="flex-shrink-0"
-                        >
-                          <Send className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      
-                      {noteTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {noteTags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
-                            >
-                              <Tag className="w-3 h-3" />
-                              {tag}
-                              <button
-                                onClick={() => setNoteTags(noteTags.filter((_, i) => i !== index))}
-                                className="ml-1 hover:text-purple-900"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-
-                  {/* 노트 목록 */}
-                  {user.actions.filter(a => a.type === 'note_added').length > 0 ? (
-                    <div className="space-y-3">
-                      {user.actions
-                        .filter(a => a.type === 'note_added')
-                        .map((note, index) => (
-                          <Card key={index} className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="text-gray-900">{note.description}</p>
-                                <p className="text-xs text-gray-500 mt-2">
-                                  {note.performedBy} • {new Date(note.performedAt).toLocaleDateString('ko-KR')}
-                                </p>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>아직 작성된 노트가 없습니다</p>
-                    </div>
-                  )}
+                  <div className="text-center py-8 text-gray-400">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p className="text-lg font-medium mb-2">노트 기능 준비 중</p>
+                    <p className="text-sm">백엔드 구현 후 사용 가능합니다</p>
+                  </div>
                 </div>
               )}
             </div>

@@ -221,6 +221,20 @@ const AdminDashboard: React.FC = () => {
     <PageLayout>
       <ErrorBoundary onError={(error) => console.error('Admin Dashboard Error:', error)}>
         <div className="max-w-7xl mx-auto p-4 space-y-6">
+        {/* 임시 데이터 경고 */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <Bell className="w-5 h-5 text-yellow-600 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-yellow-800">데이터 제한 사항</h4>
+              <p className="text-sm text-yellow-700 mt-1">
+                상태 변경(DM 발송, 우선순위 등)은 현재 세션에서만 유지되며, 페이지 새로고침 시 초기화됩니다. 
+                추천 상태(pending/processing/completed)만 영구 저장됩니다.
+              </p>
+            </div>
+          </div>
+        </div>
+        
         {/* 헤더 */}
         <div className="flex justify-between items-center">
           <div>

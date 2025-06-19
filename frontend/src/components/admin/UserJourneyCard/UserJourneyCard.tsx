@@ -377,6 +377,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
           {/* 보조 액션 */}
           {showActions && (
             <>
+              {/* 노트 기능은 백엔드 구현 후 활성화
               <Button
                 variant="ghost"
                 size="sm"
@@ -389,6 +390,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
                 <MessageCircle className="w-4 h-4 mr-1" />
                 노트
               </Button>
+              */}
               
               {onViewDetail && (
                 <Button
