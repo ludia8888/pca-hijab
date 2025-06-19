@@ -18,9 +18,9 @@ import { PageLayout } from '@/components/layout';
 import { TodaysWork, InsightsDashboard, UserJourneyCard, UserDetailModal, AdvancedFilter } from '@/components/admin';
 import AdminLoadingState from '@/components/admin/AdminLoadingState';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { trackEvent } from '@/utils/analytics';
 import { useAdminStore } from '@/store/useAdminStore';
 import { useAdminWorkflow } from '@/hooks/useAdminWorkflow';
-import { trackEvent } from '@/utils/analytics';
 import type { UnifiedUserView, AdminActionType } from '@/types/admin';
 
 const AdminDashboard: React.FC = () => {
@@ -62,6 +62,13 @@ const AdminDashboard: React.FC = () => {
   } = useAdminWorkflow();
 
   const handleLogout = useCallback((): void => {
+    trackEvent('button_click', {
+      button_name: 'admin_logout',
+      page: 'admin_dashboard',
+      action: 'logout',
+      user_flow_step: 'admin_logged_out'
+    });
+    
     logout();
     navigate('/admin/login');
   }, [logout, navigate]);
@@ -239,7 +246,17 @@ const AdminDashboard: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={loadData}
+              onClick={() => {
+                trackEvent('button_click', {
+                  button_name: 'admin_refresh_data',
+                  page: 'admin_dashboard',
+                  action: 'refresh',
+                  current_view: activeView,
+                  user_flow_step: 'admin_data_refreshed'
+                });
+                
+                loadData();
+              }}
               disabled={isLoading}
               className={isLoading ? 'animate-spin' : ''}
             >
@@ -324,7 +341,17 @@ const AdminDashboard: React.FC = () => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={toggleSelectAll}
+                    onClick={() => {
+                      trackEvent('button_click', {
+                        button_name: 'admin_deselect_all',
+                        page: 'admin_dashboard',
+                        action: 'deselect_all',
+                        selected_count: selectedUsers.size,
+                        user_flow_step: 'admin_users_deselected'
+                      });
+                      
+                      toggleSelectAll();
+                    }}
                     className="text-purple-600 hover:text-purple-700"
                   >
                     선택 해제
@@ -336,7 +363,18 @@ const AdminDashboard: React.FC = () => {
                   {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'diagnosis_done') && (
                     <Button
                       size="sm"
-                      onClick={() => handleBatchStatusChange('offer_sent')}
+                      onClick={() => {
+                        trackEvent('button_click', {
+                          button_name: 'admin_batch_dm_sent',
+                          page: 'admin_dashboard',
+                          action: 'batch_status_change',
+                          new_status: 'offer_sent',
+                          user_count: selectedUsers.size,
+                          user_flow_step: 'admin_batch_dm_marked_sent'
+                        });
+                        
+                        handleBatchStatusChange('offer_sent');
+                      }}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       DM 발송됨으로 변경
@@ -346,7 +384,18 @@ const AdminDashboard: React.FC = () => {
                   {filteredUserViews.filter(u => selectedUsers.has(u.id)).some(u => u.journeyStatus === 'offer_sent') && (
                     <Button
                       size="sm"
-                      onClick={() => handleBatchStatusChange('diagnosis_done')}
+                      onClick={() => {
+                        trackEvent('button_click', {
+                          button_name: 'admin_batch_revert_diagnosis',
+                          page: 'admin_dashboard',
+                          action: 'batch_status_revert',
+                          new_status: 'diagnosis_done',
+                          user_count: selectedUsers.size,
+                          user_flow_step: 'admin_batch_reverted_to_diagnosis'
+                        });
+                        
+                        handleBatchStatusChange('diagnosis_done');
+                      }}
                       variant="outline"
                       className="border-gray-300"
                     >

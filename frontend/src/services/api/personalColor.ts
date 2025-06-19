@@ -18,16 +18,19 @@ export class PersonalColorAPI {
     // Get dynamic configuration
     const aiApiUrl = getAIApiUrl();
     const useMockAI = shouldUseMockAI();
-    const apiTimeout = getApiTimeout();
+    const fileSizeMB = file.size / (1024 * 1024);
+    const apiTimeout = getApiTimeout(fileSizeMB);
     
     // Debug logging only in development
     if (import.meta.env.DEV) {
       console.log('analyzeImage called with:', {
         fileName: file.name,
         fileSize: file.size,
+        fileSizeMB: fileSizeMB.toFixed(2) + 'MB',
         fileType: file.type,
         aiApiUrl,
         useMockAI,
+        apiTimeout: apiTimeout + 'ms',
         debug,
         retryCount,
       });
@@ -102,7 +105,8 @@ export class PersonalColorAPI {
         }
         
         if (error.code === 'ECONNABORTED') {
-          throw new Error('분석에 시간이 오래 걸리고 있습니다. 다시 시도해주세요.');
+          const timeoutSeconds = Math.round(apiTimeout / 1000);
+          throw new Error(`분석이 ${timeoutSeconds}초를 초과했습니다. 이미지 크기를 줄이거나 다른 이미지로 시도해주세요.`);
         }
         if (error.code === 'ECONNREFUSED') {
           throw new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');

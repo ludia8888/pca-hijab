@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/utils/cn';
+import { trackEvent } from '@/utils/analytics';
 
 interface PrivacyAssuranceProps {
   onClose?: () => void;
@@ -82,7 +83,18 @@ export const PrivacyAssurance = ({
 
             {/* Close button */}
             <button
-              onClick={handleClose}
+              onClick={() => {
+                // Track privacy assurance close
+                trackEvent('button_click', {
+                  button_name: 'privacy_assurance_close',
+                  page: 'upload',
+                  action: 'close_privacy_notice',
+                  close_method: 'manual',
+                  user_flow_step: 'privacy_assurance_closed'
+                });
+                
+                handleClose();
+              }}
               className="w-6 h-6 bg-white/50 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/70 transition-colors flex-shrink-0"
               aria-label="Close"
             >

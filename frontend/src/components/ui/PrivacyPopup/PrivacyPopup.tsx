@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cn } from '@/utils/cn';
+import { trackEvent } from '@/utils/analytics';
 
 interface PrivacyPopupProps {
   isOpen: boolean;
@@ -83,7 +84,15 @@ export const PrivacyPopup = ({ isOpen, onClose }: PrivacyPopupProps): JSX.Elemen
             
             {/* Action Button */}
             <button
-              onClick={onClose}
+              onClick={() => {
+                trackEvent('button_click', {
+                  button_name: 'privacy_popup_got_it',
+                  page: 'privacy_popup',
+                  action: 'acknowledge_privacy',
+                  user_flow_step: 'privacy_acknowledged'
+                });
+                onClose();
+              }}
               className="w-full bg-gradient-to-r from-primary to-primary-light text-white py-3.5 px-6 rounded-2xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
             >
               Got it
@@ -92,7 +101,15 @@ export const PrivacyPopup = ({ isOpen, onClose }: PrivacyPopupProps): JSX.Elemen
           
           {/* Close button */}
           <button
-            onClick={onClose}
+            onClick={() => {
+              trackEvent('button_click', {
+                button_name: 'privacy_popup_close_x',
+                page: 'privacy_popup',
+                action: 'close_popup',
+                user_flow_step: 'privacy_popup_closed'
+              });
+              onClose();
+            }}
             className="absolute top-4 right-4 w-8 h-8 bg-white/50 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/70 transition-colors"
             aria-label="Close"
           >

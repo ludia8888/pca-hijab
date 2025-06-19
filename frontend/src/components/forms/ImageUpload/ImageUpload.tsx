@@ -6,6 +6,7 @@ import { VALIDATION_MESSAGES } from '@/utils/constants';
 import { convertHEICToJPEG, isHEICSupported } from '@/utils/imageConverter';
 import { CameraCapture } from '../CameraCapture';
 import { isMediaStreamSupported } from '@/utils/camera';
+import { trackEvent } from '@/utils/analytics';
 
 interface ImageUploadProps {
   onUpload: (file: File, preview: string) => void;
@@ -107,6 +108,16 @@ export const ImageUpload = ({
 
   const handleCameraClick = (e: React.MouseEvent): void => {
     e.stopPropagation();
+    
+    // Track camera button click
+    trackEvent('button_click', {
+      button_name: 'image_upload_camera',
+      page: 'upload',
+      action: 'open_camera',
+      method: supportsMediaStream ? 'media_stream' : 'file_input',
+      user_flow_step: 'camera_selection'
+    });
+    
     if (supportsMediaStream) {
       setShowCamera(true);
     } else {
@@ -202,6 +213,15 @@ export const ImageUpload = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                
+                // Track gallery button click
+                trackEvent('button_click', {
+                  button_name: 'image_upload_gallery',
+                  page: 'upload',
+                  action: 'open_gallery',
+                  user_flow_step: 'gallery_selection'
+                });
+                
                 handleButtonClick();
               }}
               className="px-6 py-2.5 bg-white/80 backdrop-blur text-gray-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
@@ -229,7 +249,17 @@ export const ImageUpload = ({
           />
           <button
             type="button"
-            onClick={handleRemove}
+            onClick={() => {
+              // Track remove image button click
+              trackEvent('button_click', {
+                button_name: 'image_upload_remove',
+                page: 'upload',
+                action: 'remove_image',
+                user_flow_step: 'image_removed'
+              });
+              
+              handleRemove();
+            }}
             className="absolute top-3 right-3 w-10 h-10 bg-black/20 backdrop-blur-lg rounded-full flex items-center justify-center hover:bg-black/30 transition-colors"
             aria-label="Remove"
           >

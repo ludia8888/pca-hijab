@@ -1,24 +1,44 @@
 // Removed unused imports - constants are used in validators.ts now
 
 /**
- * Compresses and resizes image
+ * Compresses and resizes image with progressive compression
  * @param file - Image file to compress
- * @param maxWidth - Maximum width (default: 1024)
- * @param maxHeight - Maximum height (default: 1024)
- * @param quality - Compression quality (0-1, default: 0.8)
+ * @param maxWidth - Maximum width (default: 800 for better performance)
+ * @param maxHeight - Maximum height (default: 800 for better performance)
+ * @param quality - Compression quality (0-1, default: 0.7 for smaller files)
  * @returns Promise<File> - Compressed image file
  */
 export const compressImage = async (
   file: File,
-  maxWidth = 1024,
-  maxHeight = 1024,
-  quality = 0.8,
+  maxWidth = 800,
+  maxHeight = 800,
+  quality = 0.7,
 ): Promise<File> => {
   // Skip compression for HEIC files (they should be converted first)
   if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
     // HEIC file passed to compress function - should be converted first
     return file;
   }
+
+  // Progressive compression based on file size
+  const fileSizeMB = file.size / (1024 * 1024);
+  
+  // Adjust compression parameters based on file size
+  if (fileSizeMB > 5) {
+    maxWidth = 600;
+    maxHeight = 600;
+    quality = 0.6;
+  } else if (fileSizeMB > 3) {
+    maxWidth = 700;
+    maxHeight = 700;
+    quality = 0.65;
+  } else if (fileSizeMB > 2) {
+    maxWidth = 800;
+    maxHeight = 800;
+    quality = 0.7;
+  }
+  
+  console.log(`Compressing image: ${file.name} (${fileSizeMB.toFixed(2)}MB) to ${maxWidth}x${maxHeight} @ ${quality} quality`);
   
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -65,6 +85,9 @@ export const compressImage = async (
               type: 'image/jpeg',
               lastModified: Date.now(),
             });
+
+            const compressedSizeMB = compressedFile.size / (1024 * 1024);
+            console.log(`Compression complete: ${fileSizeMB.toFixed(2)}MB → ${compressedSizeMB.toFixed(2)}MB (${Math.round((1 - compressedFile.size / file.size) * 100)}% reduction)`);
 
             resolve(compressedFile);
           },

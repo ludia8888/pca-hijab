@@ -372,7 +372,19 @@ const RecommendationPage = (): JSX.Element => {
           {currentStep > 0 && (
             <Button
               variant="secondary"
-              onClick={handleBack}
+              onClick={() => {
+                // Track previous button click
+                trackEvent('button_click', {
+                  button_name: 'recommendation_previous',
+                  page: 'recommendation',
+                  current_step: currentStep + 1,
+                  step_name: currentStepData?.title || 'additional_notes',
+                  action: 'navigate_back',
+                  user_flow_step: 'recommendation_step_back'
+                });
+                
+                handleBack();
+              }}
               className="flex-1"
             >
               Previous
@@ -381,7 +393,20 @@ const RecommendationPage = (): JSX.Element => {
           
           {currentStep < steps.length ? (
             <Button
-              onClick={handleNext}
+              onClick={() => {
+                // Track next button click
+                trackEvent('button_click', {
+                  button_name: 'recommendation_next',
+                  page: 'recommendation',
+                  current_step: currentStep + 1,
+                  step_name: currentStepData.title,
+                  is_valid: isCurrentStepValid(),
+                  action: 'navigate_forward',
+                  user_flow_step: 'recommendation_step_forward'
+                });
+                
+                handleNext();
+              }}
               disabled={!isCurrentStepValid()}
               className="flex-1"
             >
@@ -389,7 +414,18 @@ const RecommendationPage = (): JSX.Element => {
             </Button>
           ) : (
             <Button
-              onClick={handleSubmit}
+              onClick={() => {
+                // Track submit button click
+                trackEvent('button_click', {
+                  button_name: 'recommendation_submit',
+                  page: 'recommendation',
+                  action: 'submit_preferences',
+                  has_additional_notes: formData.additionalNotes !== '',
+                  user_flow_step: 'recommendation_submit'
+                });
+                
+                handleSubmit();
+              }}
               className="flex-1"
             >
               Get Recommendations

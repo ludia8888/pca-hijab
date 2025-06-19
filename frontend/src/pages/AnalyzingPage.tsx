@@ -161,8 +161,10 @@ const AnalyzingPage = (): JSX.Element => {
           errorMessage = 'HEIC format is not supported. Please use JPG or PNG files.';
         } else if (err.message.includes('network') || err.message.includes('Network')) {
           errorMessage = 'Please check your network connection.';
+        } else if (err.message.includes('초를 초과했습니다')) {
+          errorMessage = err.message; // Dynamic timeout message with seconds
         } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
-          errorMessage = 'Analysis timed out. Please try again.';
+          errorMessage = 'Analysis timed out. Please try with a smaller image.';
         } else if (err.message.includes('분석에 시간이 오래 걸리고 있습니다')) {
           errorMessage = '서버가 준비 중입니다. 잠시 후 다시 시도해주세요.';
         } else if (err.message.includes('분석 서비스')) {
@@ -250,21 +252,22 @@ const AnalyzingPage = (): JSX.Element => {
         {error && (
           <div className="bg-error/10 border border-error rounded-lg p-4 max-w-md w-full">
             <p className="text-error text-center mb-4">{error}</p>
-            <button
-              onClick={() => {
-                // Track retry button click with enhanced data
-                trackEvent('button_click', {
-                  button_name: 'try_again_analysis',
-                  page: 'analyzing',
-                  retry_attempt: 'user_initiated',
-                  previous_error: error || 'unknown',
-                  user_flow_step: 'analysis_retry_initiated'
-                });
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  // Track retry button click with enhanced data
+                  trackEvent('button_click', {
+                    button_name: 'try_again_analysis',
+                    page: 'analyzing',
+                    retry_attempt: 'user_initiated',
+                    previous_error: error || 'unknown',
+                    user_flow_step: 'analysis_retry_initiated'
+                  });
 
-                trackEngagement('retry', 'analysis_retry');
-                
-                setError(null);
-                setCurrentStep(0);
+                  trackEngagement('retry', 'analysis_retry');
+                  
+                  setError(null);
+                  setCurrentStep(0);
                 setProgress(0);
                 setIsAnalyzing(false); // Reset analyzing state
                 performAnalysis();
@@ -273,6 +276,23 @@ const AnalyzingPage = (): JSX.Element => {
             >
               Try Again
             </button>
+            {(error.includes('초과했습니다') || error.includes('timeout')) && (
+              <button
+                onClick={() => {
+                  trackEvent('button_click', {
+                    button_name: 'go_back_to_upload',
+                    page: 'analyzing',
+                    reason: 'timeout_error',
+                    user_flow_step: 'return_to_upload_after_timeout'
+                  });
+                  navigate(ROUTES.UPLOAD);
+                }}
+                className="w-full py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Use Different Image
+              </button>
+            )}
+            </div>
           </div>
         )}
 

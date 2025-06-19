@@ -164,22 +164,22 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
               </Button>
             )}
             
-            {user.journeyStatus === 'diagnosis_done' && onStatusChange && (
-              <Button
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => onStatusChange(user, 'offer_sent')}
-              >
-                <Send className="w-3 h-3 mr-1" />
-                DM 발송
-              </Button>
-            )}
-            
-            {user.journeyStatus === 'offer_sent' && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full flex items-center gap-1">
-                <Send className="w-3 h-3" />
-                DM 발송됨
-              </span>
+            {/* DM 발송 상태 토글 (컴팩트) */}
+            {(user.journeyStatus === 'diagnosis_done' || user.journeyStatus === 'offer_sent') && onStatusChange && (
+              <label className="flex items-center gap-2 px-2 py-1 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={user.journeyStatus === 'offer_sent'}
+                  onChange={(e) => {
+                    onStatusChange(user, e.target.checked ? 'offer_sent' : 'diagnosis_done');
+                  }}
+                  className="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
+                />
+                <Send className={`w-3 h-3 ${user.journeyStatus === 'offer_sent' ? 'text-blue-600' : 'text-gray-400'}`} />
+                <span className={`text-xs ${user.journeyStatus === 'offer_sent' ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>
+                  DM
+                </span>
+              </label>
             )}
           </div>
         </div>
@@ -324,36 +324,30 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
 
         {/* 액션 버튼들 */}
         <div className="flex flex-wrap gap-2">
-          {/* DM 발송 상태 표시 및 토글 */}
-          {user.journeyStatus === 'diagnosis_done' && onStatusChange && (
-            <Button
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-              onClick={() => onStatusChange(user, 'offer_sent')}
-            >
-              <Send className="w-4 h-4 mr-1" />
-              DM 발송 완료로 표시
-            </Button>
-          )}
-          
-          {user.journeyStatus === 'offer_sent' && onStatusChange && (
-            <div className="w-full space-y-2">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Send className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-700">추천 제안 DM 발송됨</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onStatusChange(user, 'diagnosis_done')}
-                    className="text-gray-600 hover:text-gray-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+          {/* DM 발송 상태 토글 */}
+          {(user.journeyStatus === 'diagnosis_done' || user.journeyStatus === 'offer_sent') && onStatusChange && (
+            <div className="w-full">
+              <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={user.journeyStatus === 'offer_sent'}
+                  onChange={(e) => {
+                    onStatusChange(user, e.target.checked ? 'offer_sent' : 'diagnosis_done');
+                  }}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <div className="flex items-center gap-2">
+                  <Send className={`w-4 h-4 ${user.journeyStatus === 'offer_sent' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className={`text-sm font-medium ${user.journeyStatus === 'offer_sent' ? 'text-blue-700' : 'text-gray-600'}`}>
+                    추천 제안 DM 발송됨
+                  </span>
                 </div>
-              </div>
+                {user.journeyStatus === 'offer_sent' && (
+                  <span className="ml-auto text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                    발송 완료
+                  </span>
+                )}
+              </label>
             </div>
           )}
           

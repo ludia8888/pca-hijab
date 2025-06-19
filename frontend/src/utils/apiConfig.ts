@@ -17,8 +17,21 @@ export function shouldUseMockAI(): boolean {
   return import.meta.env.VITE_USE_MOCK_AI === 'true';
 }
 
-export function getApiTimeout(): number {
-  return 15000; // 15 seconds
+export function getApiTimeout(fileSizeMB?: number): number {
+  // Base timeout of 20 seconds
+  const baseTimeout = 20000;
+  
+  // If no file size provided, return base timeout
+  if (!fileSizeMB) {
+    return baseTimeout;
+  }
+  
+  // Add 5 seconds for every MB over 1MB
+  // But cap at 60 seconds total
+  const additionalTime = Math.floor((fileSizeMB - 1) * 5000);
+  const dynamicTimeout = baseTimeout + additionalTime;
+  
+  return Math.min(dynamicTimeout, 60000); // Max 60 seconds
 }
 
 // Debug function to check API configuration
