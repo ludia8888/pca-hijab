@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/utils/constants';
+import { ROUTES, API_BASE_URL } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { Button, Input, Card } from '@/components/ui';
@@ -14,6 +14,16 @@ const IntroPage = (): JSX.Element => {
   const [isValid, setIsValid] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Debug: Log environment on component mount
+  React.useEffect(() => {
+    console.log('[IntroPage] Environment check:', {
+      mode: import.meta.env.MODE,
+      isProd: import.meta.env.PROD,
+      viteApiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+      apiBaseUrl: API_BASE_URL
+    });
+  }, []);
 
   const handleIdChange = (value: string): void => {
     // Remove @ symbol if user includes it

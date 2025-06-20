@@ -31,6 +31,14 @@ export class SessionAPI {
    * @returns Promise<SessionResponse>
    */
   static async createSession(instagramId: string): Promise<SessionResponse> {
+    // First, try to check if backend is reachable
+    try {
+      const healthCheck = await apiClient.get('/health').catch(() => null);
+      console.log('[Session API] Health check result:', healthCheck?.data);
+    } catch (e) {
+      console.warn('[Session API] Health check failed, continuing anyway');
+    }
+    
     let lastError: unknown;
     const maxRetries = 3;
     
