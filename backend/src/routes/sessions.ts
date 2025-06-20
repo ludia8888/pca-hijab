@@ -9,9 +9,15 @@ const router = Router();
 router.post('/', validateInstagramId, async (req, res, next) => {
   try {
     const { instagramId } = req.body;
+    const clientIp = req.headers['x-forwarded-for'] || req.ip;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    
+    console.info(`Session creation attempt - Instagram: @${instagramId}, IP: ${clientIp}, UA: ${userAgent}`);
     
     // Create session
     const session = await db.createSession(instagramId);
+    
+    console.info(`Session created successfully - ID: ${session.id}, Instagram: @${instagramId}`);
     
     res.status(201).json({
       success: true,
@@ -22,6 +28,7 @@ router.post('/', validateInstagramId, async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error(`Session creation failed - Instagram: @${req.body.instagramId}, Error:`, error);
     next(error);
   }
 });

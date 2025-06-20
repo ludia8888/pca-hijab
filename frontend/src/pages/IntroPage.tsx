@@ -13,6 +13,7 @@ const IntroPage = (): JSX.Element => {
   const [instagramId, setInstagramId] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleIdChange = (value: string): void => {
     // Remove @ symbol if user includes it
@@ -32,7 +33,10 @@ const IntroPage = (): JSX.Element => {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValid || isLoading) return;
+
+    setIsLoading(true);
+    setError('');
 
     try {
       // Create session on backend
@@ -43,8 +47,24 @@ const IntroPage = (): JSX.Element => {
       
       // Navigate to upload page
       navigate(ROUTES.UPLOAD);
-    } catch {
-      setError('Failed to create session. Please try again.');
+    } catch (error) {
+      console.error('Session creation error:', error);
+      
+      // Provide more specific error messages
+      if (error && typeof error === 'object' && 'detail' in error) {
+        const apiError = error as { detail: string; error: string };
+        if (apiError.detail.includes('네트워크')) {
+          setError('Network connection error. Please check your internet connection.');
+        } else {
+          setError(apiError.detail || 'Failed to create session. Please try again.');
+        }
+      } else if (error instanceof Error) {
+        setError(error.message || 'Failed to create session. Please try again.');
+      } else {
+        setError('Failed to create session. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,11 +126,12 @@ const IntroPage = (): JSX.Element => {
 
               <Button
                 type="submit"
-                disabled={!isValid}
+                disabled={!isValid || isLoading}
                 fullWidth
                 size="lg"
+                loading={isLoading}
               >
-                Start Analysis
+                {isLoading ? 'Creating Session...' : 'Start Analysis'}
               </Button>
             </form>
           </Card>

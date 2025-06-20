@@ -15,7 +15,8 @@ import {
   Instagram,
   Image,
   ShirtIcon,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import type { UnifiedUserView, UserJourneyStatus, Priority, MessageType } from '@/types/admin';
@@ -26,6 +27,7 @@ interface UserJourneyCardProps {
   onPriorityChange?: (user: UnifiedUserView, newPriority: Priority) => void;
   onMessageToggle?: (user: UnifiedUserView, messageType: MessageType, sent: boolean) => void;
   onEscalatePriority?: () => void;
+  onDelete?: (user: UnifiedUserView) => void;
   isSelected?: boolean;
   onSelect?: (userId: string) => void;
   compact?: boolean;
@@ -38,6 +40,7 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
   onPriorityChange,
   onMessageToggle,
   onEscalatePriority,
+  onDelete,
   isSelected = false,
   onSelect,
   compact = false,
@@ -136,11 +139,20 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
                 <Instagram className="w-3 h-3" />
                 @{user.instagramId}
               </p>
-              {user.personalColor && (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 journey-${user.personalColor.season}`}>
-                  {user.personalColor.seasonKo}
-                </span>
-              )}
+              <div className="flex items-center gap-2 mt-1">
+                {user.personalColor && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium journey-${user.personalColor.season}`}>
+                    {user.personalColor.seasonKo}
+                  </span>
+                )}
+                {user.recommendation && user.recommendation.preferences.style && (
+                  <span className="text-xs text-gray-600 flex items-center gap-1">
+                    <ShirtIcon className="w-3 h-3" />
+                    {user.recommendation.preferences.style.slice(0, 2).join(', ')}
+                    {user.recommendation.preferences.style.length > 2 && '...'}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -280,13 +292,13 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
           </div>
         )}
 
-        {/* 추천 정보 */}
+        {/* 추천 정보 - MVP 핵심 정보 표시 */}
         {user.recommendation && (
           <div className="p-3 bg-blue-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-blue-700 flex items-center gap-1">
                 <ShirtIcon className="w-4 h-4" />
-                히잡 추천
+                히잡 추천 요청
               </span>
               <span className={`text-xs px-2 py-1 rounded-full ${
                 user.recommendation.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -297,11 +309,42 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
                  user.recommendation.status === 'processing' ? '처리 중' : '대기'}
               </span>
             </div>
-            {user.recommendation.preferences.style && (
-              <p className="text-xs text-gray-600">
-                선호: {user.recommendation.preferences.style.join(', ')}
-              </p>
-            )}
+            
+            {/* 사용자 입력 정보 상세 표시 */}
+            <div className="space-y-2">
+              {user.recommendation.preferences.style && user.recommendation.preferences.style.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-600">선호 스타일</p>
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {user.recommendation.preferences.style.map((style, idx) => (
+                      <span key={idx} className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
+                        {style}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {user.recommendation.preferences.priceRange && (
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-600">가격대:</p>
+                  <p className="text-xs font-medium text-gray-900">{user.recommendation.preferences.priceRange}</p>
+                </div>
+              )}
+              
+              {user.recommendation.preferences.occasions && user.recommendation.preferences.occasions.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-600">착용 상황</p>
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {user.recommendation.preferences.occasions.map((occasion, idx) => (
+                      <span key={idx} className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
+                        {occasion}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -401,6 +444,22 @@ const UserJourneyCardComponent: React.FC<UserJourneyCardProps> = ({
                 >
                   <ArrowRight className="w-4 h-4 mr-1" />
                   상세
+                </Button>
+              )}
+              
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => {
+                    if (window.confirm(`@${user.instagramId} 사용자를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+                      onDelete(user);
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  삭제
                 </Button>
               )}
             </>

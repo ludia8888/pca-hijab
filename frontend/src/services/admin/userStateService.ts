@@ -262,4 +262,42 @@ export class UserStateService {
       results
     };
   }
+
+  /**
+   * 사용자 삭제 (테스트 데이터 정리용)
+   */
+  static async deleteUser(
+    apiKey: string,
+    userId: string
+  ): Promise<StateChangeResult> {
+    try {
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-api-key': apiKey
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to delete user: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      return {
+        success: true,
+        message: result.message || '사용자가 삭제되었습니다',
+        data: result.deletedUser,
+        timestamp: new Date()
+      };
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      return {
+        success: false,
+        message: `사용자 삭제에 실패했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp: new Date()
+      };
+    }
+  }
 }

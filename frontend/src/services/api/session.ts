@@ -26,15 +26,40 @@ export interface SessionUpdateData {
 
 export class SessionAPI {
   /**
-   * Create a new session
+   * Create a new session with retry logic
    * @param instagramId - Instagram ID
    * @returns Promise<SessionResponse>
    */
   static async createSession(instagramId: string): Promise<SessionResponse> {
-    const response = await apiClient.post<SessionResponse>('/sessions', {
-      instagramId
-    });
-    return response.data;
+    let lastError: unknown;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await apiClient.post<SessionResponse>('/sessions', {
+          instagramId
+        });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        console.warn(`Session creation attempt ${attempt} failed:`, error);
+        
+        // Don't retry on client errors (4xx)
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number } };
+          if (axiosError.response?.status && axiosError.response.status >= 400 && axiosError.response.status < 500) {
+            throw error;
+          }
+        }
+        
+        // Wait before retrying (exponential backoff)
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+        }
+      }
+    }
+    
+    throw lastError;
   }
 
   /**
