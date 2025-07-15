@@ -1,6 +1,10 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 import { trackEvent } from '@/utils/analytics';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Button } from '@/components/ui';
+import { User, LogOut } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface HeaderProps {
   title?: string;
@@ -18,6 +22,7 @@ export const Header = ({
   className,
 }: HeaderProps): JSX.Element => {
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   const handleBack = (): void => {
     // Track back button click
@@ -30,6 +35,21 @@ export const Header = ({
       onBack();
     } else {
       navigate(-1);
+    }
+  };
+
+  const handleLogout = async (): Promise<void> => {
+    try {
+      trackEvent('logout_click', {
+        page: 'header',
+        user_email: user?.email
+      });
+      
+      await logout();
+      toast.success('로그아웃되었습니다');
+      navigate('/');
+    } catch (error) {
+      toast.error('로그아웃 실패');
     }
   };
 
@@ -69,11 +89,38 @@ export const Header = ({
           </div>
 
           {/* Right section */}
-          {actions && actions.length > 0 && (
-            <div className="flex items-center space-x-2">
-              {actions}
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            {actions && actions.length > 0 && actions}
+            
+            {/* Auth buttons */}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2">
+                <Link to="/profile" className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  <User className="w-5 h-5 text-gray-700" />
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Logout"
+                >
+                  <LogOut className="w-5 h-5 text-gray-700" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link to="/login">
+                  <Button variant="secondary" size="sm">
+                    로그인
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm">
+                    회원가입
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

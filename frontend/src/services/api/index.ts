@@ -2,12 +2,14 @@ export * from './client';
 export * from './personalColor';
 export * from './recommendation';
 export * from './session';
+export * from './auth';
 
 // Convenience exports for easier use
 import { PersonalColorAPI } from './personalColor';
 import { RecommendationAPI } from './recommendation';
 import { SessionAPI, type SessionUpdateData } from './session';
-export { PersonalColorAPI, RecommendationAPI, SessionAPI };
+import { AuthAPI } from './auth';
+export { PersonalColorAPI, RecommendationAPI, SessionAPI, AuthAPI };
 export type { SessionUpdateData };
 
 // Convenience functions

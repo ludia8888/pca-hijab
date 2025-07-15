@@ -18,25 +18,43 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies
 });
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
-    // Log outgoing requests for debugging
+  async (config) => {
+    // Log outgoing requests for debugging (sanitize sensitive data)
+    const sanitizedData = config.data && config.data.password ? 
+      { ...config.data, password: '[REDACTED]' } : config.data;
+    
     console.log('[API Request]', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
       fullURL: `${config.baseURL}${config.url}`,
-      data: config.data
+      data: sanitizedData
     });
     
-    // Add auth token if available
-    const token = sessionStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Add CSRF token for non-GET requests
+    if (config.method && config.method.toUpperCase() !== 'GET') {
+      try {
+        const { CSRFAPI } = await import('./csrf');
+        let token = CSRFAPI.getCurrentToken();
+        
+        // Get new token if we don't have one
+        if (!token && config.url !== '/csrf-token') {
+          token = await CSRFAPI.getToken();
+        }
+        
+        if (token) {
+          config.headers['x-csrf-token'] = token;
+        }
+      } catch (error) {
+        console.warn('Failed to get CSRF token:', error);
+      }
     }
+    
     return config;
   },
   (error) => {
@@ -55,7 +73,7 @@ apiClient.interceptors.response.use(
     });
     return response;
   },
-  (error: AxiosError<ApiError>) => {
+  async (error: AxiosError<ApiError>) => {
     console.error('[API Response Error]', {
       message: error.message,
       code: error.code,
@@ -64,6 +82,26 @@ apiClient.interceptors.response.use(
       url: error.config?.url,
       baseURL: error.config?.baseURL
     });
+    
+    // Handle CSRF token errors
+    if (error.response?.status === 403 && 
+        error.response?.data?.error?.includes('CSRF')) {
+      try {
+        // Clear old token and get new one
+        const { CSRFAPI } = await import('./csrf');
+        CSRFAPI.clearToken();
+        
+        // Don't retry if this was already a retry
+        if (!error.config?._retry) {
+          const newToken = await CSRFAPI.getToken();
+          error.config!._retry = true;
+          error.config!.headers['x-csrf-token'] = newToken;
+          return apiClient.request(error.config!);
+        }
+      } catch (csrfError) {
+        console.error('Failed to handle CSRF error:', csrfError);
+      }
+    }
     
     if (error.response) {
       // Server responded with error

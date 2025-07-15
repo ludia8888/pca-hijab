@@ -1,13 +1,50 @@
-// API Configuration
+// API Configuration with security-first approach
 // Check multiple possible env var names for backwards compatibility
 const envApiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
 
-export const API_BASE_URL = envApiUrl ? 
-  (envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`) :
-  (import.meta.env.MODE === 'production' 
-    ? 'https://pca-hijab-backend.onrender.com/api' 
-    : 'http://localhost:5001/api');
-export const AI_API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:8000';
+// Secure API URL configuration
+export const API_BASE_URL = (() => {
+  if (envApiUrl) {
+    const url = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
+    
+    // Security check: Ensure HTTPS in production
+    if (import.meta.env.MODE === 'production' && !url.startsWith('https://')) {
+      throw new Error(`API_BASE_URL must use HTTPS in production. Got: ${url}`);
+    }
+    
+    return url;
+  }
+  
+  // Environment-specific fallbacks
+  if (import.meta.env.MODE === 'production') {
+    return 'https://pca-hijab-backend.onrender.com/api';
+  } else {
+    // Development fallback only
+    return 'http://localhost:5001/api';
+  }
+})();
+
+export const AI_API_URL = (() => {
+  const envAiUrl = import.meta.env.VITE_AI_API_URL;
+  
+  if (envAiUrl) {
+    // Security check: Ensure HTTPS in production
+    if (import.meta.env.MODE === 'production' && !envAiUrl.startsWith('https://')) {
+      throw new Error(`AI_API_URL must use HTTPS in production. Got: ${envAiUrl}`);
+    }
+    
+    return envAiUrl;
+  }
+  
+  // Environment-specific fallbacks
+  if (import.meta.env.MODE === 'production') {
+    throw new Error('VITE_AI_API_URL environment variable is required in production');
+  } else {
+    // Development fallback only
+    return 'http://localhost:8000';
+  }
+})();
+
 export const API_TIMEOUT = 15000; // 15 seconds
 
 // More explicit USE_MOCK_AI logic

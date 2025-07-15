@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command, mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -21,34 +21,38 @@ export default defineConfig({
     port: 5173,
     open: true,
     proxy: {
-      // Only proxy backend API calls, not AI API calls
-      '/api/sessions': {
+      // Proxy all API calls to backend
+      '/api': {
         target: 'http://localhost:5001',
         changeOrigin: true,
-      },
-      '/api/recommendations': {
-        target: 'http://localhost:5001',
-        changeOrigin: true,
-      },
-      '/api/admin': {
-        target: 'http://localhost:5001',
-        changeOrigin: true,
+        secure: false
       },
     },
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Disable source maps in production for security
+    sourcemap: mode !== 'production',
+    // Minify for production
+    minify: mode === 'production' ? 'esbuild' : false,
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['zustand', '@tanstack/react-query'],
         },
+        // Obfuscate chunk names in production
+        chunkFileNames: mode === 'production' ? 'assets/[hash].js' : 'assets/[name]-[hash].js',
+        entryFileNames: mode === 'production' ? 'assets/[hash].js' : 'assets/[name]-[hash].js',
+        assetFileNames: mode === 'production' ? 'assets/[hash].[ext]' : 'assets/[name]-[hash].[ext]'
       },
     },
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },
-});
+  define: {
+    // Only expose necessary environment variables
+    __DEV__: mode !== 'production',
+  },
+}));

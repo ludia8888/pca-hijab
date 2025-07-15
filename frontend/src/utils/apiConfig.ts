@@ -8,7 +8,13 @@ export function getAIApiUrl(): string {
     return envUrl;
   }
   
-  // Fallback to localhost
+  // Environment-specific fallback
+  if (import.meta.env.PROD) {
+    // In production, throw error instead of falling back to insecure HTTP
+    throw new Error('VITE_AI_API_URL environment variable is required in production');
+  }
+  
+  // Development fallback only
   return 'http://localhost:8000';
 }
 

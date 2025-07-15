@@ -2,20 +2,31 @@ import { Router } from 'express';
 import { db } from '../db';
 import { validateRecommendationData } from '../middleware/validation';
 import { AppError } from '../middleware/errorHandler';
+import { authenticateUser, authenticateAdmin } from '../middleware/auth';
+import { verifyRecommendationOwnership, verifySessionOwnership } from '../middleware/authorization';
 import type { Recommendation } from '../types';
 
 const router = Router();
 
-// POST /api/recommendations - Create a new recommendation request
-router.post('/', validateRecommendationData, async (req, res, next) => {
+// POST /api/recommendations - Create a new recommendation request (SECURED)
+router.post('/', authenticateUser, validateRecommendationData, async (req, res, next) => {
   try {
     const { sessionId, instagramId, personalColorResult, userPreferences } = req.body;
+    const userId = req.user!.userId;
     
-    // Verify session exists
+    // Verify session exists and user owns it
     const session = await db.getSession(sessionId);
     if (!session) {
       throw new AppError(400, 'Invalid session ID');
     }
+    
+    // Security check: verify session ownership
+    if (session.userId !== userId) {
+      console.warn(`SECURITY: User ${userId} attempted to create recommendation for session ${sessionId} owned by ${session.userId}`);
+      throw new AppError(403, 'Access denied: You can only create recommendations for your own sessions');
+    }
+    
+    console.info(`Recommendation creation attempt - SessionID: ${sessionId}, User: ${userId}`);
     
     // Create recommendation
     const recommendation = await db.createRecommendation({
@@ -26,6 +37,7 @@ router.post('/', validateRecommendationData, async (req, res, next) => {
       status: 'pending'
     });
     
+    console.info(`Recommendation created successfully - ID: ${recommendation.id}, User: ${userId}`);
     
     res.status(201).json({
       success: true,
@@ -33,20 +45,18 @@ router.post('/', validateRecommendationData, async (req, res, next) => {
       recommendationId: recommendation.id
     });
   } catch (error) {
+    console.error(`Recommendation creation failed - User: ${req.user?.userId}`, error);
     next(error);
   }
 });
 
-// GET /api/recommendations/:recommendationId - Get recommendation status
-router.get('/:recommendationId', async (req, res, next) => {
+// GET /api/recommendations/:recommendationId - Get recommendation status (SECURED)
+router.get('/:recommendationId', authenticateUser, verifyRecommendationOwnership, async (req, res, next) => {
   try {
-    const { recommendationId } = req.params;
+    // Recommendation is already verified and attached by middleware
+    const recommendation = req.recommendation;
     
-    const recommendation = await db.getRecommendation(recommendationId);
-    
-    if (!recommendation) {
-      throw new AppError(404, 'Recommendation not found');
-    }
+    console.info(`Recommendation accessed - ID: ${recommendation.id}, User: ${req.user!.userId}`);
     
     res.json({
       success: true,
@@ -58,14 +68,17 @@ router.get('/:recommendationId', async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error(`Recommendation access failed - RecommendationID: ${req.params.recommendationId}, User: ${req.user?.userId}`, error);
     next(error);
   }
 });
 
-// GET /api/recommendations - Get all recommendations (admin endpoint)
-router.get('/', async (req, res, next) => {
+// GET /api/recommendations - Get all recommendations (ADMIN ONLY - SECURED)
+router.get('/', authenticateAdmin, async (req, res, next) => {
   try {
     const { status } = req.query;
+    
+    console.info(`Admin recommendations list accessed - Status filter: ${status || 'all'}`);
     
     const recommendations = status 
       ? await db.getRecommendationsByStatus(status as Recommendation['status'])
@@ -77,12 +90,13 @@ router.get('/', async (req, res, next) => {
       count: recommendations.length
     });
   } catch (error) {
+    console.error('Admin recommendations list access failed:', error);
     next(error);
   }
 });
 
-// PATCH /api/recommendations/:recommendationId/status - Update recommendation status
-router.patch('/:recommendationId/status', async (req, res, next) => {
+// PATCH /api/recommendations/:recommendationId/status - Update recommendation status (ADMIN ONLY - SECURED)
+router.patch('/:recommendationId/status', authenticateAdmin, async (req, res, next) => {
   try {
     const { recommendationId } = req.params;
     const { status } = req.body;
@@ -91,11 +105,15 @@ router.patch('/:recommendationId/status', async (req, res, next) => {
       throw new AppError(400, 'Invalid status value');
     }
     
+    console.info(`Admin updating recommendation status - ID: ${recommendationId}, Status: ${status}`);
+    
     const recommendation = await db.updateRecommendationStatus(recommendationId, status);
     
     if (!recommendation) {
       throw new AppError(404, 'Recommendation not found');
     }
+    
+    console.info(`Recommendation status updated successfully - ID: ${recommendationId}, New Status: ${status}`);
     
     res.json({
       success: true,
@@ -107,14 +125,17 @@ router.patch('/:recommendationId/status', async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error(`Admin recommendation status update failed - ID: ${req.params.recommendationId}`, error);
     next(error);
   }
 });
 
-// GET /api/recommendations/debug - Debug endpoint (development only)
+// GET /api/recommendations/debug - Debug endpoint (DEVELOPMENT + ADMIN ONLY - SECURED)
 if (process.env.NODE_ENV === 'development') {
-  router.get('/debug', async (_req, res, next) => {
+  router.get('/debug', authenticateAdmin, async (_req, res, next) => {
     try {
+      console.info('Admin debug endpoint accessed - retrieving all recommendations');
+      
       const recommendations = await db.getAllRecommendations();
       
       res.json({
@@ -131,6 +152,7 @@ if (process.env.NODE_ENV === 'development') {
         }))
       });
     } catch (error) {
+      console.error('Admin debug endpoint failed:', error);
       next(error);
     }
   });

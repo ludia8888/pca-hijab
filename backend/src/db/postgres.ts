@@ -1,14 +1,39 @@
 import { Pool } from 'pg';
-import type { Session, Recommendation, PersonalColorResult, UserPreferences } from '../types';
+import type { Session, Recommendation, PersonalColorResult, UserPreferences, User, RefreshToken } from '../types';
+
+// Secure SSL configuration for database connections
+const getSSLConfig = () => {
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    return false; // No SSL for development without DATABASE_URL
+  }
+  
+  // Production SSL configuration
+  if (process.env.NODE_ENV === 'production') {
+    // More secure SSL configuration
+    if (databaseUrl.includes('render.com') || databaseUrl.includes('railway.app')) {
+      // Some cloud providers require specific SSL handling
+      return { 
+        rejectUnauthorized: false // Only for specific cloud providers
+      };
+    } else {
+      // Default secure SSL configuration
+      return {
+        rejectUnauthorized: true,
+        require: true
+      };
+    }
+  }
+  
+  // Development - allow non-SSL connections
+  return false;
+};
 
 // Create PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('render.com') 
-    ? { rejectUnauthorized: false }
-    : process.env.NODE_ENV === 'production' 
-      ? { rejectUnauthorized: false } 
-      : false,
+  ssl: getSSLConfig(),
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
@@ -39,19 +64,20 @@ export class PostgresDatabase {
   }
 
   // Sessions
-  async createSession(instagramId: string): Promise<Session> {
+  async createSession(instagramId: string, userId?: string): Promise<Session> {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     const query = `
-      INSERT INTO sessions (id, instagram_id, journey_status, priority)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id, instagram_id, journey_status, priority, created_at
+      INSERT INTO sessions (id, instagram_id, user_id, journey_status, priority)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, instagram_id, user_id, journey_status, priority, created_at
     `;
     
-    const result = await pool.query(query, [sessionId, instagramId, 'just_started', 'medium']);
+    const result = await pool.query(query, [sessionId, instagramId, userId || null, 'just_started', 'medium']);
     return {
       id: result.rows[0].id,
       instagramId: result.rows[0].instagram_id,
+      userId: result.rows[0].user_id,
       journeyStatus: result.rows[0].journey_status,
       priority: result.rows[0].priority,
       createdAt: result.rows[0].created_at,
@@ -497,6 +523,175 @@ export class PostgresDatabase {
       console.error('Failed to get unified user view:', error);
       return [];
     }
+  }
+
+  // User methods
+  async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+    const query = `
+      INSERT INTO users (email, password_hash, full_name, instagram_id, email_verified, verification_token)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [
+      data.email,
+      data.passwordHash,
+      data.fullName,
+      data.instagramId || null,
+      data.emailVerified || false,
+      data.verificationToken || null
+    ]);
+    
+    return this.mapUserRow(result.rows[0]);
+  }
+
+  async getUserById(userId: string): Promise<User | undefined> {
+    const query = `SELECT * FROM users WHERE id = $1`;
+    const result = await pool.query(query, [userId]);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    return this.mapUserRow(result.rows[0]);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const query = `SELECT * FROM users WHERE email = $1`;
+    const result = await pool.query(query, [email]);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    return this.mapUserRow(result.rows[0]);
+  }
+
+  async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+    let valueIndex = 1;
+
+    if (updates.email !== undefined) {
+      updateFields.push(`email = $${valueIndex++}`);
+      values.push(updates.email);
+    }
+    if (updates.passwordHash !== undefined) {
+      updateFields.push(`password_hash = $${valueIndex++}`);
+      values.push(updates.passwordHash);
+    }
+    if (updates.fullName !== undefined) {
+      updateFields.push(`full_name = $${valueIndex++}`);
+      values.push(updates.fullName);
+    }
+    if (updates.emailVerified !== undefined) {
+      updateFields.push(`email_verified = $${valueIndex++}`);
+      values.push(updates.emailVerified);
+    }
+    if (updates.verificationToken !== undefined) {
+      updateFields.push(`verification_token = $${valueIndex++}`);
+      values.push(updates.verificationToken);
+    }
+    if (updates.resetPasswordToken !== undefined) {
+      updateFields.push(`reset_password_token = $${valueIndex++}`);
+      values.push(updates.resetPasswordToken);
+    }
+    if (updates.resetPasswordExpires !== undefined) {
+      updateFields.push(`reset_password_expires = $${valueIndex++}`);
+      values.push(updates.resetPasswordExpires);
+    }
+
+    if (updateFields.length === 0) {
+      return this.getUserById(userId);
+    }
+
+    values.push(userId);
+    const query = `
+      UPDATE users 
+      SET ${updateFields.join(', ')}, updated_at = NOW()
+      WHERE id = $${valueIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    return this.mapUserRow(result.rows[0]);
+  }
+
+  // Refresh token methods
+  async createRefreshToken(data: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken> {
+    const query = `
+      INSERT INTO refresh_tokens (user_id, token, expires_at)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [
+      data.userId,
+      data.token,
+      data.expiresAt
+    ]);
+    
+    return {
+      id: result.rows[0].id,
+      userId: result.rows[0].user_id,
+      token: result.rows[0].token,
+      expiresAt: result.rows[0].expires_at,
+      createdAt: result.rows[0].created_at
+    };
+  }
+
+  async getRefreshToken(token: string): Promise<RefreshToken | undefined> {
+    const query = `
+      SELECT * FROM refresh_tokens 
+      WHERE token = $1 AND expires_at > NOW()
+    `;
+    
+    const result = await pool.query(query, [token]);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    return {
+      id: result.rows[0].id,
+      userId: result.rows[0].user_id,
+      token: result.rows[0].token,
+      expiresAt: result.rows[0].expires_at,
+      createdAt: result.rows[0].created_at
+    };
+  }
+
+  async deleteRefreshToken(token: string): Promise<boolean> {
+    const query = `DELETE FROM refresh_tokens WHERE token = $1`;
+    const result = await pool.query(query, [token]);
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async deleteUserRefreshTokens(userId: string): Promise<void> {
+    const query = `DELETE FROM refresh_tokens WHERE user_id = $1`;
+    await pool.query(query, [userId]);
+  }
+
+  // Helper method to map database row to User type
+  private mapUserRow(row: any): User {
+    return {
+      id: row.id,
+      email: row.email,
+      passwordHash: row.password_hash,
+      fullName: row.full_name,
+      instagramId: row.instagram_id,
+      emailVerified: row.email_verified,
+      verificationToken: row.verification_token,
+      resetPasswordToken: row.reset_password_token,
+      resetPasswordExpires: row.reset_password_expires,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
   }
 }
 

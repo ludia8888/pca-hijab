@@ -1,6 +1,21 @@
+export interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+  fullName: string;
+  instagramId?: string;
+  emailVerified: boolean;
+  verificationToken?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
 export interface Session {
   id: string;
   instagramId: string;
+  userId?: string;
   uploadedImageUrl?: string;
   analysisResult?: PersonalColorResult;
   journeyStatus?: JourneyStatus;
@@ -64,10 +79,24 @@ export interface Recommendation {
   id: string;
   sessionId: string;
   instagramId: string;
+  userId?: string;
   personalColorResult: PersonalColorResult;
   userPreferences: UserPreferences;
   uploadedImageUrl?: string;
   status: 'pending' | 'processing' | 'completed';
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshToken {
+  id: string;
+  userId: string;
+  token: string;
+  expiresAt: Date;
+  createdAt: Date;
 }

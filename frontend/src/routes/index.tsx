@@ -12,6 +12,10 @@ const ResultPage = lazy(() => import('@/pages/ResultPage'));
 const RecommendationPage = lazy(() => import('@/pages/RecommendationPage'));
 const CompletionPage = lazy(() => import('@/pages/CompletionPage'));
 
+// Auth pages
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const SignupPage = lazy(() => import('@/pages/SignupPage'));
+
 // Admin pages
 const AdminLoginPage = lazy(() => import('@/pages/admin/AdminLoginPage'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
@@ -102,6 +106,23 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <CompletionPage />
+          </Suspense>
+        ),
+      },
+      // Auth routes
+      {
+        path: '/login',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/signup',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <SignupPage />
           </Suspense>
         ),
       },

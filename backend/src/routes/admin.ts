@@ -436,7 +436,7 @@ router.get('/dashboard/data', async (req, res, next) => {
           recommendationRequestedAt: user.recommendation_requested_at,
           recommendationCompletedAt: user.recommendation_status === 'completed' ? user.recommendation_updated_at : undefined
         },
-        actions: actions.map(action => ({
+        actions: actions.map((action: any) => ({
           id: action.id,
           type: action.action_type,
           description: `${action.action_type}: ${JSON.stringify(action.action_details)}`,
