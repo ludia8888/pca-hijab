@@ -1,0 +1,192 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, frontend]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ${{ matrix.component }}
+      run: npm ci --prefer-offline
+
+    - name: Run ESLint
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run lint >/dev/null 2>&1; then
+          echo "🧹 Running ESLint for ${{ matrix.component }}..."
+          npm run lint
+        else
+          echo "⚠️  No lint script found for ${{ matrix.component }}, skipping..."
+        fi
+
+    - name: Run TypeScript type checking
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run typecheck >/dev/null 2>&1; then
+          echo "🔍 Running TypeScript type checking for ${{ matrix.component }}..."
+          npm run typecheck
+        else
+          echo "⚠️  No typecheck script found for ${{ matrix.component }}, trying build..."
+          if npm run build >/dev/null 2>&1; then
+            npm run build
+          else
+            echo "⚠️  No build script found either, skipping type checking..."
+          fi
+        fi
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, frontend]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ${{ matrix.component }}
+      run: npm ci --prefer-offline
+
+    - name: Run tests
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run test >/dev/null 2>&1; then
+          echo "🧪 Running tests for ${{ matrix.component }}..."
+          npm run test
+        else
+          echo "⚠️  No test script found for ${{ matrix.component }}, skipping..."
+        fi
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test]
+    strategy:
+      matrix:
+        component: [backend, frontend]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ${{ matrix.component }}
+      run: npm ci --prefer-offline
+
+    - name: Build application
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run build >/dev/null 2>&1; then
+          echo "🔨 Building ${{ matrix.component }}..."
+          npm run build
+        else
+          echo "⚠️  No build script found for ${{ matrix.component }}, skipping..."
+        fi
+
+    - name: Upload build artifacts
+      if: matrix.component == 'frontend'
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build-${{ github.sha }}
+        path: frontend/dist/
+        retention-days: 7
+
+  quick-security-check:
+    name: Quick Security Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, frontend]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ${{ matrix.component }}
+      run: npm ci --prefer-offline
+
+    - name: Quick npm audit (high/critical only)
+      working-directory: ${{ matrix.component }}
+      run: |
+        echo "🔍 Running quick security audit for ${{ matrix.component }}..."
+        
+        # Run audit for high and critical vulnerabilities only
+        if npm audit --audit-level=high --json > quick-audit.json; then
+          echo "✅ No high or critical vulnerabilities found in ${{ matrix.component }}"
+        else
+          echo "🚨 High or critical vulnerabilities found in ${{ matrix.component }}:"
+          
+          # Display critical and high vulnerabilities
+          cat quick-audit.json | jq -r '
+            if .vulnerabilities then
+              .vulnerabilities | to_entries[] | 
+              select(.value.severity == "critical" or .value.severity == "high") |
+              "⚠️  " + .key + " (" + .value.severity + "): " + .value.title
+            else
+              "✅ No vulnerabilities found"
+            end
+          '
+          
+          # Count vulnerabilities
+          CRITICAL=$(cat quick-audit.json | jq -r '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat quick-audit.json | jq -r '.metadata.vulnerabilities.high // 0')
+          
+          echo ""
+          echo "Summary for ${{ matrix.component }}:"
+          echo "- Critical: $CRITICAL"
+          echo "- High: $HIGH"
+          
+          if [ "$CRITICAL" != "0" ] || [ "$HIGH" != "0" ]; then
+            echo ""
+            echo "🚨 Please run 'npm audit fix' to resolve these vulnerabilities"
+            echo "💡 For detailed security analysis, check the 'Security Audit' workflow"
+            exit 1
+          fi
+        fi

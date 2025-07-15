@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { PersonalColorResult } from '@/types';
+import { secureLog, secureWarn } from '@/utils/secureLogging';
 
 export interface SessionResponse {
   success: boolean;
@@ -34,9 +35,9 @@ export class SessionAPI {
     // First, try to check if backend is reachable
     try {
       const healthCheck = await apiClient.get('/health').catch(() => null);
-      console.log('[Session API] Health check result:', healthCheck?.data);
+      secureLog('[Session API] Health check result:', healthCheck?.data);
     } catch (e) {
-      console.warn('[Session API] Health check failed, continuing anyway');
+      secureWarn('[Session API] Health check failed, continuing anyway');
     }
     
     let lastError: unknown;
@@ -50,7 +51,7 @@ export class SessionAPI {
         return response.data;
       } catch (error) {
         lastError = error;
-        console.warn(`Session creation attempt ${attempt} failed:`, error);
+        secureWarn(`Session creation attempt ${attempt} failed:`, error);
         
         // Don't retry on client errors (4xx)
         if (error && typeof error === 'object' && 'response' in error) {

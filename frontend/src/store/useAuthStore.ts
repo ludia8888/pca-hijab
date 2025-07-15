@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthAPI } from '@/services/api/auth';
+import { secureError } from '@/utils/secureLogging';
 
 interface User {
   id: string;
@@ -82,7 +83,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await AuthAPI.logout();
         } catch (error) {
-          console.error('Logout error:', error);
+          secureError('Logout error:', error);
         } finally {
           set({
             user: null,

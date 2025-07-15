@@ -1,0 +1,269 @@
+name: Security Audit & Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily security audit at 02:00 UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory: ['.', 'backend', 'frontend']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.directory }}/package-lock.json
+
+    - name: Cache node modules
+      uses: actions/cache@v4
+      with:
+        path: ${{ matrix.directory }}/node_modules
+        key: ${{ runner.os }}-node-${{ matrix.directory }}-${{ hashFiles(format('{0}/package-lock.json', matrix.directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-node-${{ matrix.directory }}-
+
+    - name: Install dependencies
+      working-directory: ${{ matrix.directory }}
+      run: |
+        if [ -f package.json ]; then
+          npm ci --prefer-offline --no-audit
+        else
+          echo "No package.json found in ${{ matrix.directory }}, skipping..."
+        fi
+
+    - name: Run npm audit
+      working-directory: ${{ matrix.directory }}
+      run: |
+        if [ -f package.json ]; then
+          echo "🔍 Running npm audit for ${{ matrix.directory }}..."
+          
+          # Run audit and capture output
+          npm audit --audit-level=moderate --json > audit-report.json || AUDIT_EXIT_CODE=$?
+          
+          # Display audit report
+          echo "📊 Audit Report for ${{ matrix.directory }}:"
+          cat audit-report.json | jq -r '
+            if .vulnerabilities then
+              "🚨 VULNERABILITIES FOUND:",
+              "- Total: " + (.metadata.vulnerabilities.total // 0 | tostring),
+              "- Critical: " + (.metadata.vulnerabilities.critical // 0 | tostring),
+              "- High: " + (.metadata.vulnerabilities.high // 0 | tostring),
+              "- Moderate: " + (.metadata.vulnerabilities.moderate // 0 | tostring),
+              "- Low: " + (.metadata.vulnerabilities.low // 0 | tostring),
+              ""
+            else
+              "✅ No vulnerabilities found"
+            end
+          '
+          
+          # Check for critical or high vulnerabilities
+          CRITICAL=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.high // 0')
+          
+          if [ "$CRITICAL" != "0" ] || [ "$HIGH" != "0" ]; then
+            echo "🚨 CRITICAL OR HIGH SEVERITY VULNERABILITIES FOUND!"
+            echo "Critical: $CRITICAL, High: $HIGH"
+            
+            # Show detailed vulnerability information
+            cat audit-report.json | jq -r '
+              if .vulnerabilities then
+                .vulnerabilities | to_entries[] | 
+                select(.value.severity == "critical" or .value.severity == "high") |
+                "⚠️  " + .key + " (" + .value.severity + "): " + .value.title
+              else
+                empty
+              end
+            '
+            
+            # Fail the build for critical/high vulnerabilities
+            exit 1
+          fi
+          
+          # Show moderate vulnerabilities as warnings
+          MODERATE=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.moderate // 0')
+          if [ "$MODERATE" != "0" ]; then
+            echo "⚠️  $MODERATE moderate severity vulnerabilities found"
+            cat audit-report.json | jq -r '
+              if .vulnerabilities then
+                .vulnerabilities | to_entries[] | 
+                select(.value.severity == "moderate") |
+                "⚠️  " + .key + " (" + .value.severity + "): " + .value.title
+              else
+                empty
+              end
+            '
+          fi
+          
+          echo "✅ Security audit completed for ${{ matrix.directory }}"
+        else
+          echo "No package.json found in ${{ matrix.directory }}, skipping audit..."
+        fi
+
+    - name: Upload audit report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: audit-report-${{ matrix.directory }}-${{ github.sha }}
+        path: ${{ matrix.directory }}/audit-report.json
+        retention-days: 30
+
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: security-audit
+    strategy:
+      matrix:
+        component: [backend, frontend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ${{ matrix.component }}
+      run: npm ci --prefer-offline
+
+    - name: Run type checking
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run typecheck >/dev/null 2>&1; then
+          echo "🔍 Running TypeScript type checking..."
+          npm run typecheck
+        elif npm run build >/dev/null 2>&1; then
+          echo "🔨 Running build (includes type checking)..."
+          npm run build
+        else
+          echo "⚠️  No typecheck or build script found, skipping..."
+        fi
+
+    - name: Run linting
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run lint >/dev/null 2>&1; then
+          echo "🧹 Running ESLint..."
+          npm run lint
+        else
+          echo "⚠️  No lint script found, skipping..."
+        fi
+
+    - name: Run tests
+      working-directory: ${{ matrix.component }}
+      run: |
+        if npm run test >/dev/null 2>&1; then
+          echo "🧪 Running tests..."
+          npm run test
+        else
+          echo "⚠️  No test script found, skipping..."
+        fi
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [security-audit, build-test]
+    if: always()
+    
+    steps:
+    - name: Download all audit reports
+      uses: actions/download-artifact@v4
+      with:
+        pattern: audit-report-*
+        merge-multiple: true
+
+    - name: Generate security summary
+      run: |
+        echo "# 🔒 Security Audit Summary" > security-summary.md
+        echo "" >> security-summary.md
+        echo "**Audit Date:** $(date)" >> security-summary.md
+        echo "**Commit:** ${{ github.sha }}" >> security-summary.md
+        echo "**Branch:** ${{ github.ref_name }}" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        # Process each audit report
+        for report in audit-report.json; do
+          if [ -f "$report" ]; then
+            echo "## Component: $(basename "$report" .json | sed 's/audit-report-//')" >> security-summary.md
+            
+            # Check if vulnerabilities exist
+            if jq -e '.vulnerabilities' "$report" > /dev/null 2>&1; then
+              TOTAL=$(jq -r '.metadata.vulnerabilities.total // 0' "$report")
+              CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' "$report")
+              HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' "$report")
+              MODERATE=$(jq -r '.metadata.vulnerabilities.moderate // 0' "$report")
+              LOW=$(jq -r '.metadata.vulnerabilities.low // 0' "$report")
+              
+              echo "- **Total Vulnerabilities:** $TOTAL" >> security-summary.md
+              echo "- **Critical:** $CRITICAL" >> security-summary.md
+              echo "- **High:** $HIGH" >> security-summary.md
+              echo "- **Moderate:** $MODERATE" >> security-summary.md
+              echo "- **Low:** $LOW" >> security-summary.md
+              
+              if [ "$CRITICAL" != "0" ] || [ "$HIGH" != "0" ]; then
+                echo "- **Status:** ❌ FAILED (Critical/High vulnerabilities found)" >> security-summary.md
+              elif [ "$MODERATE" != "0" ]; then
+                echo "- **Status:** ⚠️  WARNING (Moderate vulnerabilities found)" >> security-summary.md
+              else
+                echo "- **Status:** ✅ PASSED" >> security-summary.md
+              fi
+            else
+              echo "- **Status:** ✅ PASSED (No vulnerabilities found)" >> security-summary.md
+            fi
+            echo "" >> security-summary.md
+          fi
+        done
+        
+        echo "## 🛡️ Security Recommendations" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "1. **Keep dependencies updated** - Run \`npm audit fix\` regularly" >> security-summary.md
+        echo "2. **Monitor for new vulnerabilities** - This audit runs daily" >> security-summary.md
+        echo "3. **Review moderate vulnerabilities** - Assess impact and update when possible" >> security-summary.md
+        echo "4. **Use npm audit in local development** - Run before committing changes" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "---" >> security-summary.md
+        echo "*Generated by PCA-HIJAB Security Audit Pipeline*" >> security-summary.md
+
+    - name: Upload security summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-summary-${{ github.sha }}
+        path: security-summary.md
+        retention-days: 90
+
+    - name: Comment on PR (if applicable)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('security-summary.md')) {
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+          }

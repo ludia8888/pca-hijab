@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { secureError } from '@/utils/secureLogging';
 
 interface CSRFResponse {
   success: boolean;
@@ -15,7 +16,7 @@ export const CSRFAPI = {
       csrfToken = response.data.csrfToken;
       return csrfToken;
     } catch (error) {
-      console.error('Failed to get CSRF token:', error);
+      secureError('Failed to get CSRF token:', error);
       throw error;
     }
   },

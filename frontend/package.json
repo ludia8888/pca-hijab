@@ -11,7 +11,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "audit:critical": "npm audit --audit-level=critical",
+    "audit:high": "npm audit --audit-level=high",
+    "security:check": "npm run audit:high && npm run lint && npm run typecheck && npm run test",
+    "security:report": "npm audit --json > security-audit-report.json && echo 'Security audit report saved to security-audit-report.json'"
   },
   "dependencies": {
     "@google-analytics/data": "^5.1.0",
