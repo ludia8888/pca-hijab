@@ -20,6 +20,7 @@ import { authRouter } from './routes/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { getCSRFToken } from './middleware/csrf';
 import { db } from './db';
+import { tokenCleanupService } from './services/tokenCleanupService';
 // import { initializeGA4Client } from './services/ga4';
 
 const app = express();
@@ -234,4 +235,12 @@ app.listen(PORT, () => {
   } else {
     console.info('🔧 Development mode: Additional debugging enabled');
   }
+  
+  // Initialize token cleanup service
+  console.info('🧹 Token cleanup service initialized');
+  const cleanupStatus = tokenCleanupService.getStatus();
+  console.info('🧹 Cleanup service status:', {
+    schedulerEnabled: cleanupStatus.schedulerEnabled,
+    environment: cleanupStatus.environment
+  });
 });

@@ -24,8 +24,11 @@ import {
   generateRandomToken,
   getRefreshTokenExpiryDate,
   getPasswordResetExpiryDate,
+  getVerificationTokenExpiryDate,
   sanitizeUser
 } from '../utils/auth';
+import { maskUserId } from '../utils/logging';
+import { emailService } from '../services/emailService';
 
 const router = Router();
 
@@ -51,8 +54,9 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Generate verification token
+    // Generate verification token with expiry
     const verificationToken = generateRandomToken();
+    const verificationTokenExpires = getVerificationTokenExpiryDate();
 
     // Create user
     const user = await db.createUser({
@@ -60,7 +64,8 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
       passwordHash,
       fullName,
       emailVerified: false,
-      verificationToken
+      verificationToken,
+      verificationTokenExpires
     });
 
     // Generate tokens
@@ -84,9 +89,20 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
-    // TODO: Send verification email
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail({
+        userEmail: user.email,
+        userName: user.fullName,
+        verificationToken
+      });
+      console.info(`Verification email sent to user: ${maskUserId(user.id)}`);
+    } catch (emailError) {
+      console.error(`Failed to send verification email to user: ${maskUserId(user.id)}`, emailError);
+      // Don't fail registration if email fails - user can request resend
+    }
 
-    console.info(`User registered successfully - ID: ${user.id}`);
+    console.info(`User registered successfully - ID: ${maskUserId(user.id)}`);
 
     res.status(201).json({
       success: true,
@@ -142,7 +158,7 @@ router.post('/login', loginLimiter, csrfProtection, loginValidation, handleValid
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
-    console.info(`User logged in successfully - ID: ${user.id}`);
+    console.info(`User logged in successfully - ID: ${maskUserId(user.id)}`);
 
     res.json({
       success: true,
@@ -269,10 +285,25 @@ router.post('/verify-email', emailVerificationValidation, handleValidationErrors
     const { token } = req.body;
 
     // Find user by verification token
-    const users = await db.getAllSessions?.(); // This is a workaround - in production, add a getUserByVerificationToken method
-    // TODO: Implement proper getUserByVerificationToken in database
+    const user = await db.getUserByVerificationToken(token);
+    
+    if (!user) {
+      throw new AppError(400, 'Invalid or expired verification token');
+    }
 
-    throw new AppError(501, 'Email verification not yet implemented');
+    // Verify the user's email
+    const success = await db.verifyUserEmail(user.id);
+    
+    if (!success) {
+      throw new AppError(500, 'Failed to verify email');
+    }
+
+    console.info(`Email verified successfully - User: ${maskUserId(user.id)}`);
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully. You can now log in.'
+    });
   } catch (error) {
     console.error('Email verification failed:', error);
     next(error);
@@ -303,9 +334,20 @@ router.post('/forgot-password', passwordResetLimiter, passwordResetValidation, h
       resetPasswordExpires: getPasswordResetExpiryDate()
     });
 
-    // TODO: Send password reset email
+    // Send password reset email
+    try {
+      await emailService.sendPasswordResetEmail({
+        userEmail: user.email,
+        userName: user.fullName,
+        resetToken
+      });
+      console.info(`Password reset email sent to user: ${maskUserId(user.id)}`);
+    } catch (emailError) {
+      console.error(`Failed to send password reset email to user: ${maskUserId(user.id)}`, emailError);
+      // Don't fail the request if email fails - user can retry
+    }
 
-    console.info(`Password reset requested - User: ${user.id}, Email: ${email}`);
+    console.info(`Password reset requested - User: ${maskUserId(user.id)}`);
 
     res.json({
       success: true,
@@ -322,8 +364,32 @@ router.post('/reset-password', resetPasswordValidation, handleValidationErrors, 
   try {
     const { token, newPassword } = req.body;
 
-    // TODO: Implement getUserByResetToken in database
-    throw new AppError(501, 'Password reset not yet implemented');
+    // Find user by reset token
+    const user = await db.getUserByResetToken(token);
+    
+    if (!user) {
+      throw new AppError(400, 'Invalid or expired reset token');
+    }
+
+    // Hash the new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Reset the password
+    const success = await db.resetUserPassword(user.id, newPasswordHash);
+    
+    if (!success) {
+      throw new AppError(500, 'Failed to reset password');
+    }
+
+    // Invalidate all existing refresh tokens for security
+    await db.deleteUserRefreshTokens(user.id);
+
+    console.info(`Password reset successfully - User: ${maskUserId(user.id)}`);
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully. You can now log in with your new password.'
+    });
   } catch (error) {
     console.error('Password reset failed:', error);
     next(error);

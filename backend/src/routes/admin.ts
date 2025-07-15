@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { authenticateAdmin } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
+import { maskUserId, maskInstagramId } from '../utils/logging';
 import type { Recommendation, JourneyStatus, Priority } from '../types';
 
 const router = Router();
@@ -217,7 +218,7 @@ router.delete('/users/:userId', async (req, res, next) => {
     const deleted = await db.deleteSession(userId);
     
     if (deleted) {
-      console.info(`User ${userId} (${session.instagramId}) deleted by admin`);
+      console.info(`User ${maskUserId(userId)} (${maskInstagramId(session.instagramId)}) deleted by admin`);
       res.json({
         success: true,
         message: '사용자가 삭제되었습니다',
@@ -271,7 +272,7 @@ router.post('/users/:userId/status', async (req, res, next) => {
       }
     );
     
-    console.info(`User ${userId} status updated from ${session.journeyStatus} to ${status}`);
+    console.info(`User ${maskUserId(userId)} status updated from ${session.journeyStatus} to ${status}`);
     
     res.json({
       success: true,
@@ -322,7 +323,7 @@ router.post('/users/:userId/priority', async (req, res, next) => {
       }
     );
     
-    console.info(`User ${userId} priority updated from ${session.priority} to ${priority}`);
+    console.info(`User ${maskUserId(userId)} priority updated from ${session.priority} to ${priority}`);
     
     res.json({
       success: true,
@@ -379,7 +380,7 @@ router.post('/users/:userId/message', async (req, res, next) => {
       }
     );
     
-    console.info(`User ${userId} message ${messageType} marked as ${sent ? 'sent' : 'not sent'}`);
+    console.info(`User ${maskUserId(userId)} message ${messageType} marked as ${sent ? 'sent' : 'not sent'}`);
     
     res.json({
       success: true,

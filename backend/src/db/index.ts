@@ -180,6 +180,67 @@ class InMemoryDatabase {
     }
     return existed;
   }
+
+  // Email verification methods
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    if (!token) return undefined;
+    return Array.from(this.users.values()).find(user => 
+      user.verificationToken === token && !user.emailVerified
+    );
+  }
+
+  async verifyUserEmail(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.emailVerified = true;
+      user.verificationToken = undefined;
+      user.updatedAt = new Date();
+      this.users.set(userId, user);
+      return true;
+    }
+    return false;
+  }
+
+  // Password reset methods
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    if (!token) return undefined;
+    const now = new Date();
+    return Array.from(this.users.values()).find(user => 
+      user.resetPasswordToken === token && 
+      user.resetPasswordExpires && 
+      user.resetPasswordExpires > now
+    );
+  }
+
+  async resetUserPassword(userId: string, newPasswordHash: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.passwordHash = newPasswordHash;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      user.updatedAt = new Date();
+      this.users.set(userId, user);
+      return true;
+    }
+    return false;
+  }
+
+  async cleanupExpiredResetTokens(): Promise<void> {
+    const now = new Date();
+    let cleaned = 0;
+    for (const [userId, user] of this.users.entries()) {
+      if (user.resetPasswordExpires && user.resetPasswordExpires < now) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        user.updatedAt = new Date();
+        this.users.set(userId, user);
+        cleaned++;
+      }
+    }
+    if (cleaned > 0) {
+      console.info(`Cleaned up ${cleaned} expired reset tokens`);
+    }
+  }
 }
 
 // Database interface to ensure consistency
@@ -198,6 +259,13 @@ interface Database {
   getUserById(userId: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   updateUser(userId: string, updates: Partial<User>): Promise<User | undefined>;
+  // Email verification methods
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
+  verifyUserEmail(userId: string): Promise<boolean>;
+  // Password reset methods
+  getUserByResetToken(token: string): Promise<User | undefined>;
+  resetUserPassword(userId: string, newPasswordHash: string): Promise<boolean>;
+  cleanupExpiredResetTokens?(): Promise<void>;
   // Refresh token methods
   createRefreshToken(data: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken>;
   getRefreshToken(token: string): Promise<RefreshToken | undefined>;

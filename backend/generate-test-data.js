@@ -1,6 +1,16 @@
 // Generate test data for Admin page demonstration
 const axios = require('axios');
 
+// Secure logging function to mask sensitive data
+const maskInstagramId = (instagramId) => {
+  if (!instagramId || typeof instagramId !== 'string') return '[INVALID_ID]';
+  if (instagramId.length <= 2) return '*'.repeat(instagramId.length);
+  const first = instagramId[0];
+  const last = instagramId[instagramId.length - 1];
+  const masked = '*'.repeat(Math.max(instagramId.length - 2, 3));
+  return `${first}${masked}${last}`;
+};
+
 const API_BASE_URL = 'http://localhost:5001/api';
 
 // Test users with Korean names and various scenarios
@@ -78,7 +88,7 @@ async function generateTestData() {
   for (const user of testUsers) {
     try {
       // Step 1: Create session
-      console.log(`Creating session for @${user.instagramId}...`);
+      console.log(`Creating session for @${maskInstagramId(user.instagramId)}...`);
       const sessionResponse = await axios.post(`${API_BASE_URL}/sessions`, {
         instagramId: user.instagramId
       }, {
@@ -98,7 +108,7 @@ async function generateTestData() {
       });
       
       const recommendationId = recommendationResponse.data.recommendationId;
-      console.log(`✅ Created recommendation for @${user.instagramId} (${recommendationId})`);
+      console.log(`✅ Created recommendation for @${maskInstagramId(user.instagramId)} (${recommendationId})`);
       
       // Step 3: Update status if not pending
       if (user.status !== 'pending') {
@@ -114,7 +124,7 @@ async function generateTestData() {
       }
       
     } catch (error) {
-      console.error(`❌ Failed to create data for @${user.instagramId}:`, error.response?.data || error.message);
+      console.error(`❌ Failed to create data for @${maskInstagramId(user.instagramId)}:`, error.response?.data || error.message);
     }
   }
   

@@ -4,6 +4,7 @@ import { validateRecommendationData } from '../middleware/validation';
 import { AppError } from '../middleware/errorHandler';
 import { authenticateUser, authenticateAdmin } from '../middleware/auth';
 import { verifyRecommendationOwnership, verifySessionOwnership } from '../middleware/authorization';
+import { maskUserId } from '../utils/logging';
 import type { Recommendation } from '../types';
 
 const router = Router();
@@ -22,11 +23,11 @@ router.post('/', authenticateUser, validateRecommendationData, async (req, res, 
     
     // Security check: verify session ownership
     if (session.userId !== userId) {
-      console.warn(`SECURITY: User ${userId} attempted to create recommendation for session ${sessionId} owned by ${session.userId}`);
+      console.warn(`SECURITY: User ${maskUserId(userId)} attempted to create recommendation for session ${sessionId} owned by ${maskUserId(session.userId || 'unknown')}`);
       throw new AppError(403, 'Access denied: You can only create recommendations for your own sessions');
     }
     
-    console.info(`Recommendation creation attempt - SessionID: ${sessionId}, User: ${userId}`);
+    console.info(`Recommendation creation attempt - SessionID: ${sessionId}, User: ${maskUserId(userId)}`);
     
     // Create recommendation
     const recommendation = await db.createRecommendation({
@@ -37,7 +38,7 @@ router.post('/', authenticateUser, validateRecommendationData, async (req, res, 
       status: 'pending'
     });
     
-    console.info(`Recommendation created successfully - ID: ${recommendation.id}, User: ${userId}`);
+    console.info(`Recommendation created successfully - ID: ${recommendation.id}, User: ${maskUserId(userId)}`);
     
     res.status(201).json({
       success: true,
@@ -45,7 +46,7 @@ router.post('/', authenticateUser, validateRecommendationData, async (req, res, 
       recommendationId: recommendation.id
     });
   } catch (error) {
-    console.error(`Recommendation creation failed - User: ${req.user?.userId}`, error);
+    console.error(`Recommendation creation failed - User: ${maskUserId(req.user?.userId || 'unknown')}`, error);
     next(error);
   }
 });
@@ -56,7 +57,7 @@ router.get('/:recommendationId', authenticateUser, verifyRecommendationOwnership
     // Recommendation is already verified and attached by middleware
     const recommendation = req.recommendation;
     
-    console.info(`Recommendation accessed - ID: ${recommendation.id}, User: ${req.user!.userId}`);
+    console.info(`Recommendation accessed - ID: ${recommendation.id}, User: ${maskUserId(req.user!.userId)}`);
     
     res.json({
       success: true,
@@ -68,7 +69,7 @@ router.get('/:recommendationId', authenticateUser, verifyRecommendationOwnership
       }
     });
   } catch (error) {
-    console.error(`Recommendation access failed - RecommendationID: ${req.params.recommendationId}, User: ${req.user?.userId}`, error);
+    console.error(`Recommendation access failed - RecommendationID: ${req.params.recommendationId}, User: ${maskUserId(req.user?.userId || 'unknown')}`, error);
     next(error);
   }
 });

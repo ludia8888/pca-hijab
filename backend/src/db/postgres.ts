@@ -63,6 +63,20 @@ export class PostgresDatabase {
     }
   }
 
+  // Generic query method for token cleanup service
+  async query(text: string, params?: any[]): Promise<{ rows: any[]; rowCount: number | null }> {
+    try {
+      const result = await pool.query(text, params);
+      return {
+        rows: result.rows,
+        rowCount: result.rowCount
+      };
+    } catch (error) {
+      console.error('Database query failed:', error);
+      throw error;
+    }
+  }
+
   // Sessions
   async createSession(instagramId: string, userId?: string): Promise<Session> {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -528,8 +542,8 @@ export class PostgresDatabase {
   // User methods
   async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     const query = `
-      INSERT INTO users (email, password_hash, full_name, instagram_id, email_verified, verification_token)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO users (email, password_hash, full_name, instagram_id, email_verified, verification_token, verification_token_expires)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
     
@@ -539,7 +553,8 @@ export class PostgresDatabase {
       data.fullName,
       data.instagramId || null,
       data.emailVerified || false,
-      data.verificationToken || null
+      data.verificationToken || null,
+      data.verificationTokenExpires || null
     ]);
     
     return this.mapUserRow(result.rows[0]);
@@ -677,6 +692,107 @@ export class PostgresDatabase {
     await pool.query(query, [userId]);
   }
 
+  // Get user by verification token (only non-expired tokens)
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    if (!token) {
+      return undefined;
+    }
+
+    const query = `
+      SELECT * FROM users 
+      WHERE verification_token = $1 
+        AND email_verified = FALSE
+        AND (verification_token_expires IS NULL OR verification_token_expires > CURRENT_TIMESTAMP)
+    `;
+    
+    try {
+      const result = await pool.query(query, [token]);
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      return this.mapUserRow(result.rows[0]);
+    } catch (error) {
+      console.error('Failed to get user by verification token:', error);
+      return undefined;
+    }
+  }
+
+  // Get user by password reset token
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    if (!token) {
+      return undefined;
+    }
+
+    const query = `
+      SELECT * FROM users 
+      WHERE reset_password_token = $1 
+      AND reset_password_expires > CURRENT_TIMESTAMP
+    `;
+    
+    try {
+      const result = await pool.query(query, [token]);
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      return this.mapUserRow(result.rows[0]);
+    } catch (error) {
+      console.error('Failed to get user by reset token:', error);
+      return undefined;
+    }
+  }
+
+  // Verify email address
+  async verifyUserEmail(userId: string): Promise<boolean> {
+    const query = `
+      UPDATE users 
+      SET email_verified = TRUE, verification_token = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+    `;
+    
+    try {
+      const result = await pool.query(query, [userId]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Failed to verify user email:', error);
+      return false;
+    }
+  }
+
+  // Reset user password
+  async resetUserPassword(userId: string, newPasswordHash: string): Promise<boolean> {
+    const query = `
+      UPDATE users 
+      SET password_hash = $1, reset_password_token = NULL, reset_password_expires = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+    `;
+    
+    try {
+      const result = await pool.query(query, [newPasswordHash, userId]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Failed to reset user password:', error);
+      return false;
+    }
+  }
+
+  // Clean up expired reset tokens (for maintenance)
+  async cleanupExpiredResetTokens(): Promise<void> {
+    const query = `
+      UPDATE users 
+      SET reset_password_token = NULL, reset_password_expires = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE reset_password_expires < CURRENT_TIMESTAMP
+    `;
+    
+    try {
+      const result = await pool.query(query);
+      if (result.rowCount && result.rowCount > 0) {
+        console.info(`Cleaned up ${result.rowCount} expired reset tokens`);
+      }
+    } catch (error) {
+      console.error('Failed to cleanup expired reset tokens:', error);
+    }
+  }
+
   // Helper method to map database row to User type
   private mapUserRow(row: any): User {
     return {
@@ -687,6 +803,7 @@ export class PostgresDatabase {
       instagramId: row.instagram_id,
       emailVerified: row.email_verified,
       verificationToken: row.verification_token,
+      verificationTokenExpires: row.verification_token_expires,
       resetPasswordToken: row.reset_password_token,
       resetPasswordExpires: row.reset_password_expires,
       createdAt: row.created_at,

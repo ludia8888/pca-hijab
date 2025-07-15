@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { db } from '../db';
+import { emailService } from '../services/emailService';
+import { tokenCleanupService } from '../services/tokenCleanupService';
+import { config } from '../config/environment';
 
 const router = Router();
 
@@ -92,6 +95,82 @@ if (process.env.NODE_ENV === 'development') {
       res.json({
         success: true,
         stats
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // GET /api/debug/email - Test email service health
+  router.get('/email', async (_req, res) => {
+    try {
+      const emailHealth = {
+        enabled: config.EMAIL_ENABLED,
+        available: emailService.isAvailable(),
+        connectionTest: false
+      };
+
+      // Test connection if email is enabled
+      if (emailService.isAvailable()) {
+        try {
+          emailHealth.connectionTest = await emailService.testConnection();
+        } catch (error) {
+          console.error('Email connection test failed:', error);
+        }
+      }
+
+      res.json({
+        success: true,
+        email: emailHealth,
+        config: {
+          hasSmtpHost: !!config.SMTP_HOST,
+          hasEmailFrom: !!config.EMAIL_FROM,
+          smtpPort: config.SMTP_PORT,
+          smtpSecure: config.SMTP_SECURE
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // GET /api/debug/cleanup - Token cleanup service status
+  router.get('/cleanup', async (_req, res) => {
+    try {
+      const status = tokenCleanupService.getStatus();
+      const healthCheck = await tokenCleanupService.healthCheck();
+      const history = tokenCleanupService.getCleanupHistory();
+      
+      res.json({
+        success: true,
+        status,
+        health: healthCheck,
+        recentHistory: history.slice(-5), // Last 5 cleanups
+        totalHistoryEntries: history.length
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // POST /api/debug/cleanup/force - Force manual cleanup
+  router.post('/cleanup/force', async (_req, res) => {
+    try {
+      const result = await tokenCleanupService.forceCleanup();
+      
+      res.json({
+        success: true,
+        message: 'Manual cleanup completed',
+        result
       });
     } catch (error) {
       res.status(500).json({ 

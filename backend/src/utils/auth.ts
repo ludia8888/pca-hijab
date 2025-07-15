@@ -81,6 +81,12 @@ export const getPasswordResetExpiryDate = (): Date => {
   return expiryDate;
 };
 
+export const getVerificationTokenExpiryDate = (): Date => {
+  const expiryDate = new Date();
+  expiryDate.setHours(expiryDate.getHours() + 24); // 24 hours from now
+  return expiryDate;
+};
+
 // Sanitize user object (remove sensitive data)
 export const sanitizeUser = (user: User): Omit<User, 'passwordHash' | 'verificationToken' | 'resetPasswordToken'> => {
   const { passwordHash, verificationToken, resetPasswordToken, ...sanitizedUser } = user;

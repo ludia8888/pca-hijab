@@ -4,6 +4,16 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
+// Secure logging function to mask sensitive data
+const maskInstagramId = (instagramId) => {
+  if (!instagramId || typeof instagramId !== 'string') return '[INVALID_ID]';
+  if (instagramId.length <= 2) return '*'.repeat(instagramId.length);
+  const first = instagramId[0];
+  const last = instagramId[instagramId.length - 1];
+  const masked = '*'.repeat(Math.max(instagramId.length - 2, 3));
+  return `${first}${masked}${last}`;
+};
+
 const API_BASE_URL = 'http://localhost:5001/api';
 const AI_API_URL = 'http://localhost:8000';
 
@@ -82,7 +92,7 @@ async function runE2ETest() {
       const latestRec = debugResponse.data.recommendations.find(r => r.id === recommendationId);
       if (latestRec) {
         console.log('✅ Data found in debug endpoint:');
-        console.log('  - Instagram ID:', latestRec.instagramId);
+        console.log('  - Instagram ID:', maskInstagramId(latestRec.instagramId));
         console.log('  - Personal Color:', latestRec.personalColor);
         console.log('  - Preferences:', JSON.stringify(latestRec.preferences, null, 2));
       }
@@ -97,7 +107,7 @@ async function runE2ETest() {
     console.log('\n📊 Test Data:');
     console.log(`  - Session ID: ${sessionId}`);
     console.log(`  - Recommendation ID: ${recommendationId}`);
-    console.log(`  - Instagram ID: ${testUser.instagramId}`);
+    console.log(`  - Instagram ID: ${maskInstagramId(testUser.instagramId)}`);
     console.log(`  - Personal Color: ${personalColorResult.personal_color_en}`);
     console.log(`  - Material Preferences: ${testUser.preferences.material.join(', ')}`);
     console.log(`  - Transparency: ${testUser.preferences.transparency.join(', ')}`);

@@ -7,6 +7,7 @@ import {
   verifySessionOwnership, 
   verifySessionCreationAuth 
 } from '../middleware/authorization';
+import { createSecureSessionLog, maskUserId, maskInstagramId } from '../utils/logging';
 
 const router = Router();
 
@@ -18,12 +19,19 @@ router.post('/', optionalAuth, validateInstagramId, async (req, res, next) => {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const userId = req.user?.userId;
     
-    console.info(`Session creation attempt - Instagram: @${instagramId}, IP: ${clientIp}, UA: ${userAgent}, User: ${userId || 'anonymous'}`);
+    const secureLog = createSecureSessionLog({
+      instagramId,
+      ip: clientIp as string,
+      userAgent,
+      userId
+    });
+    
+    console.info('Session creation attempt:', secureLog);
     
     // Create session with optional userId
     const session = await db.createSession(instagramId, userId);
     
-    console.info(`Session created successfully - ID: ${session.id}, Instagram: @${instagramId}, User: ${userId || 'anonymous'}`);
+    console.info(`Session created successfully - ID: ${session.id}, User: ${secureLog.user}`);
     
     res.status(201).json({
       success: true,
@@ -35,7 +43,7 @@ router.post('/', optionalAuth, validateInstagramId, async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error(`Session creation failed - Instagram: @${req.body.instagramId}, Error:`, error);
+    console.error(`Session creation failed - Instagram: @${maskInstagramId(req.body.instagramId)}, Error:`, error);
     next(error);
   }
 });
@@ -46,14 +54,14 @@ router.get('/:sessionId', authenticateUser, verifySessionOwnership, async (req, 
     // Session is already verified and attached by middleware
     const session = req.session;
     
-    console.info(`Session accessed - ID: ${session.id}, User: ${req.user!.userId}`);
+    console.info(`Session accessed - ID: ${session.id}, User: ${maskUserId(req.user!.userId)}`);
     
     res.json({
       success: true,
       data: session
     });
   } catch (error) {
-    console.error(`Session access failed - SessionID: ${req.params.sessionId}, User: ${req.user?.userId}`, error);
+    console.error(`Session access failed - SessionID: ${req.params.sessionId}, User: ${maskUserId(req.user?.userId || 'unknown')}`, error);
     next(error);
   }
 });
@@ -67,7 +75,7 @@ router.patch('/:sessionId', authenticateUser, verifySessionOwnership, async (req
     // Session is already verified and attached by middleware
     const session = req.session;
     
-    console.info(`Session update attempt - ID: ${sessionId}, User: ${req.user!.userId}`);
+    console.info(`Session update attempt - ID: ${sessionId}, User: ${maskUserId(req.user!.userId)}`);
     
     // Update session with new data
     const updatedSession = await db.updateSession?.(sessionId, {

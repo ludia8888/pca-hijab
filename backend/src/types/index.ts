@@ -6,6 +6,7 @@ export interface User {
   instagramId?: string;
   emailVerified: boolean;
   verificationToken?: string;
+  verificationTokenExpires?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;

@@ -11,6 +11,16 @@ interface EnvironmentConfig {
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
   ADMIN_API_KEY: string;
+  
+  // Email configuration
+  EMAIL_ENABLED: boolean;
+  SMTP_HOST?: string;
+  SMTP_PORT?: number;
+  SMTP_SECURE?: boolean;
+  SMTP_USER?: string;
+  SMTP_PASS?: string;
+  EMAIL_FROM?: string;
+  EMAIL_FROM_NAME?: string;
 }
 
 class EnvironmentValidator {
@@ -36,7 +46,17 @@ class EnvironmentValidator {
       CLIENT_URL: process.env.CLIENT_URL,
       JWT_SECRET: this.validateJWTSecret(process.env.JWT_SECRET, 'JWT_SECRET'),
       JWT_REFRESH_SECRET: this.validateJWTSecret(process.env.JWT_REFRESH_SECRET, 'JWT_REFRESH_SECRET'),
-      ADMIN_API_KEY: this.validateAdminApiKey(process.env.ADMIN_API_KEY)
+      ADMIN_API_KEY: this.validateAdminApiKey(process.env.ADMIN_API_KEY),
+      
+      // Email configuration
+      EMAIL_ENABLED: this.validateEmailEnabled(),
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
+      SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS: process.env.SMTP_PASS,
+      EMAIL_FROM: process.env.EMAIL_FROM,
+      EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || 'PCA-HIJAB'
     };
   }
 
@@ -134,6 +154,40 @@ class EnvironmentValidator {
     }
   }
 
+  private validateEmailEnabled(): boolean {
+    const emailEnabled = process.env.EMAIL_ENABLED;
+    
+    // If explicitly disabled, return false
+    if (emailEnabled === 'false') {
+      console.warn('📧 Email service is explicitly disabled');
+      return false;
+    }
+    
+    // If in production, validate email configuration
+    if (process.env.NODE_ENV === 'production') {
+      const requiredEmailVars = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
+      const missing = requiredEmailVars.filter(varName => !process.env[varName]);
+      
+      if (missing.length > 0) {
+        console.warn(`⚠️  Email service disabled - missing variables: ${missing.join(', ')}`);
+        return false;
+      }
+      
+      console.info('✅ Email service configuration validated for production');
+      return true;
+    } else {
+      // In development, email is optional
+      const hasBasicConfig = process.env.SMTP_HOST && process.env.EMAIL_FROM;
+      if (!hasBasicConfig) {
+        console.warn('📧 Email service disabled in development - set SMTP_HOST and EMAIL_FROM to enable');
+        return false;
+      }
+      
+      console.info('📧 Email service enabled for development');
+      return true;
+    }
+  }
+
   public getConfig(): EnvironmentConfig {
     return { ...this.config };
   }
@@ -158,7 +212,9 @@ class EnvironmentValidator {
         hasClientUrl: !!this.config.CLIENT_URL,
         hasJwtSecret: !!this.config.JWT_SECRET,
         hasRefreshSecret: !!this.config.JWT_REFRESH_SECRET,
-        hasAdminKey: !!this.config.ADMIN_API_KEY
+        hasAdminKey: !!this.config.ADMIN_API_KEY,
+        emailEnabled: this.config.EMAIL_ENABLED,
+        hasSmtpConfig: !!(this.config.SMTP_HOST && this.config.EMAIL_FROM)
       });
     }
   }

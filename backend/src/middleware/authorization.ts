@@ -6,6 +6,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './errorHandler';
 import { db } from '../db';
+import { maskUserId } from '../utils/logging';
 
 /**
  * Middleware to verify that the authenticated user owns the session
@@ -37,7 +38,7 @@ export const verifySessionOwnership = async (
 
     // Verify ownership: user must own the session
     if (session.userId !== userId) {
-      console.warn(`SECURITY: User ${userId} attempted to access session ${sessionId} owned by ${session.userId}`);
+      console.warn(`SECURITY: User ${maskUserId(userId)} attempted to access session ${sessionId} owned by ${maskUserId(session.userId || 'unknown')}`);
       throw new AppError(403, 'Access denied: You can only access your own sessions');
     }
 
@@ -86,7 +87,7 @@ export const verifyRecommendationOwnership = async (
 
     // Verify ownership: user must own the session that created the recommendation
     if (session.userId !== userId) {
-      console.warn(`SECURITY: User ${userId} attempted to access recommendation ${recommendationId} owned by ${session.userId}`);
+      console.warn(`SECURITY: User ${maskUserId(userId)} attempted to access recommendation ${recommendationId} owned by ${maskUserId(session.userId || 'unknown')}`);
       throw new AppError(403, 'Access denied: You can only access your own recommendations');
     }
 
@@ -121,7 +122,7 @@ export const verifySessionCreationAuth = async (
       const session = await db.getSession(sessionId);
       
       if (session && session.userId && session.userId !== userId) {
-        console.warn(`SECURITY: User ${userId} attempted to modify session ${sessionId} owned by ${session.userId}`);
+        console.warn(`SECURITY: User ${maskUserId(userId)} attempted to modify session ${sessionId} owned by ${maskUserId(session.userId || 'unknown')}`);
         throw new AppError(403, 'Access denied: You can only modify your own sessions');
       }
     }
