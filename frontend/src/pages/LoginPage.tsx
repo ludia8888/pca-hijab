@@ -26,8 +26,8 @@ const LoginPage = (): JSX.Element => {
     setFocus
   } = useForm<LoginFormData>();
 
-  // Get redirect URL from location state or default to home
-  const from = (location.state as any)?.from?.pathname || '/';
+  // Get redirect URL from location state or default to landing page
+  const from = (location.state as any)?.from?.pathname || '/landing';
 
   // If already authenticated, redirect
   useEffect(() => {
@@ -189,7 +189,7 @@ const LoginPage = (): JSX.Element => {
             </div>
 
             <div className="mt-6">
-              <Link to="/upload">
+              <Link to="/landing">
                 <Button
                   variant="secondary"
                   fullWidth

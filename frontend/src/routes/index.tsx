@@ -65,7 +65,7 @@ const router = createBrowserRouter([
         path: ROUTES.HOME,
         element: (
           <Suspense fallback={<PageLoader />}>
-            <HIGLandingPage />
+            <LoginPage />
           </Suspense>
         ),
       },
@@ -106,6 +106,15 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <CompletionPage />
+          </Suspense>
+        ),
+      },
+      // Landing page (original Instagram ID form)
+      {
+        path: '/landing',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <HIGLandingPage />
           </Suspense>
         ),
       },

@@ -66,10 +66,10 @@ const SignupPage = (): JSX.Element => {
 
   const password = watch('password');
 
-  // If already authenticated, redirect to home
+  // If already authenticated, redirect to landing page
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate('/landing', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -108,7 +108,7 @@ const SignupPage = (): JSX.Element => {
       });
 
       toast.success('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
-      navigate('/');
+      navigate('/landing');
     } catch (error: any) {
       trackEvent('signup_failed', {
         email: data.email,
