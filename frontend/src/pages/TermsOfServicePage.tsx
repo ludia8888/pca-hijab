@@ -1,12 +1,11 @@
 import React from 'react';
 import { PageLayout } from '../components/layout/PageLayout/PageLayout';
-import { Container } from '../components/ui';
 import { motion } from 'framer-motion';
 
 export function TermsOfServicePage() {
   return (
     <PageLayout showBackButton={true}>
-      <Container className="py-8 px-4 max-w-4xl mx-auto">
+      <div className="py-8 px-4 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -238,7 +237,7 @@ export function TermsOfServicePage() {
             </p>
           </div>
         </motion.div>
-      </Container>
+      </div>
     </PageLayout>
   );
 }
