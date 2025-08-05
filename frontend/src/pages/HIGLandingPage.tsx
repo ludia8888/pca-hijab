@@ -134,8 +134,8 @@ const HIGLandingPage = (): JSX.Element => {
         user_flow_step: 'session_created_successfully'
       });
       
-      console.log('[HIGLandingPage] Navigating to home page...');
-      navigate(ROUTES.HOME);
+      console.log('[HIGLandingPage] Navigating to diagnosis page...');
+      navigate(ROUTES.DIAGNOSIS);
     } catch (error) {
       console.error('[HIGLandingPage] Error creating session:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
