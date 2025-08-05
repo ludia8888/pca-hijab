@@ -108,69 +108,66 @@ export async function validateImageClientSide(file: File): Promise<ImageValidati
       return result;
     }
 
-    // Validate face size (should be at least 10% of image area)
-    if (faceValidation.faceArea && faceValidation.faceArea < 0.1) {
+    // More permissive face size validation (should be at least 5% of image area) 
+    if (faceValidation.faceArea && faceValidation.faceArea < 0.05) { // Reduced from 0.1 to 0.05
       result.isValid = false;
       result.errorType = ImageAnalysisErrorType.FACE_TOO_SMALL;
       return result;
     }
 
-    // Validate face position (should not be too close to edges)
+    // More lenient face position validation (convert to warning only for very edge cases)
     if (faceValidation.facePosition) {
       const { x, y, width, height } = faceValidation.facePosition;
       const imgWidth = img.width;
       const imgHeight = img.height;
       
-      if (x < imgWidth * 0.05 || x + width > imgWidth * 0.95 ||
-          y < imgHeight * 0.05 || y + height > imgHeight * 0.95) {
-        result.details.warnings.push('Face is too close to image edges - try centering your face');
+      // Only warn if face is extremely close to edges (2% margin instead of 5%)
+      if (x < imgWidth * 0.02 || x + width > imgWidth * 0.98 ||
+          y < imgHeight * 0.02 || y + height > imgHeight * 0.98) {
+        result.details.warnings.push('Face is very close to image edges - centering may improve results');
       }
     }
 
-    // Enhanced lighting validation with more intelligent thresholds
-    if (qualityAnalysis.brightness < 60) {
+    // More permissive lighting validation 
+    if (qualityAnalysis.brightness < 30) { // Much more permissive - only reject extremely dark photos
       result.isValid = false;
       result.errorType = ImageAnalysisErrorType.TOO_DARK;
       return result;
     }
 
-    if (qualityAnalysis.brightness > 220) {
+    if (qualityAnalysis.brightness > 240) { // More permissive - only reject severely overexposed photos
       result.isValid = false;
       result.errorType = ImageAnalysisErrorType.TOO_BRIGHT;
       return result;
     }
 
-    // Check for poor lighting conditions (low brightness but not too dark)
-    if (qualityAnalysis.brightness < 90 && qualityAnalysis.contrast < 40) {
-      result.isValid = false;
-      result.errorType = ImageAnalysisErrorType.POOR_LIGHTING;
-      return result;
+    // More lenient poor lighting check - convert to warning instead of blocking
+    if (qualityAnalysis.brightness < 70 && qualityAnalysis.contrast < 30) {
+      result.details.warnings.push('Photo appears quite dark - try better lighting if possible');
     }
 
-    // Enhanced image quality validation
-    if (qualityAnalysis.sharpness < 0.2) {
+    // Much more permissive blur detection - only reject severely blurry photos
+    if (qualityAnalysis.sharpness < 0.1) { // Reduced from 0.2 to 0.1
       result.isValid = false;
       result.errorType = ImageAnalysisErrorType.IMAGE_BLURRY;
       return result;
     }
 
-    // Warn for borderline quality issues
-    if (qualityAnalysis.sharpness < 0.4) {
+    // More lenient warnings for borderline quality issues
+    if (qualityAnalysis.sharpness < 0.25) { // Reduced from 0.4 to 0.25
       result.details.warnings.push('Image appears slightly blurry - consider taking a sharper photo');
     }
 
-    if (qualityAnalysis.contrast < 25) {
+    if (qualityAnalysis.contrast < 15) { // Reduced from 25 to 15 - only warn for very low contrast
       result.details.warnings.push('Low contrast detected - try better lighting');
     }
 
     // Enhanced lighting condition analysis
     const lightingAnalysis = await analyzeLightingConditions(img, qualityAnalysis);
     
-    // Check for harsh shadows
+    // Convert harsh shadows to warning instead of blocking error
     if (lightingAnalysis.harshShadows) {
-      result.isValid = false;
-      result.errorType = ImageAnalysisErrorType.HARSH_SHADOWS;
-      return result;
+      result.details.warnings.push('Strong shadows detected - softer lighting may improve results');
     }
     
     // Check for overexposure patterns
@@ -439,11 +436,11 @@ async function analyzeLightingConditions(img: HTMLImageElement, qualityAnalysis:
   const minRegionBrightness = Math.min(...regionBrightness);
   const brightnessRange = maxRegionBrightness - minRegionBrightness;
   
-  // Detect lighting issues
-  const harshShadows = brightnessRange > 100 && minRegionBrightness < 50 && qualityAnalysis.contrast > 70;
-  const overexposed = regionBrightness.filter(b => b > 240).length >= 3; // More than 3 regions overexposed
-  const underexposed = regionBrightness.filter(b => b < 40).length >= 3; // More than 3 regions underexposed
-  const unevenLighting = brightnessRange > 80 && !harshShadows; // Uneven but not harsh shadows
+  // Much more permissive lighting issue detection
+  const harshShadows = brightnessRange > 150 && minRegionBrightness < 25 && qualityAnalysis.contrast > 100; // Much stricter criteria
+  const overexposed = regionBrightness.filter(b => b > 250).length >= 4; // More regions must be overexposed
+  const underexposed = regionBrightness.filter(b => b < 25).length >= 4; // More regions must be severely underexposed
+  const unevenLighting = brightnessRange > 120 && !harshShadows; // More permissive uneven lighting threshold
   
   return {
     harshShadows,
