@@ -3,8 +3,8 @@
 
 set -e
 
-echo "Installing dependencies..."
-npm install
+echo "Installing dependencies (including devDependencies for TypeScript build)..."
+npm install --production=false
 
 echo "Building TypeScript..."
 npm run build
