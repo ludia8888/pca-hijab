@@ -3,6 +3,7 @@ services:
     name: pca-hijab-backend
     runtime: node
     plan: free
+    region: singapore
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
@@ -11,8 +12,24 @@ services:
       - key: PORT
         value: 10000
       - key: CLIENT_URL
-        sync: false
+        value: https://pca-hijab.vercel.app
       - key: DATABASE_URL
         sync: false
       - key: ADMIN_API_KEY
         generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: AI_API_URL
+        value: https://your-ai-api-url.com
+      - key: CORS_ORIGIN
+        value: https://pca-hijab.vercel.app
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
