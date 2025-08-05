@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Package, FileText } from 'lucide-react';
+import { LogOut, Package, FileText, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { ProductForm, ProductList, ContentForm, ContentList, AdminLoadingState } from '@/components/admin';
 import { useAdminStore } from '@/store/useAdminStore';
+import AdminAnalytics from './AdminAnalytics';
 import type { Product, Content } from '@/types/admin';
 
-type TabType = 'products' | 'contents';
+type TabType = 'products' | 'contents' | 'analytics';
 type ViewMode = 'list' | 'create' | 'edit';
 
 const AdminDashboard: React.FC = () => {
@@ -116,6 +117,23 @@ const AdminDashboard: React.FC = () => {
                 <FileText className="w-4 h-4" />
                 컨텐츠 관리
               </button>
+              
+              <button
+                onClick={() => {
+                  setActiveTab('analytics');
+                  setViewMode('list');
+                  setEditingProduct(null);
+                  setEditingContent(null);
+                }}
+                className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  activeTab === 'analytics'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <BarChart2 className="w-4 h-4" />
+                분석
+              </button>
             </div>
           </div>
         </nav>
@@ -160,6 +178,13 @@ const AdminDashboard: React.FC = () => {
                 />
               )}
             </>
+          )}
+          
+          {/* Analytics */}
+          {activeTab === 'analytics' && (
+            <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
+              <AdminAnalytics />
+            </div>
           )}
         </main>
       </div>
