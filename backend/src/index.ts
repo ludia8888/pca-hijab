@@ -229,9 +229,7 @@ app.use('/api/admin', adminRouter);
 // app.use('/api/analytics', analyticsRouter);
 app.use('/api/debug', debugRouter);
 
-// TEMPORARY: Database initialization route - REMOVE AFTER USE
-import { initDbRouter } from './routes/init-db';
-app.use('/api', initDbRouter);
+// Database initialization completed - endpoint removed for security
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
