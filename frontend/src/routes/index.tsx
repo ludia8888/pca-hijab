@@ -3,6 +3,7 @@ import { ROUTES } from '@/utils/constants';
 import { lazy, Suspense } from 'react';
 import { ProtectedAdminRoute } from '@/components/auth/ProtectedAdminRoute';
 import RootLayout from '@/components/layout/RootLayout';
+import { env } from '@/config/environment';
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -41,6 +42,14 @@ const PageLoader = (): JSX.Element => (
   </div>
 );
 
+
+// Production route guard - redirects to home if accessed in production
+const ProductionRouteGuard = ({ children }: { children: React.ReactNode }): JSX.Element => {
+  if (env.isProduction) {
+    return <Navigate to={ROUTES.HOME} replace />;
+  }
+  return <>{children}</>;
+};
 
 // Error boundary for routes
 const RouteErrorBoundary = (): JSX.Element => (
@@ -123,66 +132,82 @@ const router = createBrowserRouter([
       {
         path: ROUTES.PRODUCTS,
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <ProductsPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <ProductsPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
         path: '/products/:id',
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <ProductDetailPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <ProductDetailPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
         path: '/content/:slug',
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <ContentDetailPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <ContentDetailPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
         path: ROUTES.MYPAGE,
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <MyPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <MyPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       // Auth routes
       {
         path: '/login',
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <LoginPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <LoginPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
         path: '/signup',
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <SignupPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <SignupPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
         path: '/forgot-password',
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <ForgotPasswordPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <ForgotPasswordPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
         path: '/reset-password',
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <ResetPasswordPage />
-          </Suspense>
+          <ProductionRouteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <ResetPasswordPage />
+            </Suspense>
+          </ProductionRouteGuard>
         ),
       },
       {
