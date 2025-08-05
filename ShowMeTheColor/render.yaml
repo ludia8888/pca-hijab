@@ -4,6 +4,15 @@ services:
     runtime: docker
     dockerfilePath: ./ShowMeTheColor/Dockerfile.render
     rootDir: .
+    buildFilter:
+      paths:
+        - ShowMeTheColor/**
+      ignoredPaths:
+        - backend/**
+        - frontend/**
+        - docs/**
+        - "*.md"
+        - .github/**
     envVars:
       - key: PORT
         value: 8000

@@ -6,6 +6,16 @@ services:
     region: singapore
     buildCommand: ./render-build.sh
     startCommand: npm start
+    buildFilter:
+      paths:
+        - backend/**
+        - package.json
+        - package-lock.json
+      ignoredPaths:
+        - ShowMeTheColor/**
+        - frontend/**
+        - docs/**
+        - "*.md"
     envVars:
       - key: NODE_ENV
         value: production
