@@ -104,18 +104,41 @@ export class PersonalColorAPI {
           return this.analyzeImage(file, debug, retryCount + 1);
         }
         
+        // Preserve original error for better categorization, but provide Korean fallbacks
         if (error.code === 'ECONNABORTED') {
           const timeoutSeconds = Math.round(apiTimeout / 1000);
-          throw new Error(`분석이 ${timeoutSeconds}초를 초과했습니다. 이미지 크기를 줄이거나 다른 이미지로 시도해주세요.`);
+          const timeoutError = new Error(`분석이 ${timeoutSeconds}초를 초과했습니다. 이미지 크기를 줄이거나 다른 이미지로 시도해주세요.`);
+          (timeoutError as any).originalError = error;
+          (timeoutError as any).errorType = 'timeout';
+          throw timeoutError;
         }
         if (error.code === 'ECONNREFUSED') {
-          throw new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          const connectionError = new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          (connectionError as any).originalError = error;
+          (connectionError as any).errorType = 'connection_refused';
+          throw connectionError;
         }
+        
+        // For API errors with response data, preserve the original response
         if (error.response?.status === 500) {
-          throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+          const serverError = new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+          (serverError as any).response = error.response;
+          (serverError as any).originalError = error;
+          throw serverError;
         }
         if (error.response?.status === 413) {
-          throw new Error('파일 크기가 너무 큽니다. 10MB 이하의 파일을 업로드해주세요.');
+          const fileSizeError = new Error('파일 크기가 너무 큽니다. 10MB 이하의 파일을 업로드해주세요.');
+          (fileSizeError as any).response = error.response;
+          (fileSizeError as any).originalError = error;
+          throw fileSizeError;
+        }
+        
+        // For other API errors, preserve the response data
+        if (error.response) {
+          const apiError = new Error(error.response.data?.message || error.response.data?.error || `API Error: ${error.response.status}`);
+          (apiError as any).response = error.response;
+          (apiError as any).originalError = error;
+          throw apiError;
         }
       }
       

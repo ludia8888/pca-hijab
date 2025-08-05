@@ -5,6 +5,8 @@ import { ANALYSIS_STEPS, ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { analyzeImage } from '@/services/api';
 import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement } from '@/utils/analytics';
+import { ImageAnalysisError } from '@/components/ui/ImageAnalysisError/ImageAnalysisError';
+import { parseImageAnalysisError, ImageAnalysisErrorType } from '@/utils/imageAnalysisErrors';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -12,6 +14,7 @@ const AnalyzingPage = (): JSX.Element => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<ImageAnalysisErrorType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
@@ -167,31 +170,19 @@ const AnalyzingPage = (): JSX.Element => {
       }, totalDuration);
     } catch (err) {
       console.error('Analysis error:', err);
-      let errorMessage = 'An error occurred during analysis.';
       
+      // Parse the error to determine specific type
+      const analysisErrorType = parseImageAnalysisError(err);
+      
+      let errorMessage = 'An error occurred during analysis.';
       if (err instanceof Error) {
         console.error('Error details:', {
           name: err.name,
           message: err.message,
-          stack: err.stack
+          stack: err.stack,
+          parsedType: analysisErrorType
         });
-        
-        // Check for specific error types
-        if (err.message.includes('HEIC')) {
-          errorMessage = 'HEIC format is not supported. Please use JPG or PNG files.';
-        } else if (err.message.includes('network') || err.message.includes('Network')) {
-          errorMessage = 'Please check your network connection.';
-        } else if (err.message.includes('초를 초과했습니다')) {
-          errorMessage = err.message; // Dynamic timeout message with seconds
-        } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
-          errorMessage = 'Analysis timed out. Please try with a smaller image.';
-        } else if (err.message.includes('분석에 시간이 오래 걸리고 있습니다')) {
-          errorMessage = '서버가 준비 중입니다. 잠시 후 다시 시도해주세요.';
-        } else if (err.message.includes('분석 서비스')) {
-          errorMessage = err.message; // Korean error message from API
-        } else {
-          errorMessage = err.message;
-        }
+        errorMessage = err.message;
       } else {
         console.error('Non-Error object thrown:', err);
         errorMessage = String(err);
@@ -201,16 +192,17 @@ const AnalyzingPage = (): JSX.Element => {
       trackError('ai_analysis_failed', errorMessage, 'analyzing_page');
       trackEvent('ai_analysis_failed', {
         error_message: errorMessage,
+        error_type_detailed: analysisErrorType,
         file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
         file_type: uploadedFile.type,
         analysis_duration_ms: Date.now() - Date.now(), // This would need the actual start time
         user_flow_step: 'analysis_failed',
-        error_type: errorMessage.includes('HEIC') ? 'unsupported_format' :
-                   errorMessage.includes('network') ? 'network_error' :
-                   errorMessage.includes('timeout') ? 'timeout_error' : 'unknown_error'
+        error_category: analysisErrorType
       });
       
-      setError(`Error: ${errorMessage}`);
+      // Set both error message and type
+      setError(errorMessage);
+      setErrorType(analysisErrorType);
     }
   };
 
@@ -269,50 +261,44 @@ const AnalyzingPage = (): JSX.Element => {
         </div>
 
         {/* Error state */}
-        {error && (
-          <div className="bg-error/10 border border-error rounded-lg p-4 max-w-md w-full">
-            <p className="text-error text-center mb-4">{error}</p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  // Track retry button click with enhanced data
-                  trackEvent('button_click', {
-                    button_name: 'try_again_analysis',
-                    page: 'analyzing',
-                    retry_attempt: 'user_initiated',
-                    previous_error: error || 'unknown',
-                    user_flow_step: 'analysis_retry_initiated'
-                  });
+        {error && errorType && (
+          <div className="max-w-md w-full">
+            <ImageAnalysisError
+              errorType={errorType}
+              onRetry={() => {
+                // Track retry button click with enhanced data
+                trackEvent('button_click', {
+                  button_name: 'try_again_analysis',
+                  page: 'analyzing',
+                  retry_attempt: 'user_initiated',
+                  previous_error: error || 'unknown',
+                  error_type: errorType,
+                  user_flow_step: 'analysis_retry_initiated'
+                });
 
-                  trackEngagement('retry', 'analysis_retry');
-                  
-                  setError(null);
-                  setCurrentStep(0);
+                trackEngagement('retry', 'analysis_retry');
+                
+                // Reset all error states
+                setError(null);
+                setErrorType(null);
+                setCurrentStep(0);
                 setProgress(0);
-                setIsAnalyzing(false); // Reset analyzing state
+                setIsAnalyzing(false);
+                
+                // Start analysis again
                 performAnalysis();
               }}
-              className="w-full py-3 px-4 bg-error-600 text-white font-semibold rounded-lg hover:bg-error-700 active:bg-error-800 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Try Again
-            </button>
-            {(error.includes('초과했습니다') || error.includes('timeout')) && (
-              <button
-                onClick={() => {
-                  trackEvent('button_click', {
-                    button_name: 'go_back_to_upload',
-                    page: 'analyzing',
-                    reason: 'timeout_error',
-                    user_flow_step: 'return_to_upload_after_timeout'
-                  });
-                  navigate(ROUTES.DIAGNOSIS);
-                }}
-                className="w-full py-3 px-4 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-800 active:bg-gray-900 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Use Different Image
-              </button>
-            )}
-            </div>
+              onChangeImage={() => {
+                trackEvent('button_click', {
+                  button_name: 'go_back_to_upload',
+                  page: 'analyzing',
+                  reason: 'user_requested_change',
+                  error_type: errorType,
+                  user_flow_step: 'return_to_upload_from_error'
+                });
+                navigate(ROUTES.DIAGNOSIS);
+              }}
+            />
           </div>
         )}
 

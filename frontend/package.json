@@ -35,6 +35,7 @@
     "axios": "^1.9.0",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.6",
+    "face-api.js": "^0.22.2",
     "framer-motion": "^12.23.12",
     "gtag": "^1.0.1",
     "heic2any": "^0.0.4",
