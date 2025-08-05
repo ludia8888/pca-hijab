@@ -33,6 +33,9 @@ class TokenCleanupService {
   }
 
   private shouldStartScheduler(): boolean {
+    // Temporarily disabled until database schema is updated
+    return false;
+    
     // Always run in production
     if (config.NODE_ENV === 'production') {
       return true;
