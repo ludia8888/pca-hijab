@@ -374,7 +374,7 @@ export const ImageUpload = ({
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold text-yellow-800 mb-2">
-                📸 사진 품질 개선 제안
+                📸 Photo Quality Suggestions
               </h4>
               <ul className="space-y-1">
                 {validationWarnings.map((warning, index) => (
@@ -385,7 +385,7 @@ export const ImageUpload = ({
                 ))}
               </ul>
               <p className="text-xs text-yellow-600 mt-2">
-                💡 더 정확한 분석을 위해 위 사항들을 개선해보세요. 현재 사진으로도 분석은 가능합니다.
+                💡 For more accurate analysis, consider improving these aspects. Your current photo can still be analyzed.
               </p>
             </div>
           </div>

@@ -123,7 +123,7 @@ export async function validateImageClientSide(file: File): Promise<ImageValidati
       
       if (x < imgWidth * 0.05 || x + width > imgWidth * 0.95 ||
           y < imgHeight * 0.05 || y + height > imgHeight * 0.95) {
-        result.details.warnings.push('얼굴이 사진 가장자리에 너무 가까워요 - 중앙에 위치시켜 보세요');
+        result.details.warnings.push('Face is too close to image edges - try centering your face');
       }
     }
 
@@ -156,11 +156,11 @@ export async function validateImageClientSide(file: File): Promise<ImageValidati
 
     // Warn for borderline quality issues
     if (qualityAnalysis.sharpness < 0.4) {
-      result.details.warnings.push('사진이 약간 흐릿해 보여요 - 더 선명한 사진을 촬영해보세요');
+      result.details.warnings.push('Image appears slightly blurry - consider taking a sharper photo');
     }
 
     if (qualityAnalysis.contrast < 25) {
-      result.details.warnings.push('대비가 낮게 감지됨 - 더 나은 조명을 시도해보세요');
+      result.details.warnings.push('Low contrast detected - try better lighting');
     }
 
     // Enhanced lighting condition analysis
@@ -175,17 +175,17 @@ export async function validateImageClientSide(file: File): Promise<ImageValidati
     
     // Check for overexposure patterns
     if (lightingAnalysis.overexposed) {
-      result.details.warnings.push('사진이 과다 노출된 것 같아요 - 조명을 줄여보세요');
+      result.details.warnings.push('Image may be overexposed - reduce lighting');
     }
     
     // Check for underexposure patterns
     if (lightingAnalysis.underexposed) {
-      result.details.warnings.push('사진이 부족 노출된 것 같아요 - 조명을 늘려보세요');
+      result.details.warnings.push('Image appears underexposed - increase lighting');
     }
     
     // Check for uneven lighting
     if (lightingAnalysis.unevenLighting) {
-      result.details.warnings.push('조명이 고르지 않게 감지됨 - 더 부드러운 광원을 사용해보세요');
+      result.details.warnings.push('Uneven lighting detected - use more diffused light source');
     }
 
     return result;
@@ -203,7 +203,7 @@ export async function validateImageClientSide(file: File): Promise<ImageValidati
           contrast: 50,
           sharpness: 0.5
         },
-        warnings: ['클라이언트 사이드 검증을 사용할 수 없음']
+        warnings: ['Client-side validation unavailable']
       }
     };
   }
