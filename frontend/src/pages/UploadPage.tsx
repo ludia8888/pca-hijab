@@ -137,7 +137,7 @@ const UploadPage = (): JSX.Element => {
             <button
               onClick={handleAnalyze}
               disabled={isCompressing}
-              className="w-full max-w-md mx-auto block bg-gradient-to-r from-primary to-primary-light text-white font-medium py-4 px-8 rounded-full shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full max-w-md mx-auto block bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold py-4 px-8 rounded-full shadow-2xl hover:shadow-primary/50 hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-2 border-primary-500"
             >
               {isCompressing ? (
                 <span className="flex items-center justify-center gap-2">
@@ -148,7 +148,7 @@ const UploadPage = (): JSX.Element => {
                   Processing...
                 </span>
               ) : (
-                'Analyze My Colors'
+                <span className="drop-shadow-sm">🎨 Analyze My Colors</span>
               )}
             </button>
           </div>

@@ -202,12 +202,12 @@ const AnalyzingPage = (): JSX.Element => {
         {/* Progress indicator */}
         <div className="w-full max-w-md mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600">Analyzing</span>
-            <span className="text-sm text-gray-600">{progress}%</span>
+            <span className="text-sm font-medium text-gray-700">Analyzing</span>
+            <span className="text-sm font-semibold text-primary-600">{progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden shadow-inner">
             <div
-              className="bg-primary h-full rounded-full transition-all duration-1000 ease-out"
+              className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -217,11 +217,11 @@ const AnalyzingPage = (): JSX.Element => {
         <div className="text-center mb-8">
           <div className="relative w-32 h-32 mx-auto mb-6">
             {/* Icon background circle */}
-            <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse" />
+            <div className="absolute inset-0 bg-primary-100 rounded-full animate-pulse shadow-md" />
             
             {/* Center icon */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-5xl animate-bounce">{currentStepData.icon}</span>
+              <span className="text-5xl animate-bounce drop-shadow-sm">{currentStepData.icon}</span>
             </div>
             
             {/* Rotating border */}
@@ -234,9 +234,9 @@ const AnalyzingPage = (): JSX.Element => {
                 cy="64"
                 r="62"
                 stroke="currentColor"
-                strokeWidth="4"
+                strokeWidth="5"
                 fill="none"
-                className="text-primary"
+                className="text-primary-600 drop-shadow-sm"
                 strokeDasharray="150 100"
               />
             </svg>
@@ -252,7 +252,7 @@ const AnalyzingPage = (): JSX.Element => {
         {error && (
           <div className="bg-error/10 border border-error rounded-lg p-4 max-w-md w-full">
             <p className="text-error text-center mb-4">{error}</p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   // Track retry button click with enhanced data
@@ -272,7 +272,7 @@ const AnalyzingPage = (): JSX.Element => {
                 setIsAnalyzing(false); // Reset analyzing state
                 performAnalysis();
               }}
-              className="w-full py-2 bg-error text-white rounded-lg hover:bg-error/90 transition-colors"
+              className="w-full py-3 px-4 bg-error-600 text-white font-semibold rounded-lg hover:bg-error-700 active:bg-error-800 transition-all duration-200 shadow-md hover:shadow-lg"
             >
               Try Again
             </button>
@@ -287,7 +287,7 @@ const AnalyzingPage = (): JSX.Element => {
                   });
                   navigate(ROUTES.DIAGNOSIS);
                 }}
-                className="w-full py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="w-full py-3 px-4 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-800 active:bg-gray-900 transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 Use Different Image
               </button>

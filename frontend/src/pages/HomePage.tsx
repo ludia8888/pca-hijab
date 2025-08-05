@@ -283,9 +283,9 @@ const HomePage = (): JSX.Element => {
               </Text>
               <button
                 onClick={() => navigate('/diagnosis')}
-                className="mt-6 px-6 py-3 bg-primary-400 text-white rounded-full hover:bg-primary-500 transition-colors"
+                className="mt-6 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-full hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-primary-500"
               >
-                퍼스널 컬러 진단 받기
+                🎨 퍼스널 컬러 진단 받기
               </button>
             </div>
           </div>

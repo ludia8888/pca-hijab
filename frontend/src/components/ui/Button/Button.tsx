@@ -98,7 +98,7 @@ const ButtonComponent = forwardRef<HTMLButtonElement, ButtonProps>(
     const variantClasses = cx(
       // Solid variant
       variant === 'solid' && [
-        color === 'primary' && 'bg-primary-400 text-white hover:bg-primary-600 focus-visible:ring-primary-400',
+        color === 'primary' && 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus-visible:ring-primary-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95',
         color === 'secondary' && 'bg-secondary-400 text-white hover:bg-secondary-600 focus-visible:ring-secondary-400',
         color === 'success' && 'bg-success-500 text-white hover:bg-success-600 focus-visible:ring-success-500',
         color === 'warning' && 'bg-warning-500 text-white hover:bg-warning-600 focus-visible:ring-warning-500',
@@ -109,7 +109,7 @@ const ButtonComponent = forwardRef<HTMLButtonElement, ButtonProps>(
       
       // Outline variant
       variant === 'outline' && [
-        color === 'primary' && 'bg-transparent text-primary-400 border-2 border-primary-400 hover:bg-primary-50 focus-visible:ring-primary-400',
+        color === 'primary' && 'bg-transparent text-primary-600 border-2 border-primary-600 hover:bg-primary-600 hover:text-white focus-visible:ring-primary-600 font-semibold transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200',
         color === 'secondary' && 'bg-transparent text-secondary-400 border-2 border-secondary-400 hover:bg-secondary-50 focus-visible:ring-secondary-400',
         color === 'success' && 'bg-transparent text-success-500 border-2 border-success-500 hover:bg-success-50 focus-visible:ring-success-500',
         color === 'warning' && 'bg-transparent text-warning-500 border-2 border-warning-500 hover:bg-warning-50 focus-visible:ring-warning-500',
