@@ -29,11 +29,13 @@ export const ImageUpload = ({
   const [showCamera, setShowCamera] = useState(false);
   const [supportsMediaStream, setSupportsMediaStream] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback(async (file: File) => {
     setIsValidating(true);
+    setValidationWarnings([]); // Clear previous warnings
     
     try {
       // Basic file validation first
@@ -75,7 +77,7 @@ export const ImageUpload = ({
           // Show warnings if any
           if (clientValidation.details.warnings.length > 0) {
             console.warn('Image validation warnings:', clientValidation.details.warnings);
-            // Could show warnings to user in the future
+            setValidationWarnings(clientValidation.details.warnings);
           }
 
           // Track successful validation
@@ -163,6 +165,7 @@ export const ImageUpload = ({
     if (preview) {
       revokeImagePreview(preview);
       setPreview(null);
+      setValidationWarnings([]); // Clear warnings when removing image
     }
   };
 
@@ -347,6 +350,45 @@ export const ImageUpload = ({
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
           </button>
+        </div>
+      )}
+
+      {/* Validation Warnings */}
+      {validationWarnings.length > 0 && preview && (
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-5 h-5 text-yellow-600 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-semibold text-yellow-800 mb-2">
+                📸 사진 품질 개선 제안
+              </h4>
+              <ul className="space-y-1">
+                {validationWarnings.map((warning, index) => (
+                  <li key={index} className="text-sm text-yellow-700 flex items-start space-x-2">
+                    <span className="text-yellow-600 flex-shrink-0 mt-0.5">•</span>
+                    <span>{warning}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-yellow-600 mt-2">
+                💡 더 정확한 분석을 위해 위 사항들을 개선해보세요. 현재 사진으로도 분석은 가능합니다.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
