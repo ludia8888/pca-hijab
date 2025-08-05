@@ -45,9 +45,26 @@ export class PostgresDatabase {
   // Test database connection
   async testConnection(): Promise<boolean> {
     try {
-      const result = await pool.query('SELECT NOW()');
-      console.info('Database connected at:', result.rows[0].now);
-      return true;
+      // Add connection retry logic for Render deployment
+      let retries = 3;
+      let lastError;
+      
+      while (retries > 0) {
+        try {
+          const result = await pool.query('SELECT NOW()');
+          console.info('Database connected at:', result.rows[0].now);
+          return true;
+        } catch (err) {
+          lastError = err;
+          retries--;
+          if (retries > 0) {
+            console.log(`Database connection attempt failed, retrying... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+          }
+        }
+      }
+      
+      throw lastError;
     } catch (error) {
       console.error('Database connection failed:', error);
       return false;
