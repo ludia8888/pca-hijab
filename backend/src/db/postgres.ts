@@ -101,18 +101,16 @@ export class PostgresDatabase {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     const query = `
-      INSERT INTO sessions (id, instagram_id, user_id, journey_status, priority)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, instagram_id, user_id, journey_status, priority, created_at
+      INSERT INTO sessions (id, instagram_id, user_id)
+      VALUES ($1, $2, $3)
+      RETURNING id, instagram_id, user_id, created_at
     `;
     
-    const result = await pool.query(query, [sessionId, instagramId || null, userId || null, 'just_started', 'medium']);
+    const result = await pool.query(query, [sessionId, instagramId || null, userId || null]);
     return {
       id: result.rows[0].id,
       instagramId: result.rows[0].instagram_id || undefined,
       userId: result.rows[0].user_id,
-      journeyStatus: result.rows[0].journey_status,
-      priority: result.rows[0].priority,
       createdAt: result.rows[0].created_at,
     };
   }
@@ -120,7 +118,6 @@ export class PostgresDatabase {
   async getSession(sessionId: string): Promise<Session | undefined> {
     const query = `
       SELECT id, instagram_id, uploaded_image_url, analysis_result, 
-             journey_status, priority, offer_sent_at, notes,
              created_at, updated_at
       FROM sessions
       WHERE id = $1
