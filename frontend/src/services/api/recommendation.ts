@@ -3,7 +3,6 @@ import { useAppStore } from '@/store';
 import type { UserPreferences, PersonalColorResult } from '@/types';
 
 export interface RecommendationRequest {
-  instagramId: string;
   personalColorResult: PersonalColorResult;
   preferences: UserPreferences;
   sessionId?: string;
@@ -44,7 +43,6 @@ export class RecommendationAPI {
       // Log the data being sent
       const requestData = {
         sessionId,
-        instagramId: data.instagramId,
         personalColorResult: transformedPersonalColorResult,
         userPreferences: data.preferences
       };

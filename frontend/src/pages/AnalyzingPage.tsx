@@ -8,15 +8,15 @@ import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement 
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { uploadedFile, instagramId, sessionId, uploadedImage, setAnalysisResult } = useAppStore();
+  const { uploadedFile, sessionId, uploadedImage, setAnalysisResult } = useAppStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Redirect if no image or instagram ID and track page entry
+  // Redirect if no image and track page entry
   useEffect(() => {
-    if (!uploadedFile || !instagramId) {
+    if (!uploadedFile) {
       // Track drop-off if user arrives without proper data
       trackDropOff('analyzing_page', 'missing_upload_data');
       navigate(ROUTES.HOME);
@@ -29,7 +29,7 @@ const AnalyzingPage = (): JSX.Element => {
         file_type: uploadedFile.type
       });
     }
-  }, [uploadedFile, instagramId, navigate]);
+  }, [uploadedFile, navigate]);
 
   // Start analysis on mount
   useEffect(() => {
@@ -117,11 +117,11 @@ const AnalyzingPage = (): JSX.Element => {
       // Store result
       setAnalysisResult(result);
       
-      // Save analysis result to backend
+      // Save analysis result to backend with automatic session recovery
       try {
         if (sessionId) {
-          const { updateSession } = await import('@/services/api');
-          await updateSession(sessionId, {
+          const { updateSessionWithRecovery } = await import('@/utils/sessionHelper');
+          await updateSessionWithRecovery(sessionId, {
             analysisResult: result,
             uploadedImageUrl: uploadedImage // Store image URL if available
           });
@@ -198,7 +198,7 @@ const AnalyzingPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 pb-24">
         {/* Progress indicator */}
         <div className="w-full max-w-md mb-8">
           <div className="flex justify-between items-center mb-2">
@@ -285,7 +285,7 @@ const AnalyzingPage = (): JSX.Element => {
                     reason: 'timeout_error',
                     user_flow_step: 'return_to_upload_after_timeout'
                   });
-                  navigate(ROUTES.UPLOAD);
+                  navigate(ROUTES.DIAGNOSIS);
                 }}
                 className="w-full py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '@/store/useAdminStore';
-import { AdminAPI } from '@/services/api/admin';
+import { ProductAPI } from '@/services/api/admin';
+console.log('[AdminLoginPage] ProductAPI imported:', ProductAPI);
 import { Button, Input, Card } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { trackEvent, trackError, trackEngagement } from '@/utils/analytics';
@@ -24,6 +25,7 @@ const AdminLoginPage = (): JSX.Element => {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    console.log('[AdminLoginPage] Form submitted with API key length:', apiKeyInput.length);
     setError('');
     setIsLoading(true);
 
@@ -37,8 +39,10 @@ const AdminLoginPage = (): JSX.Element => {
     trackEngagement('admin_login', 'login_attempt');
 
     try {
+      console.log('[AdminLoginPage] Calling ProductAPI.verifyApiKey...');
       // Verify API key with lightweight endpoint
-      const isValid = await AdminAPI.verifyApiKey(apiKeyInput);
+      const isValid = await ProductAPI.verifyApiKey(apiKeyInput);
+      console.log('[AdminLoginPage] API key verification result:', isValid);
       
       if (isValid) {
         // Track successful login

@@ -7,13 +7,13 @@ export interface SessionResponse {
   message: string;
   data: {
     sessionId: string;
-    instagramId: string;
+    instagramId?: string;
   };
 }
 
 export interface SessionDetails {
   id: string;
-  instagramId: string;
+  instagramId?: string;
   uploadedImageUrl?: string;
   analysisResult?: PersonalColorResult;
   createdAt: string;
@@ -28,10 +28,10 @@ export interface SessionUpdateData {
 export class SessionAPI {
   /**
    * Create a new session with retry logic
-   * @param instagramId - Instagram ID
+   * @param instagramId - Instagram ID (optional)
    * @returns Promise<SessionResponse>
    */
-  static async createSession(instagramId: string): Promise<SessionResponse> {
+  static async createSession(instagramId?: string): Promise<SessionResponse> {
     // First, try to check if backend is reachable
     try {
       const healthCheck = await apiClient.get('/health').catch(() => null);
@@ -45,9 +45,9 @@ export class SessionAPI {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await apiClient.post<SessionResponse>('/sessions', {
-          instagramId
-        });
+        const response = await apiClient.post<SessionResponse>('/sessions', 
+          instagramId ? { instagramId } : {}
+        );
         return response.data;
       } catch (error) {
         lastError = error;
@@ -97,7 +97,32 @@ export class SessionAPI {
     success: boolean;
     data: SessionDetails;
   }> {
-    const response = await apiClient.patch(`/sessions/${sessionId}`, updateData);
-    return response.data;
+    try {
+      const response = await apiClient.patch(`/sessions/${sessionId}`, updateData);
+      return response.data;
+    } catch (error) {
+      // If session not found (404), try to recreate it
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status === 404) {
+          secureWarn('[Session API] Session not found, attempting to recreate...');
+          
+          // Extract instagram ID from the session if possible
+          // For now, create without instagram ID
+          const newSession = await SessionAPI.createSession();
+          secureLog('[Session API] New session created:', newSession.data.sessionId);
+          
+          // Update with the new session ID
+          const response = await apiClient.patch(`/sessions/${newSession.data.sessionId}`, updateData);
+          
+          // Update the store with new session ID
+          const { useAppStore } = await import('@/store');
+          useAppStore.getState().setSessionData(newSession.data.sessionId, newSession.data.instagramId);
+          
+          return response.data;
+        }
+      }
+      throw error;
+    }
   }
 }

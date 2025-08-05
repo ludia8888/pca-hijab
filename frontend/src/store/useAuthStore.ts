@@ -9,6 +9,13 @@ interface User {
   fullName: string;
   instagramId?: string;
   emailVerified: boolean;
+  hasPersonalColorDiagnosis?: boolean;
+  personalColorResult?: {
+    season: string;
+    seasonEn: string;
+    confidence: number;
+    diagnosedAt: Date;
+  };
   createdAt: Date;
   updatedAt?: Date;
 }

@@ -9,18 +9,31 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 
 function App(): JSX.Element {
+  console.log('[APP] App component rendering...');
+  
   useEffect(() => {
+    console.log('[APP] useEffect running, initializing GA4...');
     // Initialize Google Analytics 4
-    initializeGA4();
+    try {
+      initializeGA4();
+      console.log('[APP] GA4 initialized successfully');
+    } catch (error) {
+      console.error('[APP] Failed to initialize GA4:', error);
+    }
   }, []);
 
+  console.log('[APP] Rendering app components...');
+  
+  // Check if Vercel analytics should be disabled
+  const disableVercelAnalytics = import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED === 'true';
+  
   return (
     <ErrorBoundary>
       <ToastProvider>
         <PageTracker>
           <Router />
-          <Analytics />
-          <SpeedInsights />
+          {!disableVercelAnalytics && <Analytics />}
+          {!disableVercelAnalytics && <SpeedInsights />}
           <Toaster
             position="top-center"
             toastOptions={{

@@ -1,4 +1,7 @@
 import { cn } from '@/utils/cn';
+import { useLocation } from 'react-router-dom';
+import { BottomNavigation } from '@/components/navigation';
+import { ROUTES } from '@/utils/constants';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -15,6 +18,11 @@ export const PageLayout = ({
   className,
   noPadding = false,
 }: PageLayoutProps): JSX.Element => {
+  const location = useLocation();
+  
+  // Don't show bottom navigation on landing page
+  const showBottomNav = location.pathname !== ROUTES.LANDING;
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {header}
@@ -23,6 +31,7 @@ export const PageLayout = ({
         className={cn(
           'flex-1',
           !noPadding && 'px-4 py-6 tablet:py-8',
+          showBottomNav && 'pb-20', // Add bottom padding when nav is shown
           className
         )}
       >
@@ -30,6 +39,9 @@ export const PageLayout = ({
       </main>
       
       {footer}
+      
+      {/* Bottom Navigation - shown on all pages except landing */}
+      {showBottomNav && <BottomNavigation />}
     </div>
   );
 };

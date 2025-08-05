@@ -6,6 +6,7 @@ export * from './DemoNotice';
 export * from './PrivacyNotice';
 export * from './PrivacyPopup';
 export * from './PrivacyAssurance';
+export * from './Text';
 export * from './Toast';
 export * from './ConfirmModal';
 export { default as ActionLoader } from './ActionLoader';

@@ -104,18 +104,18 @@ export const trackEvent = (
 // ============================================================================
 
 // 1. USER JOURNEY TRACKING
-export const trackSessionStart = (instagramId: string): void => {
+export const trackSessionStart = (instagramId?: string): void => {
   // GA4 tracking
   trackEvent('session_start', {
     event_category: 'engagement',
-    instagram_id: instagramId,
+    instagram_id: instagramId || 'anonymous',
     user_flow_step: 'session_start',
     session_id: `session_${Date.now()}`,
     device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
   });
 
   // Vercel Analytics tracking
-  VercelAnalytics.sessionStart(instagramId);
+  VercelAnalytics.sessionStart(instagramId || 'anonymous');
 };
 
 // 2. IMAGE UPLOAD TRACKING
@@ -193,11 +193,10 @@ export const trackPreferenceSubmit = (preferences: {
 };
 
 // 5. RECOMMENDATION REQUEST TRACKING
-export const trackRecommendationRequest = (instagramId: string, personalColorType: string): void => {
+export const trackRecommendationRequest = (_instagramId: string, personalColorType: string): void => {
   // GA4 tracking
   trackEvent('recommendation_request', {
     event_category: 'conversion',
-    instagram_id: instagramId,
     personal_color_type: personalColorType,
     user_flow_step: 'recommendation_request',
     value: 1  // Conversion value
@@ -223,11 +222,10 @@ export const trackResultDownload = (personalColor: string, downloadType: 'image'
 };
 
 // 7. FLOW COMPLETION TRACKING (Critical Event)
-export const trackFlowCompletion = (instagramId?: string, personalColor?: string): void => {
+export const trackFlowCompletion = (_instagramId?: string, personalColor?: string): void => {
   trackCriticalEvent('flow_complete', {
     event_category: 'conversion',
     completion_type: 'full_flow',
-    instagram_id: instagramId,
     personal_color: personalColor,
     user_flow_step: 'flow_complete',
     value: 2,

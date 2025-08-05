@@ -1,3 +1,5 @@
+console.log('[MAIN] Starting application...');
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryProvider } from './hooks/QueryProvider'
@@ -7,25 +9,57 @@ import './index.css'
 import './styles/admin-theme.css'
 import App from './App.tsx'
 
+console.log('[MAIN] Imports complete');
+
+// Add error handlers
+window.addEventListener('error', (event) => {
+  console.error('[MAIN] Global error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[MAIN] Unhandled promise rejection:', event.reason);
+});
+
+console.log('[MAIN] Starting preloadEnvironment...');
+
 // Preload environment before rendering
 preloadEnvironment().then(() => {
-  createRoot(document.getElementById('root')!).render(
+  console.log('[MAIN] preloadEnvironment complete, finding root element...');
+  const rootElement = document.getElementById('root');
+  
+  if (!rootElement) {
+    console.error('[MAIN] Root element not found!');
+    return;
+  }
+  
+  console.log('[MAIN] Creating React root...');
+  const root = createRoot(rootElement);
+  
+  console.log('[MAIN] Rendering app...');
+  root.render(
     <StrictMode>
       <QueryProvider>
         <App />
-        <SpeedInsights />
+        {import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED !== 'true' && <SpeedInsights />}
       </QueryProvider>
     </StrictMode>,
   )
+  console.log('[MAIN] Render call complete');
 }).catch((error) => {
-  console.error('Failed to preload environment:', error);
+  console.error('[MAIN] Failed to preload environment:', error);
+  console.error('[MAIN] Stack trace:', error.stack);
+  
   // Still render the app even if preload fails
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <QueryProvider>
-        <App />
-        <SpeedInsights />
-      </QueryProvider>
-    </StrictMode>,
-  )
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    console.log('[MAIN] Attempting fallback render...');
+    createRoot(rootElement).render(
+      <StrictMode>
+        <QueryProvider>
+          <App />
+          {import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED !== 'true' && <SpeedInsights />}
+        </QueryProvider>
+      </StrictMode>,
+    )
+  }
 })

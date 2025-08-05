@@ -32,7 +32,7 @@ class EmailService {
   private isEnabled: boolean;
 
   constructor() {
-    this.isEnabled = config.EMAIL_ENABLED;
+    this.isEnabled = config.EMAIL_ENABLED || process.env.NODE_ENV === 'development';
     if (this.isEnabled) {
       this.initializeTransporter();
     } else {
@@ -40,10 +40,31 @@ class EmailService {
     }
   }
 
-  private initializeTransporter(): void {
+  private async initializeTransporter(): Promise<void> {
     try {
-      // Create secure SMTP transporter
-      this.transporter = nodemailer.createTransport({
+      // For development, use Ethereal test account
+      if (process.env.NODE_ENV === 'development' && !config.SMTP_HOST) {
+        const testAccount = await nodemailer.createTestAccount();
+        
+        this.transporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email',
+          port: 587,
+          secure: false,
+          auth: {
+            user: testAccount.user,
+            pass: testAccount.pass,
+          },
+        });
+        
+        console.info('✅ Email transporter initialized with Ethereal test account');
+        console.info('📧 Ethereal account:', {
+          user: testAccount.user,
+          pass: testAccount.pass,
+          web: 'https://ethereal.email'
+        });
+      } else {
+        // Production or custom SMTP settings
+        this.transporter = nodemailer.createTransport({
         host: config.SMTP_HOST,
         port: config.SMTP_PORT || 587,
         secure: config.SMTP_SECURE || false, // Use TLS
@@ -59,9 +80,10 @@ class EmailService {
         connectionTimeout: 10000,
         greetingTimeout: 5000,
         socketTimeout: 10000,
-      });
-
-      console.info('✅ Email transporter initialized successfully');
+        });
+        
+        console.info('✅ Email transporter initialized with custom SMTP settings');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize email transporter:', error);
       this.isEnabled = false;
@@ -105,6 +127,15 @@ class EmailService {
         subject: options.subject,
         messageId: result.messageId
       });
+      
+      // For development with Ethereal, show preview URL
+      if (process.env.NODE_ENV === 'development' && !config.SMTP_HOST) {
+        const previewUrl = nodemailer.getTestMessageUrl(result);
+        if (previewUrl) {
+          console.info('📧 Preview URL:', previewUrl);
+          console.info('🌐 View email at:', previewUrl);
+        }
+      }
     } catch (error) {
       console.error('❌ Failed to send email:', {
         to: maskEmail(options.to),

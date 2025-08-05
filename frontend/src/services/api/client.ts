@@ -12,6 +12,17 @@ secureLog('[API Client] Initializing with:', {
   viteApiBaseUrl: import.meta.env.VITE_API_BASE_URL
 });
 
+// Enhanced debug logging for development
+if (import.meta.env.MODE === 'development') {
+  console.log('[API Client Debug] Full configuration:', {
+    baseURL: API_BASE_URL,
+    timeout: API_TIMEOUT,
+    mode: import.meta.env.MODE,
+    viteApiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+    nodeEnv: process.env.NODE_ENV
+  });
+}
+
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -27,6 +38,22 @@ apiClient.interceptors.request.use(
   async (config) => {
     // Secure logging of requests
     secureLog('[API Request]', createSecureRequestLog(config));
+    
+    // Add API key for admin routes
+    if (config.url?.includes('/admin/')) {
+      try {
+        const { useAdminStore } = await import('@/store/useAdminStore');
+        const apiKey = useAdminStore.getState().apiKey;
+        if (apiKey) {
+          config.headers['x-api-key'] = apiKey;
+          console.log('[API Client] Added API key to admin request:', config.url);
+        } else {
+          console.warn('[API Client] No API key found for admin request:', config.url);
+        }
+      } catch (error) {
+        console.error('[API Client] Failed to add API key:', error);
+      }
+    }
     
     // Add CSRF token for non-GET requests
     if (config.method && config.method.toUpperCase() !== 'GET') {

@@ -1,0 +1,1 @@
+export { PersonalColorSection } from './PersonalColorSection';

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Load environment variables FIRST before any other imports
 dotenv.config();
@@ -13,9 +14,11 @@ import { env, config } from './config/environment';
 
 import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
-import { adminRouter } from './routes/admin';
+import adminRouter from './routes/admin';
 import { debugRouter } from './routes/debug';
 import { authRouter } from './routes/auth';
+import { productRouter } from './routes/products';
+import { contentRouter } from './routes/contents';
 // import { analyticsRouter } from './routes/analytics';
 import { errorHandler } from './middleware/errorHandler';
 import { getCSRFToken } from './middleware/csrf';
@@ -133,12 +136,15 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept', 'Origin', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept', 'Origin', 'X-Requested-With', 'x-csrf-token'],
   exposedHeaders: ['Content-Length', 'Content-Type'],
   maxAge: 86400 // 24 hours
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files for uploaded images
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Handle preflight requests for all routes
 app.options('*', (req: Request, res: Response) => {
@@ -178,6 +184,8 @@ app.get('/', (_req: Request, res: Response) => {
       health: '/api/health',
       sessions: '/api/sessions',
       recommendations: '/api/recommendations',
+      products: '/api/products',
+      contents: '/api/contents',
       admin: '/api/admin'
     }
   });
@@ -215,6 +223,8 @@ app.get('/api/csrf-token', getCSRFToken);
 app.use('/api/auth', authRouter);
 app.use('/api/sessions', sessionRouter);
 app.use('/api/recommendations', recommendationRouter);
+app.use('/api/products', productRouter);
+app.use('/api/contents', contentRouter);
 app.use('/api/admin', adminRouter);
 // app.use('/api/analytics', analyticsRouter);
 app.use('/api/debug', debugRouter);

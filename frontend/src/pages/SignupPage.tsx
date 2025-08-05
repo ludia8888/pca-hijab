@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PageLayout } from '@/components/layout';
-import { Button, Input, Card } from '@/components/ui';
+import { Button, Input, Card, Text } from '@/components/ui';
 import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 
@@ -43,9 +43,9 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
           />
         ))}
       </div>
-      <p className="text-xs text-gray-600">
+      <Text variant="caption" color="gray">
         비밀번호 강도: <span className="font-medium">{labels[strength - 1]}</span>
-      </p>
+      </Text>
     </div>
   ) : null;
 };
@@ -125,13 +125,13 @@ const SignupPage = (): JSX.Element => {
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">회원가입</h1>
-            <p className="text-gray-600">
+            <Text variant="h1" color="gray" mb="2">회원가입</Text>
+            <Text color="gray">
               이미 계정이 있으신가요?{' '}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-primary-400 hover:text-primary-600 hover:underline transition-colors">
                 로그인
               </Link>
-            </p>
+            </Text>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -245,7 +245,7 @@ const SignupPage = (): JSX.Element => {
                   {...register('agreeToTerms', {
                     required: '이용약관에 동의해주세요'
                   })}
-                  className="mt-1 mr-2 rounded border-gray-300 text-primary focus:ring-primary"
+                  className="mt-1 mr-2 rounded border-gray-300 text-primary-400 focus:ring-primary-400"
                 />
                 <span className="text-sm text-gray-600">
                   <Link to="/terms" className="text-primary hover:underline">

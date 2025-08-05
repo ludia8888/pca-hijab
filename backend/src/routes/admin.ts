@@ -1,287 +1,275 @@
 import { Router } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { db } from '../db';
 import { authenticateAdmin } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
-import { maskUserId, maskInstagramId } from '../utils/logging';
-import type { Recommendation, JourneyStatus, Priority } from '../types';
+import type { Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus } from '../types';
 
 const router = Router();
 
 // Apply admin authentication to all routes
 router.use(authenticateAdmin);
 
+// Configure multer for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
 // GET /api/admin/verify - Verify admin API key
 router.get('/verify', (_req, res) => {
-  // If we reach here, the API key is valid (authenticated by middleware)
   res.json({
     success: true,
     message: 'API key is valid'
   });
 });
 
-// GET /api/admin/recommendations - Get all recommendations with filters
-router.get('/recommendations', async (req, res, next) => {
+// GET /api/admin/products - Get all products with filters
+router.get('/products', async (req, res, next) => {
   try {
-    const { status, limit = '50', offset = '0' } = req.query;
+    const { category, personalColor } = req.query;
     
-    // Validate pagination parameters
-    const limitNum = parseInt(limit as string);
-    const offsetNum = parseInt(offset as string);
+    let products: Product[];
     
-    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      throw new AppError(400, 'Invalid limit parameter (1-100)');
-    }
-    
-    if (isNaN(offsetNum) || offsetNum < 0) {
-      throw new AppError(400, 'Invalid offset parameter');
-    }
-    
-    let recommendations: Recommendation[];
-    
-    if (status) {
-      recommendations = await db.getRecommendationsByStatus(status as Recommendation['status']);
+    if (category && personalColor) {
+      if (!db.getProductsByCategoryAndPersonalColor) {
+        throw new AppError(500, 'Product functionality not available');
+      }
+      products = await db.getProductsByCategoryAndPersonalColor(
+        category as ProductCategory,
+        personalColor as PersonalColorType
+      );
+    } else if (category) {
+      if (!db.getProductsByCategory) {
+        throw new AppError(500, 'Product functionality not available');
+      }
+      products = await db.getProductsByCategory(category as ProductCategory);
+    } else if (personalColor) {
+      if (!db.getProductsByPersonalColor) {
+        throw new AppError(500, 'Product functionality not available');
+      }
+      products = await db.getProductsByPersonalColor(personalColor as PersonalColorType);
     } else {
-      recommendations = await db.getAllRecommendations();
+      if (!db.getAllProducts) {
+        throw new AppError(500, 'Product functionality not available');
+      }
+      products = await db.getAllProducts();
     }
-    
-    // Apply pagination
-    const paginatedRecommendations = recommendations.slice(offsetNum, offsetNum + limitNum);
     
     res.json({
       success: true,
-      data: {
-        recommendations: paginatedRecommendations,
-        total: recommendations.length,
-        limit: limitNum,
-        offset: offsetNum
-      }
+      data: products
     });
   } catch (error) {
     next(error);
   }
 });
 
-// GET /api/admin/recommendations/:id - Get single recommendation details
-router.get('/recommendations/:id', async (req, res, next) => {
+// GET /api/admin/products/:id - Get single product
+router.get('/products/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!db.getProduct) {
+      throw new AppError(500, 'Product functionality not available');
+    }
+    const product = await db.getProduct(id);
     
-    const recommendation = await db.getRecommendation(id);
-    
-    if (!recommendation) {
-      throw new AppError(404, 'Recommendation not found');
+    if (!product) {
+      throw new AppError(404, 'Product not found');
     }
     
     res.json({
       success: true,
-      data: recommendation
+      data: product
     });
   } catch (error) {
     next(error);
   }
 });
 
-// PATCH /api/admin/recommendations/:id/status - Update recommendation status
-router.patch('/recommendations/:id/status', async (req, res, next) => {
+// POST /api/admin/products - Create new product
+router.post('/products', async (req, res, next) => {
+  try {
+    const {
+      name,
+      category,
+      price,
+      thumbnailUrl,
+      detailImageUrls,
+      personalColors,
+      description,
+      shopeeLink,
+      isActive
+    } = req.body;
+    
+    // Validation
+    if (!name || !category || !price || !thumbnailUrl || !personalColors || !shopeeLink) {
+      throw new AppError(400, 'Missing required fields');
+    }
+    
+    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+    if (!validCategories.includes(category)) {
+      throw new AppError(400, 'Invalid category');
+    }
+    
+    const validPersonalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
+    if (!Array.isArray(personalColors) || !personalColors.every(pc => validPersonalColors.includes(pc))) {
+      throw new AppError(400, 'Invalid personal colors');
+    }
+    
+    if (!db.createProduct) {
+      throw new AppError(500, 'Product functionality not available');
+    }
+    const product = await db.createProduct({
+      name,
+      category,
+      price: Number(price),
+      thumbnailUrl,
+      detailImageUrls: detailImageUrls || [],
+      personalColors,
+      description,
+      shopeeLink,
+      isActive: isActive !== false
+    });
+    
+    res.status(201).json({
+      success: true,
+      data: product
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id - Update product
+router.put('/products/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const updates = req.body;
     
-    if (!status || !['pending', 'processing', 'completed'].includes(status)) {
-      throw new AppError(400, 'Invalid status');
-    }
-    
-    const updatedRecommendation = await db.updateRecommendationStatus(
-      id, 
-      status as Recommendation['status']
-    );
-    
-    if (!updatedRecommendation) {
-      throw new AppError(404, 'Recommendation not found');
-    }
-    
-    console.info(`Recommendation ${id} status updated to ${status}`);
-    
-    res.json({
-      success: true,
-      message: 'Status updated successfully',
-      data: updatedRecommendation
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// GET /api/admin/statistics - Get overall statistics
-router.get('/statistics', async (_req, res, next) => {
-  try {
-    const recommendations = await db.getAllRecommendations();
-    
-    const statistics = {
-      total: recommendations.length,
-      byStatus: {
-        pending: recommendations.filter(r => r.status === 'pending').length,
-        processing: recommendations.filter(r => r.status === 'processing').length,
-        completed: recommendations.filter(r => r.status === 'completed').length
-      },
-      byPersonalColor: recommendations.reduce((acc, rec) => {
-        // Handle both old and new format
-        const color = rec.personalColorResult?.personal_color_en || 
-                      rec.personalColorResult?.personal_color || 
-                      'unknown';
-        acc[color] = (acc[color] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-      recentRequests: recommendations.slice(0, 5).map(rec => ({
-        id: rec.id,
-        instagramId: rec.instagramId,
-        personalColor: rec.personalColorResult?.personal_color_en || 
-                       rec.personalColorResult?.personal_color || 
-                       'N/A',
-        status: rec.status,
-        createdAt: rec.createdAt
-      }))
-    };
-    
-    res.json({
-      success: true,
-      data: statistics
-    });
-  } catch (error) {
-    console.error('Error in /api/admin/statistics:', error);
-    next(error);
-  }
-});
-
-// GET /api/admin/users - Get all users/sessions
-router.get('/users', async (_req, res, next) => {
-  try {
-    if (!db.getAllSessions) {
-      throw new AppError(501, 'User management not available with current database');
-    }
-    
-    const sessions = await db.getAllSessions();
-    const recommendations = await db.getAllRecommendations();
-    
-    // Create a map of sessionId to recommendation for easy lookup
-    const sessionRecommendationMap = new Map<string, Recommendation>();
-    recommendations.forEach(rec => {
-      if (rec.sessionId) {
-        sessionRecommendationMap.set(rec.sessionId, rec);
+    // Validate category if provided
+    if (updates.category) {
+      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+      if (!validCategories.includes(updates.category)) {
+        throw new AppError(400, 'Invalid category');
       }
-    });
-    
-    // Transform sessions to user-friendly format with recommendation data
-    const users = sessions.map(session => {
-      const recommendation = sessionRecommendationMap.get(session.id);
-      return {
-        id: session.id,
-        instagramId: session.instagramId,
-        personalColor: session.analysisResult?.personal_color_en || recommendation?.personalColorResult?.personal_color_en || null,
-        personalColorKo: session.analysisResult?.personal_color_ko || recommendation?.personalColorResult?.personal_color_ko || null,
-        uploadedImageUrl: session.uploadedImageUrl || recommendation?.uploadedImageUrl || null,
-        requestedAt: session.createdAt,
-        completedAt: session.analysisResult ? (session.updatedAt || session.createdAt) : 
-                    (recommendation?.status === 'completed' ? recommendation.updatedAt : null),
-        status: recommendation?.status || (session.analysisResult ? 'analysis_only' : 'no_analysis'),
-        hasRecommendation: !!recommendation,
-        hasAnalysis: !!session.analysisResult
-      };
-    });
-    
-    res.json({
-      success: true,
-      data: users,
-      total: users.length
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// DELETE /api/admin/users/:userId - Delete a user/session
-router.delete('/users/:userId', async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    
-    if (!db.deleteSession) {
-      throw new AppError(501, 'User deletion not available with current database');
     }
     
-    // Get session info before deletion
-    const session = await db.getSession(userId);
-    if (!session) {
-      throw new AppError(404, '사용자를 찾을 수 없습니다');
-    }
-    
-    // Delete the session (this will also delete associated recommendations)
-    const deleted = await db.deleteSession(userId);
-    
-    if (deleted) {
-      console.info(`User ${maskUserId(userId)} (${maskInstagramId(session.instagramId)}) deleted by admin`);
-      res.json({
-        success: true,
-        message: '사용자가 삭제되었습니다',
-        deletedUser: {
-          id: userId,
-          instagramId: session.instagramId
-        }
-      });
-    } else {
-      throw new AppError(500, '사용자 삭제에 실패했습니다');
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-
-// POST /api/admin/users/:userId/status - Update user journey status
-router.post('/users/:userId/status', async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const { status } = req.body;
-    
-    const validStatuses = [
-      'just_started', 'diagnosis_pending', 'diagnosis_done', 'offer_sent',
-      'recommendation_requested', 'recommendation_processing', 'recommendation_completed', 'inactive'
-    ];
-    
-    if (!status || !validStatuses.includes(status)) {
-      throw new AppError(400, 'Invalid status');
-    }
-    
-    // Get current status for logging
-    const session = await db.getSession(userId);
-    if (!session) {
-      throw new AppError(404, 'User not found');
-    }
-    
-    // Update in database
-    const updated = await (db as any).updateJourneyStatus(userId, status);
-    if (!updated) {
-      throw new AppError(500, 'Failed to update status');
-    }
-    
-    // Log the action
-    await (db as any).addAdminAction(
-      userId,
-      'status_update',
-      {
-        old_status: session.journeyStatus || 'unknown',
-        new_status: status
+    // Validate personal colors if provided
+    if (updates.personalColors) {
+      const validPersonalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
+      if (!Array.isArray(updates.personalColors) || !updates.personalColors.every((pc: string) => validPersonalColors.includes(pc as PersonalColorType))) {
+        throw new AppError(400, 'Invalid personal colors');
       }
-    );
+    }
     
-    console.info(`User ${maskUserId(userId)} status updated from ${session.journeyStatus} to ${status}`);
+    if (!db.updateProduct) {
+      throw new AppError(500, 'Product functionality not available');
+    }
+    const product = await db.updateProduct(id, updates);
+    
+    if (!product) {
+      throw new AppError(404, 'Product not found');
+    }
     
     res.json({
       success: true,
-      message: 'Status updated successfully',
+      data: product
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/products/:id - Delete product
+router.delete('/products/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!db.deleteProduct) {
+      throw new AppError(500, 'Product functionality not available');
+    }
+    const deleted = await db.deleteProduct(id);
+    
+    if (!deleted) {
+      throw new AppError(404, 'Product not found');
+    }
+    
+    res.json({
+      success: true,
+      message: 'Product deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/products/seed - Seed mock products
+router.post('/products/seed', async (_req, res, next) => {
+  try {
+    // Import seedProducts function dynamically to avoid circular dependencies
+    const { seedProducts } = await import('../scripts/seed-products');
+    const success = await seedProducts();
+    
+    if (!success) {
+      throw new AppError(500, 'Failed to seed products');
+    }
+    
+    res.json({
+      success: true,
+      message: 'Products seeded successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/upload/image - Upload image
+router.post('/upload/image', upload.single('image'), (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new AppError(400, 'No image file provided');
+    }
+    
+    // In production, you would upload to cloud storage (S3, Cloudinary, etc.)
+    // For development, we'll return a local URL
+    const imageUrl = `/uploads/${req.file.filename}`;
+    
+    res.json({
+      success: true,
       data: {
-        userId,
-        oldStatus: session.journeyStatus,
-        newStatus: status,
-        updatedAt: new Date().toISOString()
+        url: imageUrl,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size
       }
     });
   } catch (error) {
@@ -289,210 +277,252 @@ router.post('/users/:userId/status', async (req, res, next) => {
   }
 });
 
-// POST /api/admin/users/:userId/priority - Update user priority
-router.post('/users/:userId/priority', async (req, res, next) => {
+// POST /api/admin/upload/images - Upload multiple images
+router.post('/upload/images', upload.array('images', 10), (req, res, next) => {
   try {
-    const { userId } = req.params;
-    const { priority } = req.body;
-    
-    const validPriorities = ['urgent', 'high', 'medium', 'low'];
-    
-    if (!priority || !validPriorities.includes(priority)) {
-      throw new AppError(400, 'Invalid priority');
+    if (!req.files || !Array.isArray(req.files)) {
+      throw new AppError(400, 'No image files provided');
     }
     
-    // Get current priority for logging
-    const session = await db.getSession(userId);
-    if (!session) {
-      throw new AppError(404, 'User not found');
-    }
-    
-    // Update in database
-    const updated = await (db as any).updatePriority(userId, priority);
-    if (!updated) {
-      throw new AppError(500, 'Failed to update priority');
-    }
-    
-    // Log the action
-    await (db as any).addAdminAction(
-      userId,
-      'priority_update',
-      {
-        old_priority: session.priority || 'medium',
-        new_priority: priority
-      }
-    );
-    
-    console.info(`User ${maskUserId(userId)} priority updated from ${session.priority} to ${priority}`);
-    
-    res.json({
-      success: true,
-      message: 'Priority updated successfully',
-      data: {
-        userId,
-        oldPriority: session.priority,
-        newPriority: priority,
-        updatedAt: new Date().toISOString()
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// POST /api/admin/users/:userId/message - Toggle message status
-router.post('/users/:userId/message', async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const { messageType, sent } = req.body;
-    
-    const validMessageTypes = ['diagnosis_reminder', 'reactivation', 'followup'];
-    
-    if (!messageType || !validMessageTypes.includes(messageType)) {
-      throw new AppError(400, 'Invalid message type');
-    }
-    
-    if (typeof sent !== 'boolean') {
-      throw new AppError(400, 'Invalid sent status - must be boolean');
-    }
-    
-    // Verify session exists
-    const session = await db.getSession(userId);
-    if (!session) {
-      throw new AppError(404, 'User not found');
-    }
-    
-    // Record message if sent is true
-    if (sent) {
-      const recorded = await (db as any).recordMessageSent(userId, messageType);
-      if (!recorded) {
-        throw new AppError(500, 'Failed to record message');
-      }
-    }
-    
-    // Log the action
-    await (db as any).addAdminAction(
-      userId,
-      'message_status_update',
-      {
-        message_type: messageType,
-        sent
-      }
-    );
-    
-    console.info(`User ${maskUserId(userId)} message ${messageType} marked as ${sent ? 'sent' : 'not sent'}`);
-    
-    res.json({
-      success: true,
-      message: 'Message status updated successfully',
-      data: {
-        userId,
-        messageType,
-        sent,
-        updatedAt: new Date().toISOString()
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// GET /api/admin/dashboard/data - Get unified dashboard data
-router.get('/dashboard/data', async (req, res, next) => {
-  try {
-    // Get unified user view from database
-    const users = await (db as any).getUnifiedUserView();
-    
-    // Transform data to match the frontend unified user view format
-    const transformedUsers = await Promise.all(users.map(async (user: any) => {
-      // Get admin actions for this user
-      const actions = await (db as any).getAdminActions(user.id);
-      
-      return {
-        id: user.id,
-        instagramId: user.instagram_id,
-        journeyStatus: user.journey_status || 'just_started',
-        priority: user.priority || 'medium',
-        personalColor: user.analysis_result ? {
-          season: user.analysis_result.personal_color_en?.toLowerCase() || 'unknown',
-          seasonKo: user.analysis_result.personal_color_ko || '알 수 없음',
-          confidence: user.analysis_result.confidence || 0.85,
-          analysisDate: user.analysis_result ? user.last_active_at : undefined
-        } : undefined,
-        recommendation: user.recommendation_id ? {
-          id: user.recommendation_id,
-          status: user.recommendation_status,
-          requestedAt: user.recommendation_requested_at,
-          completedAt: user.recommendation_status === 'completed' ? user.recommendation_updated_at : undefined,
-          preferences: {
-            style: [],
-            priceRange: undefined,
-            occasions: []
-          }
-        } : undefined,
-        timeline: {
-          registeredAt: user.registered_at,
-          lastActiveAt: user.last_active_at,
-          diagnosisAt: user.analysis_result ? user.last_active_at : undefined,
-          recommendationRequestedAt: user.recommendation_requested_at,
-          recommendationCompletedAt: user.recommendation_status === 'completed' ? user.recommendation_updated_at : undefined
-        },
-        actions: actions.map((action: any) => ({
-          id: action.id,
-          type: action.action_type,
-          description: `${action.action_type}: ${JSON.stringify(action.action_details)}`,
-          performedAt: action.performed_at,
-          performedBy: action.performed_by
-        })),
-        insights: {
-          isNewUser: user.is_new_user,
-          isAtRisk: user.journey_status === 'diagnosis_done' && !user.recommendation_id && user.days_since_last_activity > 3,
-          hasStalled: user.journey_status === 'recommendation_requested' && user.days_since_last_activity > 7,
-          daysSinceLastActivity: parseInt(user.days_since_last_activity) || 0,
-          conversionStage: getConversionStage(user, { status: user.recommendation_status })
-        }
-      };
+    const images = req.files.map(file => ({
+      url: `/uploads/${file.filename}`,
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size
     }));
     
     res.json({
       success: true,
-      data: {
-        users: transformedUsers,
-        total: transformedUsers.length
-      }
+      data: images
     });
   } catch (error) {
     next(error);
   }
 });
 
-// Helper function to determine journey status
-function getJourneyStatus(session: any, recommendation: any): string {
-  if (recommendation) {
-    switch (recommendation.status) {
-      case 'pending': return 'recommendation_requested';
-      case 'processing': return 'recommendation_processing';
-      case 'completed': return 'recommendation_completed';
+// Content Management Routes
+
+// GET /api/admin/contents - Get all contents with filters
+router.get('/contents', async (req, res, next) => {
+  try {
+    const { category, status } = req.query;
+    
+    if (!db.getAllContents) {
+      throw new AppError(500, 'Content functionality not available');
     }
+    
+    const contents = await db.getAllContents({
+      category: category as ContentCategory | undefined,
+      status: status as ContentStatus | undefined
+    });
+    
+    res.json({
+      success: true,
+      data: contents
+    });
+  } catch (error) {
+    next(error);
   }
-  
-  if (session.analysisResult) {
-    return 'diagnosis_done';
-  }
-  
-  if (session.uploadedImageUrl) {
-    return 'diagnosis_pending';
-  }
-  
-  return 'just_started';
-}
+});
 
-// Helper function to determine conversion stage
-function getConversionStage(session: any, recommendation: any): string {
-  if (recommendation?.status === 'completed') return 'completed';
-  if (recommendation) return 'recommendation';
-  if (session.analysisResult) return 'diagnosis';
-  return 'discovery';
-}
+// GET /api/admin/contents/:id - Get single content
+router.get('/contents/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    if (!db.getContent) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    const content = await db.getContent(id);
+    
+    if (!content) {
+      throw new AppError(404, 'Content not found');
+    }
+    
+    res.json({
+      success: true,
+      data: content
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-export const adminRouter = router;
+// GET /api/admin/contents/slug/:slug - Get content by slug
+router.get('/contents/slug/:slug', async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    
+    if (!db.getContentBySlug) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    const content = await db.getContentBySlug(slug);
+    
+    if (!content) {
+      throw new AppError(404, 'Content not found');
+    }
+    
+    res.json({
+      success: true,
+      data: content
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/contents - Create new content
+router.post('/contents', async (req, res, next) => {
+  try {
+    const {
+      title,
+      subtitle,
+      slug,
+      thumbnailUrl,
+      content,
+      excerpt,
+      category,
+      tags,
+      status,
+      metaDescription,
+      metaKeywords
+    } = req.body;
+    
+    // Validation
+    if (!title || !slug || !thumbnailUrl || !content || !category) {
+      throw new AppError(400, 'Missing required fields');
+    }
+    
+    const validCategories: ContentCategory[] = ['beauty_tips', 'hijab_styling', 'color_guide', 'trend', 'tutorial'];
+    if (!validCategories.includes(category)) {
+      throw new AppError(400, 'Invalid category');
+    }
+    
+    const validStatuses: ContentStatus[] = ['draft', 'published'];
+    if (status && !validStatuses.includes(status)) {
+      throw new AppError(400, 'Invalid status');
+    }
+    
+    if (!db.createContent) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    const newContent = await db.createContent({
+      title,
+      subtitle,
+      slug,
+      thumbnailUrl,
+      content,
+      excerpt,
+      category,
+      tags: tags || [],
+      status: status || 'draft',
+      metaDescription,
+      metaKeywords
+    });
+    
+    res.status(201).json({
+      success: true,
+      data: newContent
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/contents/:id - Update content
+router.put('/contents/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    // Validate category if provided
+    if (updates.category) {
+      const validCategories: ContentCategory[] = ['beauty_tips', 'hijab_styling', 'color_guide', 'trend', 'tutorial'];
+      if (!validCategories.includes(updates.category)) {
+        throw new AppError(400, 'Invalid category');
+      }
+    }
+    
+    // Validate status if provided
+    if (updates.status) {
+      const validStatuses: ContentStatus[] = ['draft', 'published'];
+      if (!validStatuses.includes(updates.status)) {
+        throw new AppError(400, 'Invalid status');
+      }
+    }
+    
+    if (!db.updateContent) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    const updatedContent = await db.updateContent(id, updates);
+    
+    if (!updatedContent) {
+      throw new AppError(404, 'Content not found');
+    }
+    
+    res.json({
+      success: true,
+      data: updatedContent
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/contents/:id/status - Update content status
+router.put('/contents/:id/status', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      throw new AppError(400, 'Status is required');
+    }
+    
+    const validStatuses: ContentStatus[] = ['draft', 'published'];
+    if (!validStatuses.includes(status)) {
+      throw new AppError(400, 'Invalid status');
+    }
+    
+    if (!db.updateContentStatus) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    const updatedContent = await db.updateContentStatus(id, status);
+    
+    if (!updatedContent) {
+      throw new AppError(404, 'Content not found');
+    }
+    
+    res.json({
+      success: true,
+      data: updatedContent
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/contents/:id - Delete content
+router.delete('/contents/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    if (!db.deleteContent) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    const deleted = await db.deleteContent(id);
+    
+    if (!deleted) {
+      throw new AppError(404, 'Content not found');
+    }
+    
+    res.json({
+      success: true,
+      message: 'Content deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;

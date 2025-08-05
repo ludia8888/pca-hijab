@@ -5,16 +5,24 @@ import { ProtectedAdminRoute } from '@/components/auth/ProtectedAdminRoute';
 import RootLayout from '@/components/layout/RootLayout';
 
 // Lazy load pages for code splitting
+const HomePage = lazy(() => import('@/pages/HomePage'));
 const HIGLandingPage = lazy(() => import('@/pages/HIGLandingPage'));
 const UploadPage = lazy(() => import('@/pages/UploadPage'));
 const AnalyzingPage = lazy(() => import('@/pages/AnalyzingPage'));
 const ResultPage = lazy(() => import('@/pages/ResultPage'));
-const RecommendationPage = lazy(() => import('@/pages/RecommendationPage'));
 const CompletionPage = lazy(() => import('@/pages/CompletionPage'));
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
+
+// Main app pages
+const ProductsPage = lazy(() => import('@/pages/ProductsCatalogPage'));
+const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
+const ContentDetailPage = lazy(() => import('@/pages/ContentDetailPage'));
+const MyPage = lazy(() => import('@/pages/MyPage'));
 
 // Admin pages
 const AdminLoginPage = lazy(() => import('@/pages/admin/AdminLoginPage'));
@@ -65,12 +73,20 @@ const router = createBrowserRouter([
         path: ROUTES.HOME,
         element: (
           <Suspense fallback={<PageLoader />}>
-            <LoginPage />
+            <HomePage />
           </Suspense>
         ),
       },
       {
-        path: ROUTES.UPLOAD,
+        path: ROUTES.LANDING,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <HIGLandingPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.DIAGNOSIS,
         element: (
           <Suspense fallback={<PageLoader />}>
             <UploadPage />
@@ -94,14 +110,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: ROUTES.RECOMMENDATION,
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <RecommendationPage />
-          </Suspense>
-        ),
-      },
-      {
         path: ROUTES.COMPLETION,
         element: (
           <Suspense fallback={<PageLoader />}>
@@ -109,12 +117,36 @@ const router = createBrowserRouter([
           </Suspense>
         ),
       },
-      // Landing page (original Instagram ID form)
+      // Main app routes
       {
-        path: '/landing',
+        path: ROUTES.PRODUCTS,
         element: (
           <Suspense fallback={<PageLoader />}>
-            <HIGLandingPage />
+            <ProductsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/products/:id',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProductDetailPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/content/:slug',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ContentDetailPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.MYPAGE,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <MyPage />
           </Suspense>
         ),
       },
@@ -132,6 +164,22 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <SignupPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/forgot-password',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ForgotPasswordPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/reset-password',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ResetPasswordPage />
           </Suspense>
         ),
       },

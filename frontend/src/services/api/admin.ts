@@ -1,266 +1,210 @@
 import { apiClient } from './client';
-import type { Recommendation } from '@/types';
+import type { Product, ProductFormData, ImageUploadResponse, ProductCategory, PersonalColorType, Content, ContentFormData, ContentCategory, ContentStatus } from '@/types/admin';
 
-interface AdminStatistics {
-  total: number;
-  byStatus: {
-    pending: number;
-    processing: number;
-    completed: number;
-  };
-  byPersonalColor: Record<string, number>;
-  recentRequests: Array<{
-    id: string;
-    instagramId: string;
-    personalColor: string;
-    status: string;
-    createdAt: Date;
-  }>;
-}
+// Debug logging
+console.log('[Admin API] Module loading...');
 
-interface RecommendationsResponse {
-  recommendations: Recommendation[];
-  total: number;
-  limit: number;
-  offset: number;
-}
+export const ProductAPI = {
+  // API Key verification
+  verify: async () => {
+    console.log('[Admin API] Verifying API key...');
+    const response = await apiClient.get('/admin/verify');
+    return response.data;
+  },
 
-interface User {
-  id: string;
-  instagramId: string;
-  personalColor: string | null;
-  personalColorKo: string | null;
-  uploadedImageUrl: string | null;
-  requestedAt: string;
-  completedAt: string | null;
-  status: string;
-  hasRecommendation: boolean;
-  hasAnalysis: boolean;
-}
-
-interface UsersResponse {
-  success: boolean;
-  data: User[];
-  total: number;
-}
-
-export class AdminAPI {
-  /**
-   * Verify admin API key
-   */
-  static async verifyApiKey(apiKey: string): Promise<boolean> {
+  // Verify API key (for login)
+  verifyApiKey: async (apiKey: string) => {
+    console.log('[Admin API] Verifying API key for login...');
     try {
-      const response = await apiClient.get<{ success: boolean }>(
-        '/admin/verify',
-        {
-          headers: this.getAuthHeaders(apiKey)
+      const response = await apiClient.get('/admin/verify', {
+        headers: {
+          'x-api-key': apiKey
         }
-      );
+      });
+      console.log('[Admin API] API key verification response:', response.data);
       return response.data.success;
-    } catch {
+    } catch (error) {
+      console.error('[Admin API] API key verification failed:', error);
       return false;
     }
-  }
+  },
 
-  
-  private static getAuthHeaders(apiKey: string): Record<string, string> {
-    return {
-      'x-api-key': apiKey
-    };
-  }
+  // Product management
+  products: {
+    // Get all products with optional filters
+    getAll: async (filters?: { category?: ProductCategory; personalColor?: PersonalColorType }) => {
+      const params = new URLSearchParams();
+      if (filters?.category) params.append('category', filters.category);
+      if (filters?.personalColor) params.append('personalColor', filters.personalColor);
+      
+      const response = await apiClient.get<{ success: boolean; data: Product[] }>(
+        `/admin/products${params.toString() ? `?${params.toString()}` : ''}`
+      );
+      return response.data.data;
+    },
 
-  /**
-   * Get all recommendations with pagination
-   */
-  static async getRecommendations(
-    apiKey: string,
-    params?: {
-      status?: 'pending' | 'processing' | 'completed';
-      limit?: number;
-      offset?: number;
+    // Get single product
+    getById: async (id: string) => {
+      const response = await apiClient.get<{ success: boolean; data: Product }>(`/admin/products/${id}`);
+      return response.data.data;
+    },
+
+    // Create new product
+    create: async (data: ProductFormData) => {
+      const response = await apiClient.post<{ success: boolean; data: Product }>('/admin/products', data);
+      return response.data.data;
+    },
+
+    // Update product
+    update: async (id: string, data: Partial<ProductFormData>) => {
+      const response = await apiClient.put<{ success: boolean; data: Product }>(`/admin/products/${id}`, data);
+      return response.data.data;
+    },
+
+    // Delete product
+    delete: async (id: string) => {
+      const response = await apiClient.delete<{ success: boolean; message: string }>(`/admin/products/${id}`);
+      return response.data;
     }
-  ): Promise<RecommendationsResponse> {
-    const response = await apiClient.get<{ success: boolean; data: RecommendationsResponse }>(
-      '/admin/recommendations',
-      {
-        headers: this.getAuthHeaders(apiKey),
-        params
-      }
-    );
-    return response.data.data;
-  }
+  },
 
-  /**
-   * Get single recommendation details
-   */
-  static async getRecommendation(apiKey: string, id: string): Promise<Recommendation> {
-    const response = await apiClient.get<{ success: boolean; data: Recommendation }>(
-      `/admin/recommendations/${id}`,
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data.data;
-  }
+  // Image upload
+  upload: {
+    // Upload single image
+    single: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await apiClient.post<{ success: boolean; data: ImageUploadResponse }>(
+        '/admin/upload/image',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      return response.data.data;
+    },
 
-  /**
-   * Update recommendation status
-   */
-  static async updateRecommendationStatus(
-    apiKey: string,
-    id: string,
-    status: 'pending' | 'processing' | 'completed'
-  ): Promise<Recommendation> {
-    const response = await apiClient.patch<{ success: boolean; data: Recommendation }>(
-      `/admin/recommendations/${id}/status`,
-      { status },
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data.data;
-  }
+    // Upload multiple images
+    multiple: async (files: File[]) => {
+      const formData = new FormData();
+      files.forEach(file => formData.append('images', file));
+      
+      const response = await apiClient.post<{ success: boolean; data: ImageUploadResponse[] }>(
+        '/admin/upload/images',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      return response.data.data;
+    }
+  },
 
-  /**
-   * Get admin statistics
-   */
-  static async getStatistics(apiKey: string): Promise<AdminStatistics> {
-    const response = await apiClient.get<{ success: boolean; data: AdminStatistics }>(
-      '/admin/statistics',
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data.data;
-  }
+  // Recommendation methods (for backward compatibility)
+  getRecommendation: async (apiKey: string, id: string) => {
+    console.log('[Admin API] Getting recommendation:', id);
+    try {
+      const response = await apiClient.get(`/admin/recommendations/${id}`, {
+        headers: {
+          'x-api-key': apiKey
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('[Admin API] Failed to get recommendation:', error);
+      throw error;
+    }
+  },
 
-  /**
-   * Get all users
-   */
-  static async getUsers(apiKey: string): Promise<UsersResponse> {
-    const response = await apiClient.get<UsersResponse>(
-      '/admin/users',
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data;
-  }
+  updateRecommendationStatus: async (apiKey: string, id: string, status: 'pending' | 'processing' | 'completed') => {
+    console.log('[Admin API] Updating recommendation status:', id, status);
+    try {
+      const response = await apiClient.put(`/admin/recommendations/${id}/status`, 
+        { status },
+        {
+          headers: {
+            'x-api-key': apiKey
+          }
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error('[Admin API] Failed to update recommendation status:', error);
+      throw error;
+    }
+  },
 
-  /**
-   * Delete a user
-   */
-  static async deleteUser(apiKey: string, userId: string): Promise<void> {
-    await apiClient.delete(
-      `/admin/users/${userId}`,
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-  }
+  // Content management
+  contents: {
+    // Get all contents with optional filters
+    getAll: async (filters?: { category?: ContentCategory; status?: ContentStatus }) => {
+      console.log('[Admin API] Getting all contents with filters:', filters);
+      const params = new URLSearchParams();
+      if (filters?.category) params.append('category', filters.category);
+      if (filters?.status) params.append('status', filters.status);
+      
+      const response = await apiClient.get<{ success: boolean; data: Content[] }>(
+        `/admin/contents${params.toString() ? `?${params.toString()}` : ''}`
+      );
+      return response.data.data;
+    },
 
-  /**
-   * Log admin action
-   */
-  static async logAction(apiKey: string, action: {
-    userId: string;
-    actionType: string;
-    description: string;
-    metadata?: any;
-  }): Promise<void> {
-    await apiClient.post(
-      '/admin/actions/log',
-      action,
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-  }
+    // Get single content
+    getById: async (id: string) => {
+      console.log('[Admin API] Getting content by ID:', id);
+      const response = await apiClient.get<{ success: boolean; data: Content }>(`/admin/contents/${id}`);
+      return response.data.data;
+    },
 
-  /**
-   * Add note to user
-   */
-  static async addUserNote(apiKey: string, userId: string, note: {
-    content: string;
-    tags?: string[];
-  }): Promise<any> {
-    const response = await apiClient.post(
-      `/admin/users/${userId}/notes`,
-      note,
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data.data;
-  }
+    // Get content by slug
+    getBySlug: async (slug: string) => {
+      console.log('[Admin API] Getting content by slug:', slug);
+      const response = await apiClient.get<{ success: boolean; data: Content }>(`/admin/contents/slug/${slug}`);
+      return response.data.data;
+    },
 
-  /**
-   * Get user notes
-   */
-  static async getUserNotes(apiKey: string, userId: string): Promise<any[]> {
-    const response = await apiClient.get(
-      `/admin/users/${userId}/notes`,
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data.data;
-  }
+    // Create new content
+    create: async (data: ContentFormData) => {
+      console.log('[Admin API] Creating new content');
+      const response = await apiClient.post<{ success: boolean; data: Content }>('/admin/contents', data);
+      return response.data.data;
+    },
 
-  /**
-   * Update user status
-   */
-  static async updateUserStatus(apiKey: string, userId: string, status: string): Promise<void> {
-    await apiClient.patch(
-      `/admin/users/${userId}/status`,
-      { status },
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-  }
+    // Update content
+    update: async (id: string, data: Partial<ContentFormData>) => {
+      console.log('[Admin API] Updating content:', id);
+      const response = await apiClient.put<{ success: boolean; data: Content }>(`/admin/contents/${id}`, data);
+      return response.data.data;
+    },
 
-  /**
-   * Update user priority
-   */
-  static async updateUserPriority(apiKey: string, userId: string, priority: string): Promise<void> {
-    await apiClient.patch(
-      `/admin/users/${userId}/priority`,
-      { priority },
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-  }
+    // Update content status
+    updateStatus: async (id: string, status: ContentStatus) => {
+      console.log('[Admin API] Updating content status:', id, status);
+      const response = await apiClient.put<{ success: boolean; data: Content }>(
+        `/admin/contents/${id}/status`,
+        { status }
+      );
+      return response.data.data;
+    },
 
-  /**
-   * Schedule followup
-   */
-  static async scheduleFollowup(apiKey: string, followup: {
-    userId: string;
-    scheduledDate: Date;
-    type: string;
-    notes?: string;
-  }): Promise<void> {
-    await apiClient.post(
-      '/admin/followups',
-      followup,
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-  }
+    // Delete content
+    delete: async (id: string) => {
+      console.log('[Admin API] Deleting content:', id);
+      const response = await apiClient.delete<{ success: boolean; message: string }>(`/admin/contents/${id}`);
+      return response.data;
+    }
+  },
 
-  /**
-   * Get unified dashboard data
-   */
-  static async getDashboardData(apiKey: string): Promise<{ users: any[], total: number }> {
-    const response = await apiClient.get<{ success: boolean; data: { users: any[], total: number } }>(
-      '/admin/dashboard/data',
-      {
-        headers: this.getAuthHeaders(apiKey)
-      }
-    );
-    return response.data.data;
+  // Convenience method for backward compatibility
+  getProducts: async () => {
+    return ProductAPI.products.getAll();
   }
-}
+};
+
+// Log successful module load
+console.log('[Admin API] Module loaded successfully, ProductAPI exported');

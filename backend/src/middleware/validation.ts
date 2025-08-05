@@ -27,9 +27,9 @@ export const validateRecommendationData = (
   res: Response,
   next: NextFunction
 ): void => {
-  const { sessionId, instagramId, personalColorResult, userPreferences } = req.body;
+  const { sessionId, personalColorResult, userPreferences } = req.body;
   
-  if (!sessionId || !instagramId || !personalColorResult || !userPreferences) {
+  if (!sessionId || !personalColorResult || !userPreferences) {
     return next(new AppError(400, 'Missing required fields'));
   }
   

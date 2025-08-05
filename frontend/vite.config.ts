@@ -19,7 +19,8 @@ export default defineConfig(({ command, mode }) => ({
   },
   server: {
     port: 5173,
-    open: true,
+    host: '127.0.0.1',
+    open: false,
     proxy: {
       // Proxy all API calls to backend
       '/api': {

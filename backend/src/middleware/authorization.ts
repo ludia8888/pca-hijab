@@ -21,10 +21,6 @@ export const verifySessionOwnership = async (
     const { sessionId } = req.params;
     const userId = req.user?.userId;
 
-    if (!userId) {
-      throw new AppError(401, 'Authentication required');
-    }
-
     if (!sessionId) {
       throw new AppError(400, 'Session ID is required');
     }
@@ -36,10 +32,18 @@ export const verifySessionOwnership = async (
       throw new AppError(404, 'Session not found');
     }
 
-    // Verify ownership: user must own the session
-    if (session.userId !== userId) {
-      console.warn(`SECURITY: User ${maskUserId(userId)} attempted to access session ${sessionId} owned by ${maskUserId(session.userId || 'unknown')}`);
-      throw new AppError(403, 'Access denied: You can only access your own sessions');
+    // For authenticated users, verify ownership
+    if (userId) {
+      if (session.userId !== userId) {
+        console.warn(`SECURITY: User ${maskUserId(userId)} attempted to access session ${sessionId} owned by ${maskUserId(session.userId || 'unknown')}`);
+        throw new AppError(403, 'Access denied: You can only access your own sessions');
+      }
+    } else {
+      // For anonymous users, allow access only if session has no userId (anonymous session)
+      if (session.userId) {
+        console.warn(`SECURITY: Anonymous user attempted to access authenticated session ${sessionId}`);
+        throw new AppError(403, 'Access denied: Cannot access authenticated sessions anonymously');
+      }
     }
 
     // Attach session to request for use in route handler

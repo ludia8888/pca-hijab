@@ -22,7 +22,7 @@ interface AppState {
 }
 
 interface AppActions {
-  setSessionData: (sessionId: string, instagramId: string) => void;
+  setSessionData: (sessionId: string, instagramId?: string) => void;
   setUploadedImage: (imageUrl: string, file: File) => void;
   setAnalysisResult: (result: PersonalColorResult) => void;
   setRecommendationPreferences: (preferences: UserPreferences) => void;
@@ -56,7 +56,7 @@ export const useAppStore = create<AppState & AppActions>()(
           set((state) => ({
             ...state,
             sessionId,
-            instagramId,
+            instagramId: instagramId || null,
           })),
 
         setUploadedImage: (imageUrl, file) =>

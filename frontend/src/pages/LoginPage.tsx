@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PageLayout } from '@/components/layout';
-import { Button, Input, Card } from '@/components/ui';
+import { Button, Input, Card, Text } from '@/components/ui';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 
@@ -26,8 +26,8 @@ const LoginPage = (): JSX.Element => {
     setFocus
   } = useForm<LoginFormData>();
 
-  // Get redirect URL from location state or default to landing page
-  const from = (location.state as any)?.from?.pathname || '/landing';
+  // Get redirect URL from location state or default to home page
+  const from = (location.state as any)?.from?.pathname || '/';
 
   // If already authenticated, redirect
   useEffect(() => {
@@ -162,7 +162,10 @@ const LoginPage = (): JSX.Element => {
                 />
                 <span className="text-gray-600">로그인 상태 유지</span>
               </label>
-              <Link to="/forgot-password" className="text-primary hover:underline">
+              <Link
+                to="/forgot-password"
+                className="text-primary hover:underline"
+              >
                 비밀번호 찾기
               </Link>
             </div>
@@ -189,7 +192,7 @@ const LoginPage = (): JSX.Element => {
             </div>
 
             <div className="mt-6">
-              <Link to="/landing">
+              <Link to="/">
                 <Button
                   variant="secondary"
                   fullWidth
@@ -198,9 +201,9 @@ const LoginPage = (): JSX.Element => {
                   로그인 없이 계속하기
                 </Button>
               </Link>
-              <p className="text-xs text-gray-500 text-center mt-2">
+              <Text variant="caption" color="gray" align="center" mt="2">
                 로그인 없이도 퍼스널 컬러 진단을 받을 수 있습니다
-              </p>
+              </Text>
             </div>
           </div>
         </Card>

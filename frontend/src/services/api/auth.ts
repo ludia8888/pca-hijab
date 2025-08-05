@@ -112,5 +112,15 @@ export const AuthAPI = {
       newPassword
     });
     return response.data;
+  },
+
+  // Update personal color diagnosis
+  updatePersonalColorDiagnosis: async (diagnosisData: {
+    season: string;
+    seasonEn: string;
+    confidence: number;
+  }): Promise<UserResponse> => {
+    const response = await apiClient.put<UserResponse>('/auth/personal-color', diagnosisData);
+    return response.data;
   }
 };

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { Session, Recommendation, PersonalColorResult, UserPreferences, User, RefreshToken } from '../types';
+import type { Session, Recommendation, PersonalColorResult, UserPreferences, User, RefreshToken, Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus } from '../types';
 
 // Secure SSL configuration for database connections
 const getSSLConfig = () => {
@@ -78,7 +78,7 @@ export class PostgresDatabase {
   }
 
   // Sessions
-  async createSession(instagramId: string, userId?: string): Promise<Session> {
+  async createSession(instagramId: string | null, userId?: string): Promise<Session> {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     const query = `
@@ -87,10 +87,10 @@ export class PostgresDatabase {
       RETURNING id, instagram_id, user_id, journey_status, priority, created_at
     `;
     
-    const result = await pool.query(query, [sessionId, instagramId, userId || null, 'just_started', 'medium']);
+    const result = await pool.query(query, [sessionId, instagramId || null, userId || null, 'just_started', 'medium']);
     return {
       id: result.rows[0].id,
-      instagramId: result.rows[0].instagram_id,
+      instagramId: result.rows[0].instagram_id || undefined,
       userId: result.rows[0].user_id,
       journeyStatus: result.rows[0].journey_status,
       priority: result.rows[0].priority,
@@ -809,6 +809,280 @@ export class PostgresDatabase {
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
+  }
+
+  // Product methods
+  async createProduct(data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    const productId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const query = `
+      INSERT INTO products (
+        id, name, category, price, thumbnail_url, detail_image_urls,
+        personal_colors, description, shopee_link, is_active
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [
+      productId,
+      data.name,
+      data.category,
+      data.price,
+      data.thumbnailUrl,
+      data.detailImageUrls,
+      data.personalColors,
+      data.description,
+      data.shopeeLink,
+      data.isActive
+    ]);
+    
+    return this.mapProductRow(result.rows[0]);
+  }
+
+  async getProduct(productId: string): Promise<Product | undefined> {
+    const query = 'SELECT * FROM products WHERE id = $1';
+    const result = await pool.query(query, [productId]);
+    return result.rows[0] ? this.mapProductRow(result.rows[0]) : undefined;
+  }
+
+  async updateProduct(productId: string, updates: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product | undefined> {
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    Object.entries(updates).forEach(([key, value]) => {
+      const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      fields.push(`${dbKey} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    });
+
+    if (fields.length === 0) return this.getProduct(productId);
+
+    values.push(productId);
+    const query = `
+      UPDATE products 
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+    return result.rows[0] ? this.mapProductRow(result.rows[0]) : undefined;
+  }
+
+  async deleteProduct(productId: string): Promise<boolean> {
+    const query = 'DELETE FROM products WHERE id = $1';
+    const result = await pool.query(query, [productId]);
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async deleteAllProducts(): Promise<void> {
+    await pool.query('DELETE FROM products');
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    const query = 'SELECT * FROM products ORDER BY created_at DESC';
+    const result = await pool.query(query);
+    return result.rows.map(row => this.mapProductRow(row));
+  }
+
+  async getProductsByCategory(category: ProductCategory): Promise<Product[]> {
+    const query = 'SELECT * FROM products WHERE category = $1 ORDER BY created_at DESC';
+    const result = await pool.query(query, [category]);
+    return result.rows.map(row => this.mapProductRow(row));
+  }
+
+  async getProductsByPersonalColor(personalColor: PersonalColorType): Promise<Product[]> {
+    const query = 'SELECT * FROM products WHERE $1 = ANY(personal_colors) ORDER BY created_at DESC';
+    const result = await pool.query(query, [personalColor]);
+    return result.rows.map(row => this.mapProductRow(row));
+  }
+
+  async getProductsByCategoryAndPersonalColor(category: ProductCategory, personalColor: PersonalColorType): Promise<Product[]> {
+    const query = 'SELECT * FROM products WHERE category = $1 AND $2 = ANY(personal_colors) ORDER BY created_at DESC';
+    const result = await pool.query(query, [category, personalColor]);
+    return result.rows.map(row => this.mapProductRow(row));
+  }
+
+  private mapProductRow(row: any): Product {
+    return {
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      price: row.price,
+      thumbnailUrl: row.thumbnail_url,
+      detailImageUrls: row.detail_image_urls || [],
+      personalColors: row.personal_colors || [],
+      description: row.description,
+      shopeeLink: row.shopee_link,
+      isActive: row.is_active,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+  }
+
+  // Content methods
+  async createContent(data: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>): Promise<Content> {
+    const contentId = `content_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const query = `
+      INSERT INTO contents (
+        id, title, subtitle, slug, thumbnail_url, content, excerpt,
+        category, tags, status, published_at, meta_description, meta_keywords
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [
+      contentId,
+      data.title,
+      data.subtitle,
+      data.slug,
+      data.thumbnailUrl,
+      data.content,
+      data.excerpt,
+      data.category,
+      data.tags,
+      data.status,
+      data.publishedAt || (data.status === 'published' ? new Date() : null),
+      data.metaDescription,
+      data.metaKeywords
+    ]);
+    
+    return this.mapContentRow(result.rows[0]);
+  }
+
+  async getContent(contentId: string): Promise<Content | undefined> {
+    // Increment view count and return
+    const query = `
+      UPDATE contents 
+      SET view_count = view_count + 1, updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `;
+    const result = await pool.query(query, [contentId]);
+    return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
+  }
+
+  async getContentBySlug(slug: string): Promise<Content | undefined> {
+    // Increment view count and return
+    const query = `
+      UPDATE contents 
+      SET view_count = view_count + 1, updated_at = NOW()
+      WHERE slug = $1
+      RETURNING *
+    `;
+    const result = await pool.query(query, [slug]);
+    return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
+  }
+
+  async updateContent(contentId: string, updates: Partial<Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>>): Promise<Content | undefined> {
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    Object.entries(updates).forEach(([key, value]) => {
+      const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      fields.push(`${dbKey} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    });
+
+    if (fields.length === 0) return this.getContent(contentId);
+
+    // Handle published_at update
+    if (updates.status === 'published') {
+      fields.push(`published_at = COALESCE(published_at, NOW())`);
+    }
+
+    values.push(contentId);
+    const query = `
+      UPDATE contents 
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+    return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
+  }
+
+  async deleteContent(contentId: string): Promise<boolean> {
+    const query = 'DELETE FROM contents WHERE id = $1';
+    const result = await pool.query(query, [contentId]);
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async getAllContents(filters?: { category?: ContentCategory; status?: ContentStatus }): Promise<Content[]> {
+    let query = 'SELECT * FROM contents';
+    const conditions: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (filters?.category) {
+      conditions.push(`category = $${paramIndex}`);
+      values.push(filters.category);
+      paramIndex++;
+    }
+
+    if (filters?.status) {
+      conditions.push(`status = $${paramIndex}`);
+      values.push(filters.status);
+      paramIndex++;
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const result = await pool.query(query, values);
+    return result.rows.map(row => this.mapContentRow(row));
+  }
+
+  async updateContentStatus(contentId: string, status: ContentStatus): Promise<Content | undefined> {
+    const query = `
+      UPDATE contents 
+      SET status = $1, updated_at = NOW(), 
+          published_at = CASE WHEN $1 = 'published' AND published_at IS NULL THEN NOW() ELSE published_at END
+      WHERE id = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [status, contentId]);
+    return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
+  }
+
+  private mapContentRow(row: any): Content {
+    return {
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      slug: row.slug,
+      thumbnailUrl: row.thumbnail_url,
+      content: row.content,
+      excerpt: row.excerpt,
+      category: row.category,
+      tags: row.tags || [],
+      status: row.status,
+      publishedAt: row.published_at,
+      metaDescription: row.meta_description,
+      metaKeywords: row.meta_keywords,
+      viewCount: row.view_count,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+  }
+
+  // Clear all data (for testing)
+  async clearAllData(): Promise<void> {
+    await pool.query('DELETE FROM refresh_tokens');
+    await pool.query('DELETE FROM recommendations');
+    await pool.query('DELETE FROM sessions');
+    await pool.query('DELETE FROM users');
+    await pool.query('DELETE FROM products');
+    await pool.query('DELETE FROM contents');
   }
 }
 

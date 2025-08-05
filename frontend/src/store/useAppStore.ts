@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { PersonalColorResult, UserPreferences } from '@/types';
+import type { PersonalColorResult, UserPreferences, ViewedProduct, SavedProduct } from '@/types';
 
 export interface AppActions {
   setInstagramId: (id: string) => void;
@@ -11,6 +11,11 @@ export interface AppActions {
   initSession: () => void;
   setSessionData: (sessionId: string, instagramId: string) => void;
   resetApp: () => void;
+  // Product actions
+  addViewedProduct: (productId: string) => void;
+  toggleSavedProduct: (productId: string) => void;
+  clearViewedProducts: () => void;
+  clearSavedProducts: () => void;
 }
 
 export interface AppState {
@@ -29,6 +34,10 @@ export interface AppState {
   
   // Session
   sessionId: string | null;
+  
+  // Product tracking
+  viewedProducts: ViewedProduct[];
+  savedProducts: SavedProduct[];
 }
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -69,6 +78,31 @@ export const useAppStore = create<AppState & AppActions>()(
           set({ sessionId, instagramId });
         },
         
+        // Product tracking
+        viewedProducts: [],
+        savedProducts: [],
+        
+        addViewedProduct: (productId) => set((state) => {
+          // Remove if already exists to avoid duplicates
+          const filtered = state.viewedProducts.filter(p => p.productId !== productId);
+          // Add to beginning and limit to 10 items
+          const newViewed: ViewedProduct = { productId, viewedAt: new Date().toISOString() };
+          return { viewedProducts: [newViewed, ...filtered].slice(0, 10) };
+        }),
+        
+        toggleSavedProduct: (productId) => set((state) => {
+          const exists = state.savedProducts.find(p => p.productId === productId);
+          if (exists) {
+            return { savedProducts: state.savedProducts.filter(p => p.productId !== productId) };
+          } else {
+            const newSaved: SavedProduct = { productId, savedAt: new Date().toISOString() };
+            return { savedProducts: [newSaved, ...state.savedProducts] };
+          }
+        }),
+        
+        clearViewedProducts: () => set({ viewedProducts: [] }),
+        clearSavedProducts: () => set({ savedProducts: [] }),
+        
         // Reset
         resetApp: () => set({
           instagramId: null,
@@ -77,6 +111,8 @@ export const useAppStore = create<AppState & AppActions>()(
           analysisResult: null,
           userPreferences: null,
           sessionId: null,
+          viewedProducts: [],
+          savedProducts: [],
         }),
       }),
       {
@@ -86,6 +122,8 @@ export const useAppStore = create<AppState & AppActions>()(
           analysisResult: state.analysisResult,
           userPreferences: state.userPreferences,
           sessionId: state.sessionId,
+          viewedProducts: state.viewedProducts,
+          savedProducts: state.savedProducts,
         }),
       }
     )

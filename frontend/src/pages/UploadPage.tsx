@@ -4,34 +4,37 @@ import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
 import { useAppStore } from '@/store';
 import { Button, Card, PrivacyPopup, PrivacyAssurance } from '@/components/ui';
-import { Header, PageLayout } from '@/components/layout';
 import { ImageUpload } from '@/components/forms';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { instagramId, setUploadedImage, setLoading, setError, error } = useAppStore();
+  const { sessionId, setUploadedImage, setLoading, setError, error } = useAppStore();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
   const [showPrivacyAssurance, setShowPrivacyAssurance] = useState(true);
 
-  // Redirect if no Instagram ID
+  // Redirect if no session
   useEffect(() => {
-    if (!instagramId) {
-      trackDropOff('upload_page', 'no_instagram_id');
+    console.log('[UploadPage] Checking session, sessionId:', sessionId);
+    if (!sessionId) {
+      console.log('[UploadPage] No session found, redirecting to home...');
+      trackDropOff('upload_page', 'no_session');
       navigate(ROUTES.HOME);
     } else {
+      console.log('[UploadPage] Session found, user can upload image');
       // Track successful page entry
       trackEvent('page_enter', {
         page: 'upload',
         user_flow_step: 'upload_page_entered',
-        has_instagram_id: true
+        has_session: true
       });
     }
-  }, [instagramId, navigate]);
+  }, [sessionId, navigate]);
 
   // Pre-warm API on component mount (production only)
   useEffect(() => {
@@ -97,16 +100,8 @@ const UploadPage = (): JSX.Element => {
   };
 
   return (
-    <PageLayout 
-      header={
-        <Header 
-          title="Upload Photo" 
-          showBack 
-          onBack={() => navigate(ROUTES.HOME)}
-        />
-      }
-    >
-      <div className="max-w-md mx-auto w-full px-5">
+    <PageLayout>
+      <div className="max-w-md mx-auto w-full pb-20">
         {/* Minimal Instructions */}
         <div className="text-center mb-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -138,7 +133,7 @@ const UploadPage = (): JSX.Element => {
 
         {/* Floating Action Button */}
         {selectedFile && previewUrl && (
-          <div className="fixed bottom-8 left-0 right-0 px-5 z-40">
+          <div className="fixed bottom-24 left-0 right-0 px-5 z-40">
             <button
               onClick={handleAnalyze}
               disabled={isCompressing}

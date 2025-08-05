@@ -1,7 +1,6 @@
 // 사용자 상태 관리 서비스
 // 액션 기반에서 상태 변경 기반으로 전환
 
-import { AdminAPI } from '../api/admin';
 import type { UnifiedUserView, UserJourneyStatus, Priority } from '@/types/admin';
 
 export interface StateChangeResult {

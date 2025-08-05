@@ -3,13 +3,17 @@ export * from './personalColor';
 export * from './recommendation';
 export * from './session';
 export * from './auth';
+export * from './products';
+export * from './contents';
 
 // Convenience exports for easier use
 import { PersonalColorAPI } from './personalColor';
 import { RecommendationAPI } from './recommendation';
 import { SessionAPI, type SessionUpdateData } from './session';
 import { AuthAPI } from './auth';
-export { PersonalColorAPI, RecommendationAPI, SessionAPI, AuthAPI };
+import { ProductAPI } from './products';
+import { ContentAPI } from './contents';
+export { PersonalColorAPI, RecommendationAPI, SessionAPI, AuthAPI, ProductAPI, ContentAPI };
 export type { SessionUpdateData };
 
 // Convenience functions

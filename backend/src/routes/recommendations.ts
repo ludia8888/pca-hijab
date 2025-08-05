@@ -12,7 +12,7 @@ const router = Router();
 // POST /api/recommendations - Create a new recommendation request (SECURED)
 router.post('/', authenticateUser, validateRecommendationData, async (req, res, next) => {
   try {
-    const { sessionId, instagramId, personalColorResult, userPreferences } = req.body;
+    const { sessionId, personalColorResult, userPreferences } = req.body;
     const userId = req.user!.userId;
     
     // Verify session exists and user owns it
@@ -32,7 +32,7 @@ router.post('/', authenticateUser, validateRecommendationData, async (req, res, 
     // Create recommendation
     const recommendation = await db.createRecommendation({
       sessionId,
-      instagramId,
+      instagramId: 'anonymous',
       personalColorResult,
       userPreferences,
       status: 'pending'

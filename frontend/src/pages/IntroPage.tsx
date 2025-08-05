@@ -56,7 +56,7 @@ const IntroPage = (): JSX.Element => {
       setSessionData(response.data.sessionId, response.data.instagramId);
       
       // Navigate to upload page
-      navigate(ROUTES.UPLOAD);
+      navigate(ROUTES.DIAGNOSIS);
     } catch (error) {
       console.error('Session creation error:', error);
       

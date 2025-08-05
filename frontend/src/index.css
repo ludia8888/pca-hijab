@@ -50,7 +50,7 @@
 
   /* Focus styles for accessibility */
   *:focus-visible {
-    @apply outline-2 outline-offset-2 outline-primary;
+    @apply outline-2 outline-offset-2 outline-primary-400;
   }
 
   /* Disable outline for mouse users */
@@ -95,6 +95,51 @@
 
   .safe-right {
     padding-right: env(safe-area-inset-right);
+  }
+
+  /* Custom prose styles for content */
+  .prose h1 {
+    @apply text-3xl font-bold mb-4;
+  }
+  
+  .prose h2 {
+    @apply text-2xl font-bold mb-3 mt-8;
+  }
+  
+  .prose h3 {
+    @apply text-xl font-semibold mb-2 mt-6;
+  }
+  
+  .prose p {
+    @apply mb-4 leading-relaxed text-gray-700;
+  }
+  
+  .prose ul {
+    @apply list-disc list-inside mb-4 space-y-2;
+  }
+  
+  .prose ol {
+    @apply list-decimal list-inside mb-4 space-y-2;
+  }
+  
+  .prose li {
+    @apply text-gray-700;
+  }
+  
+  .prose img {
+    @apply rounded-lg my-6 w-full;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary-500 pl-4 my-4 italic text-gray-600;
+  }
+  
+  .prose a {
+    @apply text-primary-400 underline hover:text-primary-600;
+  }
+  
+  .prose strong {
+    @apply font-semibold text-gray-900;
   }
 }
 

@@ -13,7 +13,7 @@ export const loginLimiter = rateLimit({
     res.status(429).json({
       success: false,
       error: 'Too many login attempts. Please try again later.',
-      retryAfter: req.rateLimit?.resetTime
+      retryAfter: (req as any).rateLimit?.resetTime
     });
   }
 });
@@ -28,7 +28,7 @@ export const signupLimiter = rateLimit({
     res.status(429).json({
       success: false,
       error: 'Too many signup attempts. Please try again later.',
-      retryAfter: req.rateLimit?.resetTime
+      retryAfter: (req as any).rateLimit?.resetTime
     });
   }
 });

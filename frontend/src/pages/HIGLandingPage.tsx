@@ -99,6 +99,56 @@ const HIGLandingPage = (): JSX.Element => {
     });
   };
 
+  const handleStartAnalysis = async (): Promise<void> => {
+    if (isLoading) return;
+
+    console.log('[HIGLandingPage] Starting analysis...');
+    setIsLoading(true);
+    
+    // Track CTA click
+    trackEvent('cta_click', {
+      button_name: 'find_my_personal_color',
+      user_flow_step: 'session_creation_started',
+      page: 'landing'
+    });
+
+    try {
+      console.log('[HIGLandingPage] Creating session...');
+      const response = await SessionAPI.createSession();
+      console.log('[HIGLandingPage] Session created:', response.data);
+      
+      setSessionData(response.data.sessionId);
+      console.log('[HIGLandingPage] Session data set in store, sessionId:', response.data.sessionId);
+      
+      // Debug: Check store state
+      const currentState = useAppStore.getState();
+      console.log('[HIGLandingPage] Current store state:', {
+        sessionId: currentState.sessionId,
+        instagramId: currentState.instagramId
+      });
+      
+      // Track successful session creation
+      trackSessionStart();
+      trackEvent('session_create_success', {
+        session_id: response.data.sessionId,
+        user_flow_step: 'session_created_successfully'
+      });
+      
+      console.log('[HIGLandingPage] Navigating to home page...');
+      navigate(ROUTES.HOME);
+    } catch (error) {
+      console.error('[HIGLandingPage] Error creating session:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError('Failed to start analysis. Please try again.');
+      
+      // Track session creation failure
+      trackError('session_create_failed', errorMessage, 'landing_page');
+      trackDropOff('landing_page', 'session_creation_error');
+      
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!isValid || isLoading) return;
@@ -125,7 +175,7 @@ const HIGLandingPage = (): JSX.Element => {
         user_flow_step: 'session_created_successfully'
       });
 
-      navigate(ROUTES.UPLOAD);
+      navigate(ROUTES.DIAGNOSIS);
     } catch (error) {
       setError('Failed to create session. Please try again.');
       
@@ -177,34 +227,22 @@ const HIGLandingPage = (): JSX.Element => {
 
           {/* CTA Card */}
           <div className={styles.ctaCard}>
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <input
-                  type="text"
-                  value={instagramId}
-                  onChange={(e) => handleIdChange(e.target.value)}
-                  placeholder="Instagram ID"
-                  className={styles.input}
-                  disabled={isLoading}
-                />
-                <div className={styles.inputLine} />
-              </div>
-              
+            <div className={styles.form}>
               {error && (
                 <p className={styles.error}>{error}</p>
               )}
               
               <button
-                type="submit"
-                disabled={!isValid || isLoading}
+                onClick={handleStartAnalysis}
+                disabled={isLoading}
                 className={styles.submitButton}
               >
                 <span className={styles.buttonText}>
-                  {isLoading ? 'Starting...' : 'Begin Analysis'}
+                  {isLoading ? 'Starting...' : 'Find My Personal Color'}
                 </span>
                 <div className={styles.buttonGlow} />
               </button>
-            </form>
+            </div>
           </div>
         </div>
       </section>

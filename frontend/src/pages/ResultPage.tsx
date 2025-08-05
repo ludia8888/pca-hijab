@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout';
 import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
 import { useAppStore } from '@/store';
+import { useAuthStore } from '@/store/useAuthStore';
+import { AuthAPI } from '@/services/api/auth';
 import { shareOrCopy } from '@/utils/helpers';
 import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
 import { trackAIAnalysis, trackEvent, trackResultDownload, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
+import { toast } from 'react-hot-toast';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -39,10 +42,12 @@ function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
 
 const ResultPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { analysisResult, instagramId, uploadedImage } = useAppStore();
+  const { analysisResult, uploadedImage } = useAppStore();
+  const { isAuthenticated, user, setUser } = useAuthStore();
   const [showDownloadHint, setShowDownloadHint] = useState(true);
   const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
   const saveButtonRef = useRef<HTMLButtonElement>(null);
+  const [hasSavedToProfile, setHasSavedToProfile] = useState(false);
   
   // Auto hide download hint after 10 seconds
   useEffect(() => {
@@ -75,9 +80,9 @@ const ResultPage = (): JSX.Element => {
     };
   }, [showDownloadHint]);
 
-  // Track AI analysis completion when result is available
+  // Track AI analysis completion and save to user profile if authenticated
   useEffect(() => {
-    if (analysisResult && instagramId) {
+    if (analysisResult) {
       const seasonKey = getSeasonKey(analysisResult.personal_color_en);
       trackAIAnalysis({
         personalColorType: analysisResult.personal_color_en,
@@ -86,12 +91,50 @@ const ResultPage = (): JSX.Element => {
         confidence: analysisResult.confidence || 0,
         processingTime: 0 // We don't have the actual time here
       });
+      
+      // Save to user profile if authenticated and not already saved
+      if (isAuthenticated && !hasSavedToProfile && !user?.hasPersonalColorDiagnosis) {
+        const saveDiagnosisToProfile = async () => {
+          try {
+            const response = await AuthAPI.updatePersonalColorDiagnosis({
+              season: analysisResult.personal_color,
+              seasonEn: analysisResult.personal_color_en,
+              confidence: analysisResult.confidence || 0
+            });
+            
+            // Update user state with new data
+            if (response.data.user) {
+              setUser({
+                ...response.data.user,
+                hasPersonalColorDiagnosis: true,
+                personalColorResult: {
+                  season: analysisResult.personal_color,
+                  seasonEn: analysisResult.personal_color_en,
+                  confidence: analysisResult.confidence || 0,
+                  diagnosedAt: new Date()
+                }
+              });
+            }
+            
+            setHasSavedToProfile(true);
+            toast.success('퍼스널 컬러 진단 결과가 프로필에 저장되었습니다');
+            trackEvent('diagnosis_saved_to_profile', {
+              personal_color: analysisResult.personal_color_en,
+              confidence: analysisResult.confidence || 0
+            });
+          } catch (error) {
+            console.error('Failed to save diagnosis to profile:', error);
+          }
+        };
+        
+        saveDiagnosisToProfile();
+      }
     }
-  }, [analysisResult, instagramId]);
+  }, [analysisResult, navigate, isAuthenticated, user, setUser, hasSavedToProfile]);
 
   // Redirect if no analysis result
   useEffect(() => {
-    if (!analysisResult || !instagramId) {
+    if (!analysisResult) {
       // Track drop-off if user arrives without proper data
       trackDropOff('result_page', 'missing_analysis_data');
       
@@ -108,7 +151,7 @@ const ResultPage = (): JSX.Element => {
         confidence_score: Math.round((analysisResult.confidence || 0) * 100)
       });
     }
-  }, [analysisResult, instagramId, navigate]);
+  }, [analysisResult, navigate]);
 
   const result = analysisResult;
   
@@ -174,7 +217,7 @@ const ResultPage = (): JSX.Element => {
       trackEngagement('download', 'result_image');
       trackResultDownload(result.personal_color_en, 'image');
       
-      const blob = await generateResultCard(result, instagramId || 'user');
+      const blob = await generateResultCard(result, '');
       const filename = `hijab_color_${result.personal_color_en.replace(' ', '_')}_${Date.now()}.jpg`;
       downloadResultCard(blob, filename);
 
@@ -402,7 +445,7 @@ const ResultPage = (): JSX.Element => {
                   button_name: 'get_hijab_recommendations',
                   page: 'result'
                 });
-                navigate(ROUTES.RECOMMENDATION);
+                navigate(ROUTES.PRODUCTS);
               }}
               className="w-full bg-white text-purple-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors"
             >

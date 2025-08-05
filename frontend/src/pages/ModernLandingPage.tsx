@@ -48,7 +48,7 @@ const ModernLandingPage = (): JSX.Element => {
       const response = await SessionAPI.createSession(instagramId);
       setSessionData(response.data.sessionId, response.data.instagramId);
       trackSessionStart(instagramId);
-      navigate(ROUTES.UPLOAD);
+      navigate(ROUTES.DIAGNOSIS);
     } catch {
       setError('Failed to create session. Please try again.');
     } finally {

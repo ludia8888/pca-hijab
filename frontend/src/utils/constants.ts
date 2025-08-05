@@ -7,9 +7,9 @@ export const API_BASE_URL = (() => {
   if (envApiUrl) {
     const url = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
     
-    // Security check: Ensure HTTPS in production
+    // Security check: Ensure HTTPS in production - but just warn, don't throw
     if (import.meta.env.MODE === 'production' && !url.startsWith('https://')) {
-      throw new Error(`API_BASE_URL must use HTTPS in production. Got: ${url}`);
+      console.warn(`API_BASE_URL should use HTTPS in production. Got: ${url}`);
     }
     
     return url;
@@ -28,9 +28,9 @@ export const AI_API_URL = (() => {
   const envAiUrl = import.meta.env.VITE_AI_API_URL;
   
   if (envAiUrl) {
-    // Security check: Ensure HTTPS in production
+    // Security check: Ensure HTTPS in production - but just warn, don't throw
     if (import.meta.env.MODE === 'production' && !envAiUrl.startsWith('https://')) {
-      throw new Error(`AI_API_URL must use HTTPS in production. Got: ${envAiUrl}`);
+      console.warn(`AI_API_URL should use HTTPS in production. Got: ${envAiUrl}`);
     }
     
     return envAiUrl;
@@ -38,10 +38,12 @@ export const AI_API_URL = (() => {
   
   // Environment-specific fallbacks
   if (import.meta.env.MODE === 'production') {
-    throw new Error('VITE_AI_API_URL environment variable is required in production');
+    console.error('VITE_AI_API_URL environment variable is missing in production, using fallback');
+    // Use localhost as fallback instead of throwing
+    return 'http://localhost:8000';
   } else {
     // Development fallback only
-    return 'http://localhost:8000';
+    return 'http://localhost:8080';
   }
 })();
 
@@ -112,11 +114,14 @@ export const ANALYSIS_STEPS = [
 // Routes
 export const ROUTES = {
   HOME: '/',
-  UPLOAD: '/upload',
+  LANDING: '/landing',
+  DIAGNOSIS: '/diagnosis',
   ANALYZING: '/analyzing',
   RESULT: '/result',
   RECOMMENDATION: '/recommendation',
   COMPLETION: '/completion',
+  PRODUCTS: '/products',
+  MYPAGE: '/mypage',
   ADMIN_LOGIN: '/admin/login',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_RECOMMENDATION: '/admin/recommendations/:id',

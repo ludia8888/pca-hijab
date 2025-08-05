@@ -114,3 +114,72 @@ export interface ColorPalette {
   bestColors: Color[];
   worstColors: Color[];
 }
+
+// Product Tracking Types
+export interface ViewedProduct {
+  productId: string;
+  viewedAt: string; // ISO string for serialization
+}
+
+export interface SavedProduct {
+  productId: string;
+  savedAt: string; // ISO string for serialization
+}
+
+// Product Types (for regular users)
+export type ProductCategory = 'hijab' | 'lens' | 'lip' | 'eyeshadow';
+export type PersonalColorType = 'spring_warm' | 'autumn_warm' | 'summer_cool' | 'winter_cool';
+
+export interface Product {
+  id: string;
+  name: string;
+  category: ProductCategory;
+  price: number;
+  thumbnailUrl: string;
+  detailImageUrls: string[];
+  personalColors: PersonalColorType[]; // recommended personal colors
+  description?: string;
+  shopeeLink: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Category labels for UI
+export const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  hijab: '히잡',
+  lens: '렌즈',
+  lip: '립',
+  eyeshadow: '아이쉐도우'
+};
+
+// Personal color labels for UI
+export const PERSONAL_COLOR_LABELS: Record<PersonalColorType, string> = {
+  spring_warm: '봄 웜톤',
+  autumn_warm: '가을 웜톤',
+  summer_cool: '여름 쿨톤',
+  winter_cool: '겨울 쿨톤'
+};
+
+// Content Types
+export type ContentCategory = 'beauty_tips' | 'hijab_styling' | 'color_guide' | 'trend' | 'tutorial';
+export type ContentStatus = 'draft' | 'published';
+
+export interface Content {
+  id: string;
+  title: string;
+  subtitle?: string;
+  slug: string;
+  thumbnailUrl: string;
+  content: string; // HTML content
+  excerpt?: string;
+  category: ContentCategory;
+  tags: string[];
+  status: ContentStatus;
+  publishedAt?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}

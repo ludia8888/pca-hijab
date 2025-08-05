@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { validateInstagramId } from '../middleware/validation';
 import { AppError } from '../middleware/errorHandler';
 import { optionalAuth, authenticateUser } from '../middleware/auth';
 import { 
@@ -11,8 +10,8 @@ import { createSecureSessionLog, maskUserId, maskInstagramId } from '../utils/lo
 
 const router = Router();
 
-// POST /api/sessions - Create a new session
-router.post('/', optionalAuth, validateInstagramId, async (req, res, next) => {
+// POST /api/sessions - Create a new session (Instagram ID optional)
+router.post('/', optionalAuth, async (req, res, next) => {
   try {
     const { instagramId } = req.body;
     const clientIp = req.headers['x-forwarded-for'] || req.ip;
@@ -20,7 +19,7 @@ router.post('/', optionalAuth, validateInstagramId, async (req, res, next) => {
     const userId = req.user?.userId;
     
     const secureLog = createSecureSessionLog({
-      instagramId,
+      instagramId: instagramId || 'anonymous',
       ip: clientIp as string,
       userAgent,
       userId
@@ -28,8 +27,8 @@ router.post('/', optionalAuth, validateInstagramId, async (req, res, next) => {
     
     console.info('Session creation attempt:', secureLog);
     
-    // Create session with optional userId
-    const session = await db.createSession(instagramId, userId);
+    // Create session with optional Instagram ID and userId
+    const session = await db.createSession(instagramId || null, userId);
     
     console.info(`Session created successfully - ID: ${session.id}, User: ${secureLog.user}`);
     
@@ -38,7 +37,7 @@ router.post('/', optionalAuth, validateInstagramId, async (req, res, next) => {
       message: 'Session created successfully',
       data: {
         sessionId: session.id,
-        instagramId: session.instagramId,
+        instagramId: session.instagramId || undefined,
         userId: session.userId
       }
     });
@@ -67,7 +66,7 @@ router.get('/:sessionId', authenticateUser, verifySessionOwnership, async (req, 
 });
 
 // PATCH /api/sessions/:sessionId - Update session with analysis result (SECURED)
-router.patch('/:sessionId', authenticateUser, verifySessionOwnership, async (req, res, next) => {
+router.patch('/:sessionId', optionalAuth, verifySessionOwnership, async (req, res, next) => {
   try {
     const { sessionId } = req.params;
     const { uploadedImageUrl, analysisResult } = req.body;
@@ -75,7 +74,7 @@ router.patch('/:sessionId', authenticateUser, verifySessionOwnership, async (req
     // Session is already verified and attached by middleware
     const session = req.session;
     
-    console.info(`Session update attempt - ID: ${sessionId}, User: ${maskUserId(req.user!.userId)}`);
+    console.info(`Session update attempt - ID: ${sessionId}, User: ${maskUserId(req.user?.userId || 'anonymous')}`);
     
     // Update session with new data
     const updatedSession = await db.updateSession?.(sessionId, {

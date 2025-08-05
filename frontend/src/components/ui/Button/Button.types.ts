@@ -1,14 +1,7 @@
-import type { ReactNode, ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonBaseProps } from '@/design-system';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
-export type ButtonSize = 'sm' | 'md' | 'lg';
-
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  children: ReactNode;
-  loading?: boolean;
-  fullWidth?: boolean;
-  icon?: ReactNode;
-  iconPosition?: 'left' | 'right';
+export interface ButtonProps extends ButtonBaseProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonBaseProps> {
+  // Button component already has all needed props from ButtonBaseProps
+  // Any additional button-specific props can be added here
 }

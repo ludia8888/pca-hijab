@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAdminStore } from '@/store/useAdminStore';
-import { AdminAPI } from '@/services/api/admin';
+import { ProductAPI } from '@/services/api/admin';
 import { Card, Button, LoadingSpinner } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { ArrowLeft, Instagram, Palette, Tag, Calendar, FileText } from 'lucide-react';
@@ -20,7 +20,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
 
     setIsLoading(true);
     try {
-      const data = await AdminAPI.getRecommendation(apiKey, id);
+      const data = await ProductAPI.getRecommendation(apiKey, id);
       setRecommendation(data);
     } catch {
       // Handle error silently
@@ -43,7 +43,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
 
     setIsUpdating(true);
     try {
-      const updated = await AdminAPI.updateRecommendationStatus(apiKey, id, newStatus);
+      const updated = await ProductAPI.updateRecommendationStatus(apiKey, id, newStatus);
       setRecommendation(updated);
     } catch {
       // Handle error silently

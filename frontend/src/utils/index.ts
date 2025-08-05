@@ -14,3 +14,4 @@ export {
 } from './seasonData';
 export * from './fontLoader';
 export * from './canvasPolyfill';
+export * from './sessionHelper';

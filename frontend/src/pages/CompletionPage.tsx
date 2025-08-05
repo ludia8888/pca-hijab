@@ -10,13 +10,12 @@ import { trackRecommendationRequest, trackEvent, trackEngagement, trackError, tr
 
 const CompletionPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const instagramId = useAppStore((state) => state.instagramId);
   const analysisResult = useAppStore((state) => state.analysisResult);
   const reset = useAppStore((state) => state.reset);
 
   // Redirect if no required data
   useEffect(() => {
-    if (!instagramId || !analysisResult) {
+    if (!analysisResult) {
       // Track drop-off if user arrives without proper data
       trackDropOff('completion_page', 'missing_required_data');
       navigate(ROUTES.HOME);
@@ -25,17 +24,15 @@ const CompletionPage = (): JSX.Element => {
       trackEvent('page_enter', {
         page: 'completion',
         user_flow_step: 'completion_page_entered',
-        personal_color: analysisResult.personal_color_en,
-        instagram_id: instagramId
+        personal_color: analysisResult.personal_color_en
       });
 
       // Track recommendation request and flow completion with enhanced data
-      trackRecommendationRequest(instagramId, analysisResult.personal_color_en);
+      trackRecommendationRequest('', analysisResult.personal_color_en);
       
-      trackFlowCompletion(instagramId, analysisResult.personal_color_en);
+      trackFlowCompletion('', analysisResult.personal_color_en);
       
       trackEvent('flow_complete', {
-        instagram_id: instagramId,
         personal_color: analysisResult.personal_color_en,
         confidence_score: Math.round((analysisResult.confidence || 0) * 100),
         user_flow_step: 'full_flow_completed',
@@ -51,7 +48,7 @@ const CompletionPage = (): JSX.Element => {
         personal_color: analysisResult.personal_color_en
       });
     }
-  }, [instagramId, analysisResult, navigate]);
+  }, [analysisResult, navigate]);
 
   const handleShare = async (): Promise<void> => {
     try {
@@ -84,7 +81,7 @@ const CompletionPage = (): JSX.Element => {
   };
 
   const handleSaveResult = async (): Promise<void> => {
-    if (!analysisResult || !instagramId) return;
+    if (!analysisResult) return;
     
     try {
       // Track save result button click with enhanced data
@@ -98,7 +95,7 @@ const CompletionPage = (): JSX.Element => {
       trackEngagement('download', 'completion_result_image');
       
       // Generate the beautiful enhanced result card
-      const blob = await generateResultCard(analysisResult, instagramId);
+      const blob = await generateResultCard(analysisResult, '');
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `hijab_personal_color_${timestamp}.jpg`;
       downloadResultCard(blob, filename);
@@ -130,8 +127,7 @@ const CompletionPage = (): JSX.Element => {
     trackEvent('session_end', {
       end_location: 'completion_page',
       session_completed: true,
-      personal_color: analysisResult?.personal_color_en,
-      instagram_id: instagramId
+      personal_color: analysisResult?.personal_color_en
     });
     
     reset();
@@ -140,7 +136,7 @@ const CompletionPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 pb-24">
         <div className="max-w-md w-full space-y-8">
           {/* Success Animation */}
           <div className="text-center">
@@ -178,7 +174,7 @@ const CompletionPage = (): JSX.Element => {
           <Card>
             <div className="text-center space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-                <span className="text-primary font-medium">@{instagramId}</span>
+                <span className="text-primary font-medium">Your Results</span>
               </div>
               
               <div className="space-y-2">

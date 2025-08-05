@@ -49,7 +49,7 @@ export const PrivacyAssurance = ({
   return (
     <div 
       className={cn(
-        "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40",
+        "fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40",
         "transition-all duration-500 ease-out",
         isClosing ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0",
         !isClosing && "animate-gentle-bounce"

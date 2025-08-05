@@ -15,7 +15,7 @@ export interface User {
 
 export interface Session {
   id: string;
-  instagramId: string;
+  instagramId?: string;
   userId?: string;
   uploadedImageUrl?: string;
   analysisResult?: PersonalColorResult;
@@ -100,4 +100,44 @@ export interface RefreshToken {
   token: string;
   expiresAt: Date;
   createdAt: Date;
+}
+
+export type ProductCategory = 'hijab' | 'lens' | 'lip' | 'eyeshadow';
+export type PersonalColorType = 'spring_warm' | 'autumn_warm' | 'summer_cool' | 'winter_cool';
+
+export interface Product {
+  id: string;
+  name: string;
+  category: ProductCategory;
+  price: number;
+  thumbnailUrl: string;
+  detailImageUrls: string[];
+  personalColors: PersonalColorType[]; // 해당 상품이 추천되는 퍼스널 컬러들
+  description?: string;
+  shopeeLink: string; // 쇼피 상품 링크
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type ContentCategory = 'beauty_tips' | 'hijab_styling' | 'color_guide' | 'trend' | 'tutorial';
+export type ContentStatus = 'draft' | 'published';
+
+export interface Content {
+  id: string;
+  title: string;
+  subtitle?: string;
+  slug: string;
+  thumbnailUrl: string;
+  content: string; // HTML content
+  excerpt?: string;
+  category: ContentCategory;
+  tags: string[];
+  status: ContentStatus;
+  publishedAt?: Date;
+  metaDescription?: string;
+  metaKeywords?: string;
+  viewCount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
