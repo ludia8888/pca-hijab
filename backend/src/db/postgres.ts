@@ -12,7 +12,9 @@ const getSSLConfig = () => {
   // Production SSL configuration
   if (process.env.NODE_ENV === 'production') {
     // More secure SSL configuration
-    if (databaseUrl.includes('render.com') || databaseUrl.includes('railway.app')) {
+    if (databaseUrl.includes('render.com') || 
+        databaseUrl.includes('railway.app') || 
+        databaseUrl.includes('dpg-')) {  // Render internal database URLs
       // Some cloud providers require specific SSL handling
       return { 
         rejectUnauthorized: false // Only for specific cloud providers
