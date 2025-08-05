@@ -17,6 +17,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
+const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
+const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
 
 // Main app pages
 const ProductsPage = lazy(() => import('@/pages/ProductsCatalogPage'));
@@ -182,6 +184,26 @@ const router = createBrowserRouter([
             <ResetPasswordPage />
           </Suspense>
         ),
+      },
+      {
+        path: ROUTES.TERMS_OF_SERVICE,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <TermsOfServicePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.PRIVACY_POLICY,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <PrivacyPolicyPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/privacy',
+        element: <Navigate to={ROUTES.PRIVACY_POLICY} replace />,
       },
       // Admin routes
       {

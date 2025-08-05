@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
@@ -415,7 +415,14 @@ const HIGLandingPage = (): JSX.Element => {
       {/* Footer - Minimal presence */}
       <footer className={styles.footer}>
         <p className={styles.footerText}>
-          © 2025 Noor.AI · Privacy-first color analysis
+          © 2025 Noor.AI · Privacy-first color analysis · {' '}
+          <Link to={ROUTES.TERMS_OF_SERVICE} className={styles.footerLink}>
+            Terms of Service
+          </Link>
+          {' · '}
+          <Link to={ROUTES.PRIVACY_POLICY} className={styles.footerLink}>
+            Privacy Policy
+          </Link>
         </p>
       </footer>
 

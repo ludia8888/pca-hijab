@@ -122,6 +122,8 @@ export const ROUTES = {
   COMPLETION: '/completion',
   PRODUCTS: '/products',
   MYPAGE: '/mypage',
+  TERMS_OF_SERVICE: '/terms-of-service',
+  PRIVACY_POLICY: '/privacy-policy',
   ADMIN_LOGIN: '/admin/login',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_RECOMMENDATION: '/admin/recommendations/:id',

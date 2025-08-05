@@ -7,6 +7,7 @@ import { PageLayout } from '@/components/layout';
 import { Button, Input, Card, Text } from '@/components/ui';
 import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
+import { ROUTES } from '@/utils/constants';
 
 interface SignupFormData {
   fullName: string;
@@ -248,7 +249,7 @@ const SignupPage = (): JSX.Element => {
                   className="mt-1 mr-2 rounded border-gray-300 text-primary-400 focus:ring-primary-400"
                 />
                 <span className="text-sm text-gray-600">
-                  <Link to="/terms" className="text-primary hover:underline">
+                  <Link to={ROUTES.TERMS_OF_SERVICE} className="text-primary hover:underline">
                     이용약관
                   </Link>
                   {' 및 '}
