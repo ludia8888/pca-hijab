@@ -462,6 +462,15 @@ if (process.env.NODE_ENV !== 'production') {
 } else {
   // In production, only log that database is configured
   console.info(`Database type: ${usePostgres ? 'PostgreSQL' : 'In-Memory'}`);
+  if (process.env.DATABASE_URL) {
+    console.info('DATABASE_URL exists:', true);
+    console.info('DATABASE_URL length:', process.env.DATABASE_URL.length);
+    // Extract and log only the host part for debugging
+    const hostMatch = process.env.DATABASE_URL.match(/@([^:\/]+)/);
+    if (hostMatch) {
+      console.info('Database host from env:', hostMatch[1]);
+    }
+  }
 }
 
 export const db: Database = usePostgres ? postgresDb : new InMemoryDatabase();
