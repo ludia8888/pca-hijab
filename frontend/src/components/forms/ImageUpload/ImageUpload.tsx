@@ -170,8 +170,8 @@ export const ImageUpload = ({
           {/* Camera Icon */}
           <div className={cn(
             'w-20 h-20 rounded-full flex items-center justify-center mb-4',
-            'bg-gradient-to-br from-primary to-primary-light',
-            'shadow-lg transform transition-transform',
+            'bg-gradient-to-br from-primary-600 to-primary-700',
+            'shadow-xl transform transition-transform',
             isDragging ? 'scale-110' : ''
           )}>
             <svg
@@ -179,7 +179,7 @@ export const ImageUpload = ({
               height="40"
               viewBox="0 0 24 24"
               fill="none"
-              className="text-white"
+              className="text-white drop-shadow-md"
             >
               <path
                 d="M23 19C23 20.1046 22.1046 21 21 21H3C1.89543 21 1 20.1046 1 19V8C1 6.89543 1.89543 6 3 6H7L9 3H15L17 6H21C22.1046 6 23 6.89543 23 8V19Z"
@@ -204,7 +204,7 @@ export const ImageUpload = ({
             <button
               type="button"
               onClick={handleCameraClick}
-              className="px-6 py-2.5 bg-white/80 backdrop-blur text-gray-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
+              className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-full text-sm font-bold shadow-lg hover:shadow-xl hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
               disabled={disabled}
             >
               📷 Camera
@@ -224,7 +224,7 @@ export const ImageUpload = ({
                 
                 handleButtonClick();
               }}
-              className="px-6 py-2.5 bg-white/80 backdrop-blur text-gray-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
+              className="px-6 py-3 bg-gradient-to-r from-secondary-400 to-secondary-500 text-white rounded-full text-sm font-bold shadow-lg hover:shadow-xl hover:from-secondary-500 hover:to-secondary-600 transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
               disabled={disabled}
             >
               🖼️ Gallery

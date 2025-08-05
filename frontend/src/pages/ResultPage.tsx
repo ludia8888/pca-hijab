@@ -427,16 +427,16 @@ const ResultPage = (): JSX.Element => {
 
         {/* CTA Section - Elegant Design */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur-xl opacity-20" />
-          <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-500 rounded-2xl blur-xl opacity-30" />
+          <div className="relative bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 text-white shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold mb-1">Find Your Perfect Hijab</h3>
-                <p className="text-white/80 text-sm">
+                <h3 className="text-xl font-bold mb-1 drop-shadow-sm">Find Your Perfect Hijab</h3>
+                <p className="text-white/90 text-sm font-medium">
                   Hijab recommendations for your {seasonInfo?.en}
                 </p>
               </div>
-              <div className="text-4xl">🧕</div>
+              <div className="text-4xl drop-shadow-sm">🧕</div>
             </div>
             <button
               onClick={() => {
@@ -447,15 +447,15 @@ const ResultPage = (): JSX.Element => {
                 });
                 navigate(ROUTES.PRODUCTS);
               }}
-              className="w-full bg-white text-purple-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors"
+              className="w-full bg-white text-primary-700 font-bold py-4 rounded-xl hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-md"
             >
-              Get Hijab Recommendations
+              🛍️ Get Hijab Recommendations
             </button>
           </div>
         </div>
         
         {/* Secondary Action */}
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <button
             onClick={() => {
               // Track try again button click
@@ -465,9 +465,9 @@ const ResultPage = (): JSX.Element => {
               });
               navigate(ROUTES.HOME);
             }}
-            className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+            className="px-8 py-3 bg-gray-700 text-white font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-md"
           >
-            Try Again
+            🔄 Try Again
           </button>
         </div>
       </div>
