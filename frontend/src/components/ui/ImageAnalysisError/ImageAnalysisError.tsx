@@ -81,7 +81,7 @@ export const ImageAnalysisError: React.FC<ImageAnalysisErrorProps> = ({
       {/* Solutions */}
       <div className="mb-6">
         <h4 className={`font-semibold ${getSeverityTextColor(errorInfo.severity)} mb-3`}>
-          💡 이렇게 해보세요:
+          💡 Here's what to try:
         </h4>
         <ul className="space-y-2">
           {errorInfo.solutions.map((solution, index) => (
@@ -103,13 +103,13 @@ export const ImageAnalysisError: React.FC<ImageAnalysisErrorProps> = ({
           onClick={handleRetry}
           className="flex-1 px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors duration-200 shadow-md hover:shadow-lg"
         >
-          🔄 다시 분석하기
+          🔄 Try Again
         </button>
         <button
           onClick={handleChangeImage}
           className="flex-1 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors duration-200 shadow-md hover:shadow-lg"
         >
-          📷 다른 사진 선택
+          📷 Choose Different Photo
         </button>
       </div>
 
@@ -120,13 +120,13 @@ export const ImageAnalysisError: React.FC<ImageAnalysisErrorProps> = ({
             <span className="text-lg">💡</span>
             <div className="flex-1">
               <p className={`text-sm font-medium ${getSeverityTextColor(errorInfo.severity)} mb-1`}>
-                완벽한 셀카 촬영 팁:
+                Perfect selfie tips:
               </p>
               <ul className={`text-xs ${getSeverityTextColor(errorInfo.severity)} space-y-1`}>
-                <li>• 자연광이 들어오는 창가에서 촬영하세요</li>
-                <li>• 얼굴이 화면의 60-80%를 차지하도록 하세요</li>
-                <li>• 정면을 바라보고 고개를 똑바로 세우세요</li>
-                <li>• 얼굴 전체(이마~턱)가 모두 보이게 하세요</li>
+                <li>• Take photos near a window with natural light</li>
+                <li>• Make your face fill 60-80% of the frame</li>
+                <li>• Face forward and keep your head straight</li>
+                <li>• Show your entire face from forehead to chin</li>
               </ul>
             </div>
           </div>
