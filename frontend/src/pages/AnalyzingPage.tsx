@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout';
 import { ANALYSIS_STEPS, ROUTES } from '@/utils/constants';
@@ -13,6 +13,8 @@ const AnalyzingPage = (): JSX.Element => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const analysisAbortControllerRef = useRef<AbortController | null>(null);
 
   // Redirect if no image and track page entry
   useEffect(() => {
@@ -50,6 +52,23 @@ const AnalyzingPage = (): JSX.Element => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedFile]);
+
+  // Cleanup effect - Clear timeouts and abort controllers on unmount
+  useEffect(() => {
+    return () => {
+      // Clear navigation timeout if exists
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+        navigationTimeoutRef.current = null;
+      }
+      
+      // Abort any ongoing analysis
+      if (analysisAbortControllerRef.current) {
+        analysisAbortControllerRef.current.abort();
+        analysisAbortControllerRef.current = null;
+      }
+    };
+  }, []);
 
   // Progress animation with tracking
   useEffect(() => {
@@ -142,9 +161,10 @@ const AnalyzingPage = (): JSX.Element => {
       });
       
       // Wait for animation to complete
-      setTimeout(() => {
+      const totalDuration = ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000;
+      navigationTimeoutRef.current = setTimeout(() => {
         navigate(ROUTES.RESULT);
-      }, ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000);
+      }, totalDuration);
     } catch (err) {
       console.error('Analysis error:', err);
       let errorMessage = 'An error occurred during analysis.';

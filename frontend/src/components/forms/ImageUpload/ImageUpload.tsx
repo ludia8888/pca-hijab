@@ -4,6 +4,7 @@ import { createImagePreview, revokeImagePreview } from '@/utils/helpers';
 import { validateImageFile } from '@/utils/validators';
 import { VALIDATION_MESSAGES } from '@/utils/constants';
 import { convertHEICToJPEG, isHEICSupported } from '@/utils/imageConverter';
+import { ImageProcessor } from '@/utils/imageProcessor';
 import { CameraCapture } from '../CameraCapture';
 import { isMediaStreamSupported } from '@/utils/camera';
 import { trackEvent } from '@/utils/analytics';
@@ -40,22 +41,23 @@ export const ImageUpload = ({
       let processedFile = file;
       let previewUrl: string;
       
-      // Check if it's a HEIC file and needs conversion
-      const isHEIC = file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic');
-      
-      if (isHEIC && !isHEICSupported()) {
-        try {
-          // Try to convert HEIC to JPEG
-          processedFile = await convertHEICToJPEG(file);
-          previewUrl = createImagePreview(processedFile);
-        } catch (conversionError) {
-          // If conversion fails, show error to user
-          onError(conversionError instanceof Error ? conversionError.message : 'Failed to convert HEIC file.');
-          return;
-        }
-      } else {
-        previewUrl = createImagePreview(processedFile);
+      // Process image (HEIC conversion and compression)
+      try {
+        console.log('Processing image:', file.name, file.type, file.size);
+        processedFile = await ImageProcessor.processImage(file, {
+          maxWidth: 1920,
+          maxHeight: 1920,
+          quality: 0.9,
+          format: 'jpeg'
+        });
+        console.log('Image processed:', processedFile.name, processedFile.type, processedFile.size);
+      } catch (processingError) {
+        console.warn('Image processing failed, using original:', processingError);
+        // Continue with original file if processing fails
       }
+      
+      // Create preview
+      previewUrl = createImagePreview(processedFile);
       
       setPreview(previewUrl);
       onUpload(processedFile, previewUrl);

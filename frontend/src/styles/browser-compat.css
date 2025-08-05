@@ -1,0 +1,278 @@
+/* Browser Compatibility Styles */
+
+/* Ensure proper box-sizing across all browsers */
+*,
+*::before,
+*::after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Smooth scrolling with fallback */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+}
+
+/* Fix iOS Safari issues with 100vh */
+:root {
+  --app-height: 100vh;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fix */
+  :root {
+    --app-height: -webkit-fill-available;
+  }
+}
+
+.min-h-screen {
+  min-height: 100vh;
+  min-height: var(--app-height);
+}
+
+/* Ensure proper rendering of images */
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* Fix button appearance on iOS */
+button,
+input[type="button"],
+input[type="submit"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Ensure proper touch targets */
+button,
+a,
+input,
+textarea,
+select {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Fix Safari flexbox issues */
+.flex {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-col {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.items-center {
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.justify-center {
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+/* Fix gradient rendering */
+.bg-gradient-to-r,
+.bg-gradient-to-b,
+.bg-gradient-to-t,
+.bg-gradient-to-l,
+.bg-gradient-to-br {
+  background-image: -webkit-gradient(linear, left top, right top, from(var(--tw-gradient-from)), to(var(--tw-gradient-to)));
+  background-image: -webkit-linear-gradient(left, var(--tw-gradient-from), var(--tw-gradient-to));
+  background-image: -moz-linear-gradient(left, var(--tw-gradient-from), var(--tw-gradient-to));
+  background-image: -o-linear-gradient(left, var(--tw-gradient-from), var(--tw-gradient-to));
+}
+
+/* Ensure proper transform rendering */
+.transform {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Fix transition performance */
+.transition-all,
+.transition-colors,
+.transition-transform,
+.transition-opacity {
+  -webkit-transition-property: all;
+  -moz-transition-property: all;
+  -o-transition-property: all;
+  transition-property: all;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Ensure proper shadow rendering */
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+  -webkit-box-shadow: var(--tw-shadow);
+  -moz-box-shadow: var(--tw-shadow);
+  box-shadow: var(--tw-shadow);
+}
+
+/* Fix backdrop blur for Safari */
+.backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* Prevent layout shift from scrollbar */
+body {
+  overflow-y: scroll;
+  overscroll-behavior-y: none;
+}
+
+/* Ensure proper font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix input zoom on iOS */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Prevent double-tap zoom */
+* {
+  touch-action: manipulation;
+}
+
+/* Fix position sticky for older browsers */
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+/* Ensure proper overflow handling */
+.overflow-hidden {
+  overflow: hidden;
+  -webkit-overflow-scrolling: auto;
+}
+
+.overflow-auto {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix aspect ratio for older browsers */
+.aspect-square {
+  position: relative;
+}
+
+.aspect-square::before {
+  content: "";
+  display: block;
+  padding-bottom: 100%;
+}
+
+.aspect-square > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure animations work across browsers */
+@-webkit-keyframes spin {
+  to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+@-webkit-keyframes ping {
+  75%, 100% { -webkit-transform: scale(2); transform: scale(2); opacity: 0; }
+}
+
+@keyframes ping {
+  75%, 100% { -webkit-transform: scale(2); transform: scale(2); opacity: 0; }
+}
+
+@-webkit-keyframes pulse {
+  50% { opacity: .5; }
+}
+
+@keyframes pulse {
+  50% { opacity: .5; }
+}
+
+@-webkit-keyframes bounce {
+  0%, 100% { -webkit-transform: translateY(-25%); transform: translateY(-25%); -webkit-animation-timing-function: cubic-bezier(0.8,0,1,1); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+  50% { -webkit-transform: none; transform: none; -webkit-animation-timing-function: cubic-bezier(0,0,0.2,1); animation-timing-function: cubic-bezier(0,0,0.2,1); }
+}
+
+@keyframes bounce {
+  0%, 100% { -webkit-transform: translateY(-25%); transform: translateY(-25%); -webkit-animation-timing-function: cubic-bezier(0.8,0,1,1); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+  50% { -webkit-transform: none; transform: none; -webkit-animation-timing-function: cubic-bezier(0,0,0.2,1); animation-timing-function: cubic-bezier(0,0,0.2,1); }
+}
+
+/* Fix grid layout for older browsers */
+.grid {
+  display: -ms-grid;
+  display: grid;
+}
+
+/* Ensure proper rendering of rounded corners */
+.rounded-full,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl {
+  -webkit-border-radius: var(--tw-border-radius);
+  -moz-border-radius: var(--tw-border-radius);
+  border-radius: var(--tw-border-radius);
+  overflow: hidden;
+}
+
+/* Fix filter effects */
+.blur,
+.grayscale,
+.brightness-50,
+.contrast-125 {
+  -webkit-filter: var(--tw-filter);
+  filter: var(--tw-filter);
+}

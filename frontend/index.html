@@ -34,8 +34,24 @@
     </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>AI Personal Color Analysis for Hijab - Noor</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Basic polyfills for older browsers -->
+    <script>
+      // Check if browser supports basic features
+      if (!window.Promise || !window.fetch || !window.Symbol) {
+        document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=Promise,fetch,Symbol,Object.assign,Array.from"><\/script>');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

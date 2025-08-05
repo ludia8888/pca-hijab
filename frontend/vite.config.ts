@@ -36,6 +36,10 @@ export default defineConfig(({ command, mode }) => ({
     sourcemap: mode !== 'production',
     // Minify for production
     minify: mode === 'production' ? 'esbuild' : false,
+    // Browser compatibility
+    target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+    // Chunk size warnings
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {

@@ -1,13 +1,14 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import './styles/browser-compat.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --color-primary: #FF6B6B;
-    --color-primary-light: #FF8E8E;
-    --color-primary-dark: #E85555;
+    --color-primary: #FF91A4;
+    --color-primary-light: #FFB6C8;
+    --color-primary-dark: #FF5178;
     --color-secondary: #4ECDC4;
     --color-gray-50: #F9FAFB;
     --color-gray-900: #111827;

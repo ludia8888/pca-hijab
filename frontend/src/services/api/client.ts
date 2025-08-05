@@ -1,8 +1,14 @@
 import axios, { AxiosError } from 'axios';
-import type { AxiosInstance, AxiosRequestConfig } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL, API_TIMEOUT } from '@/utils/constants';
 import type { ApiError, ApiResponse } from '@/types';
 import { secureLog, secureError, createSecureRequestLog, createSecureResponseLog, createSecureErrorLog } from '@/utils/secureLogging';
+
+// Extend config with retry metadata
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+  _retryCount?: number;
+}
 
 // Debug API configuration (secure)
 secureLog('[API Client] Initializing with:', {
@@ -89,6 +95,8 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<ApiError>) => {
+    const config = error.config as ExtendedAxiosRequestConfig;
+    
     secureError('[API Response Error]', createSecureErrorLog(error));
     
     // Handle CSRF token errors
@@ -100,15 +108,46 @@ apiClient.interceptors.response.use(
         CSRFAPI.clearToken();
         
         // Don't retry if this was already a retry
-        if (!error.config?._retry) {
+        if (!config?._retry) {
           const newToken = await CSRFAPI.getToken();
-          error.config!._retry = true;
-          error.config!.headers['x-csrf-token'] = newToken;
-          return apiClient.request(error.config!);
+          config._retry = true;
+          config.headers['x-csrf-token'] = newToken;
+          return apiClient.request(config);
         }
       } catch (csrfError) {
         secureError('Failed to handle CSRF error:', csrfError);
       }
+    }
+    
+    // Network error retry logic
+    if (!error.response && error.code !== 'ECONNABORTED' && config) {
+      // Initialize retry count
+      config._retryCount = config._retryCount || 0;
+      
+      // Retry up to 3 times for network errors
+      if (config._retryCount < 3) {
+        config._retryCount++;
+        
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, config._retryCount - 1) * 1000;
+        
+        secureLog(`[API Retry] Attempt ${config._retryCount} after ${delay}ms`);
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        return apiClient.request(config);
+      }
+    }
+    
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED') {
+      const apiError: ApiError = {
+        error: 'Request Timeout',
+        detail: '요청 시간이 초과되었습니다. 다시 시도해주세요.',
+        code: 'TIMEOUT',
+      };
+      return Promise.reject(apiError);
     }
     
     if (error.response) {
