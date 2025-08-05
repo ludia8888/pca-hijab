@@ -1,18 +1,18 @@
 // Design System Tokens - Single Source of Truth for all design values
 
 export const colors = {
-  // Primary colors
+  // Primary colors - Soft pink palette
   primary: {
-    50: '#FFF1F1',
-    100: '#FFE4E4',
-    200: '#FFCACA',
-    300: '#FFA3A3',
-    400: '#FF6B6B', // Main primary
-    500: '#FF4444',
-    600: '#E85555', // Primary dark
-    700: '#CC3333',
-    800: '#AA2222',
-    900: '#881111',
+    50: '#FFF5F7',
+    100: '#FFE4E9',
+    200: '#FFD1DC',
+    300: '#FFB6C8',
+    400: '#FF91A4', // Main primary - soft pink
+    500: '#FF6B8A',
+    600: '#FF5178', // Primary dark - deeper pink
+    700: '#E94368',
+    800: '#CC3654',
+    900: '#AA2A44',
   },
   
   // Secondary colors
@@ -207,7 +207,7 @@ export const shadows = {
   '2xl': '0 20px 40px rgba(0, 0, 0, 0.15)',
   inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
   // Colored shadows
-  primary: '0 4px 12px rgba(255, 107, 107, 0.3)',
+  primary: '0 4px 12px rgba(255, 145, 164, 0.3)', // Updated to match new primary-400
   secondary: '0 4px 12px rgba(78, 205, 196, 0.3)',
 } as const;
 
