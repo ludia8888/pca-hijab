@@ -15,28 +15,28 @@ interface BottomNavItem {
 const NAV_ITEMS: BottomNavItem[] = [
   {
     id: 'home',
-    label: '홈',
+    label: 'Home',
     icon: '🏠',
     activeIcon: '🏠',
     route: ROUTES.HOME,
   },
   {
     id: 'products',
-    label: '추천상품',
+    label: 'Shop',
     icon: '🛍️',
     activeIcon: '🛍️',
     route: ROUTES.PRODUCTS,
   },
   {
     id: 'diagnosis',
-    label: '진단하기',
+    label: 'Analyze',
     icon: '🎨',
     activeIcon: '🎨',
     route: ROUTES.DIAGNOSIS,
   },
   {
     id: 'mypage',
-    label: '마이페이지',
+    label: 'Profile',
     icon: '👤',
     activeIcon: '👤',
     route: ROUTES.MYPAGE,
