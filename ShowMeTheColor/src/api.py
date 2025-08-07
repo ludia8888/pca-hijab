@@ -20,12 +20,23 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Allowed origins - add all deployment domains here
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173", 
+    "http://localhost:5174",
+    "https://pca-hijab.vercel.app",
+    "https://noorai-ashy.vercel.app",
+    "https://noorai.vercel.app",
+    "*"  # Allow all origins as fallback
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for debugging
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["Content-Type", "Authorization", "x-api-key", "Accept", "Origin"],
+    allow_headers=["Content-Type", "Authorization", "x-api-key", "Accept", "Origin", "Cache-Control", "X-Requested-With"],
     expose_headers=["Content-Length", "Content-Type"],
     max_age=3600
 )
@@ -44,6 +55,7 @@ async def health_check():
 @app.options("/analyze")
 async def options_analyze():
     """Handle preflight requests"""
+    # Return appropriate CORS headers for preflight
     return JSONResponse(
         content={"message": "OK"},
         headers={
