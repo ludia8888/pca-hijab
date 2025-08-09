@@ -7,7 +7,7 @@ export const colors = {
     100: '#FFE4E9',
     200: '#FFD1DC',
     300: '#FFB6C8',
-    400: '#FF91A4', // Main primary - soft pink
+    400: '#FF00B9', // Main primary - soft pink
     500: '#FF6B8A',
     600: '#FF5178', // Primary dark - deeper pink
     700: '#E94368',
