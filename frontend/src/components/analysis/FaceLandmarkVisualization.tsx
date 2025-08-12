@@ -390,28 +390,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     }
   }, [currentAnalysisStep, forceAnimationPhase, landmarks, animationPhase, drawLandmarks, getAnimationPhaseForStep]);
 
-  if (isLoading) {
-    return (
-      <div className={`flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg ${className}`}>
-        <div className="text-center p-8">
-          <div className="relative">
-            {/* Main loading spinner */}
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            {/* Inner spinning dot */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full animate-pulse" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-800">AI 얼굴 인식 엔진 초기화 중...</p>
-            <p className="text-xs text-gray-500">MediaPipe Face Mesh 모델 로딩</p>
-            <div className="flex items-center justify-center space-x-1 text-xs text-gray-400">
-              <span className="animate-bounce">🧠</span>
-              <span>TensorFlow.js + WebGL 가속</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Don't block render, show image with loading overlay instead
 
   if (error) {
     return (
@@ -434,6 +413,20 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
   return (
     <div className={`relative ${className}`}>
+      {/* Show image immediately, even during loading */}
+      {!landmarks.length && (
+        <img
+          src={imageUrl}
+          alt="Face analysis"
+          className="w-full rounded-2xl shadow-2xl"
+          style={{ 
+            aspectRatio: '3/4',
+            objectFit: 'cover',
+            display: 'block'
+          }}
+        />
+      )}
+      
       {/* Hidden image for detection */}
       <img
         ref={imageRef}
@@ -444,17 +437,32 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         crossOrigin="anonymous"
       />
       
-      {/* Canvas for landmark visualization - matching upload page preview */}
+      {/* Canvas for landmark visualization - shows after detection */}
       <canvas
         ref={canvasRef}
-        className="w-full rounded-2xl shadow-2xl"
+        className={`w-full rounded-2xl shadow-2xl ${!landmarks.length ? 'hidden' : ''}`}
         style={{ 
           backgroundColor: 'transparent',
           aspectRatio: '3/4',
           objectFit: 'cover',
-          display: 'block'
+          display: landmarks.length ? 'block' : 'none'
         }}
       />
+      
+      {/* Loading overlay - shows while TensorFlow is initializing */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-2xl">
+          <div className="bg-white/95 rounded-xl p-4 shadow-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">AI 얼굴 인식 엔진 준비중</p>
+                <p className="text-xs text-gray-500">MediaPipe 모델 로딩...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

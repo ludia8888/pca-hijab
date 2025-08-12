@@ -17,7 +17,7 @@ const AnalyzingPage = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<ImageAnalysisErrorType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showLandmarkVisualization, setShowLandmarkVisualization] = useState(false);
+  const [showLandmarkVisualization, setShowLandmarkVisualization] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
@@ -94,10 +94,10 @@ const AnalyzingPage = (): JSX.Element => {
       const timer = setTimeout(() => {
         setProgress(step.progress);
         
-        // Show face landmark visualization throughout all analysis steps
-        if (imageUrl && currentStep < ANALYSIS_STEPS.length) {
+        // Show visualization immediately, even during TensorFlow loading
+        if (currentStep < ANALYSIS_STEPS.length) {
           setShowLandmarkVisualization(true);
-        } else if (currentStep >= ANALYSIS_STEPS.length) {
+        } else {
           // Hide visualization when analysis is complete
           setShowLandmarkVisualization(false);
         }
@@ -249,8 +249,8 @@ const AnalyzingPage = (): JSX.Element => {
   return (
     <PageLayout>
       <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Face Landmark Visualization matching upload page size */}
-        {showLandmarkVisualization && imageUrl && (
+        {/* Face Landmark Visualization matching upload page size - show immediately */}
+        {imageUrl && (
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-8">
             <div className="relative w-full max-w-md">
               <FaceLandmarkVisualization
