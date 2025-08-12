@@ -708,12 +708,13 @@ const UploadPage = (): JSX.Element => {
             {!previewUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
-                  className="border-4 border-white border-dashed rounded-full opacity-70 animate-pulse"
+                  className="border-4 border-white border-dashed opacity-70 animate-pulse"
                   style={{
-                    width: '70%',
-                    aspectRatio: '1',
+                    width: '60%',
+                    height: '75%',
                     borderStyle: 'dashed',
-                    borderWidth: '3px'
+                    borderWidth: '3px',
+                    borderRadius: '50%'
                   }}
                 />
               </div>
@@ -729,12 +730,13 @@ const UploadPage = (): JSX.Element => {
                 {/* Face detection guide overlay */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div 
-                    className="border-4 border-white border-dashed rounded-full opacity-80"
+                    className="border-4 border-white border-dashed opacity-80"
                     style={{
-                      width: '70%',
-                      aspectRatio: '1',
+                      width: '60%',
+                      height: '75%',
                       borderStyle: 'dashed',
-                      borderWidth: '3px'
+                      borderWidth: '3px',
+                      borderRadius: '50%'
                     }}
                   />
                 </div>
