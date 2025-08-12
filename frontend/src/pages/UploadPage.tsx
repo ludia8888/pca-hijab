@@ -425,8 +425,18 @@ const UploadPage = (): JSX.Element => {
       });
 
       const drawStartTime = performance.now();
-      // Draw the video frame to canvas
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Handle front camera mirroring when drawing to canvas
+      if (facingMode === 'user') {
+        // Flip horizontally for front camera
+        context.scale(-1, 1);
+        context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+        context.scale(-1, 1); // Reset transformation
+      } else {
+        // Draw normally for back camera
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      }
+      
       const drawTime = performance.now() - drawStartTime;
       
       console.log('✅ [Camera API] Video frame drawn to canvas in', Math.round(drawTime), 'ms');
@@ -676,7 +686,7 @@ const UploadPage = (): JSX.Element => {
               ref={videoRef}
               className={`absolute inset-0 w-full h-full object-cover rounded-3xl ${
                 !previewUrl && isCameraActive && !cameraError ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
-              }`}
+              } ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
               autoPlay
               playsInline
               muted
