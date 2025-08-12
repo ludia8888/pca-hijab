@@ -248,24 +248,10 @@ const AnalyzingPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 pb-24">
-        {/* Progress indicator */}
-        <div className="w-full max-w-md mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Analyzing</span>
-            <span className="text-sm font-semibold text-primary-600">{progress}%</span>
-          </div>
-          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden shadow-inner">
-            <div
-              className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Face Landmark Visualization - Show during analysis with synchronized animation */}
+      <div className="min-h-screen relative">
+        {/* Full-screen Face Landmark Visualization as background */}
         {showLandmarkVisualization && imageUrl && (
-          <div className="w-full max-w-md mx-auto mb-6">
+          <div className="absolute inset-0 w-full h-full">
             <FaceLandmarkVisualization
               imageUrl={imageUrl}
               currentAnalysisStep={currentStep}
@@ -279,147 +265,121 @@ const AnalyzingPage = (): JSX.Element => {
                   user_flow_step: 'landmarks_visualization_synchronized'
                 });
               }}
-              className="h-64 sm:h-72"
+              className="w-full h-full"
             />
           </div>
         )}
 
-        {/* Character Animation Area */}
-        <div className="relative w-full max-w-lg mx-auto mb-8">
-          {/* Character Container */}
-          <div className="relative flex flex-col items-center">
-            {/* Speech Bubble */}
-            <div className="relative mb-4 px-6 py-4 bg-white rounded-2xl shadow-lg border-2 border-primary-200 max-w-sm">
-              {/* Speech bubble tail */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-white border-b-2 border-r-2 border-primary-200 rotate-45"></div>
-              
-              {/* Message content */}
-              <p className="text-sm font-medium text-gray-800 leading-relaxed text-center">
-                {currentStepData.message}
-              </p>
-              
-              {/* Tech explanation (smaller text) */}
-              <p className="text-xs text-gray-500 mt-2 text-center italic">
-                {currentStepData.techExplanation}
-              </p>
-            </div>
-
-            {/* Character Image Container */}
-            <div className="relative">
-              {/* Character image with fallback */}
-              <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center shadow-lg animate-bounce border-4 border-white overflow-hidden">
-                {/* Try to load character image, fallback to emoji */}
-                <img
-                  src={currentStepData.characterImage}
-                  alt={`AI ${currentStepData.character}`}
-                  className="w-full h-full object-cover rounded-full"
-                  onError={(e) => {
-                    // Fallback to emoji representation if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = target.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'block';
-                  }}
+        {/* Overlay content on top of image */}
+        <div className="relative z-10 min-h-screen">
+          {/* Top: Progress indicator */}
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-20">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700">Analyzing</span>
+                <span className="text-sm font-semibold text-primary-600">{progress}%</span>
+              </div>
+              <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${progress}%` }}
                 />
-                {/* Fallback emoji representation */}
-                <div className="text-center" style={{ display: 'none' }}>
-                  <div className="text-2xl mb-1">
-                    {currentStepData.character === 'detective' && '🕵️‍♀️'}
-                    {currentStepData.character === 'scientist' && '👩‍🔬'}
-                    {currentStepData.character === 'wizard' && '🧙‍♀️'}
-                    {currentStepData.character === 'analyst' && '👩‍💼'}
-                    {currentStepData.character === 'artist' && '👩‍🎨'}
+              </div>
+            </div>
+          </div>
+
+          {/* Character and Speech Bubble - Alternating corners */}
+          {!error && (
+            <div 
+              key={`character-${currentStep}`}
+              className={`fixed bottom-0 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+              style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
+            >
+              <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
+                {/* Character Container */}
+                <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
+                    <div className="text-3xl">
+                      {currentStepData.character === 'detective' && '🕵️‍♀️'}
+                      {currentStepData.character === 'scientist' && '👩‍🔬'}
+                      {currentStepData.character === 'wizard' && '🧙‍♀️'}
+                      {currentStepData.character === 'analyst' && '👩‍💼'}
+                      {currentStepData.character === 'artist' && '👩‍🎨'}
+                    </div>
                   </div>
-                  <div className="text-xs font-semibold text-gray-600 capitalize">
-                    {currentStepData.character}
+                  {/* Character name badge */}
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">
+                    AI {currentStepData.character}
+                  </div>
+                </div>
+
+                {/* Speech Bubble */}
+                <div className={`relative max-w-xs ${currentStep % 2 === 0 ? 'ml-2' : 'mr-2'} animate-fade-in`} style={{ animationDelay: '0.4s' }}>
+                  <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border-2 border-primary-200 p-4 transform transition-all hover:scale-105">
+                    {/* Bubble tail pointing to character */}
+                    <div className={`absolute bottom-4 ${currentStep % 2 === 0 ? '-left-2' : '-right-2'} w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent ${currentStep % 2 === 0 ? 'border-r-8 border-r-white' : 'border-l-8 border-l-white'}`}></div>
+                    
+                    {/* Message content */}
+                    <p className="text-sm font-medium text-gray-800 leading-relaxed">
+                      {currentStepData.message}
+                    </p>
+                    
+                    {/* Tech explanation (smaller text) */}
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      {currentStepData.techExplanation}
+                    </p>
+                    
+                    {/* Step indicator */}
+                    <div className="text-xs text-primary-600 font-semibold mt-2">
+                      Step {currentStep + 1} / {ANALYSIS_STEPS.length}
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Floating particles animation */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-0 w-2 h-2 bg-primary-300 rounded-full animate-ping" style={{animationDelay: '0s'}} />
-                <div className="absolute top-2 right-2 w-1 h-1 bg-secondary-400 rounded-full animate-ping" style={{animationDelay: '0.5s'}} />
-                <div className="absolute bottom-2 left-4 w-1.5 h-1.5 bg-primary-400 rounded-full animate-ping" style={{animationDelay: '1s'}} />
-              </div>
-
-              {/* Progress ring around character */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="48"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  className="text-primary-200"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="48"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  className="text-primary-600 transition-all duration-1000 ease-out"
-                  strokeDasharray={`${2 * Math.PI * 48}`}
-                  strokeDashoffset={`${2 * Math.PI * 48 * (1 - progress / 100)}`}
-                  strokeLinecap="round"
-                />
-              </svg>
             </div>
+          )}
 
-            {/* Character name and step info */}
-            <div className="mt-4 text-center">
-              <h3 className="text-sm font-bold text-primary-700 capitalize mb-1">
-                AI {currentStepData.character}
-              </h3>
-              <p className="text-xs text-gray-500">
-                Step {currentStep + 1} of {ANALYSIS_STEPS.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Error state */}
+        {/* Error state - positioned at center */}
         {error && errorType && (
-          <div className="max-w-md w-full">
-            <ImageAnalysisError
-              errorType={errorType}
-              onRetry={() => {
-                // Track retry button click with enhanced data
-                trackEvent('button_click', {
-                  button_name: 'try_again_analysis',
-                  page: 'analyzing',
-                  retry_attempt: 'user_initiated',
-                  previous_error: error || 'unknown',
-                  error_type: errorType,
-                  user_flow_step: 'analysis_retry_initiated'
-                });
+          <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/50 backdrop-blur-sm">
+            <div className="max-w-md w-full mx-4">
+              <ImageAnalysisError
+                errorType={errorType}
+                onRetry={() => {
+                  // Track retry button click with enhanced data
+                  trackEvent('button_click', {
+                    button_name: 'try_again_analysis',
+                    page: 'analyzing',
+                    retry_attempt: 'user_initiated',
+                    previous_error: error || 'unknown',
+                    error_type: errorType,
+                    user_flow_step: 'analysis_retry_initiated'
+                  });
 
-                trackEngagement('retry', 'analysis_retry');
-                
-                // Reset all error states
-                setError(null);
-                setErrorType(null);
-                setCurrentStep(0);
-                setProgress(0);
-                setIsAnalyzing(false);
-                
-                // Start analysis again
-                performAnalysis();
-              }}
-              onChangeImage={() => {
-                trackEvent('button_click', {
-                  button_name: 'go_back_to_upload',
-                  page: 'analyzing',
-                  reason: 'user_requested_change',
-                  error_type: errorType,
-                  user_flow_step: 'return_to_upload_from_error'
-                });
-                navigate(ROUTES.DIAGNOSIS);
-              }}
-            />
+                  trackEngagement('retry', 'analysis_retry');
+                  
+                  // Reset all error states
+                  setError(null);
+                  setErrorType(null);
+                  setCurrentStep(0);
+                  setProgress(0);
+                  setIsAnalyzing(false);
+                  
+                  // Start analysis again
+                  performAnalysis();
+                }}
+                onChangeImage={() => {
+                  trackEvent('button_click', {
+                    button_name: 'go_back_to_upload',
+                    page: 'analyzing',
+                    reason: 'user_requested_change',
+                    error_type: errorType,
+                    user_flow_step: 'return_to_upload_from_error'
+                  });
+                  navigate(ROUTES.DIAGNOSIS);
+                }}
+              />
+            </div>
           </div>
         )}
 
