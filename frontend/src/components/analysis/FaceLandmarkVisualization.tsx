@@ -114,98 +114,108 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     faces.forEach((face, faceIndex) => {
-      // Draw face bounding box
-      ctx.strokeStyle = '#00FF9F';
+      // Simple face outline - just a soft rounded rectangle
+      const boxX = face.box.xMin * canvas.width;
+      const boxY = face.box.yMin * canvas.height;
+      const boxWidth = face.box.width * canvas.width;
+      const boxHeight = face.box.height * canvas.height;
+      
+      // Draw soft face outline
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
-      ctx.strokeRect(
-        face.box.xMin * canvas.width,
-        face.box.yMin * canvas.height,
-        face.box.width * canvas.width,
-        face.box.height * canvas.height
-      );
+      ctx.setLineDash([8, 4]);
+      
+      // Rounded rectangle for face area
+      const radius = 20;
+      ctx.beginPath();
+      ctx.moveTo(boxX + radius, boxY);
+      ctx.lineTo(boxX + boxWidth - radius, boxY);
+      ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + radius);
+      ctx.lineTo(boxX + boxWidth, boxY + boxHeight - radius);
+      ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - radius, boxY + boxHeight);
+      ctx.lineTo(boxX + radius, boxY + boxHeight);
+      ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - radius);
+      ctx.lineTo(boxX, boxY + radius);
+      ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-      // Define landmark groups for different analysis phases (synchronized with character messages)
-      const landmarkGroups = {
+      // Simplified landmark visualization - just key points
+      const simplePhases = {
         detecting: {
-          points: face.keypoints.filter((_, i) => i % 6 === 0), // Dense detection grid
+          // Just eyes and mouth - friendly face scanning
+          points: [
+            face.keypoints[33], face.keypoints[133],   // Eyes
+            face.keypoints[362], face.keypoints[263],  // Eyes
+            face.keypoints[13], face.keypoints[14],    // Lips
+          ].filter(Boolean),
           color: '#00FF9F',
-          size: 3,
-          label: '478개 3D 랜드마크 스캔'
+          emoji: '👀',
+          label: '얼굴 인식 중'
         },
         extracting: {
-          points: face.keypoints.filter((_, i) => 
-            // 16,000 pixels color extraction areas
-            (i >= 33 && i <= 133) || // Right eye region
-            (i >= 362 && i <= 398) || // Left eye region  
-            (i >= 1 && i <= 97) || // Nose region
-            (i >= 61 && i <= 291) || // Mouth region
-            (i >= 10 && i <= 151) || // Forehead region
-            (i >= 172 && i <= 175) // Cheek regions
-          ),
+          // Color sampling points - forehead, cheeks, chin
+          points: [
+            face.keypoints[10],   // Forehead
+            face.keypoints[50], face.keypoints[280],  // Cheeks
+            face.keypoints[152],  // Chin
+          ].filter(Boolean),
           color: '#FF6B9D',
-          size: 2.5,
-          label: '16,000개 픽셀 색상 추출'
+          emoji: '🎨',
+          label: '피부톤 추출 중'
         },
         analyzing: {
-          points: face.keypoints, // All points for comprehensive analysis
+          // Analysis progress - just center points
+          points: [
+            face.keypoints[1],    // Nose tip
+            face.keypoints[17],   // Lower lip
+          ].filter(Boolean),
           color: '#FFD93D',
-          size: 1.8,
-          label: '다차원 색공간 매트릭스 변환'
+          emoji: '✨',
+          label: '색상 분석 중'
         },
         complete: {
-          points: face.keypoints.filter((_, i) => 
-            // Final personal color analysis points
-            i === 10 || i === 151 || i === 9 || i === 175 || // Forehead
-            i === 93 || i === 132 || i === 58 || i === 172 || // Cheeks
-            i === 150 || i === 176 || i === 148 || i === 152 || // Jaw/chin
-            i === 1 || i === 2 || i === 61 || i === 291 // Key facial points
-          ),
+          // Completion - smiley face pattern
+          points: [
+            face.keypoints[33], face.keypoints[263],   // Eyes
+            face.keypoints[13],   // Mouth
+          ].filter(Boolean),
           color: '#8B5CF6',
-          size: 4,
-          label: '2,847개 색상 DB 매칭 완료'
+          emoji: '🎯',
+          label: '분석 완료!'
         }
       };
 
-      const currentGroup = landmarkGroups[phase as keyof typeof landmarkGroups] || landmarkGroups.detecting;
+      const currentPhase = simplePhases[phase as keyof typeof simplePhases] || simplePhases.detecting;
       
-      // Draw landmarks
-      ctx.fillStyle = currentGroup.color;
-      currentGroup.points.forEach((landmark, i) => {
+      // Draw simple dots for landmarks
+      currentPhase.points.forEach((landmark) => {
+        if (!landmark) return;
+        
         const x = landmark.x * canvas.width;
         const y = landmark.y * canvas.height;
         
-        // Add subtle glow effect
-        ctx.shadowColor = currentGroup.color;
-        ctx.shadowBlur = 8;
+        // Simple glowing dot
+        ctx.fillStyle = currentPhase.color;
+        ctx.shadowColor = currentPhase.color;
+        ctx.shadowBlur = 10;
         
         ctx.beginPath();
-        ctx.arc(x, y, currentGroup.size, 0, 2 * Math.PI);
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
         ctx.fill();
-        
-        // Add connecting lines for certain phases
-        if (phase === 'complete' && i > 0) {
-          ctx.strokeStyle = currentGroup.color + '40';
-          ctx.lineWidth = 1;
-          ctx.setLineDash([2, 2]);
-          const prevLandmark = currentGroup.points[i - 1];
-          ctx.beginPath();
-          ctx.moveTo(prevLandmark.x * canvas.width, prevLandmark.y * canvas.height);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
       });
 
       // Reset shadow
       ctx.shadowBlur = 0;
 
-      // Draw label
-      ctx.font = '14px Inter, sans-serif';
-      ctx.fillStyle = '#FFFFFF';
+      // Draw friendly label with emoji
+      ctx.font = 'bold 16px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
       ctx.fillText(
-        `${currentGroup.label} (${currentGroup.points.length} points)`,
-        face.box.xMin * canvas.width,
-        face.box.yMin * canvas.height - 10
+        `${currentPhase.emoji} ${currentPhase.label}`,
+        boxX + boxWidth / 2 - 60,
+        boxY - 15
       );
     });
   }, []);
@@ -410,50 +420,15 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         style={{ backgroundColor: '#f9fafb' }}
       />
       
-      {/* Analysis phase indicator - synchronized with character */}
-      <div className="absolute top-4 left-4 bg-black bg-opacity-80 text-white px-4 py-2 rounded-lg text-sm font-medium border border-primary-400">
+      {/* Simple progress indicator */}
+      <div className="absolute top-4 left-4 bg-white bg-opacity-90 text-gray-800 px-3 py-2 rounded-full text-sm font-medium shadow-lg">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 rounded-full bg-primary animate-ping"></div>
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-300">Step {currentAnalysisStep + 1}/5</span>
-            <span className="capitalize font-semibold">{
-              landmarks.length > 0 && animationPhase ? 
-              (['detecting', 'extracting', 'analyzing', 'complete'].includes(animationPhase) ? 
-                {
-                  'detecting': '478개 3D 랜드마크 스캔',
-                  'extracting': '16,000개 픽셀 색상 추출', 
-                  'analyzing': '다차원 색공간 변환',
-                  'complete': '2,847개 색상 DB 매칭'
-                }[animationPhase] : 'AI 분석 중'
-              ) : 'AI 초기화 중'
-            }</span>
-          </div>
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+          <span className="font-semibold">
+            Step {currentAnalysisStep + 1} / 5
+          </span>
         </div>
       </div>
-
-      {/* Legend */}
-      {landmarks.length > 0 && (
-        <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 text-white p-3 rounded-lg text-xs">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-400"></div>
-              <span>Face Detection</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-pink-400"></div>
-              <span>Feature Extraction</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-              <span>Color Analysis</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-              <span>Personal Color Points</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
