@@ -306,29 +306,13 @@ const AnalyzingPage = (): JSX.Element => {
   return (
     <PageLayout>
       <div 
-        className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"
+        className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100"
         style={{ cursor: 'default' }}
       >
-        {/* Face Landmark Visualization matching upload page size - show immediately */}
+        {/* Face Landmark Visualization at the very top of the screen */}
         {imageUrl && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-8">
-            <div className="relative w-full max-w-md">
-              {/* Progress indicator overlaid on image */}
-              <div className="absolute top-4 left-0 right-0 px-4 z-30">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">Analyzing</span>
-                    <span className="text-sm font-semibold text-primary-600">{progress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              
+          <div className="w-full flex justify-center px-4 pt-4">
+            <div className="w-full max-w-md">
               <FaceLandmarkVisualization
                 imageUrl={imageUrl}
                 currentAnalysisStep={currentStep}
@@ -342,18 +326,18 @@ const AnalyzingPage = (): JSX.Element => {
                   user_flow_step: 'landmarks_visualization_synchronized'
                 });
               }}
-                className="w-full h-full"
+                className="w-full"
               />
             </div>
           </div>
         )}
 
-        {/* Overlay content on top of image */}
-        <div className="relative z-10 min-h-screen">
+        {/* Content below the image */}
+        <div className="flex-1 relative">
 
           {/* Navigation buttons for draping phases */}
           {canSkip && (
-            <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
               <div className="flex gap-4">
                 <button
                   onClick={handleGoBack}
@@ -382,7 +366,7 @@ const AnalyzingPage = (): JSX.Element => {
           {!error && (
             <div 
               key={`character-${currentStep}`}
-              className={`fixed ${canSkip ? 'bottom-40' : 'bottom-0'} ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+              className={`absolute ${canSkip ? 'bottom-32' : 'bottom-0'} ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
               style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
             >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
@@ -431,7 +415,7 @@ const AnalyzingPage = (): JSX.Element => {
 
         {/* Error state - positioned at center */}
         {error && errorType && (
-          <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/50 backdrop-blur-sm">
+          <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/50 backdrop-blur-sm">
             <div className="max-w-md w-full mx-4">
               <ImageAnalysisError
                 errorType={errorType}
