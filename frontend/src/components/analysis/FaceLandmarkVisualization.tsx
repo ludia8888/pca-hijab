@@ -114,34 +114,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     faces.forEach((face, faceIndex) => {
-      // Simple face outline - just a soft rounded rectangle
-      const boxX = face.box.xMin * canvas.width;
-      const boxY = face.box.yMin * canvas.height;
-      const boxWidth = face.box.width * canvas.width;
-      const boxHeight = face.box.height * canvas.height;
-      
-      // Draw soft face outline
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 4]);
-      
-      // Rounded rectangle for face area
-      const radius = 20;
-      ctx.beginPath();
-      ctx.moveTo(boxX + radius, boxY);
-      ctx.lineTo(boxX + boxWidth - radius, boxY);
-      ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + radius);
-      ctx.lineTo(boxX + boxWidth, boxY + boxHeight - radius);
-      ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - radius, boxY + boxHeight);
-      ctx.lineTo(boxX + radius, boxY + boxHeight);
-      ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - radius);
-      ctx.lineTo(boxX, boxY + radius);
-      ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Simplified landmark visualization - just key points
+      // Simplified landmark visualization - just key points, no labels
       const simplePhases = {
         detecting: {
           // Just eyes and mouth - friendly face scanning
@@ -150,9 +123,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             face.keypoints[362], face.keypoints[263],  // Eyes
             face.keypoints[13], face.keypoints[14],    // Lips
           ].filter(Boolean),
-          color: '#00FF9F',
-          emoji: '👀',
-          label: '얼굴 인식 중'
+          color: '#00FF9F'
         },
         extracting: {
           // Color sampling points - forehead, cheeks, chin
@@ -161,9 +132,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             face.keypoints[50], face.keypoints[280],  // Cheeks
             face.keypoints[152],  // Chin
           ].filter(Boolean),
-          color: '#FF6B9D',
-          emoji: '🎨',
-          label: '피부톤 추출 중'
+          color: '#FF6B9D'
         },
         analyzing: {
           // Analysis progress - just center points
@@ -171,9 +140,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             face.keypoints[1],    // Nose tip
             face.keypoints[17],   // Lower lip
           ].filter(Boolean),
-          color: '#FFD93D',
-          emoji: '✨',
-          label: '색상 분석 중'
+          color: '#FFD93D'
         },
         complete: {
           // Completion - smiley face pattern
@@ -181,9 +148,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             face.keypoints[33], face.keypoints[263],   // Eyes
             face.keypoints[13],   // Mouth
           ].filter(Boolean),
-          color: '#8B5CF6',
-          emoji: '🎯',
-          label: '분석 완료!'
+          color: '#8B5CF6'
         }
       };
 
@@ -208,15 +173,6 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
       // Reset shadow
       ctx.shadowBlur = 0;
-
-      // Draw friendly label with emoji
-      ctx.font = 'bold 16px Inter, sans-serif';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(
-        `${currentPhase.emoji} ${currentPhase.label}`,
-        boxX + boxWidth / 2 - 60,
-        boxY - 15
-      );
     });
   }, []);
 
@@ -416,19 +372,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       {/* Canvas for landmark visualization */}
       <canvas
         ref={canvasRef}
-        className="w-full h-full object-contain rounded-lg border-2 border-primary-200"
-        style={{ backgroundColor: '#f9fafb' }}
+        className="w-full h-full object-contain rounded-lg"
+        style={{ backgroundColor: 'transparent' }}
       />
-      
-      {/* Simple progress indicator */}
-      <div className="absolute top-4 left-4 bg-white bg-opacity-90 text-gray-800 px-3 py-2 rounded-full text-sm font-medium shadow-lg">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-          <span className="font-semibold">
-            Step {currentAnalysisStep + 1} / 5
-          </span>
-        </div>
-      </div>
     </div>
   );
 };
