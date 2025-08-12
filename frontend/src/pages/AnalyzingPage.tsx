@@ -99,29 +99,33 @@ const AnalyzingPage = (): JSX.Element => {
       const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison';
       setCanSkip(isDrapingPhase);
       
-      stepTimerRef.current = setTimeout(() => {
-        setProgress(step.progress);
-        
-        // Show visualization immediately, even during TensorFlow loading
-        if (currentStep < ANALYSIS_STEPS.length) {
-          setShowLandmarkVisualization(true);
-        } else {
-          // Hide visualization when analysis is complete
-          setShowLandmarkVisualization(false);
-        }
-        
-        // Track progress milestones
-        trackEvent('analysis_progress', {
-          step_number: currentStep + 1,
-          step_name: step.message,
-          progress_percentage: step.progress,
-          user_flow_step: 'analysis_progress_update'
-        });
-        
-        if (currentStep < ANALYSIS_STEPS.length - 1) {
-          setCurrentStep(currentStep + 1);
-        }
-      }, step.duration);
+      // Set progress immediately
+      setProgress(step.progress);
+      
+      // Show visualization immediately
+      if (currentStep < ANALYSIS_STEPS.length) {
+        setShowLandmarkVisualization(true);
+      } else {
+        setShowLandmarkVisualization(false);
+      }
+      
+      // Track progress milestones
+      trackEvent('analysis_progress', {
+        step_number: currentStep + 1,
+        step_name: step.message,
+        progress_percentage: step.progress,
+        user_flow_step: 'analysis_progress_update'
+      });
+      
+      // Only auto-advance for non-draping phases
+      if (!isDrapingPhase) {
+        stepTimerRef.current = setTimeout(() => {
+          if (currentStep < ANALYSIS_STEPS.length - 1) {
+            setCurrentStep(currentStep + 1);
+          }
+        }, step.duration);
+      }
+      // For draping phases, wait for user interaction (no timer)
 
       return () => {
         if (stepTimerRef.current) {
