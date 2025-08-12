@@ -109,7 +109,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
     const faceCenterX = (minX + maxX) / 2;
-    const faceCenterY = (minY + maxY) / 2;
+    // Move face center slightly up (reduce Y by 10% of face height)
+    const faceCenterY = (minY + maxY) / 2 - (maxY - minY) * 0.1;
     const faceWidth = maxX - minX;
     const faceHeight = maxY - minY;
     
@@ -123,7 +124,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     ctx.beginPath();
     ctx.rect(0, 0, canvas.width, canvas.height);
     
-    // Then subtract the face area (ellipse)
+    // Then subtract the face area (ellipse) - moved up
     ctx.moveTo(faceCenterX + (faceWidth/2 + padding), faceCenterY);
     ctx.ellipse(
       faceCenterX,

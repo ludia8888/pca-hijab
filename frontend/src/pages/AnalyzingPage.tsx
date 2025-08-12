@@ -282,12 +282,32 @@ const AnalyzingPage = (): JSX.Element => {
     }
   };
 
+  // Handle going back to previous step
+  const handleGoBack = () => {
+    if (currentStep > 0) {
+      // Clear current timer if any
+      if (stepTimerRef.current) {
+        clearTimeout(stepTimerRef.current);
+      }
+      
+      // Track user interaction
+      trackEvent('navigation_back', {
+        from_step: currentStep,
+        to_step: currentStep - 1,
+        step_name: currentStepData.id,
+        user_flow_step: 'user_went_back'
+      });
+      
+      // Move to previous step
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   return (
     <PageLayout>
       <div 
         className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"
-        onClick={handleProceedToNext}
-        style={{ cursor: canSkip ? 'pointer' : 'default' }}
+        style={{ cursor: 'default' }}
       >
         {/* Face Landmark Visualization matching upload page size - show immediately */}
         {imageUrl && (
@@ -330,20 +350,38 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
           </div>
 
-          {/* Skip hint for draping phases */}
+          {/* Navigation buttons for draping phases */}
           {canSkip && (
-            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
-              <div className="bg-black/70 text-white px-4 py-2 rounded-full text-sm">
-                화면을 터치하면 다음 단계로 넘어갑니다
+            <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
+              <div className="flex gap-4">
+                <button
+                  onClick={handleGoBack}
+                  className="bg-white/90 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2"
+                  disabled={currentStep === 0}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  뒤로가기
+                </button>
+                <button
+                  onClick={handleProceedToNext}
+                  className="bg-primary-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 flex items-center gap-2"
+                >
+                  앞으로가기
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
           )}
 
-          {/* Character and Speech Bubble - Alternating corners */}
+          {/* Character and Speech Bubble - Positioned above navigation buttons */}
           {!error && (
             <div 
               key={`character-${currentStep}`}
-              className={`fixed bottom-0 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+              className={`fixed ${canSkip ? 'bottom-40' : 'bottom-0'} ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
               style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
             >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
