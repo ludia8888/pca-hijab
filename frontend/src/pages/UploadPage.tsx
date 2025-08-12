@@ -682,14 +682,14 @@ const UploadPage = (): JSX.Element => {
     <PageLayout>
       <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="text-center pt-1 pb-0">
-          <h1 className="text-sm font-bold text-gray-900">
+        <div className="text-center pt-4 pb-0">
+          <h1 className="text-xl font-bold text-gray-900">
             Upload Your Photo
           </h1>
         </div>
 
         {/* Main Photo Area */}
-        <div className="flex-1 flex flex-col items-center justify-center px-3 min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0">
           {/* Photo Preview/Camera Area */}
           <div className="relative w-full max-w-sm aspect-[3/4] mb-4">
             {/* Always render video and canvas elements outside conditional rendering for refs */}
