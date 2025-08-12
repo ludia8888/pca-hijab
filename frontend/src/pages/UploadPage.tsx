@@ -682,8 +682,8 @@ const UploadPage = (): JSX.Element => {
     <PageLayout>
       <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="text-center pt-2 pb-1">
-          <h1 className="text-lg font-bold text-gray-900">
+        <div className="text-center pt-1 pb-0">
+          <h1 className="text-sm font-bold text-gray-900">
             Upload Your Photo
           </h1>
         </div>
@@ -691,7 +691,7 @@ const UploadPage = (): JSX.Element => {
         {/* Main Photo Area */}
         <div className="flex-1 flex flex-col items-center justify-center px-3 min-h-0">
           {/* Photo Preview/Camera Area */}
-          <div className="relative w-full max-w-xs aspect-[3/4] mb-2">
+          <div className="relative w-full max-w-xs aspect-[4/3] mb-1">
             {/* Always render video and canvas elements outside conditional rendering for refs */}
             <video
               ref={videoRef}
@@ -808,13 +808,13 @@ const UploadPage = (): JSX.Element => {
 
           {/* Error Display */}
           {error && (
-            <div className="mb-1 p-1 bg-red-50 border border-red-200 rounded-lg max-w-xs w-full">
+            <div className="mb-0 p-1 bg-red-50 border border-red-200 rounded max-w-xs w-full">
               <p className="text-red-600 text-xs text-center">{error}</p>
             </div>
           )}
 
           {/* Guidelines */}
-          <div className="bg-white rounded-lg p-2 mx-3 mb-2 shadow-sm border border-gray-100 max-w-xs w-full">
+          <div className="bg-white rounded p-1 mx-3 mb-1 shadow-sm border border-gray-100 max-w-xs w-full">
             <div className="grid grid-cols-3 gap-2">
               {/* No filters */}
               <div className="text-center">
@@ -862,8 +862,8 @@ const UploadPage = (): JSX.Element => {
         )}
 
         {/* Bottom Controls */}
-        <div className="pb-safe-area-inset-bottom pb-2">
-          <div className="flex items-center justify-center gap-4 px-4">
+        <div className="pb-safe-area-inset-bottom pb-1">
+          <div className="flex items-center justify-center gap-3 px-3">
             {/* Gallery/Upload Button */}
             <button
               onClick={() => {
