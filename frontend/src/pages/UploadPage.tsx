@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
@@ -17,6 +17,14 @@ const UploadPage = (): JSX.Element => {
   const [isCompressing, setIsCompressing] = useState(false);
   const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
   const [showPrivacyAssurance, setShowPrivacyAssurance] = useState(true);
+  
+  // Camera states
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Redirect if no session
   useEffect(() => {
@@ -35,6 +43,114 @@ const UploadPage = (): JSX.Element => {
       });
     }
   }, [sessionId, navigate]);
+
+  // Start camera on component mount
+  useEffect(() => {
+    startCamera();
+    
+    // Cleanup camera on unmount
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  // Restart camera when facing mode changes
+  useEffect(() => {
+    if (isCameraActive) {
+      stopCamera();
+      startCamera();
+    }
+  }, [facingMode]);
+
+  const startCamera = async (): Promise<void> => {
+    try {
+      setCameraError(null);
+      
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.play();
+      }
+      
+      setStream(mediaStream);
+      setIsCameraActive(true);
+      
+      // Track camera access
+      trackEvent('camera_access', {
+        facing_mode: facingMode,
+        status: 'granted',
+        page: 'upload'
+      });
+    } catch (error) {
+      console.error('Camera access error:', error);
+      setCameraError('Camera access denied or not available');
+      setIsCameraActive(false);
+      
+      // Track camera error
+      trackError('camera_access_denied', error instanceof Error ? error.message : 'Camera not available', 'upload_page');
+    }
+  };
+
+  const stopCamera = (): void => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = async (): Promise<void> => {
+    if (!videoRef.current || !canvasRef.current || !isCameraActive) return;
+
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      if (!context) return;
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw the video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert to blob
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+          const preview = URL.createObjectURL(file);
+          
+          await handleImageUpload(file, preview);
+          
+          // Stop camera after capture
+          stopCamera();
+        }
+      }, 'image/jpeg', 0.8);
+
+      // Track photo capture
+      trackEvent('photo_capture', {
+        method: 'camera',
+        facing_mode: facingMode,
+        page: 'upload'
+      });
+    } catch (error) {
+      console.error('Photo capture error:', error);
+      handleImageError('Failed to capture photo');
+    }
+  };
+
+  const switchCamera = (): void => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+  };
 
   // Pre-warm API on component mount (production only)
   useEffect(() => {
@@ -111,14 +227,14 @@ const UploadPage = (): JSX.Element => {
 
         {/* Main Photo Area */}
         <div className="flex-1 flex flex-col items-center justify-center px-4">
-          {/* Photo Preview/Upload Area */}
+          {/* Photo Preview/Camera Area */}
           <div className="relative w-full max-w-sm aspect-[3/4] mb-8">
             {previewUrl ? (
-              // Show uploaded image with face detection guide
+              // Show captured photo with face detection guide
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-white shadow-lg">
                 <img 
                   src={previewUrl} 
-                  alt="Uploaded photo" 
+                  alt="Captured photo" 
                   className="w-full h-full object-cover"
                 />
                 {/* Face detection guide overlay */}
@@ -135,50 +251,92 @@ const UploadPage = (): JSX.Element => {
                 </div>
               </div>
             ) : (
-              // Show upload placeholder
-              <div 
-                className="relative w-full h-full rounded-3xl bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors"
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.capture = 'environment';
-                  input.onchange = async (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) {
-                      try {
-                        const preview = URL.createObjectURL(file);
-                        await handleImageUpload(file, preview);
-                      } catch (error) {
-                        handleImageError('Failed to process image');
-                      }
-                    }
-                  };
-                  input.click();
-                }}
-              >
-                {/* Placeholder content */}
-                <div className="text-center text-gray-500">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-300 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+              // Show live camera feed
+              <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
+                {isCameraActive && !cameraError ? (
+                  <>
+                    {/* Live camera video */}
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      playsInline
+                      muted
+                    />
+                    
+                    {/* Face detection guide overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div 
+                        className="border-4 border-white border-dashed rounded-full opacity-70 animate-pulse"
+                        style={{
+                          width: '70%',
+                          aspectRatio: '1',
+                          borderStyle: 'dashed',
+                          borderWidth: '3px'
+                        }}
+                      />
+                    </div>
+
+                    {/* Camera status indicator */}
+                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      Live
+                    </div>
+
+                    {/* Camera mode indicator */}
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                      {facingMode === 'user' ? 'Front' : 'Back'}
+                    </div>
+                  </>
+                ) : cameraError ? (
+                  // Camera error state
+                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                    <div className="text-center text-white px-6">
+                      <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                      </svg>
+                      <h3 className="text-lg font-semibold mb-2">Camera Not Available</h3>
+                      <p className="text-sm text-gray-300 mb-4">{cameraError}</p>
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = async (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              try {
+                                const preview = URL.createObjectURL(file);
+                                await handleImageUpload(file, preview);
+                              } catch (error) {
+                                handleImageError('Failed to process image');
+                              }
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        Upload Photo Instead
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-sm font-medium">Tap to add photo</p>
-                </div>
+                ) : (
+                  // Loading camera state
+                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <svg className="animate-spin w-8 h-8 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                      <p className="text-sm">Starting camera...</p>
+                    </div>
+                  </div>
+                )}
                 
-                {/* Face guide overlay */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div 
-                    className="border-4 border-gray-400 border-dashed rounded-full opacity-30"
-                    style={{
-                      width: '70%',
-                      aspectRatio: '1',
-                      borderStyle: 'dashed',
-                      borderWidth: '3px'
-                    }}
-                  />
-                </div>
+                {/* Hidden canvas for photo capture */}
+                <canvas ref={canvasRef} className="hidden" />
               </div>
             )}
           </div>
@@ -229,13 +387,12 @@ const UploadPage = (): JSX.Element => {
         {/* Bottom Controls */}
         <div className="pb-safe-area-inset-bottom pb-8">
           <div className="flex items-center justify-center gap-8 px-8">
-            {/* Camera Button */}
+            {/* Gallery/Upload Button */}
             <button
               onClick={() => {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
-                input.capture = 'environment';
                 input.onchange = async (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {
@@ -250,39 +407,40 @@ const UploadPage = (): JSX.Element => {
                 input.click();
               }}
               disabled={isCompressing}
-              className="w-16 h-16 bg-white border-4 border-black rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+
+            {/* Capture Photo Button */}
+            <button
+              onClick={previewUrl ? handleAnalyze : capturePhoto}
+              disabled={isCompressing || (!isCameraActive && !previewUrl)}
+              className="w-16 h-16 bg-white border-4 border-black rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCompressing ? (
                 <svg className="animate-spin w-6 h-6 text-black" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                 </svg>
+              ) : previewUrl ? (
+                // Show analyze icon when photo is captured
+                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               ) : (
+                // Show shutter button when camera is active
                 <div className="w-12 h-12 bg-white rounded-full"></div>
               )}
             </button>
 
             {/* Flip Camera Button */}
             <button
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.capture = 'user'; // Front camera
-                input.onchange = async (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) {
-                    try {
-                      const preview = URL.createObjectURL(file);
-                      await handleImageUpload(file, preview);
-                    } catch (error) {
-                      handleImageError('Failed to process image');
-                    }
-                  }
-                };
-                input.click();
-              }}
-              className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+              onClick={switchCamera}
+              disabled={!isCameraActive || cameraError !== null}
+              className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -290,28 +448,6 @@ const UploadPage = (): JSX.Element => {
             </button>
           </div>
 
-          {/* Analyze Button - Only show when image is selected */}
-          {selectedFile && previewUrl && (
-            <div className="px-8 mt-6">
-              <button
-                onClick={handleAnalyze}
-                disabled={isCompressing}
-                className="w-full bg-primary-600 text-white font-semibold py-4 px-6 rounded-2xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-              >
-                {isCompressing ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  '🎨 Analyze My Colors'
-                )}
-              </button>
-            </div>
-          )}
         </div>
         
         {/* Privacy Popup */}
