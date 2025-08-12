@@ -20,8 +20,10 @@ const AnalyzingPage = (): JSX.Element => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showLandmarkVisualization, setShowLandmarkVisualization] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [canSkip, setCanSkip] = useState(false);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
+  const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Redirect if no image and track page entry
   useEffect(() => {
@@ -92,7 +94,12 @@ const AnalyzingPage = (): JSX.Element => {
   useEffect(() => {
     if (currentStep < ANALYSIS_STEPS.length) {
       const step = ANALYSIS_STEPS[currentStep];
-      const timer = setTimeout(() => {
+      
+      // Enable skip for draping phases (warm-cool-comparison and season-comparison)
+      const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison';
+      setCanSkip(isDrapingPhase);
+      
+      stepTimerRef.current = setTimeout(() => {
         setProgress(step.progress);
         
         // Show visualization immediately, even during TensorFlow loading
@@ -116,7 +123,11 @@ const AnalyzingPage = (): JSX.Element => {
         }
       }, step.duration);
 
-      return () => clearTimeout(timer);
+      return () => {
+        if (stepTimerRef.current) {
+          clearTimeout(stepTimerRef.current);
+        }
+      };
     }
     return undefined;
   }, [currentStep, imageUrl]);
@@ -246,9 +257,34 @@ const AnalyzingPage = (): JSX.Element => {
 
   const currentStepData = ANALYSIS_STEPS[currentStep] || ANALYSIS_STEPS[0];
 
+  // Handle skip to next step
+  const handleSkipStep = () => {
+    if (canSkip && currentStep < ANALYSIS_STEPS.length - 1) {
+      // Clear current timer
+      if (stepTimerRef.current) {
+        clearTimeout(stepTimerRef.current);
+      }
+      
+      // Track skip action
+      trackEvent('analysis_step_skipped', {
+        step_number: currentStep + 1,
+        step_name: currentStepData.id,
+        user_flow_step: 'user_skipped_draping'
+      });
+      
+      // Move to next step
+      setCurrentStep(currentStep + 1);
+      setCanSkip(false);
+    }
+  };
+
   return (
     <PageLayout>
-      <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div 
+        className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"
+        onClick={handleSkipStep}
+        style={{ cursor: canSkip ? 'pointer' : 'default' }}
+      >
         {/* Face Landmark Visualization matching upload page size - show immediately */}
         {imageUrl && (
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-8">
@@ -290,12 +326,21 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
           </div>
 
+          {/* Skip hint for draping phases */}
+          {canSkip && (
+            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
+              <div className="bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+                화면을 터치하면 다음 단계로 넘어갑니다
+              </div>
+            </div>
+          )}
+
           {/* Character and Speech Bubble - Alternating corners */}
           {!error && (
             <div 
               key={`character-${currentStep}`}
               className={`fixed bottom-0 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
-              style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
+              style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
             >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
                 {/* Character Container */}
