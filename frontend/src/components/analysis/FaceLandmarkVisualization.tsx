@@ -101,49 +101,42 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
   // Create inverted face mask (everything except face)
   const createInverseFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement) => {
-    // Start with full canvas
+    // Calculate face bounds with expansion for safety
+    const xs = face.keypoints.map(kp => kp.x * canvas.width);
+    const ys = face.keypoints.map(kp => kp.y * canvas.height);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const faceCenterX = (minX + maxX) / 2;
+    const faceCenterY = (minY + maxY) / 2;
+    const faceWidth = maxX - minX;
+    const faceHeight = maxY - minY;
+    
+    // Add padding to ensure face is fully protected
+    const padding = Math.max(faceWidth, faceHeight) * 0.15;
+    
+    // Create elliptical face mask (more natural for faces)
+    ctx.save();
+    
+    // Draw the entire canvas first
     ctx.beginPath();
     ctx.rect(0, 0, canvas.width, canvas.height);
     
-    // MediaPipe 468 face landmarks - use silhouette points for accurate boundary
-    // These are the actual face contour points from MediaPipe Face Mesh
-    const faceContourIndices = [
-      // Silhouette points (face oval)
-      10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 340, 346, 347, 348, 349, 350, 451, 452, 453, 464, 435, 410, 287, 273, 335, 321, 308, 324, 318,
-      // Forehead line
-      9, 10, 151, 337, 299, 333, 298, 301, 368, 264, 447, 366, 401, 435, 367, 364, 394, 395, 369, 396, 400, 377, 152, 148,
-      // Jaw line from left to right
-      172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 340, 346, 347, 348, 349, 350, 451, 452, 453, 464, 435, 410, 287, 273, 335, 321, 308, 324, 318,
-      // Chin line
-      18, 175, 199, 200, 9, 10, 151, 337, 299, 333, 298, 301
-    ];
+    // Then subtract the face area (ellipse)
+    ctx.moveTo(faceCenterX + (faceWidth/2 + padding), faceCenterY);
+    ctx.ellipse(
+      faceCenterX,
+      faceCenterY,
+      faceWidth/2 + padding,
+      faceHeight/2 + padding,
+      0,
+      0,
+      Math.PI * 2,
+      true // counterclockwise to create hole
+    );
     
-    // Remove duplicates and sort
-    const uniqueIndices = [...new Set(faceContourIndices)].filter(i => i < face.keypoints.length);
-    
-    if (uniqueIndices.length > 0) {
-      // Create smooth face contour path
-      ctx.moveTo(face.keypoints[10].x * canvas.width, face.keypoints[10].y * canvas.height);
-      
-      // Draw face silhouette using quadratic curves for smoother outline
-      const silhouettePoints = [
-        10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 340, 346, 347, 348, 349, 350, 
-        451, 452, 453, 464, 435, 410, 287, 273, 335, 321, 308, 324, 318, 402, 317, 14, 87, 
-        178, 88, 95, 78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 272, 271, 268, 269, 270, 
-        267, 264, 447, 366, 401, 435, 367, 364, 394, 395, 369, 396, 400, 377, 152, 148, 176, 
-        149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10
-      ];
-      
-      for (let i = 0; i < silhouettePoints.length; i++) {
-        const idx = silhouettePoints[i];
-        if (idx < face.keypoints.length) {
-          const point = face.keypoints[idx];
-          ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
-        }
-      }
-      
-      ctx.closePath();
-    }
+    ctx.closePath();
     
     // Use even-odd fill rule to create inverse mask
     ctx.clip('evenodd');
