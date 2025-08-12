@@ -251,22 +251,48 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       }
 
       // Convert to our interface format
-      const detectedFaces: DetectedFace[] = faces.map(face => ({
-        keypoints: face.keypoints.map(kp => ({
-          x: kp.x / imageRef.current!.width,
-          y: kp.y / imageRef.current!.height,
-          z: (kp as any).z || 0,
-          name: (kp as any).name
-        })),
-        box: {
-          xMin: face.box.xMin / imageRef.current!.width,
-          yMin: face.box.yMin / imageRef.current!.height,
-          xMax: face.box.xMax / imageRef.current!.width,
-          yMax: face.box.yMax / imageRef.current!.height,
-          width: face.box.width / imageRef.current!.width,
-          height: face.box.height / imageRef.current!.width,
+      const detectedFaces: DetectedFace[] = faces.map(face => {
+        // Handle cases where box might be undefined
+        let box: DetectedFace['box'];
+        
+        if (face.box) {
+          box = {
+            xMin: face.box.xMin / imageRef.current!.width,
+            yMin: face.box.yMin / imageRef.current!.height,
+            xMax: face.box.xMax / imageRef.current!.width,
+            yMax: face.box.yMax / imageRef.current!.height,
+            width: face.box.width / imageRef.current!.width,
+            height: face.box.height / imageRef.current!.height,
+          };
+        } else {
+          // Calculate bounding box from keypoints if box is not provided
+          const xs = face.keypoints.map(kp => kp.x);
+          const ys = face.keypoints.map(kp => kp.y);
+          const minX = Math.min(...xs) / imageRef.current!.width;
+          const maxX = Math.max(...xs) / imageRef.current!.width;
+          const minY = Math.min(...ys) / imageRef.current!.height;
+          const maxY = Math.max(...ys) / imageRef.current!.height;
+          
+          box = {
+            xMin: minX,
+            yMin: minY,
+            xMax: maxX,
+            yMax: maxY,
+            width: maxX - minX,
+            height: maxY - minY,
+          };
         }
-      }));
+        
+        return {
+          keypoints: face.keypoints.map(kp => ({
+            x: kp.x / imageRef.current!.width,
+            y: kp.y / imageRef.current!.height,
+            z: (kp as any).z || 0,
+            name: (kp as any).name
+          })),
+          box
+        };
+      });
 
       setLandmarks(detectedFaces);
       console.log('🎯 [Synchronized] Face landmarks ready - waiting for character sync');
