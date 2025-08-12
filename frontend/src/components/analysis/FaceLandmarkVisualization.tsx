@@ -447,8 +447,12 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       {/* Canvas for landmark visualization */}
       <canvas
         ref={canvasRef}
-        className="w-full h-full object-contain rounded-lg"
-        style={{ backgroundColor: 'transparent' }}
+        className="w-full h-auto rounded-lg shadow-2xl"
+        style={{ 
+          backgroundColor: 'transparent',
+          maxHeight: '80vh',
+          objectFit: 'contain'
+        }}
       />
     </div>
   );

@@ -248,14 +248,15 @@ const AnalyzingPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div className="min-h-screen relative">
-        {/* Full-screen Face Landmark Visualization as background */}
+      <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Face Landmark Visualization with original aspect ratio */}
         {showLandmarkVisualization && imageUrl && (
-          <div className="absolute inset-0 w-full h-full">
-            <FaceLandmarkVisualization
-              imageUrl={imageUrl}
-              currentAnalysisStep={currentStep}
-              onLandmarksDetected={(landmarks) => {
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="relative max-w-md w-full">
+              <FaceLandmarkVisualization
+                imageUrl={imageUrl}
+                currentAnalysisStep={currentStep}
+                onLandmarksDetected={(landmarks) => {
                 console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
                 trackEvent('face_landmarks_detected', {
                   faces_count: landmarks.length,
@@ -265,8 +266,9 @@ const AnalyzingPage = (): JSX.Element => {
                   user_flow_step: 'landmarks_visualization_synchronized'
                 });
               }}
-              className="w-full h-full"
-            />
+                className="w-full"
+              />
+            </div>
           </div>
         )}
 
