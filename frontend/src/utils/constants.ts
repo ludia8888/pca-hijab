@@ -77,54 +77,84 @@ export const ANALYSIS_STEPS = [
   {
     id: 'face-detection',
     character: 'detective',
-    characterImage: '/images/characters/detective-analyzing.png', // 탐정 캐릭터 이미지
-    speechBubble: '/images/speech-bubbles/bubble-1.png', // 말풍선 이미지
-    message: '얼굴의 6개 부위를 정밀하게 스캔하고 있어요! 478개 3D 랜드마크를 AI가 실시간 분석 중이에요 🕵️‍♀️',
-    progress: 15,
-    duration: 3500, // TensorFlow 로딩 + 얼굴 감지 시간 고려
-    techExplanation: 'MediaPipe Face Mesh로 3차원 얼굴 구조를 정밀 매핑하고 있습니다'
+    characterImage: '/images/characters/detective-analyzing.png',
+    speechBubble: '/images/speech-bubbles/bubble-1.png',
+    message: '얼굴의 478개 포인트를 정밀 스캔 중이에요! AI가 당신의 얼굴 구조를 3D로 분석하고 있어요 🕵️‍♀️',
+    progress: 20,
+    duration: 4000,
+    techExplanation: 'MediaPipe Face Mesh로 얼굴 구조 매핑 중'
   },
   {
     id: 'color-extraction',
     character: 'scientist',
-    characterImage: '/images/characters/scientist-extracting.png', // 과학자 캐릭터 이미지
+    characterImage: '/images/characters/scientist-extracting.png',
     speechBubble: '/images/speech-bubbles/bubble-2.png',
-    message: '각 랜드마크에서 16,000개 픽셀 색상을 추출 중이에요! 딥러닝 컬러 클러스터링 알고리즘 실행 중 🔬',
-    progress: 35,
-    duration: 4000, // 더 심층적인 분석처럼 보이도록
-    techExplanation: 'K-means++ 클러스터링과 CIELAB 색공간 변환으로 정밀 색상 분석 중'
+    message: '피부톤, 홍조, 혈색을 추출하고 있어요! 이마, 볼, 턱에서 색상 데이터를 수집 중이에요 🔬',
+    progress: 40,
+    duration: 4000,
+    techExplanation: '주요 얼굴 부위에서 색상 샘플링 진행 중'
   },
   {
-    id: 'color-space-conversion',
+    id: 'warm-cool-comparison',
     character: 'wizard',
-    characterImage: '/images/characters/wizard-converting.png', // 마법사 캐릭터 이미지  
+    characterImage: '/images/characters/wizard-converting.png',
     speechBubble: '/images/speech-bubbles/bubble-3.png',
-    message: 'RGB→Lab→HSV 다차원 색공간 매트릭스 변환을 수행하고 있어요! 고급 수학 연산 처리 중 ✨🎨',
-    progress: 55,
-    duration: 3500,
-    techExplanation: 'CIE 1976 Lab* 색공간과 HSV 원통형 좌표계로 정확한 색상 수치 계산'
+    message: '웜톤과 쿨톤을 비교 중이에요! 황색 언더톤과 핑크 언더톤 중 어느 것이 더 어울리는지 분석해요 🎨',
+    progress: 60,
+    duration: 5000,
+    techExplanation: '피부 언더톤과 혈색을 기반으로 웜/쿨 판별'
   },
   {
-    id: 'warm-cool-analysis',
+    id: 'season-comparison',
     character: 'analyst',
-    characterImage: '/images/characters/analyst-thinking.png', // 분석가 캐릭터 이미지
+    characterImage: '/images/characters/analyst-thinking.png',
     speechBubble: '/images/speech-bubbles/bubble-4.png',
-    message: '퍼스널 컬러 AI 모델이 웜/쿨톤을 심층 분석 중! 다변량 통계 알고리즘으로 정밀도 98.7% 달성 📊',
+    message: '4계절 중 가장 어울리는 시즌을 찾고 있어요! 명도와 채도를 분석해서 최적의 계절을 선정해요 📊',
     progress: 80,
-    duration: 4500, // 가장 복잡한 단계처럼
-    techExplanation: '베이지안 추론과 SVM 분류기로 개인별 색상 특성을 정량화 분석'
+    duration: 5000,
+    techExplanation: '명도, 채도, 대비도를 기반으로 계절 타입 결정'
   },
   {
-    id: 'final-classification',
+    id: 'final-result',
     character: 'artist',
-    characterImage: '/images/characters/artist-creating.png', // 아티스트 캐릭터 이미지
+    characterImage: '/images/characters/artist-creating.png',
     speechBubble: '/images/speech-bubbles/bubble-5.png',
-    message: 'AI가 당신만의 완벽한 컬러 팔레트를 생성하고 있어요! 2,847개 색상 DB와 매칭 중 🎨✨',
+    message: '당신만의 퍼스널 컬러 팔레트를 완성하고 있어요! 맞춤형 히잡 색상을 추천 준비 중이에요 ✨',
     progress: 100,
-    duration: 3000, // 결과 완성 단계
-    techExplanation: '신경망 기반 컬러 매칭과 개인화 알고리즘으로 최적 팔레트 구성 완료'
+    duration: 3000,
+    techExplanation: '개인 맞춤 컬러 팔레트 생성 완료'
   },
 ];
+
+// Personal Color Palettes for Visual Comparison
+export const COLOR_PALETTES = {
+  warm: {
+    base: ['#FF9966', '#FFB366', '#FFCC99'], // 웜톤 기본 색상
+    spring: {
+      name: '봄 웜톤',
+      colors: ['#FF9999', '#FFCC99', '#FFE5CC', '#FFAA88'],
+      description: '밝고 선명한 코랄과 피치 계열'
+    },
+    autumn: {
+      name: '가을 웜톤',
+      colors: ['#CC6633', '#996633', '#CC9966', '#805533'],
+      description: '깊고 차분한 브라운과 오렌지 계열'
+    }
+  },
+  cool: {
+    base: ['#FF99CC', '#CC99FF', '#99CCFF'], // 쿨톤 기본 색상
+    summer: {
+      name: '여름 쿨톤',
+      colors: ['#FFB3D9', '#D9B3FF', '#B3D9FF', '#E6CCFF'],
+      description: '부드러운 파스텔 핑크와 라벤더 계열'
+    },
+    winter: {
+      name: '겨울 쿨톤',
+      colors: ['#FF0066', '#CC0066', '#9900CC', '#0066CC'],
+      description: '선명하고 차가운 비비드 톤'
+    }
+  }
+};
 
 // Routes
 export const ROUTES = {

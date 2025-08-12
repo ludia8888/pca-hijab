@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import '@tensorflow/tfjs-backend-webgl';
 import * as tf from '@tensorflow/tfjs';
+import { COLOR_PALETTES } from '@/utils/constants';
 
 interface FaceLandmarkVisualizationProps {
   imageUrl: string;
@@ -44,7 +45,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState<DetectedFace[]>([]);
-  const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'analyzing' | 'complete'>('detecting');
+  const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'warm-cool' | 'season' | 'complete'>('detecting');
 
   // Initialize TensorFlow and face detector
   useEffect(() => {
@@ -98,7 +99,61 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     initializeDetector();
   }, []);
 
-  // Draw face landmarks on canvas
+  // Create face mask for color draping effect
+  const createFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement) => {
+    // Create clipping path for face area
+    ctx.save();
+    ctx.beginPath();
+    
+    // Use face contour points to create mask
+    const faceContour = face.keypoints.filter((_, i) => 
+      // Face outline points
+      (i >= 0 && i <= 16) || // Chin line
+      (i >= 172 && i <= 177) || // Left jaw
+      (i >= 397 && i <= 400) || // Right jaw
+      (i >= 356 && i <= 368) // Forehead
+    );
+    
+    if (faceContour.length > 0) {
+      ctx.moveTo(faceContour[0].x * canvas.width, faceContour[0].y * canvas.height);
+      faceContour.forEach(point => {
+        ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
+      });
+      ctx.closePath();
+    }
+    
+    return ctx;
+  };
+
+  // Draw color draping overlay
+  const drawColorDraping = (
+    ctx: CanvasRenderingContext2D, 
+    canvas: HTMLCanvasElement, 
+    colors: string[], 
+    side: 'left' | 'right' | 'full'
+  ) => {
+    ctx.save();
+    
+    // Set composite operation for overlay effect
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.4;
+    
+    const width = side === 'full' ? canvas.width : canvas.width / 2;
+    const startX = side === 'right' ? canvas.width / 2 : 0;
+    
+    // Create gradient with provided colors
+    const gradient = ctx.createLinearGradient(startX, 0, startX + width, canvas.height);
+    colors.forEach((color, index) => {
+      gradient.addColorStop(index / (colors.length - 1), color);
+    });
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(startX, 0, width, canvas.height);
+    
+    ctx.restore();
+  };
+
+  // Draw face landmarks on canvas with new effects
   const drawLandmarks = useCallback((faces: DetectedFace[], phase: string) => {
     const canvas = canvasRef.current;
     const image = imageRef.current;
@@ -113,65 +168,145 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     // Draw the image
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
+    // Handle different visualization phases
+    if (phase === 'warm-cool') {
+      // Draw warm-cool comparison with split screen
+      faces.forEach((face) => {
+        // Save current state
+        ctx.save();
+        
+        // Create face mask to protect face area
+        createFaceMask(ctx, face, canvas);
+        ctx.clip();
+        
+        // Draw original image in face area
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        
+        ctx.restore();
+        
+        // Draw color draping outside face area
+        ctx.save();
+        
+        // Create inverse mask (everything except face)
+        ctx.globalCompositeOperation = 'destination-over';
+        
+        // Left side - Warm tones
+        drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left');
+        
+        // Right side - Cool tones  
+        drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right');
+        
+        // Add dividing line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+        
+        // Add labels
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.shadowColor = 'black';
+        ctx.shadowBlur = 4;
+        ctx.fillText('웜톤', 20, 40);
+        ctx.fillText('쿨톤', canvas.width - 80, 40);
+        
+        ctx.restore();
+      });
+      return;
+    }
+    
+    if (phase === 'season') {
+      // Draw seasonal comparison
+      faces.forEach((face) => {
+        ctx.save();
+        
+        // Create face mask
+        createFaceMask(ctx, face, canvas);
+        ctx.clip();
+        
+        // Draw original image in face area
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        
+        ctx.restore();
+        
+        // Draw seasonal colors outside face
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-over';
+        
+        // TODO: Determine if warm or cool based on analysis
+        const isWarm = true; // This should come from actual analysis
+        
+        if (isWarm) {
+          // Spring vs Autumn
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left');
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.autumn.colors, 'right');
+          
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 18px sans-serif';
+          ctx.shadowColor = 'black';
+          ctx.shadowBlur = 4;
+          ctx.fillText('봄 웜톤', 20, 40);
+          ctx.fillText('가을 웜톤', canvas.width - 100, 40);
+        } else {
+          // Summer vs Winter
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.summer.colors, 'left');
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.winter.colors, 'right');
+          
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 18px sans-serif';
+          ctx.shadowColor = 'black';
+          ctx.shadowBlur = 4;
+          ctx.fillText('여름 쿨톤', 20, 40);
+          ctx.fillText('겨울 쿨톤', canvas.width - 100, 40);
+        }
+        
+        // Add dividing line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+        
+        ctx.restore();
+      });
+      return;
+    }
+    
+    // Original landmark visualization for other phases
     faces.forEach((face, faceIndex) => {
-      // More points for richer visualization, but still simple style
       const simplePhases = {
         detecting: {
-          // Face outline and features - scanning effect
           points: face.keypoints.filter((_, i) => 
-            // Eyes area
             (i >= 33 && i <= 46) || (i >= 263 && i <= 276) ||
-            // Nose bridge and tip
             (i >= 1 && i <= 6) || (i >= 195 && i <= 197) ||
-            // Mouth area
             (i >= 13 && i <= 17) || (i >= 269 && i <= 271) ||
-            // Face contour
             i % 15 === 0
           ).filter(Boolean),
           color: '#00FF9F'
         },
         extracting: {
-          // Color sampling areas - forehead, cheeks, chin, nose
           points: face.keypoints.filter((_, i) => 
-            // Forehead area
             (i >= 9 && i <= 10) || (i >= 67 && i <= 69) || (i >= 107 && i <= 109) ||
-            // Cheek areas
             (i >= 35 && i <= 36) || (i >= 116 && i <= 117) || 
             (i >= 213 && i <= 214) || (i >= 192 && i <= 193) ||
-            // Nose and around
             (i >= 1 && i <= 6) || (i >= 19 && i <= 20) || (i >= 94 && i <= 125) ||
-            // Chin area
             (i >= 17 && i <= 18) || (i >= 172 && i <= 175) ||
-            // Jawline
             i % 20 === 0
           ).filter(Boolean),
           color: '#FF6B9D'
         },
-        analyzing: {
-          // Color space analysis - distributed points
-          points: face.keypoints.filter((_, i) => 
-            // Even distribution across face
-            i % 8 === 0 || 
-            // Key facial features
-            (i >= 1 && i <= 17) || // Central line
-            (i >= 93 && i <= 137) || // Mid face
-            (i >= 356 && i <= 389) // Side face
-          ).filter(Boolean),
-          color: '#FFD93D'
-        },
         complete: {
-          // Final result - highlight key color zones
           points: face.keypoints.filter((_, i) => 
-            // T-zone (forehead and nose)
             (i >= 9 && i <= 10) || (i >= 1 && i <= 6) ||
-            // Cheek zones (important for color)
             (i >= 35 && i <= 36) || (i >= 266 && i <= 267) ||
             (i >= 116 && i <= 117) || (i >= 345 && i <= 346) ||
-            // Under eye areas
             (i >= 46 && i <= 53) || (i >= 276 && i <= 283) ||
-            // Mouth and chin
             (i >= 13 && i <= 14) || (i >= 17 && i <= 18) ||
-            // Face outline key points
             i % 25 === 0
           ).filter(Boolean),
           color: '#8B5CF6'
@@ -252,13 +387,13 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   }, []);
 
   // Map analysis steps to animation phases
-  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'analyzing' | 'complete' => {
+  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'warm-cool' | 'season' | 'complete' => {
     const phaseMap = {
       0: 'detecting' as const,    // face-detection
-      1: 'extracting' as const,  // color-extraction 
-      2: 'analyzing' as const,   // color-space-conversion
-      3: 'analyzing' as const,   // warm-cool-analysis
-      4: 'complete' as const,    // final-classification
+      1: 'extracting' as const,   // color-extraction
+      2: 'warm-cool' as const,    // warm-cool-comparison
+      3: 'season' as const,       // season-comparison
+      4: 'complete' as const,     // final-result
     };
     return phaseMap[step as keyof typeof phaseMap] || 'detecting';
   };
