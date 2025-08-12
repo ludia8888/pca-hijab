@@ -99,30 +99,40 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     initializeDetector();
   }, []);
 
-  // Create face mask for color draping effect
-  const createFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement) => {
-    // Create clipping path for face area
-    ctx.save();
+  // Create inverted face mask (everything except face)
+  const createInverseFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement) => {
+    // Start with full canvas
     ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
     
-    // Use face contour points to create mask
-    const faceContour = face.keypoints.filter((_, i) => 
-      // Face outline points
-      (i >= 0 && i <= 16) || // Chin line
-      (i >= 172 && i <= 177) || // Left jaw
-      (i >= 397 && i <= 400) || // Right jaw
-      (i >= 356 && i <= 368) // Forehead
-    );
+    // MediaPipe face outline indices for more accurate face boundary
+    const faceOutlineIndices = [
+      10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 340, 346, 347, 348, 349, 350, 451, 452, 453, 464,
+      435, 410, 287, 273, 335, 321, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78, 191, 80, 81, 82, 13, 312,
+      311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78, 191, 80, 81, 82, 13, 312, 311, 310, 415,
+      272, 271, 268, 269, 270, 267, 264, 447, 366, 401, 435, 367, 364, 394, 395, 369, 396, 400, 377, 152, 148,
+      176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10
+    ];
     
-    if (faceContour.length > 0) {
-      ctx.moveTo(faceContour[0].x * canvas.width, faceContour[0].y * canvas.height);
-      faceContour.forEach(point => {
-        ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
+    // Create face path (to be subtracted from rectangle)
+    const validIndices = faceOutlineIndices.filter(i => i < face.keypoints.length);
+    
+    if (validIndices.length > 0) {
+      const firstPoint = face.keypoints[validIndices[0]];
+      ctx.moveTo(firstPoint.x * canvas.width, firstPoint.y * canvas.height);
+      
+      validIndices.forEach(i => {
+        const point = face.keypoints[i];
+        if (point) {
+          ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
+        }
       });
+      
       ctx.closePath();
     }
     
-    return ctx;
+    // Use even-odd fill rule to create inverse mask
+    ctx.clip('evenodd');
   };
 
   // Draw color draping overlay as background
@@ -172,14 +182,15 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
     // Handle different visualization phases
     if (phase === 'warm-cool') {
-      // Draw warm-cool comparison with split screen
+      // Draw warm-cool comparison with face masking
       faces.forEach((face) => {
-        // Save original image state
+        // Save state
         ctx.save();
         
-        // Draw color backgrounds first (behind everything)
-        ctx.globalCompositeOperation = 'destination-over';
+        // Create inverse face mask (everything except face)
+        createInverseFaceMask(ctx, face, canvas);
         
+        // Draw colors only outside face area
         // Left side - Warm tones
         drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left', face);
         
@@ -223,9 +234,11 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
         const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
         
-        // Save state and draw colors behind image
+        // Save state and create face mask
         ctx.save();
-        ctx.globalCompositeOperation = 'destination-over';
+        
+        // Create inverse face mask (everything except face)
+        createInverseFaceMask(ctx, face, canvas);
         
         if (isWarm) {
           // Spring vs Autumn
@@ -257,7 +270,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           ctx.restore();
         }
         
-        ctx.restore(); // Restore from destination-over mode
+        ctx.restore(); // Restore from face masking
         
         // Add dividing line at face center
         ctx.save();
