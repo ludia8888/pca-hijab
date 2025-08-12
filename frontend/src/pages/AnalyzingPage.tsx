@@ -21,6 +21,7 @@ const AnalyzingPage = (): JSX.Element => {
   const [showLandmarkVisualization, setShowLandmarkVisualization] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [canSkip, setCanSkip] = useState(false);
+  const [showNavButtons, setShowNavButtons] = useState(false);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -99,6 +100,9 @@ const AnalyzingPage = (): JSX.Element => {
       const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison';
       setCanSkip(isDrapingPhase);
       
+      // Show navigation buttons for ALL phases
+      setShowNavButtons(true);
+      
       // Set progress immediately
       setProgress(step.progress);
       
@@ -117,15 +121,8 @@ const AnalyzingPage = (): JSX.Element => {
         user_flow_step: 'analysis_progress_update'
       });
       
-      // Only auto-advance for non-draping phases
-      if (!isDrapingPhase) {
-        stepTimerRef.current = setTimeout(() => {
-          if (currentStep < ANALYSIS_STEPS.length - 1) {
-            setCurrentStep(currentStep + 1);
-          }
-        }, step.duration);
-      }
-      // For draping phases, wait for user interaction (no timer)
+      // No auto-advance for any phase - user controls navigation
+      // This gives users full control over the analysis flow
 
       return () => {
         if (stepTimerRef.current) {
@@ -303,6 +300,27 @@ const AnalyzingPage = (): JSX.Element => {
     }
   };
 
+  // Handle forward navigation (for all phases)
+  const handleGoForward = () => {
+    if (currentStep < ANALYSIS_STEPS.length - 1) {
+      // Clear current timer if any
+      if (stepTimerRef.current) {
+        clearTimeout(stepTimerRef.current);
+      }
+      
+      // Track user interaction
+      trackEvent('navigation_forward', {
+        from_step: currentStep,
+        to_step: currentStep + 1,
+        step_name: currentStepData.id,
+        user_flow_step: 'user_went_forward'
+      });
+      
+      // Move to next step
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
   return (
     <PageLayout>
       <div 
@@ -335,13 +353,13 @@ const AnalyzingPage = (): JSX.Element => {
         {/* Content below the image */}
         <div className="flex-1 relative">
 
-          {/* Navigation buttons for draping phases */}
-          {canSkip && (
+          {/* Navigation buttons for ALL phases */}
+          {showNavButtons && (
             <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
               <div className="flex gap-4">
                 <button
                   onClick={handleGoBack}
-                  className="bg-white/90 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2"
+                  className="bg-white/90 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={currentStep === 0}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,8 +368,9 @@ const AnalyzingPage = (): JSX.Element => {
                   뒤로가기
                 </button>
                 <button
-                  onClick={handleProceedToNext}
-                  className="bg-primary-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 flex items-center gap-2"
+                  onClick={canSkip ? handleProceedToNext : handleGoForward}
+                  className="bg-primary-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={currentStep === ANALYSIS_STEPS.length - 1}
                 >
                   앞으로가기
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,11 +381,11 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
           )}
 
-          {/* Character and Speech Bubble - Positioned above navigation buttons */}
+          {/* Character and Speech Bubble - Always positioned above navigation buttons */}
           {!error && (
             <div 
               key={`character-${currentStep}`}
-              className={`absolute ${canSkip ? 'bottom-32' : 'bottom-0'} ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+              className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
               style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
             >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
