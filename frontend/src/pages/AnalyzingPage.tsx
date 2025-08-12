@@ -225,39 +225,101 @@ const AnalyzingPage = (): JSX.Element => {
           </div>
         </div>
 
-        {/* Animation area */}
-        <div className="text-center mb-8">
-          <div className="relative w-32 h-32 mx-auto mb-6">
-            {/* Icon background circle */}
-            <div className="absolute inset-0 bg-primary-100 rounded-full animate-pulse shadow-md" />
-            
-            {/* Center icon */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-5xl animate-bounce drop-shadow-sm">{currentStepData.icon}</span>
+        {/* Character Animation Area */}
+        <div className="relative w-full max-w-lg mx-auto mb-8">
+          {/* Character Container */}
+          <div className="relative flex flex-col items-center">
+            {/* Speech Bubble */}
+            <div className="relative mb-4 px-6 py-4 bg-white rounded-2xl shadow-lg border-2 border-primary-200 max-w-sm">
+              {/* Speech bubble tail */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-white border-b-2 border-r-2 border-primary-200 rotate-45"></div>
+              
+              {/* Message content */}
+              <p className="text-sm font-medium text-gray-800 leading-relaxed text-center">
+                {currentStepData.message}
+              </p>
+              
+              {/* Tech explanation (smaller text) */}
+              <p className="text-xs text-gray-500 mt-2 text-center italic">
+                {currentStepData.techExplanation}
+              </p>
             </div>
-            
-            {/* Rotating border */}
-            <svg
-              className="absolute inset-0 w-full h-full animate-spin"
-              style={{ animationDuration: '3s' }}
-            >
-              <circle
-                cx="64"
-                cy="64"
-                r="62"
-                stroke="currentColor"
-                strokeWidth="5"
-                fill="none"
-                className="text-primary-600 drop-shadow-sm"
-                strokeDasharray="150 100"
-              />
-            </svg>
-          </div>
 
-          {/* Current step message */}
-          <h2 className="text-h3 font-bold text-gray-900 mb-2">
-            {currentStepData.message}
-          </h2>
+            {/* Character Image Container */}
+            <div className="relative">
+              {/* Character image with fallback */}
+              <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center shadow-lg animate-bounce border-4 border-white overflow-hidden">
+                {/* Try to load character image, fallback to emoji */}
+                <img
+                  src={currentStepData.characterImage}
+                  alt={`AI ${currentStepData.character}`}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    // Fallback to emoji representation if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'block';
+                  }}
+                />
+                {/* Fallback emoji representation */}
+                <div className="text-center" style={{ display: 'none' }}>
+                  <div className="text-2xl mb-1">
+                    {currentStepData.character === 'detective' && '🕵️‍♀️'}
+                    {currentStepData.character === 'scientist' && '👩‍🔬'}
+                    {currentStepData.character === 'wizard' && '🧙‍♀️'}
+                    {currentStepData.character === 'analyst' && '👩‍💼'}
+                    {currentStepData.character === 'artist' && '👩‍🎨'}
+                  </div>
+                  <div className="text-xs font-semibold text-gray-600 capitalize">
+                    {currentStepData.character}
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating particles animation */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 left-0 w-2 h-2 bg-primary-300 rounded-full animate-ping" style={{animationDelay: '0s'}} />
+                <div className="absolute top-2 right-2 w-1 h-1 bg-secondary-400 rounded-full animate-ping" style={{animationDelay: '0.5s'}} />
+                <div className="absolute bottom-2 left-4 w-1.5 h-1.5 bg-primary-400 rounded-full animate-ping" style={{animationDelay: '1s'}} />
+              </div>
+
+              {/* Progress ring around character */}
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="48"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  fill="none"
+                  className="text-primary-200"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="48"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  fill="none"
+                  className="text-primary-600 transition-all duration-1000 ease-out"
+                  strokeDasharray={`${2 * Math.PI * 48}`}
+                  strokeDashoffset={`${2 * Math.PI * 48 * (1 - progress / 100)}`}
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            {/* Character name and step info */}
+            <div className="mt-4 text-center">
+              <h3 className="text-sm font-bold text-primary-700 capitalize mb-1">
+                AI {currentStepData.character}
+              </h3>
+              <p className="text-xs text-gray-500">
+                Step {currentStep + 1} of {ANALYSIS_STEPS.length}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Error state */}
@@ -302,21 +364,45 @@ const AnalyzingPage = (): JSX.Element => {
           </div>
         )}
 
-        {/* Tips section */}
+        {/* Enhanced Tips section with character context */}
         <div className="mt-12 max-w-md w-full">
-          <h3 className="text-h5 font-semibold text-gray-900 mb-4 text-center">
-            💡 What is Personal Color?
-          </h3>
-          <div className="space-y-3 text-body-sm text-gray-600">
-            <p>
-              • A color group that harmonizes with your skin tone, hair color, and eye color
-            </p>
-            <p>
-              • Classified into Spring/Summer/Autumn/Winter with unique characteristics
-            </p>
-            <p>
-              • Knowing your personal color helps create a more vibrant and radiant look
-            </p>
+          <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6 border border-primary-100">
+            <h3 className="text-h5 font-semibold text-gray-900 mb-4 text-center">
+              🧬 AI가 분석하는 과학적 원리
+            </h3>
+            <div className="space-y-3 text-body-sm text-gray-700">
+              <div className="flex items-start space-x-3">
+                <span className="text-primary-600 font-bold">01</span>
+                <p>
+                  <strong>얼굴 인식:</strong> 68개 랜드마크 포인트로 정확한 부위를 감지해요
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-primary-600 font-bold">02</span>
+                <p>
+                  <strong>색상 추출:</strong> K-means 클러스터링으로 대표 색상을 찾아내요
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-primary-600 font-bold">03</span>
+                <p>
+                  <strong>수치 분석:</strong> Lab과 HSV 색공간에서 정밀한 톤 분석을 진행해요
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-primary-600 font-bold">04</span>
+                <p>
+                  <strong>최적 매칭:</strong> 과학적 기준값과 비교해 당신만의 퍼스널컬러를 찾아요
+                </p>
+              </div>
+            </div>
+            
+            {/* Fun fact */}
+            <div className="mt-4 p-3 bg-white rounded-lg border border-primary-200">
+              <p className="text-xs text-gray-600 text-center italic">
+                💡 <strong>재미있는 사실:</strong> 이 분석 과정은 매초 수백만 번의 계산을 통해 0.1% 오차 범위 내에서 당신의 퍼스널컬러를 찾아냅니다!
+              </p>
+            </div>
           </div>
         </div>
       </div>

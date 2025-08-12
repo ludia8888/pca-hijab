@@ -72,42 +72,57 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const ACCEPTED_IMAGE_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic'];
 export const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic'];
 
-// Analysis Steps
+// Analysis Steps with Character & Speech Bubbles
 export const ANALYSIS_STEPS = [
   {
-    id: 'skin-analysis',
-    icon: '🎨',
-    message: 'Analyzing skin undertones...',
+    id: 'face-detection',
+    character: 'detective',
+    characterImage: '/images/characters/detective-analyzing.png', // 탐정 캐릭터 이미지
+    speechBubble: '/images/speech-bubbles/bubble-1.png', // 말풍선 이미지
+    message: '얼굴의 6개 부위를 정밀하게 스캔하고 있어요! 양쪽 볼, 눈썹, 눈을 찾아내는 중이에요 🕵️‍♀️',
     progress: 20,
-    duration: 1250,
+    duration: 1500,
+    techExplanation: '딥러닝 얼굴 감지 알고리즘으로 68개 랜드마크 포인트를 분석해요'
   },
   {
-    id: 'saturation-calculation',
-    icon: '🌈',
-    message: 'Calculating your ideal saturation levels...',
-    progress: 45,
-    duration: 1250,
+    id: 'color-extraction',
+    character: 'scientist',
+    characterImage: '/images/characters/scientist-extracting.png', // 과학자 캐릭터 이미지
+    speechBubble: '/images/speech-bubbles/bubble-2.png',
+    message: '각 부위에서 가장 대표적인 색상 4개씩을 추출하고 있어요! 첨단 컬러 클러스터링 기술이에요 🔬',
+    progress: 40,
+    duration: 1500,
+    techExplanation: 'K-means 클러스터링으로 주요 색상을 추출하고 히스토그램 분석을 진행해요'
   },
   {
-    id: 'tone-analysis',
-    icon: '✨',
-    message: 'Analyzing overall tone through contrast...',
-    progress: 70,
-    duration: 1250,
+    id: 'color-space-conversion',
+    character: 'wizard',
+    characterImage: '/images/characters/wizard-converting.png', // 마법사 캐릭터 이미지  
+    speechBubble: '/images/speech-bubbles/bubble-3.png',
+    message: 'RGB 색상을 Lab과 HSV 색공간으로 변환하는 마법을 부리고 있어요! ✨🎨',
+    progress: 60,
+    duration: 1500,
+    techExplanation: 'ColorMath 라이브러리로 정확한 색상 수치 변환을 수행해요'
   },
   {
-    id: 'palette-generation',
-    icon: '🎨',
-    message: 'Generating your optimal color palette...',
-    progress: 90,
-    duration: 1250,
+    id: 'warm-cool-analysis',
+    character: 'analyst',
+    characterImage: '/images/characters/analyst-thinking.png', // 분석가 캐릭터 이미지
+    speechBubble: '/images/speech-bubbles/bubble-4.png',
+    message: 'Lab_b 수치로 웜톤과 쿨톤을 판별하고 있어요! 과학적 기준값과 거리를 계산 중이에요 📊',
+    progress: 80,
+    duration: 1500,
+    techExplanation: '웜톤(11.65) vs 쿨톤(4.64) 기준값과의 유클리드 거리를 계산해요'
   },
   {
-    id: 'completion',
-    icon: '✅',
-    message: 'Your results are ready!',
+    id: 'final-classification',
+    character: 'artist',
+    characterImage: '/images/characters/artist-creating.png', // 아티스트 캐릭터 이미지
+    speechBubble: '/images/speech-bubbles/bubble-5.png',
+    message: 'HSV 채도값으로 최종 타입을 결정하고 당신만의 컬러 팔레트를 완성하고 있어요! 🎨✨',
     progress: 100,
-    duration: 500,
+    duration: 1000,
+    techExplanation: '봄(18.59), 여름(12.5), 가을(27.14), 겨울(16.74) 기준으로 최적 매칭해요'
   },
 ];
 
