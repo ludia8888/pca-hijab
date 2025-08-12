@@ -671,6 +671,17 @@ const UploadPage = (): JSX.Element => {
         <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0">
           {/* Photo Preview/Camera Area */}
           <div className="relative w-full max-w-sm aspect-[3/4] mb-4">
+            {/* Always render video and canvas elements outside conditional rendering for refs */}
+            <video
+              ref={videoRef}
+              className={`absolute inset-0 w-full h-full object-cover rounded-3xl ${
+                !previewUrl && isCameraActive && !cameraError ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
+              }`}
+              autoPlay
+              playsInline
+              muted
+            />
+            <canvas ref={canvasRef} className="absolute opacity-0 pointer-events-none" />
             {previewUrl ? (
               // Show captured photo with face detection guide
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-white shadow-lg">
@@ -697,14 +708,6 @@ const UploadPage = (): JSX.Element => {
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
                 {isCameraActive && !cameraError ? (
                   <>
-                    {/* Live camera video */}
-                    <video
-                      ref={videoRef}
-                      className="w-full h-full object-cover"
-                      autoPlay
-                      playsInline
-                      muted
-                    />
                     
                     {/* Face detection guide overlay */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -776,9 +779,6 @@ const UploadPage = (): JSX.Element => {
                     </div>
                   </div>
                 )}
-                
-                {/* Hidden canvas for photo capture */}
-                <canvas ref={canvasRef} className="hidden" />
               </div>
             )}
           </div>
