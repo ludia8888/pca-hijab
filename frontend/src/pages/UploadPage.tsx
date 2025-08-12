@@ -661,11 +661,11 @@ const UploadPage = (): JSX.Element => {
           )}
 
           {/* Guidelines */}
-          <div className="bg-white rounded-2xl p-6 mx-4 mb-8 shadow-sm border border-gray-100 max-w-sm w-full">
-            <div className="grid grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl p-4 mx-4 mb-8 shadow-sm border border-gray-100 max-w-sm w-full">
+            <div className="grid grid-cols-3 gap-4">
               {/* No filters */}
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-3 bg-black rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-black rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
@@ -675,7 +675,7 @@ const UploadPage = (): JSX.Element => {
 
               {/* Natural lighting */}
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-3 bg-black rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-black rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
@@ -685,7 +685,7 @@ const UploadPage = (): JSX.Element => {
 
               {/* Front facing */}
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-3 bg-black rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-black rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
