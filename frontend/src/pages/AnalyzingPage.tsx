@@ -313,6 +313,22 @@ const AnalyzingPage = (): JSX.Element => {
         {imageUrl && (
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-8">
             <div className="relative w-full max-w-md">
+              {/* Progress indicator overlaid on image */}
+              <div className="absolute top-4 left-0 right-0 px-4 z-30">
+                <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">Analyzing</span>
+                    <span className="text-sm font-semibold text-primary-600">{progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
               <FaceLandmarkVisualization
                 imageUrl={imageUrl}
                 currentAnalysisStep={currentStep}
@@ -334,21 +350,6 @@ const AnalyzingPage = (): JSX.Element => {
 
         {/* Overlay content on top of image */}
         <div className="relative z-10 min-h-screen">
-          {/* Top: Progress indicator */}
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-20">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Analyzing</span>
-                <span className="text-sm font-semibold text-primary-600">{progress}%</span>
-              </div>
-              <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          </div>
 
           {/* Navigation buttons for draping phases */}
           {canSkip && (
