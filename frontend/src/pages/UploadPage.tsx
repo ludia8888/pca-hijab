@@ -157,29 +157,57 @@ const UploadPage = (): JSX.Element => {
       
       if (videoRef.current) {
         console.log('🎥 [Camera API] Setting video element source...');
-        videoRef.current.srcObject = mediaStream;
+        const video = videoRef.current;
         
-        // Add event listeners to track video element state
-        videoRef.current.onloadedmetadata = () => {
-          console.log('📺 [Camera API] Video metadata loaded');
-          console.log('📺 [Camera API] Video dimensions:', {
-            videoWidth: videoRef.current?.videoWidth,
-            videoHeight: videoRef.current?.videoHeight
-          });
-        };
+        // Create promise to wait for video to be ready
+        const videoReadyPromise = new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Video loading timeout'));
+          }, 10000);
+          
+          const onLoadedMetadata = () => {
+            console.log('📺 [Camera API] Video metadata loaded');
+            console.log('📺 [Camera API] Video dimensions:', {
+              videoWidth: video.videoWidth,
+              videoHeight: video.videoHeight
+            });
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              clearTimeout(timeout);
+              resolve();
+            }
+          };
+          
+          const onPlay = () => {
+            console.log('▶️ [Camera API] Video started playing');
+          };
+          
+          const onError = (e: Event) => {
+            console.error('🚨 [Camera API] Video element error:', e);
+            clearTimeout(timeout);
+            reject(new Error('Video element error'));
+          };
+          
+          video.onloadedmetadata = onLoadedMetadata;
+          video.onplay = onPlay;
+          video.onerror = onError;
+        });
         
-        videoRef.current.onplay = () => {
-          console.log('▶️ [Camera API] Video started playing');
-        };
+        video.srcObject = mediaStream;
         
-        videoRef.current.onerror = (e) => {
-          console.error('🚨 [Camera API] Video element error:', e);
-        };
-        
-        await videoRef.current.play();
-        console.log('✅ [Camera API] Video element play() called successfully');
+        try {
+          await video.play();
+          console.log('✅ [Camera API] Video element play() called successfully');
+          
+          // Wait for video to be fully ready
+          await videoReadyPromise;
+          console.log('✅ [Camera API] Video is fully ready for capture');
+        } catch (playError) {
+          console.error('🚨 [Camera API] Video play error:', playError);
+          throw playError;
+        }
       } else {
         console.error('🚨 [Camera API] Video ref is null!');
+        throw new Error('Video element not available');
       }
       
       setStream(mediaStream);
@@ -269,14 +297,17 @@ const UploadPage = (): JSX.Element => {
     // Pre-capture validation
     if (!videoRef.current) {
       console.error('🚨 [Camera API] Video ref is null - cannot capture');
+      handleImageError('Camera not ready for capture');
       return;
     }
     if (!canvasRef.current) {
       console.error('🚨 [Camera API] Canvas ref is null - cannot capture');
+      handleImageError('Canvas not available for capture');
       return;
     }
-    if (!isCameraActive) {
+    if (!isCameraActive || !stream) {
       console.error('🚨 [Camera API] Camera not active - cannot capture');
+      handleImageError('Camera not active');
       return;
     }
     
@@ -289,7 +320,40 @@ const UploadPage = (): JSX.Element => {
 
       if (!context) {
         console.error('🚨 [Camera API] Cannot get 2D context from canvas');
+        handleImageError('Canvas context not available');
         return;
+      }
+      
+      // Wait for video to be ready if needed
+      if (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2) {
+        console.log('⏳ [Camera API] Waiting for video to be ready...');
+        
+        // Wait up to 3 seconds for video to be ready
+        const waitForVideo = new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Video not ready within timeout'));
+          }, 3000);
+          
+          const checkReady = () => {
+            if (video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2) {
+              clearTimeout(timeout);
+              console.log('✅ [Camera API] Video is now ready');
+              resolve();
+            } else {
+              setTimeout(checkReady, 100);
+            }
+          };
+          
+          checkReady();
+        });
+        
+        try {
+          await waitForVideo;
+        } catch (waitError) {
+          console.error('🚨 [Camera API] Video not ready for capture:', waitError);
+          handleImageError('Camera video not ready');
+          return;
+        }
       }
       
       console.log('📸 [Camera API] Video element state:', {
@@ -299,6 +363,13 @@ const UploadPage = (): JSX.Element => {
         currentTime: video.currentTime,
         paused: video.paused
       });
+
+      // Validate video dimensions
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        console.error('🚨 [Camera API] Invalid video dimensions');
+        handleImageError('Invalid camera video dimensions');
+        return;
+      }
 
       // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
@@ -316,40 +387,54 @@ const UploadPage = (): JSX.Element => {
       
       console.log('✅ [Camera API] Video frame drawn to canvas in', Math.round(drawTime), 'ms');
 
+      // Validate canvas has content
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const hasContent = imageData.data.some(pixel => pixel !== 0);
+      
+      if (!hasContent) {
+        console.error('🚨 [Camera API] Canvas appears to be empty');
+        handleImageError('Failed to capture image - empty frame');
+        return;
+      }
+
       const blobStartTime = performance.now();
-      // Convert to blob
-      canvas.toBlob(async (blob) => {
-        const blobTime = performance.now() - blobStartTime;
-        console.log('⏱️ [Camera API] Canvas to blob conversion time:', Math.round(blobTime), 'ms');
+      // Convert to blob with promise wrapper
+      const blobPromise = new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.8);
+      });
+      
+      const blob = await blobPromise;
+      const blobTime = performance.now() - blobStartTime;
+      console.log('⏱️ [Camera API] Canvas to blob conversion time:', Math.round(blobTime), 'ms');
+      
+      if (blob && blob.size > 0) {
+        console.log('📸 [Camera API] Photo blob created:', {
+          size: blob.size,
+          type: blob.type,
+          sizeKB: Math.round(blob.size / 1024)
+        });
         
-        if (blob) {
-          console.log('📸 [Camera API] Photo blob created:', {
-            size: blob.size,
-            type: blob.type,
-            sizeKB: Math.round(blob.size / 1024)
-          });
-          
-          const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-          const preview = URL.createObjectURL(file);
-          
-          console.log('📸 [Camera API] Photo file created:', {
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified
-          });
-          
-          await handleImageUpload(file, preview);
-          
-          console.log('✅ [Camera API] Photo uploaded successfully');
-          
-          // Stop camera after capture
-          stopCamera();
-        } else {
-          console.error('🚨 [Camera API] Failed to create blob from canvas');
-          handleImageError('Failed to capture photo - blob creation failed');
-        }
-      }, 'image/jpeg', 0.8);
+        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+        const preview = URL.createObjectURL(file);
+        
+        console.log('📸 [Camera API] Photo file created:', {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified
+        });
+        
+        await handleImageUpload(file, preview);
+        
+        console.log('✅ [Camera API] Photo uploaded successfully');
+        
+        // Stop camera after capture
+        stopCamera();
+      } else {
+        console.error('🚨 [Camera API] Failed to create blob from canvas or blob is empty');
+        handleImageError('Failed to capture photo - image processing failed');
+        return;
+      }
 
       // Track photo capture
       trackEvent('photo_capture', {
@@ -358,7 +443,8 @@ const UploadPage = (): JSX.Element => {
         page: 'upload',
         canvas_width: canvas.width,
         canvas_height: canvas.height,
-        draw_time_ms: Math.round(drawTime)
+        draw_time_ms: Math.round(drawTime),
+        blob_size_kb: blob ? Math.round(blob.size / 1024) : 0
       });
       
       console.log('🎉 [Camera API] Photo capture process completed successfully');
