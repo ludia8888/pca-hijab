@@ -114,40 +114,66 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     faces.forEach((face, faceIndex) => {
-      // Simplified landmark visualization - just key points, no labels
+      // More points for richer visualization, but still simple style
       const simplePhases = {
         detecting: {
-          // Just eyes and mouth - friendly face scanning
-          points: [
-            face.keypoints[33], face.keypoints[133],   // Eyes
-            face.keypoints[362], face.keypoints[263],  // Eyes
-            face.keypoints[13], face.keypoints[14],    // Lips
-          ].filter(Boolean),
+          // Face outline and features - scanning effect
+          points: face.keypoints.filter((_, i) => 
+            // Eyes area
+            (i >= 33 && i <= 46) || (i >= 263 && i <= 276) ||
+            // Nose bridge and tip
+            (i >= 1 && i <= 6) || (i >= 195 && i <= 197) ||
+            // Mouth area
+            (i >= 13 && i <= 17) || (i >= 269 && i <= 271) ||
+            // Face contour
+            i % 15 === 0
+          ).filter(Boolean),
           color: '#00FF9F'
         },
         extracting: {
-          // Color sampling points - forehead, cheeks, chin
-          points: [
-            face.keypoints[10],   // Forehead
-            face.keypoints[50], face.keypoints[280],  // Cheeks
-            face.keypoints[152],  // Chin
-          ].filter(Boolean),
+          // Color sampling areas - forehead, cheeks, chin, nose
+          points: face.keypoints.filter((_, i) => 
+            // Forehead area
+            (i >= 9 && i <= 10) || (i >= 67 && i <= 69) || (i >= 107 && i <= 109) ||
+            // Cheek areas
+            (i >= 35 && i <= 36) || (i >= 116 && i <= 117) || 
+            (i >= 213 && i <= 214) || (i >= 192 && i <= 193) ||
+            // Nose and around
+            (i >= 1 && i <= 6) || (i >= 19 && i <= 20) || (i >= 94 && i <= 125) ||
+            // Chin area
+            (i >= 17 && i <= 18) || (i >= 172 && i <= 175) ||
+            // Jawline
+            i % 20 === 0
+          ).filter(Boolean),
           color: '#FF6B9D'
         },
         analyzing: {
-          // Analysis progress - just center points
-          points: [
-            face.keypoints[1],    // Nose tip
-            face.keypoints[17],   // Lower lip
-          ].filter(Boolean),
+          // Color space analysis - distributed points
+          points: face.keypoints.filter((_, i) => 
+            // Even distribution across face
+            i % 8 === 0 || 
+            // Key facial features
+            (i >= 1 && i <= 17) || // Central line
+            (i >= 93 && i <= 137) || // Mid face
+            (i >= 356 && i <= 389) // Side face
+          ).filter(Boolean),
           color: '#FFD93D'
         },
         complete: {
-          // Completion - smiley face pattern
-          points: [
-            face.keypoints[33], face.keypoints[263],   // Eyes
-            face.keypoints[13],   // Mouth
-          ].filter(Boolean),
+          // Final result - highlight key color zones
+          points: face.keypoints.filter((_, i) => 
+            // T-zone (forehead and nose)
+            (i >= 9 && i <= 10) || (i >= 1 && i <= 6) ||
+            // Cheek zones (important for color)
+            (i >= 35 && i <= 36) || (i >= 266 && i <= 267) ||
+            (i >= 116 && i <= 117) || (i >= 345 && i <= 346) ||
+            // Under eye areas
+            (i >= 46 && i <= 53) || (i >= 276 && i <= 283) ||
+            // Mouth and chin
+            (i >= 13 && i <= 14) || (i >= 17 && i <= 18) ||
+            // Face outline key points
+            i % 25 === 0
+          ).filter(Boolean),
           color: '#8B5CF6'
         }
       };
@@ -155,21 +181,31 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       const currentPhase = simplePhases[phase as keyof typeof simplePhases] || simplePhases.detecting;
       
       // Draw simple dots for landmarks
-      currentPhase.points.forEach((landmark) => {
+      currentPhase.points.forEach((landmark, index) => {
         if (!landmark) return;
         
         const x = landmark.x * canvas.width;
         const y = landmark.y * canvas.height;
         
-        // Simple glowing dot
+        // Vary dot size slightly for visual interest
+        const baseSize = 2.5;
+        const sizeVariation = Math.sin(index * 0.5) * 0.5 + baseSize;
+        
+        // Simple glowing dot with subtle animation
         ctx.fillStyle = currentPhase.color;
         ctx.shadowColor = currentPhase.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
+        
+        // Add slight opacity variation for depth
+        ctx.globalAlpha = 0.6 + Math.sin(index * 0.3) * 0.4;
         
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.arc(x, y, sizeVariation, 0, 2 * Math.PI);
         ctx.fill();
       });
+      
+      // Reset alpha
+      ctx.globalAlpha = 1;
 
       // Reset shadow
       ctx.shadowBlur = 0;
