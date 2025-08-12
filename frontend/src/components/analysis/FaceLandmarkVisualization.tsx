@@ -44,11 +44,19 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   // Initialize TensorFlow and face detector
   useEffect(() => {
     const initializeDetector = async () => {
+      const startTime = performance.now();
+      
       try {
-        console.log('🔧 Initializing TensorFlow.js backend...');
-        await tf.ready();
+        console.log('🔧 [TensorFlow] Starting initialization at', new Date().toISOString());
         
-        console.log('🔧 Loading MediaPipe Face Mesh model...');
+        console.log('🔧 [TensorFlow] Initializing backend and WebGL...');
+        const backendStart = performance.now();
+        await tf.ready();
+        const backendTime = performance.now() - backendStart;
+        console.log(`✅ [TensorFlow] Backend ready in ${Math.round(backendTime)}ms`);
+        
+        console.log('🔧 [MediaPipe] Loading Face Mesh model weights...');
+        const modelStart = performance.now();
         const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
         const detectorConfig = {
           runtime: 'tfjs' as const,
@@ -56,11 +64,27 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         };
         
         const faceDetector = await faceLandmarksDetection.createDetector(model, detectorConfig);
+        const modelTime = performance.now() - modelStart;
+        console.log(`✅ [MediaPipe] Face Mesh model loaded in ${Math.round(modelTime)}ms`);
+        
         setDetector(faceDetector);
-        console.log('✅ Face landmark detector initialized');
+        
+        const totalTime = performance.now() - startTime;
+        console.log(`🎯 [TensorFlow] Complete initialization in ${Math.round(totalTime)}ms`);
+        console.log(`📊 [Performance] Backend: ${Math.round(backendTime)}ms, Model: ${Math.round(modelTime)}ms`);
+        
+        // Track performance for analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'tensorflow_initialization', {
+            'custom_parameter_3': totalTime, // load_time custom parameter
+            'backend_time': backendTime,
+            'model_time': modelTime
+          });
+        }
+        
       } catch (err) {
-        console.error('❌ Failed to initialize face detector:', err);
-        setError('Failed to load face detection model');
+        console.error('❌ [TensorFlow] Failed to initialize:', err);
+        setError('AI 얼굴 인식 모델 로딩에 실패했습니다. 새로고침을 시도해주세요.');
       } finally {
         setIsLoading(false);
       }
@@ -214,13 +238,23 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
       setLandmarks(detectedFaces);
       
-      // Animate through different phases
-      const phases = ['detecting', 'extracting', 'analyzing', 'complete'] as const;
+      // Animate through different phases with realistic timing
+      const phases = [
+        { name: 'detecting', duration: 2000, description: 'AI 얼굴 탐지 중' },
+        { name: 'extracting', duration: 2500, description: '특징점 추출 중' }, 
+        { name: 'analyzing', duration: 3000, description: '딥러닝 분석 중' },
+        { name: 'complete', duration: 1500, description: '분석 완료' }
+      ] as const;
+      
       for (let i = 0; i < phases.length; i++) {
-        setAnimationPhase(phases[i]);
-        drawLandmarks(detectedFaces, phases[i]);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const phase = phases[i];
+        console.log(`🎯 [Face Analysis] Phase ${i + 1}/4: ${phase.description} (${phase.duration}ms)`);
+        setAnimationPhase(phase.name);
+        drawLandmarks(detectedFaces, phase.name);
+        await new Promise(resolve => setTimeout(resolve, phase.duration));
       }
+      
+      console.log('✅ [Face Analysis] Complete landmark analysis finished');
 
       if (onLandmarksDetected) {
         onLandmarksDetected(detectedFaces);
@@ -257,10 +291,22 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
+      <div className={`flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg ${className}`}>
         <div className="text-center p-8">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-gray-600">Loading AI face detection model...</p>
+          <div className="relative">
+            {/* Main loading spinner */}
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            {/* Inner spinning dot */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-gray-800">AI 얼굴 인식 엔진 초기화 중...</p>
+            <p className="text-xs text-gray-500">MediaPipe Face Mesh 모델 로딩</p>
+            <div className="flex items-center justify-center space-x-1 text-xs text-gray-400">
+              <span className="animate-bounce">🧠</span>
+              <span>TensorFlow.js + WebGL 가속</span>
+            </div>
+          </div>
         </div>
       </div>
     );

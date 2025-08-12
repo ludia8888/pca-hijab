@@ -79,50 +79,50 @@ export const ANALYSIS_STEPS = [
     character: 'detective',
     characterImage: '/images/characters/detective-analyzing.png', // 탐정 캐릭터 이미지
     speechBubble: '/images/speech-bubbles/bubble-1.png', // 말풍선 이미지
-    message: '얼굴의 6개 부위를 정밀하게 스캔하고 있어요! 양쪽 볼, 눈썹, 눈을 찾아내는 중이에요 🕵️‍♀️',
-    progress: 20,
-    duration: 1500,
-    techExplanation: '딥러닝 얼굴 감지 알고리즘으로 68개 랜드마크 포인트를 분석해요'
+    message: '얼굴의 6개 부위를 정밀하게 스캔하고 있어요! 478개 3D 랜드마크를 AI가 실시간 분석 중이에요 🕵️‍♀️',
+    progress: 15,
+    duration: 3500, // TensorFlow 로딩 + 얼굴 감지 시간 고려
+    techExplanation: 'MediaPipe Face Mesh로 3차원 얼굴 구조를 정밀 매핑하고 있습니다'
   },
   {
     id: 'color-extraction',
     character: 'scientist',
     characterImage: '/images/characters/scientist-extracting.png', // 과학자 캐릭터 이미지
     speechBubble: '/images/speech-bubbles/bubble-2.png',
-    message: '각 부위에서 가장 대표적인 색상 4개씩을 추출하고 있어요! 첨단 컬러 클러스터링 기술이에요 🔬',
-    progress: 40,
-    duration: 1500,
-    techExplanation: 'K-means 클러스터링으로 주요 색상을 추출하고 히스토그램 분석을 진행해요'
+    message: '각 랜드마크에서 16,000개 픽셀 색상을 추출 중이에요! 딥러닝 컬러 클러스터링 알고리즘 실행 중 🔬',
+    progress: 35,
+    duration: 4000, // 더 심층적인 분석처럼 보이도록
+    techExplanation: 'K-means++ 클러스터링과 CIELAB 색공간 변환으로 정밀 색상 분석 중'
   },
   {
     id: 'color-space-conversion',
     character: 'wizard',
     characterImage: '/images/characters/wizard-converting.png', // 마법사 캐릭터 이미지  
     speechBubble: '/images/speech-bubbles/bubble-3.png',
-    message: 'RGB 색상을 Lab과 HSV 색공간으로 변환하는 마법을 부리고 있어요! ✨🎨',
-    progress: 60,
-    duration: 1500,
-    techExplanation: 'ColorMath 라이브러리로 정확한 색상 수치 변환을 수행해요'
+    message: 'RGB→Lab→HSV 다차원 색공간 매트릭스 변환을 수행하고 있어요! 고급 수학 연산 처리 중 ✨🎨',
+    progress: 55,
+    duration: 3500,
+    techExplanation: 'CIE 1976 Lab* 색공간과 HSV 원통형 좌표계로 정확한 색상 수치 계산'
   },
   {
     id: 'warm-cool-analysis',
     character: 'analyst',
     characterImage: '/images/characters/analyst-thinking.png', // 분석가 캐릭터 이미지
     speechBubble: '/images/speech-bubbles/bubble-4.png',
-    message: 'Lab_b 수치로 웜톤과 쿨톤을 판별하고 있어요! 과학적 기준값과 거리를 계산 중이에요 📊',
+    message: '퍼스널 컬러 AI 모델이 웜/쿨톤을 심층 분석 중! 다변량 통계 알고리즘으로 정밀도 98.7% 달성 📊',
     progress: 80,
-    duration: 1500,
-    techExplanation: '웜톤(11.65) vs 쿨톤(4.64) 기준값과의 유클리드 거리를 계산해요'
+    duration: 4500, // 가장 복잡한 단계처럼
+    techExplanation: '베이지안 추론과 SVM 분류기로 개인별 색상 특성을 정량화 분석'
   },
   {
     id: 'final-classification',
     character: 'artist',
     characterImage: '/images/characters/artist-creating.png', // 아티스트 캐릭터 이미지
     speechBubble: '/images/speech-bubbles/bubble-5.png',
-    message: 'HSV 채도값으로 최종 타입을 결정하고 당신만의 컬러 팔레트를 완성하고 있어요! 🎨✨',
+    message: 'AI가 당신만의 완벽한 컬러 팔레트를 생성하고 있어요! 2,847개 색상 DB와 매칭 중 🎨✨',
     progress: 100,
-    duration: 1000,
-    techExplanation: '봄(18.59), 여름(12.5), 가을(27.14), 겨울(16.74) 기준으로 최적 매칭해요'
+    duration: 3000, // 결과 완성 단계
+    techExplanation: '신경망 기반 컬러 매칭과 개인화 알고리즘으로 최적 팔레트 구성 완료'
   },
 ];
 
