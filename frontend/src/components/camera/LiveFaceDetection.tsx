@@ -249,10 +249,18 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
 
   // Start/stop detection
   useEffect(() => {
+    console.log('🔄 [LiveFaceDetection] Detection state changed:', {
+      isActive,
+      hasDetector: !!detector,
+      hasVideoRef: !!videoRef.current
+    });
+    
     if (isActive && detector && videoRef.current) {
+      console.log('▶️ [LiveFaceDetection] Starting face detection');
       setIsDetecting(true);
       detectFaces();
     } else {
+      console.log('⏸️ [LiveFaceDetection] Stopping face detection');
       setIsDetecting(false);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -293,9 +301,9 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
       {/* Overlay canvas for live face detection */}
       <canvas
         ref={canvasRef}
-        className={`absolute inset-0 w-full h-full pointer-events-none z-30 ${className}`}
+        className={`absolute inset-0 w-full h-full pointer-events-none z-50 ${className}`}
         style={{ 
-          mixBlendMode: 'screen', // Blend mode for nice overlay effect
+          mixBlendMode: 'normal', // Changed from 'screen' for better visibility
           opacity: isDetecting ? 1 : 0,
           transition: 'opacity 0.3s ease-in-out'
         }}

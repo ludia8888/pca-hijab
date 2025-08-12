@@ -705,8 +705,8 @@ const UploadPage = (): JSX.Element => {
             />
             <canvas ref={canvasRef} className="absolute opacity-0 pointer-events-none" />
             
-            {/* Face detection guide overlay - Always visible when no preview */}
-            {!previewUrl && (
+            {/* Face detection guide overlay - Only show when camera is not active */}
+            {!previewUrl && !isCameraActive && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
                   className="border-4 border-white border-dashed opacity-70 animate-pulse"
@@ -747,13 +747,14 @@ const UploadPage = (): JSX.Element => {
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
                 {isCameraActive && !cameraError ? (
                   <>
-                    {/* Live Face Detection Overlay */}
+                    {/* Live Face Detection Overlay with AR animations */}
                     <LiveFaceDetection
                       videoRef={videoRef}
                       isActive={isCameraActive && !previewUrl}
                       onFaceDetected={(detected) => {
                         // Track face detection for analytics
                         if (detected) {
+                          console.log('👤 [Face Detection] Face detected in camera');
                           trackEvent('live_face_detected', {
                             page: 'upload',
                             detection_type: 'real_time_camera',
@@ -761,6 +762,7 @@ const UploadPage = (): JSX.Element => {
                           });
                         }
                       }}
+                      className="z-40"
                     />
 
                     {/* Camera status indicator */}
