@@ -125,7 +125,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     return ctx;
   };
 
-  // Draw color draping overlay around face
+  // Draw color draping overlay as background
   const drawColorDraping = (
     ctx: CanvasRenderingContext2D, 
     canvas: HTMLCanvasElement, 
@@ -133,20 +133,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     side: 'left' | 'right' | 'full',
     face: DetectedFace
   ) => {
-    ctx.save();
-    
-    // Calculate face bounds
+    // Calculate face center for split
     const faceKeypoints = face.keypoints;
     const xs = faceKeypoints.map(kp => kp.x * canvas.width);
-    const ys = faceKeypoints.map(kp => kp.y * canvas.height);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-    const faceCenterX = (minX + maxX) / 2;
-    const faceCenterY = (minY + maxY) / 2;
-    const faceWidth = maxX - minX;
-    const faceHeight = maxY - minY;
+    const faceCenterX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
     
     // Determine which side to apply color
     let rectX = 0;
@@ -159,33 +149,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       rectWidth = canvas.width - faceCenterX;
     }
     
-    // First, draw solid color background for the entire side
+    // Draw solid color background for the entire side
     const mainColor = colors[Math.floor(colors.length / 2)];
     ctx.fillStyle = mainColor;
     ctx.fillRect(rectX, 0, rectWidth, canvas.height);
-    
-    // Then create gradient only around face edges for smooth transition
-    const faceRadius = Math.max(faceWidth, faceHeight) / 2;
-    const gradientRadius = faceRadius * 1.5;
-    
-    // Create radial gradient from face center
-    const gradient = ctx.createRadialGradient(
-      faceCenterX, faceCenterY, faceRadius * 0.8,
-      faceCenterX, faceCenterY, gradientRadius
-    );
-    
-    // Gradient: transparent at face -> color at edges
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
-    gradient.addColorStop(0.8, mainColor + 'CC');
-    gradient.addColorStop(1, mainColor);
-    
-    // Apply gradient overlay
-    ctx.globalCompositeOperation = 'source-atop';
-    ctx.fillStyle = gradient;
-    ctx.fillRect(rectX, 0, rectWidth, canvas.height);
-    
-    ctx.restore();
   };
 
   // Draw face landmarks on canvas with new effects
@@ -207,12 +174,19 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     if (phase === 'warm-cool') {
       // Draw warm-cool comparison with split screen
       faces.forEach((face) => {
-        // Draw color draping around face (not on face)
+        // Save original image state
+        ctx.save();
+        
+        // Draw color backgrounds first (behind everything)
+        ctx.globalCompositeOperation = 'destination-over';
+        
         // Left side - Warm tones
         drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left', face);
         
         // Right side - Cool tones  
         drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right', face);
+        
+        ctx.restore();
         
         // Add dividing line at face center
         const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
@@ -249,6 +223,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
         const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
         
+        // Save state and draw colors behind image
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-over';
+        
         if (isWarm) {
           // Spring vs Autumn
           drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left', face);
@@ -278,6 +256,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           ctx.fillText('겨울 쿨톤', faceCenterX + 80, 40);
           ctx.restore();
         }
+        
+        ctx.restore(); // Restore from destination-over mode
         
         // Add dividing line at face center
         ctx.save();
