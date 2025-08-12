@@ -249,10 +249,10 @@ const AnalyzingPage = (): JSX.Element => {
   return (
     <PageLayout>
       <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Face Landmark Visualization with original aspect ratio */}
+        {/* Face Landmark Visualization matching upload page size */}
         {showLandmarkVisualization && imageUrl && (
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="relative max-w-md w-full">
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-8">
+            <div className="relative w-full max-w-md">
               <FaceLandmarkVisualization
                 imageUrl={imageUrl}
                 currentAnalysisStep={currentStep}
@@ -266,7 +266,7 @@ const AnalyzingPage = (): JSX.Element => {
                   user_flow_step: 'landmarks_visualization_synchronized'
                 });
               }}
-                className="w-full"
+                className="w-full h-full"
               />
             </div>
           </div>

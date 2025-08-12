@@ -444,14 +444,15 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         crossOrigin="anonymous"
       />
       
-      {/* Canvas for landmark visualization */}
+      {/* Canvas for landmark visualization - matching upload page preview */}
       <canvas
         ref={canvasRef}
-        className="w-full h-auto rounded-lg shadow-2xl"
+        className="w-full rounded-2xl shadow-2xl"
         style={{ 
           backgroundColor: 'transparent',
-          maxHeight: '80vh',
-          objectFit: 'contain'
+          aspectRatio: '3/4',
+          objectFit: 'cover',
+          display: 'block'
         }}
       />
     </div>
