@@ -101,67 +101,217 @@ const UploadPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div className="max-w-md mx-auto w-full pb-20">
-        {/* Minimal Instructions */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        {/* Header */}
+        <div className="text-center pt-12 pb-8">
+          <h1 className="text-2xl font-bold text-gray-900">
             Upload Your Photo
-          </h2>
-          <p className="text-gray-500 text-sm">
-            Natural lighting • No filters • Front facing
-          </p>
+          </h1>
         </div>
 
-        {/* Minimal Error Display */}
-        {error && (
-          <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-2xl">
-            <p className="text-red-600 text-sm text-center">{error}</p>
+        {/* Main Photo Area */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          {/* Photo Preview/Upload Area */}
+          <div className="relative w-full max-w-sm aspect-[3/4] mb-8">
+            {previewUrl ? (
+              // Show uploaded image with face detection guide
+              <div className="relative w-full h-full rounded-3xl overflow-hidden bg-white shadow-lg">
+                <img 
+                  src={previewUrl} 
+                  alt="Uploaded photo" 
+                  className="w-full h-full object-cover"
+                />
+                {/* Face detection guide overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div 
+                    className="border-4 border-white border-dashed rounded-full opacity-80"
+                    style={{
+                      width: '70%',
+                      aspectRatio: '1',
+                      borderStyle: 'dashed',
+                      borderWidth: '3px'
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              // Show upload placeholder
+              <div 
+                className="relative w-full h-full rounded-3xl bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.capture = 'environment';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      try {
+                        const preview = URL.createObjectURL(file);
+                        await handleImageUpload(file, preview);
+                      } catch (error) {
+                        handleImageError('Failed to process image');
+                      }
+                    }
+                  };
+                  input.click();
+                }}
+              >
+                {/* Placeholder content */}
+                <div className="text-center text-gray-500">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-300 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium">Tap to add photo</p>
+                </div>
+                
+                {/* Face guide overlay */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div 
+                    className="border-4 border-gray-400 border-dashed rounded-full opacity-30"
+                    style={{
+                      width: '70%',
+                      aspectRatio: '1',
+                      borderStyle: 'dashed',
+                      borderWidth: '3px'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Glass Morphism Upload Area */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary-light/20 rounded-3xl blur-xl" />
-          <div className="relative bg-white/70 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
-            <ImageUpload
-              onUpload={handleImageUpload}
-              onError={handleImageError}
-              disabled={isCompressing}
-            />
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl max-w-sm w-full">
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            </div>
+          )}
+
+          {/* Guidelines */}
+          <div className="bg-white rounded-2xl p-6 mx-4 mb-8 shadow-sm border border-gray-100 max-w-sm w-full">
+            <div className="grid grid-cols-3 gap-6">
+              {/* No filters */}
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-black rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-700">No filters</p>
+              </div>
+
+              {/* Natural lighting */}
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-black rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-700">Natural lighting</p>
+              </div>
+
+              {/* Front facing */}
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-black rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-700">Front facing</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Floating Action Button */}
-        {selectedFile && previewUrl && (
-          <div className="fixed bottom-24 left-0 right-0 px-5 z-40">
+        {/* Bottom Controls */}
+        <div className="pb-safe-area-inset-bottom pb-8">
+          <div className="flex items-center justify-center gap-8 px-8">
+            {/* Camera Button */}
             <button
-              onClick={handleAnalyze}
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.capture = 'environment';
+                input.onchange = async (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    try {
+                      const preview = URL.createObjectURL(file);
+                      await handleImageUpload(file, preview);
+                    } catch (error) {
+                      handleImageError('Failed to process image');
+                    }
+                  }
+                };
+                input.click();
+              }}
               disabled={isCompressing}
-              className="w-full max-w-md mx-auto block bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold py-4 px-8 rounded-full shadow-2xl hover:shadow-primary/50 hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-2 border-primary-500"
+              className="w-16 h-16 bg-white border-4 border-black rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               {isCompressing ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Processing...
-                </span>
+                <svg className="animate-spin w-6 h-6 text-black" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
               ) : (
-                <span className="drop-shadow-sm">🎨 Analyze My Colors</span>
+                <div className="w-12 h-12 bg-white rounded-full"></div>
               )}
             </button>
-          </div>
-        )}
 
-        {/* Minimal Privacy Link */}
-        <div className="text-center mt-8">
-          <button
-            onClick={() => setShowPrivacyPopup(true)}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Privacy Policy
-          </button>
+            {/* Flip Camera Button */}
+            <button
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.capture = 'user'; // Front camera
+                input.onchange = async (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    try {
+                      const preview = URL.createObjectURL(file);
+                      await handleImageUpload(file, preview);
+                    } catch (error) {
+                      handleImageError('Failed to process image');
+                    }
+                  }
+                };
+                input.click();
+              }}
+              className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Analyze Button - Only show when image is selected */}
+          {selectedFile && previewUrl && (
+            <div className="px-8 mt-6">
+              <button
+                onClick={handleAnalyze}
+                disabled={isCompressing}
+                className="w-full bg-primary-600 text-white font-semibold py-4 px-6 rounded-2xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              >
+                {isCompressing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  '🎨 Analyze My Colors'
+                )}
+              </button>
+            </div>
+          )}
         </div>
         
         {/* Privacy Popup */}
