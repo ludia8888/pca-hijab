@@ -28,45 +28,92 @@ const UploadPage = (): JSX.Element => {
 
   // Redirect if no session
   useEffect(() => {
-    console.log('[UploadPage] Checking session, sessionId:', sessionId);
+    console.log('🔍 [UploadPage] Checking session, sessionId:', sessionId);
+    console.log('🔍 [UploadPage] Page load time:', new Date().toISOString());
+    
     if (!sessionId) {
-      console.log('[UploadPage] No session found, redirecting to home...');
+      console.log('❌ [UploadPage] No session found, redirecting to home...');
       trackDropOff('upload_page', 'no_session');
       navigate(ROUTES.HOME);
     } else {
-      console.log('[UploadPage] Session found, user can upload image');
+      console.log('✅ [UploadPage] Session found, user can upload image');
       // Track successful page entry
       trackEvent('page_enter', {
         page: 'upload',
         user_flow_step: 'upload_page_entered',
-        has_session: true
+        has_session: true,
+        timestamp: new Date().toISOString()
       });
     }
   }, [sessionId, navigate]);
 
   // Start camera on component mount
   useEffect(() => {
+    console.log('🚀 [Camera API] Component mounted, starting camera...');
+    console.log('🚀 [Camera API] Browser info:', {
+      userAgent: navigator.userAgent,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine
+    });
+    
+    // Check device capabilities
+    if (navigator.mediaDevices) {
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          console.log('📹 [Camera API] Available video devices:', videoDevices.length);
+          videoDevices.forEach((device, index) => {
+            console.log(`📹 [Camera API] Video device ${index + 1}:`, {
+              deviceId: device.deviceId,
+              label: device.label || 'Unknown Camera',
+              kind: device.kind
+            });
+          });
+        })
+        .catch(err => {
+          console.error('🚨 [Camera API] Error enumerating devices:', err);
+        });
+    }
+    
     startCamera();
     
     // Cleanup camera on unmount
     return () => {
+      console.log('🔚 [Camera API] Component unmounting, cleaning up...');
       stopCamera();
     };
   }, []);
 
   // Restart camera when facing mode changes
   useEffect(() => {
+    console.log('🔄 [Camera API] Facing mode changed to:', facingMode);
+    
     if (isCameraActive) {
+      console.log('🔄 [Camera API] Restarting camera with new facing mode...');
       stopCamera();
       startCamera();
+    } else {
+      console.log('ℹ️ [Camera API] Camera not active, skipping restart');
     }
   }, [facingMode]);
 
   const startCamera = async (): Promise<void> => {
+    console.log('🎥 [Camera API] Starting camera initialization...');
+    console.log('🎥 [Camera API] Requested facing mode:', facingMode);
+    
+    // Check if getUserMedia is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('🚨 [Camera API] getUserMedia not supported in this browser');
+      setCameraError('Camera not supported in this browser');
+      setIsCameraActive(false);
+      return;
+    }
+    
+    console.log('✅ [Camera API] getUserMedia is available');
+    
     try {
       setCameraError(null);
-      
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      console.log('🎥 [Camera API] Requesting media stream with constraints:', {
         video: { 
           facingMode: facingMode,
           width: { ideal: 1280 },
@@ -74,22 +121,114 @@ const UploadPage = (): JSX.Element => {
         }
       });
       
+      const startTime = performance.now();
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      const initTime = performance.now() - startTime;
+      
+      console.log('✅ [Camera API] Media stream obtained successfully');
+      console.log('⏱️ [Camera API] Initialization time:', Math.round(initTime), 'ms');
+      console.log('🎥 [Camera API] Media stream details:', {
+        id: mediaStream.id,
+        active: mediaStream.active,
+        videoTracks: mediaStream.getVideoTracks().length,
+        audioTracks: mediaStream.getAudioTracks().length
+      });
+      
+      // Log video track details
+      const videoTracks = mediaStream.getVideoTracks();
+      if (videoTracks.length > 0) {
+        const videoTrack = videoTracks[0];
+        const settings = videoTrack.getSettings();
+        console.log('📹 [Camera API] Video track settings:', {
+          width: settings.width,
+          height: settings.height,
+          frameRate: settings.frameRate,
+          facingMode: settings.facingMode,
+          deviceId: settings.deviceId,
+          label: videoTrack.label
+        });
+      }
+      
       if (videoRef.current) {
+        console.log('🎥 [Camera API] Setting video element source...');
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+        
+        // Add event listeners to track video element state
+        videoRef.current.onloadedmetadata = () => {
+          console.log('📺 [Camera API] Video metadata loaded');
+          console.log('📺 [Camera API] Video dimensions:', {
+            videoWidth: videoRef.current?.videoWidth,
+            videoHeight: videoRef.current?.videoHeight
+          });
+        };
+        
+        videoRef.current.onplay = () => {
+          console.log('▶️ [Camera API] Video started playing');
+        };
+        
+        videoRef.current.onerror = (e) => {
+          console.error('🚨 [Camera API] Video element error:', e);
+        };
+        
+        await videoRef.current.play();
+        console.log('✅ [Camera API] Video element play() called successfully');
+      } else {
+        console.error('🚨 [Camera API] Video ref is null!');
       }
       
       setStream(mediaStream);
       setIsCameraActive(true);
       
+      console.log('🎉 [Camera API] Camera initialization completed successfully');
+      
       // Track camera access
       trackEvent('camera_access', {
         facing_mode: facingMode,
         status: 'granted',
-        page: 'upload'
+        page: 'upload',
+        init_time_ms: Math.round(initTime),
+        video_width: mediaStream.getVideoTracks()[0]?.getSettings().width,
+        video_height: mediaStream.getVideoTracks()[0]?.getSettings().height
       });
     } catch (error) {
-      console.error('Camera access error:', error);
+      console.error('🚨 [Camera API] Camera access error:', error);
+      
+      // Log detailed error information
+      if (error instanceof Error) {
+        console.error('🚨 [Camera API] Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+        
+        // Specific error types
+        switch (error.name) {
+          case 'NotAllowedError':
+            console.error('🚨 [Camera API] User denied camera permission');
+            break;
+          case 'NotFoundError':
+            console.error('🚨 [Camera API] No camera device found');
+            break;
+          case 'NotReadableError':
+            console.error('🚨 [Camera API] Camera is already in use by another application');
+            break;
+          case 'OverconstrainedError':
+            console.error('🚨 [Camera API] Camera constraints cannot be satisfied');
+            break;
+          case 'SecurityError':
+            console.error('🚨 [Camera API] Security error - HTTPS required');
+            break;
+          default:
+            console.error('🚨 [Camera API] Unknown camera error type:', error.name);
+        }
+      }
+      
       setCameraError('Camera access denied or not available');
       setIsCameraActive(false);
       
@@ -99,40 +238,116 @@ const UploadPage = (): JSX.Element => {
   };
 
   const stopCamera = (): void => {
+    console.log('🛑 [Camera API] Stopping camera...');
+    
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      const tracks = stream.getTracks();
+      console.log('🛑 [Camera API] Stopping', tracks.length, 'media tracks');
+      
+      tracks.forEach((track, index) => {
+        console.log(`🛑 [Camera API] Stopping track ${index + 1}:`, {
+          kind: track.kind,
+          label: track.label,
+          readyState: track.readyState
+        });
+        track.stop();
+      });
+      
       setStream(null);
+      console.log('✅ [Camera API] All tracks stopped and stream cleared');
+    } else {
+      console.log('ℹ️ [Camera API] No active stream to stop');
     }
+    
     setIsCameraActive(false);
+    console.log('✅ [Camera API] Camera stopped successfully');
   };
 
   const capturePhoto = async (): Promise<void> => {
-    if (!videoRef.current || !canvasRef.current || !isCameraActive) return;
+    console.log('📸 [Camera API] Starting photo capture...');
+    
+    // Pre-capture validation
+    if (!videoRef.current) {
+      console.error('🚨 [Camera API] Video ref is null - cannot capture');
+      return;
+    }
+    if (!canvasRef.current) {
+      console.error('🚨 [Camera API] Canvas ref is null - cannot capture');
+      return;
+    }
+    if (!isCameraActive) {
+      console.error('🚨 [Camera API] Camera not active - cannot capture');
+      return;
+    }
+    
+    console.log('✅ [Camera API] Pre-capture validation passed');
 
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
 
-      if (!context) return;
+      if (!context) {
+        console.error('🚨 [Camera API] Cannot get 2D context from canvas');
+        return;
+      }
+      
+      console.log('📸 [Camera API] Video element state:', {
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        readyState: video.readyState,
+        currentTime: video.currentTime,
+        paused: video.paused
+      });
 
       // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      
+      console.log('📸 [Camera API] Canvas dimensions set:', {
+        width: canvas.width,
+        height: canvas.height
+      });
 
+      const drawStartTime = performance.now();
       // Draw the video frame to canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const drawTime = performance.now() - drawStartTime;
+      
+      console.log('✅ [Camera API] Video frame drawn to canvas in', Math.round(drawTime), 'ms');
 
+      const blobStartTime = performance.now();
       // Convert to blob
       canvas.toBlob(async (blob) => {
+        const blobTime = performance.now() - blobStartTime;
+        console.log('⏱️ [Camera API] Canvas to blob conversion time:', Math.round(blobTime), 'ms');
+        
         if (blob) {
+          console.log('📸 [Camera API] Photo blob created:', {
+            size: blob.size,
+            type: blob.type,
+            sizeKB: Math.round(blob.size / 1024)
+          });
+          
           const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
           const preview = URL.createObjectURL(file);
           
+          console.log('📸 [Camera API] Photo file created:', {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          });
+          
           await handleImageUpload(file, preview);
+          
+          console.log('✅ [Camera API] Photo uploaded successfully');
           
           // Stop camera after capture
           stopCamera();
+        } else {
+          console.error('🚨 [Camera API] Failed to create blob from canvas');
+          handleImageError('Failed to capture photo - blob creation failed');
         }
       }, 'image/jpeg', 0.8);
 
@@ -140,16 +355,113 @@ const UploadPage = (): JSX.Element => {
       trackEvent('photo_capture', {
         method: 'camera',
         facing_mode: facingMode,
-        page: 'upload'
+        page: 'upload',
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
+        draw_time_ms: Math.round(drawTime)
       });
+      
+      console.log('🎉 [Camera API] Photo capture process completed successfully');
     } catch (error) {
-      console.error('Photo capture error:', error);
+      console.error('🚨 [Camera API] Photo capture error:', error);
+      
+      if (error instanceof Error) {
+        console.error('🚨 [Camera API] Capture error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
+      
       handleImageError('Failed to capture photo');
     }
   };
 
   const switchCamera = (): void => {
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+    const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+    console.log('🔄 [Camera API] Switching camera from', facingMode, 'to', newFacingMode);
+    
+    setFacingMode(newFacingMode);
+    
+    // Track camera switch
+    trackEvent('camera_switch', {
+      from_facing_mode: facingMode,
+      to_facing_mode: newFacingMode,
+      page: 'upload'
+    });
+  };
+
+  // Camera API testing function for development
+  const testCameraAPI = (): void => {
+    console.log('\n🧪 [Camera API Test] Starting comprehensive camera API test...');
+    console.log('=' .repeat(50));
+    
+    // Test 1: Browser support
+    console.log('🧪 [Test 1] Browser support check:');
+    console.log('   - navigator.mediaDevices:', !!navigator.mediaDevices);
+    console.log('   - getUserMedia:', !!navigator.mediaDevices?.getUserMedia);
+    console.log('   - enumerateDevices:', !!navigator.mediaDevices?.enumerateDevices);
+    
+    // Test 2: Current state
+    console.log('🧪 [Test 2] Current camera state:');
+    console.log('   - isCameraActive:', isCameraActive);
+    console.log('   - facingMode:', facingMode);
+    console.log('   - cameraError:', cameraError);
+    console.log('   - stream:', stream ? 'Active' : 'None');
+    console.log('   - videoRef.current:', !!videoRef.current);
+    console.log('   - canvasRef.current:', !!canvasRef.current);
+    
+    // Test 3: Video element details
+    if (videoRef.current) {
+      const video = videoRef.current;
+      console.log('🧪 [Test 3] Video element details:');
+      console.log('   - videoWidth:', video.videoWidth);
+      console.log('   - videoHeight:', video.videoHeight);
+      console.log('   - readyState:', video.readyState);
+      console.log('   - currentTime:', video.currentTime);
+      console.log('   - paused:', video.paused);
+      console.log('   - srcObject:', !!video.srcObject);
+    }
+    
+    // Test 4: Stream details
+    if (stream) {
+      console.log('🧪 [Test 4] Media stream details:');
+      console.log('   - id:', stream.id);
+      console.log('   - active:', stream.active);
+      console.log('   - videoTracks:', stream.getVideoTracks().length);
+      
+      stream.getVideoTracks().forEach((track, index) => {
+        const settings = track.getSettings();
+        console.log(`   - Track ${index + 1}:`, {
+          label: track.label,
+          readyState: track.readyState,
+          width: settings.width,
+          height: settings.height,
+          facingMode: settings.facingMode
+        });
+      });
+    }
+    
+    // Test 5: Device enumeration
+    if (navigator.mediaDevices?.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const videoDevices = devices.filter(d => d.kind === 'videoinput');
+          console.log('🧪 [Test 5] Available video devices:');
+          console.log('   - Total devices:', devices.length);
+          console.log('   - Video devices:', videoDevices.length);
+          videoDevices.forEach((device, index) => {
+            console.log(`   - Device ${index + 1}:`, {
+              deviceId: device.deviceId.substring(0, 20) + '...',
+              label: device.label || 'Unknown Camera'
+            });
+          });
+        })
+        .catch(err => console.error('   - Device enumeration failed:', err));
+    }
+    
+    console.log('=' .repeat(50));
+    console.log('🧪 [Camera API Test] Test completed. Check logs above for details.\n');
   };
 
   // Pre-warm API on component mount (production only)
@@ -383,6 +695,18 @@ const UploadPage = (): JSX.Element => {
             </div>
           </div>
         </div>
+
+        {/* Debug Controls (Development only) */}
+        {import.meta.env.DEV && (
+          <div className="fixed top-4 left-4 z-50">
+            <button
+              onClick={testCameraAPI}
+              className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+            >
+              🧪 Test Camera API
+            </button>
+          </div>
+        )}
 
         {/* Bottom Controls */}
         <div className="pb-safe-area-inset-bottom pb-8">
