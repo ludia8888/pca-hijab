@@ -8,7 +8,6 @@ import { ImageUpload } from '@/components/forms';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
-import LiveFaceDetection from '@/components/camera/LiveFaceDetection';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -705,8 +704,8 @@ const UploadPage = (): JSX.Element => {
             />
             <canvas ref={canvasRef} className="absolute opacity-0 pointer-events-none" />
             
-            {/* Face detection guide overlay - Only show when camera is not active */}
-            {!previewUrl && !isCameraActive && (
+            {/* Face detection guide overlay - Always show when no preview */}
+            {!previewUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
                   className="border-4 border-white border-dashed opacity-70 animate-pulse"
@@ -747,32 +746,14 @@ const UploadPage = (): JSX.Element => {
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
                 {isCameraActive && !cameraError ? (
                   <>
-                    {/* Live Face Detection Overlay with AR animations */}
-                    <LiveFaceDetection
-                      videoRef={videoRef}
-                      isActive={isCameraActive && !previewUrl}
-                      onFaceDetected={(detected) => {
-                        // Track face detection for analytics
-                        if (detected) {
-                          console.log('👤 [Face Detection] Face detected in camera');
-                          trackEvent('live_face_detected', {
-                            page: 'upload',
-                            detection_type: 'real_time_camera',
-                            user_flow_step: 'face_recognition_feedback'
-                          });
-                        }
-                      }}
-                      className="z-40"
-                    />
-
                     {/* Camera status indicator */}
-                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 z-30">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       Live
                     </div>
 
                     {/* Camera mode indicator */}
-                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm z-30">
                       {facingMode === 'user' ? 'Front' : 'Back'}
                     </div>
                   </>

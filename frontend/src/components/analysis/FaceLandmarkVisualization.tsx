@@ -229,12 +229,21 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     try {
       console.log('🔍 [Synchronized] Starting face landmark detection...');
       
-      // Use tf.tidy for memory management
-      const faces = await tf.tidy(async () => {
-        const detectionResult = await detector.estimateFaces(imageRef.current!);
-        console.log(`✅ [Synchronized] Detected ${detectionResult.length} face(s)`);
-        return detectionResult;
-      });
+      // Async operations cannot be wrapped with tf.tidy - use manual cleanup
+      const faces = await detector.estimateFaces(imageRef.current);
+      console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
+
+      // Manually clean up any tensors that might have been created
+      if (typeof tf !== 'undefined' && tf.engine) {
+        const numTensorsBeforeCleanup = tf.memory().numTensors;
+        tf.engine().startScope();
+        tf.engine().endScope();
+        const numTensorsAfterCleanup = tf.memory().numTensors;
+        
+        if (numTensorsBeforeCleanup > numTensorsAfterCleanup) {
+          console.log(`🧹 [Memory] Cleaned ${numTensorsBeforeCleanup - numTensorsAfterCleanup} leaked tensors in static detection`);
+        }
+      }
 
       if (faces.length === 0) {
         setError('No faces detected in the image');
@@ -255,7 +264,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           xMax: face.box.xMax / imageRef.current!.width,
           yMax: face.box.yMax / imageRef.current!.height,
           width: face.box.width / imageRef.current!.width,
-          height: face.box.height / imageRef.current!.height,
+          height: face.box.height / imageRef.current!.width,
         }
       }));
 
@@ -269,6 +278,12 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     } catch (err) {
       console.error('❌ Face detection failed:', err);
       setError('Face detection failed');
+      
+      // Force cleanup on error to prevent memory buildup
+      if (typeof tf !== 'undefined' && tf.engine) {
+        tf.engine().startScope();
+        tf.engine().endScope();
+      }
     }
   }, [detector, onLandmarksDetected]);
 

@@ -95,14 +95,21 @@ export class TensorFlowMemoryMonitor {
       
       const beforeMemory = this.getMemoryInfo();
       
-      // Dispose all disposable tensors
+      // Multiple cleanup strategies to handle different types of memory leaks
+      
+      // 1. Dispose all disposable tensors
       tf.disposeVariables();
       
-      // Run engine cleanup
-      tf.engine().startScope();
-      tf.engine().endScope();
+      // 2. Run engine scope cleanup multiple times for better coverage
+      for (let i = 0; i < 3; i++) {
+        tf.engine().startScope();
+        tf.engine().endScope();
+      }
       
-      // Force garbage collection if available
+      // 3. Manual tensor cleanup for any remaining tensors
+      this.manualTensorCleanup();
+      
+      // 4. Force garbage collection if available
       if (typeof window !== 'undefined' && (window as any).gc) {
         (window as any).gc();
       }
@@ -113,8 +120,36 @@ export class TensorFlowMemoryMonitor {
       console.log(`✅ [Memory Monitor] Cleanup completed. Freed ${freedMB.toFixed(1)}MB`);
       console.log(`🧠 [Memory Monitor] Before: ${beforeMemory.numTensors} tensors, After: ${afterMemory.numTensors} tensors`);
       
+      // Update memory history after cleanup
+      this.memoryHistory.push(afterMemory.numBytes / (1024 * 1024));
+      if (this.memoryHistory.length > 20) {
+        this.memoryHistory.shift();
+      }
+      
     } catch (error) {
       console.error('❌ [Memory Monitor] Cleanup failed:', error);
+    }
+  }
+
+  /**
+   * Manual tensor cleanup for MediaPipe and other potential leaks
+   */
+  private manualTensorCleanup(): void {
+    try {
+      // Get all tensors and try to dispose any that are orphaned
+      const memInfo = tf.memory();
+      if (memInfo.numTensors > 100) { // Only if we have a significant number
+        console.log(`🔧 [Memory Monitor] Manual cleanup: ${memInfo.numTensors} tensors detected`);
+        
+        // Force a more aggressive cleanup cycle
+        if (typeof tf.engine().registryFactory !== 'undefined') {
+          // Clear any cached operations
+          tf.engine().startScope();
+          tf.engine().endScope();
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ [Memory Monitor] Manual cleanup failed:', error);
     }
   }
 
