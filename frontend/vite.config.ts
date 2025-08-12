@@ -40,11 +40,17 @@ export default defineConfig(({ command, mode }) => ({
     target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     // Chunk size warnings
     chunkSizeWarningLimit: 1000,
+    // Increase module preload timeout
+    modulePreload: {
+      polyfill: true
+    },
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['zustand', '@tanstack/react-query'],
+          // Separate TensorFlow into its own chunk
+          'tensorflow-vendor': ['@tensorflow/tfjs', '@tensorflow-models/face-landmarks-detection'],
           // Separate critical pages to prevent cross-contamination
           'core-pages': [
             'src/pages/HomePage.tsx',
