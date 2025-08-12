@@ -711,7 +711,7 @@ const UploadPage = (): JSX.Element => {
                   className="border-4 border-white border-dashed opacity-70 animate-pulse"
                   style={{
                     width: '60%',
-                    height: '75%',
+                    height: '70%',
                     borderStyle: 'dashed',
                     borderWidth: '3px',
                     borderRadius: '50%'
@@ -733,7 +733,7 @@ const UploadPage = (): JSX.Element => {
                     className="border-4 border-white border-dashed opacity-80"
                     style={{
                       width: '60%',
-                      height: '75%',
+                      height: '70%',
                       borderStyle: 'dashed',
                       borderWidth: '3px',
                       borderRadius: '50%'
