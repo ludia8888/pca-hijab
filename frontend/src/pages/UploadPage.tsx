@@ -75,7 +75,23 @@ const UploadPage = (): JSX.Element => {
         });
     }
     
-    startCamera();
+    // Wait for refs to be available before starting camera
+    const startCameraWhenReady = () => {
+      console.log('🔍 [Camera API] Checking refs availability...', {
+        videoRef: !!videoRef.current,
+        canvasRef: !!canvasRef.current
+      });
+      
+      if (videoRef.current && canvasRef.current) {
+        console.log('✅ [Camera API] Refs are ready, starting camera');
+        startCamera();
+      } else {
+        console.log('⏳ [Camera API] Refs not ready yet, waiting...');
+        setTimeout(startCameraWhenReady, 100);
+      }
+    };
+    
+    startCameraWhenReady();
     
     // Cleanup camera on unmount
     return () => {
@@ -91,7 +107,24 @@ const UploadPage = (): JSX.Element => {
     if (isCameraActive) {
       console.log('🔄 [Camera API] Restarting camera with new facing mode...');
       stopCamera();
-      startCamera();
+      
+      // Wait for refs to be available before restarting camera
+      const restartCameraWhenReady = () => {
+        console.log('🔍 [Camera API] Checking refs for restart...', {
+          videoRef: !!videoRef.current,
+          canvasRef: !!canvasRef.current
+        });
+        
+        if (videoRef.current && canvasRef.current) {
+          console.log('✅ [Camera API] Refs ready for restart, starting camera');
+          startCamera();
+        } else {
+          console.log('⏳ [Camera API] Refs not ready for restart, waiting...');
+          setTimeout(restartCameraWhenReady, 100);
+        }
+      };
+      
+      restartCameraWhenReady();
     } else {
       console.log('ℹ️ [Camera API] Camera not active, skipping restart');
     }
@@ -100,6 +133,17 @@ const UploadPage = (): JSX.Element => {
   const startCamera = async (): Promise<void> => {
     console.log('🎥 [Camera API] Starting camera initialization...');
     console.log('🎥 [Camera API] Requested facing mode:', facingMode);
+    
+    // Double-check refs are available
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('🚨 [Camera API] Video or canvas ref is null at start!', {
+        videoRef: !!videoRef.current,
+        canvasRef: !!canvasRef.current
+      });
+      setCameraError('Camera elements not ready');
+      setIsCameraActive(false);
+      return;
+    }
     
     // Check if getUserMedia is available
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
