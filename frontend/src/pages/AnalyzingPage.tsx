@@ -364,47 +364,6 @@ const AnalyzingPage = (): JSX.Element => {
           </div>
         )}
 
-        {/* Enhanced Tips section with character context */}
-        <div className="mt-12 max-w-md w-full">
-          <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6 border border-primary-100">
-            <h3 className="text-h5 font-semibold text-gray-900 mb-4 text-center">
-              🧬 AI가 분석하는 과학적 원리
-            </h3>
-            <div className="space-y-3 text-body-sm text-gray-700">
-              <div className="flex items-start space-x-3">
-                <span className="text-primary-600 font-bold">01</span>
-                <p>
-                  <strong>얼굴 인식:</strong> 68개 랜드마크 포인트로 정확한 부위를 감지해요
-                </p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-primary-600 font-bold">02</span>
-                <p>
-                  <strong>색상 추출:</strong> K-means 클러스터링으로 대표 색상을 찾아내요
-                </p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-primary-600 font-bold">03</span>
-                <p>
-                  <strong>수치 분석:</strong> Lab과 HSV 색공간에서 정밀한 톤 분석을 진행해요
-                </p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-primary-600 font-bold">04</span>
-                <p>
-                  <strong>최적 매칭:</strong> 과학적 기준값과 비교해 당신만의 퍼스널컬러를 찾아요
-                </p>
-              </div>
-            </div>
-            
-            {/* Fun fact */}
-            <div className="mt-4 p-3 bg-white rounded-lg border border-primary-200">
-              <p className="text-xs text-gray-600 text-center italic">
-                💡 <strong>재미있는 사실:</strong> 이 분석 과정은 매초 수백만 번의 계산을 통해 0.1% 오차 범위 내에서 당신의 퍼스널컬러를 찾아냅니다!
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </PageLayout>
   );
