@@ -5,11 +5,15 @@ import { createRoot } from 'react-dom/client'
 import { QueryProvider } from './hooks/QueryProvider'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { preloadEnvironment } from './utils/preload'
+import { setupChunkErrorHandler } from './utils/chunkErrorHandler'
 import './index.css'
 import './styles/admin-theme.css'
 import App from './App.tsx'
 
 console.log('[MAIN] Imports complete');
+
+// Setup chunk error handler
+setupChunkErrorHandler();
 
 // Add error handlers
 window.addEventListener('error', (event) => {

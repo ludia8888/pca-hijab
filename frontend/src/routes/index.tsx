@@ -4,14 +4,15 @@ import { lazy, Suspense } from 'react';
 import { ProtectedAdminRoute } from '@/components/auth/ProtectedAdminRoute';
 import RootLayout from '@/components/layout/RootLayout';
 import { env } from '@/config/environment';
+import { retryChunkLoad } from '@/utils/chunkErrorHandler';
 
-// Lazy load pages for code splitting
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const HIGLandingPage = lazy(() => import('@/pages/HIGLandingPage'));
-const UploadPage = lazy(() => import('@/pages/UploadPage'));
-const AnalyzingPage = lazy(() => import('@/pages/AnalyzingPage'));
-const ResultPage = lazy(() => import('@/pages/ResultPage'));
-const CompletionPage = lazy(() => import('@/pages/CompletionPage'));
+// Lazy load pages for code splitting with retry mechanism
+const HomePage = lazy(() => retryChunkLoad(() => import('@/pages/HomePage')));
+const HIGLandingPage = lazy(() => retryChunkLoad(() => import('@/pages/HIGLandingPage')));
+const UploadPage = lazy(() => retryChunkLoad(() => import('@/pages/UploadPage')));
+const AnalyzingPage = lazy(() => retryChunkLoad(() => import('@/pages/AnalyzingPage')));
+const ResultPage = lazy(() => retryChunkLoad(() => import('@/pages/ResultPage')));
+const CompletionPage = lazy(() => retryChunkLoad(() => import('@/pages/CompletionPage')));
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
