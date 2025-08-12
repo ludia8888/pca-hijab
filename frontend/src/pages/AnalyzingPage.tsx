@@ -261,19 +261,19 @@ const AnalyzingPage = (): JSX.Element => {
 
   const currentStepData = ANALYSIS_STEPS[currentStep] || ANALYSIS_STEPS[0];
 
-  // Handle skip to next step
-  const handleSkipStep = () => {
+  // Handle proceeding to next step (for draping phases)
+  const handleProceedToNext = () => {
     if (canSkip && currentStep < ANALYSIS_STEPS.length - 1) {
-      // Clear current timer
+      // Clear current timer if any
       if (stepTimerRef.current) {
         clearTimeout(stepTimerRef.current);
       }
       
-      // Track skip action
-      trackEvent('analysis_step_skipped', {
+      // Track user interaction
+      trackEvent('draping_phase_completed', {
         step_number: currentStep + 1,
         step_name: currentStepData.id,
-        user_flow_step: 'user_skipped_draping'
+        user_flow_step: 'user_proceeded_from_draping'
       });
       
       // Move to next step
@@ -286,7 +286,7 @@ const AnalyzingPage = (): JSX.Element => {
     <PageLayout>
       <div 
         className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"
-        onClick={handleSkipStep}
+        onClick={handleProceedToNext}
         style={{ cursor: canSkip ? 'pointer' : 'default' }}
       >
         {/* Face Landmark Visualization matching upload page size - show immediately */}
