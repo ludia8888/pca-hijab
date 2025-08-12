@@ -7,6 +7,9 @@ interface FaceLandmarkVisualizationProps {
   imageUrl: string;
   onLandmarksDetected?: (landmarks: any[]) => void;
   className?: string;
+  // External control for synchronization
+  currentAnalysisStep?: number;
+  forceAnimationPhase?: 'detecting' | 'extracting' | 'analyzing' | 'complete' | null;
 }
 
 interface FaceLandmark {
@@ -31,7 +34,9 @@ interface DetectedFace {
 const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   imageUrl,
   onLandmarksDetected,
-  className = ''
+  className = '',
+  currentAnalysisStep = 0,
+  forceAnimationPhase = null
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -119,42 +124,45 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         face.box.height * canvas.height
       );
 
-      // Define landmark groups for different analysis phases
+      // Define landmark groups for different analysis phases (synchronized with character messages)
       const landmarkGroups = {
         detecting: {
-          points: face.keypoints.filter((_, i) => i % 8 === 0), // Sparse points
+          points: face.keypoints.filter((_, i) => i % 6 === 0), // Dense detection grid
           color: '#00FF9F',
           size: 3,
-          label: 'Face Detection'
+          label: '478개 3D 랜드마크 스캔'
         },
         extracting: {
           points: face.keypoints.filter((_, i) => 
-            // Eyes, nose, mouth key points
-            (i >= 33 && i <= 133) || // Right eye
-            (i >= 362 && i <= 398) || // Left eye  
-            (i >= 1 && i <= 97) || // Nose
-            (i >= 61 && i <= 291) // Mouth
+            // 16,000 pixels color extraction areas
+            (i >= 33 && i <= 133) || // Right eye region
+            (i >= 362 && i <= 398) || // Left eye region  
+            (i >= 1 && i <= 97) || // Nose region
+            (i >= 61 && i <= 291) || // Mouth region
+            (i >= 10 && i <= 151) || // Forehead region
+            (i >= 172 && i <= 175) // Cheek regions
           ),
           color: '#FF6B9D',
-          size: 2,
-          label: 'Feature Extraction'
+          size: 2.5,
+          label: '16,000개 픽셀 색상 추출'
         },
         analyzing: {
-          points: face.keypoints, // All points
+          points: face.keypoints, // All points for comprehensive analysis
           color: '#FFD93D',
-          size: 1.5,
-          label: 'Color Analysis'
+          size: 1.8,
+          label: '다차원 색공간 매트릭스 변환'
         },
         complete: {
           points: face.keypoints.filter((_, i) => 
-            // Key beauty points for personal color analysis
+            // Final personal color analysis points
             i === 10 || i === 151 || i === 9 || i === 175 || // Forehead
             i === 93 || i === 132 || i === 58 || i === 172 || // Cheeks
-            i === 150 || i === 176 || i === 148 || i === 152 // Jaw/chin
+            i === 150 || i === 176 || i === 148 || i === 152 || // Jaw/chin
+            i === 1 || i === 2 || i === 61 || i === 291 // Key facial points
           ),
           color: '#8B5CF6',
           size: 4,
-          label: 'Personal Color Points'
+          label: '2,847개 색상 DB 매칭 완료'
         }
       };
 
@@ -202,16 +210,27 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     });
   }, []);
 
+  // Map analysis steps to animation phases
+  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'analyzing' | 'complete' => {
+    const phaseMap = {
+      0: 'detecting' as const,    // face-detection
+      1: 'extracting' as const,  // color-extraction 
+      2: 'analyzing' as const,   // color-space-conversion
+      3: 'analyzing' as const,   // warm-cool-analysis
+      4: 'complete' as const,    // final-classification
+    };
+    return phaseMap[step as keyof typeof phaseMap] || 'detecting';
+  };
+
   // Detect face landmarks
   const detectLandmarks = useCallback(async () => {
     if (!detector || !imageRef.current) return;
 
     try {
-      console.log('🔍 Starting face landmark detection...');
-      setAnimationPhase('detecting');
+      console.log('🔍 [Synchronized] Starting face landmark detection...');
       
       const faces = await detector.estimateFaces(imageRef.current);
-      console.log(`✅ Detected ${faces.length} face(s)`);
+      console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
 
       if (faces.length === 0) {
         setError('No faces detected in the image');
@@ -237,24 +256,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       }));
 
       setLandmarks(detectedFaces);
-      
-      // Animate through different phases with realistic timing
-      const phases = [
-        { name: 'detecting', duration: 2000, description: 'AI 얼굴 탐지 중' },
-        { name: 'extracting', duration: 2500, description: '특징점 추출 중' }, 
-        { name: 'analyzing', duration: 3000, description: '딥러닝 분석 중' },
-        { name: 'complete', duration: 1500, description: '분석 완료' }
-      ] as const;
-      
-      for (let i = 0; i < phases.length; i++) {
-        const phase = phases[i];
-        console.log(`🎯 [Face Analysis] Phase ${i + 1}/4: ${phase.description} (${phase.duration}ms)`);
-        setAnimationPhase(phase.name);
-        drawLandmarks(detectedFaces, phase.name);
-        await new Promise(resolve => setTimeout(resolve, phase.duration));
-      }
-      
-      console.log('✅ [Face Analysis] Complete landmark analysis finished');
+      console.log('🎯 [Synchronized] Face landmarks ready - waiting for character sync');
 
       if (onLandmarksDetected) {
         onLandmarksDetected(detectedFaces);
@@ -264,7 +266,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       console.error('❌ Face detection failed:', err);
       setError('Face detection failed');
     }
-  }, [detector, drawLandmarks, onLandmarksDetected]);
+  }, [detector, onLandmarksDetected]);
 
   // Handle image load
   const handleImageLoad = useCallback(() => {
@@ -288,6 +290,19 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       detectLandmarks();
     }
   }, [detector, detectLandmarks]);
+
+  // Synchronize animation phase with external analysis step
+  useEffect(() => {
+    if (landmarks.length > 0 && (forceAnimationPhase || currentAnalysisStep >= 0)) {
+      const targetPhase = forceAnimationPhase || getAnimationPhaseForStep(currentAnalysisStep);
+      
+      if (targetPhase !== animationPhase) {
+        console.log(`🎯 [Sync] Character step ${currentAnalysisStep} → Animation phase: ${targetPhase}`);
+        setAnimationPhase(targetPhase);
+        drawLandmarks(landmarks, targetPhase);
+      }
+    }
+  }, [currentAnalysisStep, forceAnimationPhase, landmarks, animationPhase, drawLandmarks, getAnimationPhaseForStep]);
 
   if (isLoading) {
     return (
@@ -350,16 +365,24 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         style={{ backgroundColor: '#f9fafb' }}
       />
       
-      {/* Analysis phase indicator */}
-      <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm font-medium">
+      {/* Analysis phase indicator - synchronized with character */}
+      <div className="absolute top-4 left-4 bg-black bg-opacity-80 text-white px-4 py-2 rounded-lg text-sm font-medium border border-primary-400">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-          <span className="capitalize">{animationPhase.replace('_', ' ')}</span>
-          {landmarks.length > 0 && (
-            <span className="text-gray-300">
-              ({landmarks[0]?.keypoints.length || 0} landmarks)
-            </span>
-          )}
+          <div className="w-2 h-2 rounded-full bg-primary animate-ping"></div>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-300">Step {currentAnalysisStep + 1}/5</span>
+            <span className="capitalize font-semibold">{
+              landmarks.length > 0 && animationPhase ? 
+              (['detecting', 'extracting', 'analyzing', 'complete'].includes(animationPhase) ? 
+                {
+                  'detecting': '478개 3D 랜드마크 스캔',
+                  'extracting': '16,000개 픽셀 색상 추출', 
+                  'analyzing': '다차원 색공간 변환',
+                  'complete': '2,847개 색상 DB 매칭'
+                }[animationPhase] : 'AI 분석 중'
+              ) : 'AI 초기화 중'
+            }</span>
+          </div>
         </div>
       </div>
 

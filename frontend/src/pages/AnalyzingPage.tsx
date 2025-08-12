@@ -94,9 +94,12 @@ const AnalyzingPage = (): JSX.Element => {
       const timer = setTimeout(() => {
         setProgress(step.progress);
         
-        // Show face landmark visualization during the first step (face detection)
-        if (currentStep === 0 && imageUrl) {
+        // Show face landmark visualization throughout all analysis steps
+        if (imageUrl && currentStep < ANALYSIS_STEPS.length) {
           setShowLandmarkVisualization(true);
+        } else if (currentStep >= ANALYSIS_STEPS.length) {
+          // Hide visualization when analysis is complete
+          setShowLandmarkVisualization(false);
         }
         
         // Track progress milestones
@@ -260,17 +263,20 @@ const AnalyzingPage = (): JSX.Element => {
           </div>
         </div>
 
-        {/* Face Landmark Visualization - Show during analysis */}
+        {/* Face Landmark Visualization - Show during analysis with synchronized animation */}
         {showLandmarkVisualization && imageUrl && (
           <div className="w-full max-w-md mx-auto mb-6">
             <FaceLandmarkVisualization
               imageUrl={imageUrl}
+              currentAnalysisStep={currentStep}
               onLandmarksDetected={(landmarks) => {
-                console.log('Face landmarks detected:', landmarks);
+                console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
                 trackEvent('face_landmarks_detected', {
                   faces_count: landmarks.length,
                   total_landmarks: landmarks.reduce((sum, face) => sum + face.keypoints.length, 0),
-                  user_flow_step: 'landmarks_visualization_complete'
+                  current_analysis_step: currentStep,
+                  step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
+                  user_flow_step: 'landmarks_visualization_synchronized'
                 });
               }}
               className="h-64 sm:h-72"
