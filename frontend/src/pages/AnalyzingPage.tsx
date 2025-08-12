@@ -7,6 +7,7 @@ import { analyzeImage } from '@/services/api';
 import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement } from '@/utils/analytics';
 import { ImageAnalysisError } from '@/components/ui/ImageAnalysisError/ImageAnalysisError';
 import { parseImageAnalysisError, ImageAnalysisErrorType } from '@/utils/imageAnalysisErrors';
+import FaceLandmarkVisualization from '@/components/analysis/FaceLandmarkVisualization';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const AnalyzingPage = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<ImageAnalysisErrorType | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showLandmarkVisualization, setShowLandmarkVisualization] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
 
@@ -33,8 +36,19 @@ const AnalyzingPage = (): JSX.Element => {
         file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
         file_type: uploadedFile.type
       });
+      
+      // Create image URL for visualization
+      const url = uploadedImage || URL.createObjectURL(uploadedFile);
+      setImageUrl(url);
+      
+      // Cleanup URL when component unmounts
+      return () => {
+        if (!uploadedImage && url) {
+          URL.revokeObjectURL(url);
+        }
+      };
     }
-  }, [uploadedFile, navigate]);
+  }, [uploadedFile, uploadedImage, navigate]);
 
   // Start analysis on mount
   useEffect(() => {
@@ -80,6 +94,11 @@ const AnalyzingPage = (): JSX.Element => {
       const timer = setTimeout(() => {
         setProgress(step.progress);
         
+        // Show face landmark visualization during the first step (face detection)
+        if (currentStep === 0 && imageUrl) {
+          setShowLandmarkVisualization(true);
+        }
+        
         // Track progress milestones
         trackEvent('analysis_progress', {
           step_number: currentStep + 1,
@@ -96,7 +115,7 @@ const AnalyzingPage = (): JSX.Element => {
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [currentStep]);
+  }, [currentStep, imageUrl]);
 
   const performAnalysis = async (): Promise<void> => {
     if (!uploadedFile) return;
@@ -240,6 +259,24 @@ const AnalyzingPage = (): JSX.Element => {
             />
           </div>
         </div>
+
+        {/* Face Landmark Visualization - Show during analysis */}
+        {showLandmarkVisualization && imageUrl && (
+          <div className="w-full max-w-md mx-auto mb-6">
+            <FaceLandmarkVisualization
+              imageUrl={imageUrl}
+              onLandmarksDetected={(landmarks) => {
+                console.log('Face landmarks detected:', landmarks);
+                trackEvent('face_landmarks_detected', {
+                  faces_count: landmarks.length,
+                  total_landmarks: landmarks.reduce((sum, face) => sum + face.keypoints.length, 0),
+                  user_flow_step: 'landmarks_visualization_complete'
+                });
+              }}
+              className="h-64 sm:h-72"
+            />
+          </div>
+        )}
 
         {/* Character Animation Area */}
         <div className="relative w-full max-w-lg mx-auto mb-8">
