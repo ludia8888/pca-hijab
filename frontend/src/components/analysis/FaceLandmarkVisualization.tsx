@@ -125,30 +125,78 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     return ctx;
   };
 
-  // Draw color draping overlay
+  // Draw color draping overlay around face only (hijab-like effect)
   const drawColorDraping = (
     ctx: CanvasRenderingContext2D, 
     canvas: HTMLCanvasElement, 
     colors: string[], 
-    side: 'left' | 'right' | 'full'
+    side: 'left' | 'right' | 'full',
+    face: DetectedFace
   ) => {
     ctx.save();
     
-    // Set composite operation for overlay effect
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = 0.4;
+    // Calculate face bounds
+    const faceKeypoints = face.keypoints;
+    const xs = faceKeypoints.map(kp => kp.x * canvas.width);
+    const ys = faceKeypoints.map(kp => kp.y * canvas.height);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const faceCenterX = (minX + maxX) / 2;
+    const faceCenterY = (minY + maxY) / 2;
+    const faceWidth = maxX - minX;
+    const faceHeight = maxY - minY;
     
-    const width = side === 'full' ? canvas.width : canvas.width / 2;
-    const startX = side === 'right' ? canvas.width / 2 : 0;
+    // Create expanded area around face (like hijab framing)
+    const expansionFactor = 1.8; // How much larger than face
+    const expandedWidth = faceWidth * expansionFactor;
+    const expandedHeight = faceHeight * expansionFactor;
     
-    // Create gradient with provided colors
-    const gradient = ctx.createLinearGradient(startX, 0, startX + width, canvas.height);
-    colors.forEach((color, index) => {
-      gradient.addColorStop(index / (colors.length - 1), color);
-    });
+    // Determine which side to apply color
+    let startX = faceCenterX - expandedWidth / 2;
+    let endX = faceCenterX + expandedWidth / 2;
     
+    if (side === 'left') {
+      endX = faceCenterX;
+    } else if (side === 'right') {
+      startX = faceCenterX;
+    }
+    
+    // Create radial gradient from face center
+    const gradient = ctx.createRadialGradient(
+      faceCenterX, faceCenterY, Math.min(faceWidth, faceHeight) / 2,
+      faceCenterX, faceCenterY, Math.max(expandedWidth, expandedHeight) / 2
+    );
+    
+    // Add colors with fade effect
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // Transparent at face
+    gradient.addColorStop(0.3, colors[0] + '40'); // Start color with transparency
+    gradient.addColorStop(0.6, colors[Math.floor(colors.length / 2)] + '60');
+    gradient.addColorStop(1, colors[colors.length - 1] + '20'); // Fade out
+    
+    // Draw the draped area
     ctx.fillStyle = gradient;
-    ctx.fillRect(startX, 0, width, canvas.height);
+    
+    // Create path for hijab-like shape
+    ctx.beginPath();
+    
+    // Top arc (like hijab crown)
+    ctx.moveTo(startX, faceCenterY - expandedHeight / 2);
+    ctx.quadraticCurveTo(
+      faceCenterX, faceCenterY - expandedHeight * 0.7,
+      endX, faceCenterY - expandedHeight / 2
+    );
+    
+    // Side curves
+    ctx.lineTo(endX, faceCenterY + expandedHeight / 2);
+    ctx.quadraticCurveTo(
+      faceCenterX, faceCenterY + expandedHeight * 0.6,
+      startX, faceCenterY + expandedHeight / 2
+    );
+    
+    ctx.closePath();
+    ctx.fill();
     
     ctx.restore();
   };
@@ -172,47 +220,35 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     if (phase === 'warm-cool') {
       // Draw warm-cool comparison with split screen
       faces.forEach((face) => {
-        // Save current state
-        ctx.save();
-        
-        // Create face mask to protect face area
-        createFaceMask(ctx, face, canvas);
-        ctx.clip();
-        
-        // Draw original image in face area
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        
-        ctx.restore();
-        
-        // Draw color draping outside face area
-        ctx.save();
-        
-        // Create inverse mask (everything except face)
-        ctx.globalCompositeOperation = 'destination-over';
-        
+        // Draw color draping around face (not on face)
         // Left side - Warm tones
-        drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left');
+        drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left', face);
         
         // Right side - Cool tones  
-        drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right');
+        drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right', face);
         
-        // Add dividing line
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Add dividing line at face center
+        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
+        
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.lineWidth = 2;
         ctx.setLineDash([10, 10]);
         ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, 0);
-        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.moveTo(faceCenterX, 0);
+        ctx.lineTo(faceCenterX, canvas.height);
         ctx.stroke();
+        ctx.restore();
         
         // Add labels
+        ctx.save();
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.shadowColor = 'black';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
         ctx.shadowBlur = 4;
-        ctx.fillText('웜톤', 20, 40);
-        ctx.fillText('쿨톤', canvas.width - 80, 40);
-        
+        ctx.textAlign = 'center';
+        ctx.fillText('웜톤', faceCenterX - 80, 40);
+        ctx.fillText('쿨톤', faceCenterX + 80, 40);
         ctx.restore();
       });
       return;
@@ -221,57 +257,50 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     if (phase === 'season') {
       // Draw seasonal comparison
       faces.forEach((face) => {
-        ctx.save();
-        
-        // Create face mask
-        createFaceMask(ctx, face, canvas);
-        ctx.clip();
-        
-        // Draw original image in face area
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        
-        ctx.restore();
-        
-        // Draw seasonal colors outside face
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-over';
-        
         // TODO: Determine if warm or cool based on analysis
         const isWarm = true; // This should come from actual analysis
         
+        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
+        
         if (isWarm) {
           // Spring vs Autumn
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left');
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.autumn.colors, 'right');
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left', face);
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.autumn.colors, 'right', face);
           
+          ctx.save();
           ctx.fillStyle = 'white';
           ctx.font = 'bold 18px sans-serif';
-          ctx.shadowColor = 'black';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
           ctx.shadowBlur = 4;
-          ctx.fillText('봄 웜톤', 20, 40);
-          ctx.fillText('가을 웜톤', canvas.width - 100, 40);
+          ctx.textAlign = 'center';
+          ctx.fillText('봄 웜톤', faceCenterX - 80, 40);
+          ctx.fillText('가을 웜톤', faceCenterX + 80, 40);
+          ctx.restore();
         } else {
           // Summer vs Winter
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.summer.colors, 'left');
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.winter.colors, 'right');
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.summer.colors, 'left', face);
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.winter.colors, 'right', face);
           
+          ctx.save();
           ctx.fillStyle = 'white';
           ctx.font = 'bold 18px sans-serif';
-          ctx.shadowColor = 'black';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
           ctx.shadowBlur = 4;
-          ctx.fillText('여름 쿨톤', 20, 40);
-          ctx.fillText('겨울 쿨톤', canvas.width - 100, 40);
+          ctx.textAlign = 'center';
+          ctx.fillText('여름 쿨톤', faceCenterX - 80, 40);
+          ctx.fillText('겨울 쿨톤', faceCenterX + 80, 40);
+          ctx.restore();
         }
         
-        // Add dividing line
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Add dividing line at face center
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.lineWidth = 2;
         ctx.setLineDash([10, 10]);
         ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, 0);
-        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.moveTo(faceCenterX, 0);
+        ctx.lineTo(faceCenterX, canvas.height);
         ctx.stroke();
-        
         ctx.restore();
       });
       return;
