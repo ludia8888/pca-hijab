@@ -8,6 +8,7 @@ import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement 
 import { ImageAnalysisError } from '@/components/ui/ImageAnalysisError/ImageAnalysisError';
 import { parseImageAnalysisError, ImageAnalysisErrorType } from '@/utils/imageAnalysisErrors';
 import FaceLandmarkVisualization from '@/components/analysis/FaceLandmarkVisualization';
+import { updateSessionWithRecovery } from '@/utils/sessionHelper';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -164,7 +165,6 @@ const AnalyzingPage = (): JSX.Element => {
       // Save analysis result to backend with automatic session recovery
       try {
         if (sessionId) {
-          const { updateSessionWithRecovery } = await import('@/utils/sessionHelper');
           await updateSessionWithRecovery(sessionId, {
             analysisResult: result,
             uploadedImageUrl: uploadedImage // Store image URL if available
