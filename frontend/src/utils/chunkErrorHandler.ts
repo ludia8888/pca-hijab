@@ -55,14 +55,28 @@ export const retryChunkLoad = async <T>(
   const currentUrl = new URL(window.location.href);
   currentUrl.searchParams.set('_cb', Date.now().toString());
   
-  // Give user option to reload with cache busting
-  const shouldReload = confirm(
-    'Resource loading failed. Would you like to refresh the page to try again?'
-  );
+  // For critical errors, automatically reload without asking user
+  // This ensures users don't get stuck in broken states
+  console.log('🔄 Automatically reloading page with cache busting...');
   
-  if (shouldReload) {
+  // Add a flag to prevent infinite reload loops
+  const reloadCount = parseInt(sessionStorage.getItem('chunk_reload_count') || '0');
+  
+  if (reloadCount < 3) {
+    sessionStorage.setItem('chunk_reload_count', (reloadCount + 1).toString());
     window.location.href = currentUrl.toString();
-    return; // This won't execute, but TypeScript needs it
+    return;
+  } else {
+    // After 3 auto-reloads, ask user
+    sessionStorage.removeItem('chunk_reload_count');
+    const shouldReload = confirm(
+      'Multiple resource loading failures detected. Would you like to try refreshing the page one more time?'
+    );
+    
+    if (shouldReload) {
+      window.location.reload();
+      return;
+    }
   }
   
   throw new Error(`Failed to load module after ${maxRetries + 1} attempts. Please refresh the page.`);
