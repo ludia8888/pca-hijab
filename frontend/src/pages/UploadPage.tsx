@@ -8,6 +8,7 @@ import { ImageUpload } from '@/components/forms';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
+import LiveFaceDetection from '@/components/camera/LiveFaceDetection';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -746,6 +747,21 @@ const UploadPage = (): JSX.Element => {
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
                 {isCameraActive && !cameraError ? (
                   <>
+                    {/* Live Face Detection Overlay */}
+                    <LiveFaceDetection
+                      videoRef={videoRef}
+                      isActive={isCameraActive && !previewUrl}
+                      onFaceDetected={(detected) => {
+                        // Track face detection for analytics
+                        if (detected) {
+                          trackEvent('live_face_detected', {
+                            page: 'upload',
+                            detection_type: 'real_time_camera',
+                            user_flow_step: 'face_recognition_feedback'
+                          });
+                        }
+                      }}
+                    />
 
                     {/* Camera status indicator */}
                     <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
