@@ -180,7 +180,46 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
       const currentPhase = simplePhases[phase as keyof typeof simplePhases] || simplePhases.detecting;
       
-      // Draw simple dots for landmarks
+      // Draw connecting lines first (behind dots)
+      ctx.strokeStyle = currentPhase.color;
+      ctx.lineWidth = 0.5;
+      ctx.globalAlpha = 0.2;
+      
+      // Connect nearby points to create mesh effect
+      currentPhase.points.forEach((point1, i) => {
+        if (!point1) return;
+        
+        const x1 = point1.x * canvas.width;
+        const y1 = point1.y * canvas.height;
+        
+        // Connect to next few points in array
+        for (let j = i + 1; j < Math.min(i + 4, currentPhase.points.length); j++) {
+          const point2 = currentPhase.points[j];
+          if (!point2) continue;
+          
+          const x2 = point2.x * canvas.width;
+          const y2 = point2.y * canvas.height;
+          
+          // Calculate distance
+          const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          
+          // Only connect points that are reasonably close (avoid crossing entire face)
+          if (distance < 50) {
+            // Fade line based on distance
+            ctx.globalAlpha = Math.max(0.1, 0.3 - (distance / 100));
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+        }
+      });
+      
+      // Reset alpha for dots
+      ctx.globalAlpha = 1;
+      
+      // Draw dots on top of lines
       currentPhase.points.forEach((landmark, index) => {
         if (!landmark) return;
         
