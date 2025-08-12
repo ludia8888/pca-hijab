@@ -48,8 +48,23 @@ export const retryChunkLoad = async <T>(
     }
   }
   
-  // If all retries failed, try to reload the page as last resort
-  console.error('All chunk loading attempts failed. Suggesting page reload.', lastError);
+  // If all retries failed, try cache-busting reload as last resort
+  console.error('All chunk loading attempts failed. Attempting cache-busting reload.', lastError);
+  
+  // Try to reload with cache busting
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set('_cb', Date.now().toString());
+  
+  // Give user option to reload with cache busting
+  const shouldReload = confirm(
+    'Resource loading failed. Would you like to refresh the page to try again?'
+  );
+  
+  if (shouldReload) {
+    window.location.href = currentUrl.toString();
+    return; // This won't execute, but TypeScript needs it
+  }
+  
   throw new Error(`Failed to load module after ${maxRetries + 1} attempts. Please refresh the page.`);
 };
 

@@ -166,7 +166,23 @@ const AnalyzingPage = (): JSX.Element => {
       // Wait for animation to complete
       const totalDuration = ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000;
       navigationTimeoutRef.current = setTimeout(() => {
-        navigate(ROUTES.RESULT);
+        try {
+          navigate(ROUTES.RESULT);
+        } catch (navigationError) {
+          console.error('Navigation to result page failed:', navigationError);
+          
+          // If navigation fails (likely due to chunk loading), try direct URL change
+          const isChunkError = navigationError instanceof Error && 
+            navigationError.message.includes('Failed to fetch dynamically imported module');
+          
+          if (isChunkError) {
+            console.log('Attempting direct navigation to result page...');
+            window.location.href = ROUTES.RESULT + `?cb=${Date.now()}`;
+          } else {
+            // For non-chunk errors, still try to navigate
+            window.location.href = ROUTES.RESULT;
+          }
+        }
       }, totalDuration);
     } catch (err) {
       console.error('Analysis error:', err);

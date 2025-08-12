@@ -45,11 +45,17 @@ export default defineConfig(({ command, mode }) => ({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['zustand', '@tanstack/react-query'],
+          // Separate critical pages to prevent cross-contamination
+          'core-pages': [
+            'src/pages/HomePage.tsx',
+            'src/pages/AnalyzingPage.tsx', 
+            'src/pages/ResultPage.tsx'
+          ]
         },
-        // Obfuscate chunk names in production
-        chunkFileNames: mode === 'production' ? 'assets/[hash].js' : 'assets/[name]-[hash].js',
-        entryFileNames: mode === 'production' ? 'assets/[hash].js' : 'assets/[name]-[hash].js',
-        assetFileNames: mode === 'production' ? 'assets/[hash].[ext]' : 'assets/[name]-[hash].[ext]'
+        // Stable chunk names for better caching
+        chunkFileNames: mode === 'production' ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash].js',
+        entryFileNames: mode === 'production' ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash].js',
+        assetFileNames: mode === 'production' ? 'assets/[name]-[hash].[ext]' : 'assets/[name]-[hash].[ext]'
       },
     },
   },
