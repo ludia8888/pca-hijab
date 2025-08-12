@@ -714,7 +714,7 @@ const UploadPage = (): JSX.Element => {
                     height: '75%',
                     borderStyle: 'dashed',
                     borderWidth: '3px',
-                    borderRadius: '60% 60% 50% 50%'
+                    borderRadius: '50%'
                   }}
                 />
               </div>
@@ -736,7 +736,7 @@ const UploadPage = (): JSX.Element => {
                       height: '75%',
                       borderStyle: 'dashed',
                       borderWidth: '3px',
-                      borderRadius: '60% 60% 50% 50%'
+                      borderRadius: '50%'
                     }}
                   />
                 </div>
