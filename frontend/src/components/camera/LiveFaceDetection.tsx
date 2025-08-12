@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import '@tensorflow/tfjs-backend-webgl';
 import * as tf from '@tensorflow/tfjs';
+import { memoryMonitor } from '@/utils/memoryMonitor';
 
 interface LiveFaceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -47,6 +48,9 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
       try {
         console.log('🔧 [Live Detection] Initializing lightweight face detector...');
         
+        // Start memory monitoring
+        memoryMonitor.startMonitoring(3000); // Check every 3 seconds
+        
         // Use lightweight TFJS runtime for real-time performance
         await tf.ready();
         
@@ -74,10 +78,30 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
     }
 
     return () => {
-      // Cleanup
+      // Comprehensive cleanup to prevent memory leaks
+      console.log('🧹 [Cleanup] Disposing LiveFaceDetection resources...');
+      
+      // Stop memory monitoring
+      memoryMonitor.stopMonitoring();
+      
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
+      
+      // Dispose detector if it exists
+      if (detector) {
+        try {
+          detector.dispose();
+          console.log('✅ [Cleanup] Face detector disposed');
+        } catch (error) {
+          console.warn('⚠️ [Cleanup] Failed to dispose detector:', error);
+        }
+      }
+      
+      // Force comprehensive cleanup
+      memoryMonitor.forceCleanup();
+      console.log('🧠 [Cleanup] TensorFlow memory cleaned up');
     };
   }, [isActive]);
 
@@ -184,7 +208,7 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
     });
   }, [animationPhase, onFaceDetected, videoRef]);
 
-  // Real-time detection loop
+  // Real-time detection loop with memory management
   const detectFaces = useCallback(async () => {
     if (!detector || !videoRef.current || !isActive) return;
 
@@ -197,41 +221,64 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
     }
 
     try {
-      // Detect faces (throttled for performance)
-      const faces = await detector.estimateFaces(video);
-      
-      // Convert to our format
-      const detectedFaces: DetectedFace[] = faces.map(face => ({
-        keypoints: face.keypoints.map(kp => ({
-          x: kp.x,
-          y: kp.y,
-          z: (kp as any).z || 0
-        })),
-        box: {
-          xMin: face.box.xMin,
-          yMin: face.box.yMin,
-          xMax: face.box.xMax,
-          yMax: face.box.yMax,
-          width: face.box.width,
-          height: face.box.height,
-        }
-      }));
+      // Use tf.tidy to automatically dispose tensors and prevent memory leaks
+      const detectedFaces = await tf.tidy(async () => {
+        console.log(`🧠 [Memory] GPU memory before detection: ${tf.memory().numBytes / 1024 / 1024}MB`);
+        
+        // Detect faces (throttled for performance)
+        const faces = await detector.estimateFaces(video);
+        
+        // Convert to our format
+        const processedFaces: DetectedFace[] = faces.map(face => ({
+          keypoints: face.keypoints.map(kp => ({
+            x: kp.x,
+            y: kp.y,
+            z: (kp as any).z || 0
+          })),
+          box: {
+            xMin: face.box.xMin,
+            yMin: face.box.yMin,
+            xMax: face.box.xMax,
+            yMax: face.box.yMax,
+            width: face.box.width,
+            height: face.box.height,
+          }
+        }));
+
+        return processedFaces;
+      });
 
       drawLiveLandmarks(detectedFaces);
       setAnimationPhase(prev => prev + 1);
+
+      // Periodic cleanup using memory monitor
+      if (animationPhase % 50 === 0) { // Every ~6 seconds
+        const alert = memoryMonitor.checkMemoryUsage();
+        
+        if (alert && alert.level !== 'info') {
+          console.log(`🧹 [Memory] ${alert.message} - Running cleanup`);
+          memoryMonitor.forceCleanup();
+        }
+        
+        // Log memory trend
+        const trend = memoryMonitor.getMemoryTrend();
+        if (trend === 'increasing') {
+          console.warn('📈 [Memory] Memory usage trending upward - monitoring closely');
+        }
+      }
 
     } catch (error) {
       console.warn('⚠️ [Live Detection] Frame detection failed:', error);
     }
 
-    // Continue detection loop (throttled to ~10 FPS for better performance)
+    // Continue detection loop (throttled to ~8 FPS for better memory management)
     setTimeout(() => {
       if (isActive && detector) {
         animationFrameRef.current = requestAnimationFrame(detectFaces);
       }
-    }, 100); // ~10 FPS - good balance between smooth animation and performance
+    }, 125); // ~8 FPS - better balance for memory management
 
-  }, [detector, isActive, drawLiveLandmarks, videoRef]);
+  }, [detector, isActive, drawLiveLandmarks, videoRef, animationPhase]);
 
   // Start/stop detection
   useEffect(() => {
@@ -256,8 +303,26 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
     }
 
     return () => {
+      // Stop detection loop and clean up resources
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
+      // Clean up canvas
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      
+      // Force garbage collection
+      if (typeof tf !== 'undefined' && tf.engine) {
+        console.log('🧹 [Detection Cleanup] Forcing tensor cleanup...');
+        tf.engine().startScope();
+        tf.engine().endScope();
       }
     };
   }, [isActive, detector, detectFaces, videoRef]);

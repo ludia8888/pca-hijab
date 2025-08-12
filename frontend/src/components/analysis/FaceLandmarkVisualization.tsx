@@ -222,15 +222,19 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     return phaseMap[step as keyof typeof phaseMap] || 'detecting';
   };
 
-  // Detect face landmarks
+  // Detect face landmarks with memory management
   const detectLandmarks = useCallback(async () => {
     if (!detector || !imageRef.current) return;
 
     try {
       console.log('🔍 [Synchronized] Starting face landmark detection...');
       
-      const faces = await detector.estimateFaces(imageRef.current);
-      console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
+      // Use tf.tidy for memory management
+      const faces = await tf.tidy(async () => {
+        const detectionResult = await detector.estimateFaces(imageRef.current!);
+        console.log(`✅ [Synchronized] Detected ${detectionResult.length} face(s)`);
+        return detectionResult;
+      });
 
       if (faces.length === 0) {
         setError('No faces detected in the image');
