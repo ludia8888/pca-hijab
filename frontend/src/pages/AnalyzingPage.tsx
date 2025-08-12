@@ -96,11 +96,11 @@ const AnalyzingPage = (): JSX.Element => {
     if (currentStep < ANALYSIS_STEPS.length) {
       const step = ANALYSIS_STEPS[currentStep];
       
-      // Enable skip for draping phases (warm-cool-comparison and season-comparison)
-      const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison';
+      // Enable skip for draping phases and final result
+      const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison' || step.id === 'final-result';
       setCanSkip(isDrapingPhase);
       
-      // Show navigation buttons ONLY for draping phases
+      // Show navigation buttons for phases 3, 4, and 5
       setShowNavButtons(isDrapingPhase);
       
       // Set progress immediately
@@ -388,11 +388,11 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
           )}
 
-          {/* Character and Speech Bubble - Positioned above navigation buttons when visible */}
+          {/* Character and Speech Bubble - Always positioned consistently */}
           {!error && (
             <div 
               key={`character-${currentStep}`}
-              className={`absolute ${showNavButtons ? 'bottom-32' : 'bottom-0'} ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+              className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
               style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
             >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
