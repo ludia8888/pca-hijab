@@ -125,7 +125,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     return ctx;
   };
 
-  // Draw color draping overlay around face only (hijab-like effect)
+  // Draw color draping overlay around face
   const drawColorDraping = (
     ctx: CanvasRenderingContext2D, 
     canvas: HTMLCanvasElement, 
@@ -148,55 +148,42 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const faceWidth = maxX - minX;
     const faceHeight = maxY - minY;
     
-    // Create expanded area around face (like hijab framing)
-    const expansionFactor = 1.8; // How much larger than face
-    const expandedWidth = faceWidth * expansionFactor;
-    const expandedHeight = faceHeight * expansionFactor;
-    
     // Determine which side to apply color
-    let startX = faceCenterX - expandedWidth / 2;
-    let endX = faceCenterX + expandedWidth / 2;
+    let rectX = 0;
+    let rectWidth = canvas.width;
     
     if (side === 'left') {
-      endX = faceCenterX;
+      rectWidth = faceCenterX;
     } else if (side === 'right') {
-      startX = faceCenterX;
+      rectX = faceCenterX;
+      rectWidth = canvas.width - faceCenterX;
     }
+    
+    // First, draw solid color background for the entire side
+    const mainColor = colors[Math.floor(colors.length / 2)];
+    ctx.fillStyle = mainColor;
+    ctx.fillRect(rectX, 0, rectWidth, canvas.height);
+    
+    // Then create gradient only around face edges for smooth transition
+    const faceRadius = Math.max(faceWidth, faceHeight) / 2;
+    const gradientRadius = faceRadius * 1.5;
     
     // Create radial gradient from face center
     const gradient = ctx.createRadialGradient(
-      faceCenterX, faceCenterY, Math.min(faceWidth, faceHeight) / 2,
-      faceCenterX, faceCenterY, Math.max(expandedWidth, expandedHeight) / 2
+      faceCenterX, faceCenterY, faceRadius * 0.8,
+      faceCenterX, faceCenterY, gradientRadius
     );
     
-    // Add colors with fade effect
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // Transparent at face
-    gradient.addColorStop(0.3, colors[0] + '40'); // Start color with transparency
-    gradient.addColorStop(0.6, colors[Math.floor(colors.length / 2)] + '60');
-    gradient.addColorStop(1, colors[colors.length - 1] + '20'); // Fade out
+    // Gradient: transparent at face -> color at edges
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+    gradient.addColorStop(0.8, mainColor + 'CC');
+    gradient.addColorStop(1, mainColor);
     
-    // Draw the draped area
+    // Apply gradient overlay
+    ctx.globalCompositeOperation = 'source-atop';
     ctx.fillStyle = gradient;
-    
-    // Create path for hijab-like shape
-    ctx.beginPath();
-    
-    // Top arc (like hijab crown)
-    ctx.moveTo(startX, faceCenterY - expandedHeight / 2);
-    ctx.quadraticCurveTo(
-      faceCenterX, faceCenterY - expandedHeight * 0.7,
-      endX, faceCenterY - expandedHeight / 2
-    );
-    
-    // Side curves
-    ctx.lineTo(endX, faceCenterY + expandedHeight / 2);
-    ctx.quadraticCurveTo(
-      faceCenterX, faceCenterY + expandedHeight * 0.6,
-      startX, faceCenterY + expandedHeight / 2
-    );
-    
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(rectX, 0, rectWidth, canvas.height);
     
     ctx.restore();
   };
