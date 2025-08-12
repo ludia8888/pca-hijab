@@ -382,7 +382,7 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
           </div>
         )}
-
+        </div>
       </div>
     </PageLayout>
   );
