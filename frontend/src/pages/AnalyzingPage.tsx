@@ -100,8 +100,8 @@ const AnalyzingPage = (): JSX.Element => {
       const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison';
       setCanSkip(isDrapingPhase);
       
-      // Show navigation buttons for ALL phases
-      setShowNavButtons(true);
+      // Show navigation buttons ONLY for draping phases
+      setShowNavButtons(isDrapingPhase);
       
       // Set progress immediately
       setProgress(step.progress);
@@ -121,8 +121,15 @@ const AnalyzingPage = (): JSX.Element => {
         user_flow_step: 'analysis_progress_update'
       });
       
-      // No auto-advance for any phase - user controls navigation
-      // This gives users full control over the analysis flow
+      // Auto-advance for non-draping phases, manual control for draping phases
+      if (!isDrapingPhase) {
+        stepTimerRef.current = setTimeout(() => {
+          if (currentStep < ANALYSIS_STEPS.length - 1) {
+            setCurrentStep(currentStep + 1);
+          }
+        }, step.duration);
+      }
+      // For draping phases, wait for user interaction (no timer)
 
       return () => {
         if (stepTimerRef.current) {
@@ -353,7 +360,7 @@ const AnalyzingPage = (): JSX.Element => {
         {/* Content below the image */}
         <div className="flex-1 relative">
 
-          {/* Navigation buttons for ALL phases */}
+          {/* Navigation buttons for draping phases only */}
           {showNavButtons && (
             <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
               <div className="flex gap-4">
@@ -381,11 +388,11 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
           )}
 
-          {/* Character and Speech Bubble - Always positioned above navigation buttons */}
+          {/* Character and Speech Bubble - Positioned above navigation buttons when visible */}
           {!error && (
             <div 
               key={`character-${currentStep}`}
-              className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+              className={`absolute ${showNavButtons ? 'bottom-32' : 'bottom-0'} ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
               style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
             >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
