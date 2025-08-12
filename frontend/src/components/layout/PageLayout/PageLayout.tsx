@@ -20,8 +20,10 @@ export const PageLayout = ({
 }: PageLayoutProps): JSX.Element => {
   const location = useLocation();
   
-  // Don't show bottom navigation on landing page and admin pages
-  const showBottomNav = location.pathname !== ROUTES.LANDING && !location.pathname.startsWith('/admin');
+  // Don't show bottom navigation on landing page, diagnosis page, and admin pages
+  const showBottomNav = location.pathname !== ROUTES.LANDING && 
+                        location.pathname !== ROUTES.DIAGNOSIS && 
+                        !location.pathname.startsWith('/admin');
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
