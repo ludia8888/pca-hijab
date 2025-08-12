@@ -682,6 +682,21 @@ const UploadPage = (): JSX.Element => {
               muted
             />
             <canvas ref={canvasRef} className="absolute opacity-0 pointer-events-none" />
+            
+            {/* Face detection guide overlay - Always visible when no preview */}
+            {!previewUrl && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <div 
+                  className="border-4 border-white border-dashed rounded-full opacity-70 animate-pulse"
+                  style={{
+                    width: '70%',
+                    aspectRatio: '1',
+                    borderStyle: 'dashed',
+                    borderWidth: '3px'
+                  }}
+                />
+              </div>
+            )}
             {previewUrl ? (
               // Show captured photo with face detection guide
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-white shadow-lg">
@@ -708,19 +723,6 @@ const UploadPage = (): JSX.Element => {
               <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
                 {isCameraActive && !cameraError ? (
                   <>
-                    
-                    {/* Face detection guide overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div 
-                        className="border-4 border-white border-dashed rounded-full opacity-70 animate-pulse"
-                        style={{
-                          width: '70%',
-                          aspectRatio: '1',
-                          borderStyle: 'dashed',
-                          borderWidth: '3px'
-                        }}
-                      />
-                    </div>
 
                     {/* Camera status indicator */}
                     <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
