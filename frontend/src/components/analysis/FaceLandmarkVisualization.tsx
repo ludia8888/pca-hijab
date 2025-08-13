@@ -47,6 +47,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'warm-cool' | 'season' | 'complete'>('detecting');
   const animationFrameRef = useRef<number>(0);
   const animationTimeRef = useRef<number>(0);
+  const frameCountRef = useRef<number>(0);
 
   // Initialize TensorFlow and face detector
   useEffect(() => {
@@ -301,12 +302,21 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     faces.forEach((face, faceIndex) => {
       const simplePhases = {
         detecting: {
-          points: face.keypoints.filter((_, i) => 
-            (i >= 33 && i <= 46) || (i >= 263 && i <= 276) ||
-            (i >= 1 && i <= 6) || (i >= 195 && i <= 197) ||
-            (i >= 13 && i <= 17) || (i >= 269 && i <= 271) ||
-            i % 15 === 0
-          ).filter(Boolean),
+          // More comprehensive points for better triangulation
+          points: face.keypoints.filter((_, i) => {
+            // Eye regions
+            if ((i >= 33 && i <= 46) || (i >= 263 && i <= 276)) return true;
+            // Nose
+            if ((i >= 1 && i <= 6) || (i >= 195 && i <= 197)) return true;
+            // Mouth
+            if ((i >= 13 && i <= 17) || (i >= 269 && i <= 271)) return true;
+            // Face contour
+            if ((i >= 10 && i <= 234 && i % 12 === 0) || 
+                (i >= 356 && i <= 454 && i % 12 === 0)) return true;
+            // Additional key points
+            if (i % 10 === 0) return true;
+            return false;
+          }).filter(Boolean),
           color: '#00FF9F'
         },
         extracting: {
@@ -335,41 +345,156 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
       const currentPhase = simplePhases[phase as keyof typeof simplePhases] || simplePhases.detecting;
       
-      // Draw connecting lines first (behind dots)
-      ctx.strokeStyle = currentPhase.color;
-      ctx.lineWidth = 0.5;
-      ctx.globalAlpha = 0.2;
-      
-      // Connect nearby points to create mesh effect
-      currentPhase.points.forEach((point1, i) => {
-        if (!point1) return;
+      // Enhanced visualization for detecting phase
+      if (phase === 'detecting') {
+        const time = Date.now() * 0.001; // Time in seconds for animation
         
-        const x1 = point1.x * canvas.width;
-        const y1 = point1.y * canvas.height;
+        // Draw scanning lines effect
+        ctx.save();
+        ctx.strokeStyle = '#00FF9F';
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.3;
+        ctx.setLineDash([5, 10]);
         
-        // Connect to next few points in array
-        for (let j = i + 1; j < Math.min(i + 4, currentPhase.points.length); j++) {
-          const point2 = currentPhase.points[j];
-          if (!point2) continue;
-          
-          const x2 = point2.x * canvas.width;
-          const y2 = point2.y * canvas.height;
-          
-          // Calculate distance
-          const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-          
-          // Only connect points that are reasonably close (avoid crossing entire face)
-          if (distance < 50) {
-            // Fade line based on distance
-            ctx.globalAlpha = Math.max(0.1, 0.3 - (distance / 100));
+        // Horizontal scanning line
+        const scanY = (Math.sin(time * 1.5) * 0.5 + 0.5) * canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(0, scanY);
+        ctx.lineTo(canvas.width, scanY);
+        ctx.stroke();
+        
+        // Vertical scanning line
+        const scanX = (Math.cos(time * 1.5) * 0.5 + 0.5) * canvas.width;
+        ctx.beginPath();
+        ctx.moveTo(scanX, 0);
+        ctx.lineTo(scanX, canvas.height);
+        ctx.stroke();
+        
+        ctx.setLineDash([]); // Reset line dash
+        ctx.restore();
+        
+        // Optimized Delaunay-style triangulation
+        ctx.strokeStyle = currentPhase.color;
+        ctx.lineWidth = 0.5;
+        
+        // Group points by regions for more efficient triangulation
+        const regions = {
+          leftEye: currentPhase.points.slice(0, Math.floor(currentPhase.points.length * 0.2)),
+          rightEye: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.2), Math.floor(currentPhase.points.length * 0.4)),
+          nose: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.4), Math.floor(currentPhase.points.length * 0.6)),
+          mouth: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.6), Math.floor(currentPhase.points.length * 0.8)),
+          outline: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.8))
+        };
+        
+        // Draw triangulation for each region
+        Object.values(regions).forEach((regionPoints) => {
+          for (let i = 0; i < regionPoints.length; i++) {
+            const point1 = regionPoints[i];
+            if (!point1) continue;
             
+            const x1 = point1.x * canvas.width;
+            const y1 = point1.y * canvas.height;
+            
+            // Connect to 2-3 nearest points in the same region
+            for (let j = i + 1; j < Math.min(i + 3, regionPoints.length); j++) {
+              const point2 = regionPoints[j];
+              if (!point2) continue;
+              
+              const x2 = point2.x * canvas.width;
+              const y2 = point2.y * canvas.height;
+              
+              const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+              
+              if (distance < 60) {
+                // Pulsing effect based on time
+                const pulse = Math.sin(time * 2 + i * 0.1) * 0.2 + 0.3;
+                ctx.globalAlpha = pulse;
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+              }
+            }
+          }
+        });
+        
+        // Draw feature detection boxes
+        ctx.save();
+        ctx.strokeStyle = '#00FF9F';
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.5;
+        ctx.setLineDash([3, 3]);
+        
+        // Eye detection boxes with corner brackets
+        const leftEyePoints = face.keypoints.slice(33, 46);
+        const rightEyePoints = face.keypoints.slice(263, 276);
+        
+        [leftEyePoints, rightEyePoints].forEach((eyePoints) => {
+          if (eyePoints.length > 0) {
+            const xs = eyePoints.map(p => p.x * canvas.width);
+            const ys = eyePoints.map(p => p.y * canvas.height);
+            const minX = Math.min(...xs) - 10;
+            const maxX = Math.max(...xs) + 10;
+            const minY = Math.min(...ys) - 10;
+            const maxY = Math.max(...ys) + 10;
+            
+            const cornerSize = 8;
             ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
+            // Top-left corner
+            ctx.moveTo(minX + cornerSize, minY);
+            ctx.lineTo(minX, minY);
+            ctx.lineTo(minX, minY + cornerSize);
+            // Top-right corner
+            ctx.moveTo(maxX - cornerSize, minY);
+            ctx.lineTo(maxX, minY);
+            ctx.lineTo(maxX, minY + cornerSize);
+            // Bottom-left corner
+            ctx.moveTo(minX + cornerSize, maxY);
+            ctx.lineTo(minX, maxY);
+            ctx.lineTo(minX, maxY - cornerSize);
+            // Bottom-right corner
+            ctx.moveTo(maxX - cornerSize, maxY);
+            ctx.lineTo(maxX, maxY);
+            ctx.lineTo(maxX, maxY - cornerSize);
             ctx.stroke();
           }
-        }
-      });
+        });
+        
+        ctx.setLineDash([]);
+        ctx.restore();
+      } else {
+        // Original mesh for other phases
+        ctx.strokeStyle = currentPhase.color;
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.2;
+        
+        currentPhase.points.forEach((point1, i) => {
+          if (!point1) return;
+          
+          const x1 = point1.x * canvas.width;
+          const y1 = point1.y * canvas.height;
+          
+          for (let j = i + 1; j < Math.min(i + 4, currentPhase.points.length); j++) {
+            const point2 = currentPhase.points[j];
+            if (!point2) continue;
+            
+            const x2 = point2.x * canvas.width;
+            const y2 = point2.y * canvas.height;
+            
+            const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            
+            if (distance < 50) {
+              ctx.globalAlpha = Math.max(0.1, 0.3 - (distance / 100));
+              
+              ctx.beginPath();
+              ctx.moveTo(x1, y1);
+              ctx.lineTo(x2, y2);
+              ctx.stroke();
+            }
+          }
+        });
+      }
       
       // Reset alpha for dots
       ctx.globalAlpha = 1;
@@ -381,21 +506,64 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         const x = landmark.x * canvas.width;
         const y = landmark.y * canvas.height;
         
-        // Vary dot size slightly for visual interest
-        const baseSize = 2.5;
-        const sizeVariation = Math.sin(index * 0.5) * 0.5 + baseSize;
-        
-        // Simple glowing dot with subtle animation
-        ctx.fillStyle = currentPhase.color;
-        ctx.shadowColor = currentPhase.color;
-        ctx.shadowBlur = 8;
-        
-        // Add slight opacity variation for depth
-        ctx.globalAlpha = 0.6 + Math.sin(index * 0.3) * 0.4;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, sizeVariation, 0, 2 * Math.PI);
-        ctx.fill();
+        if (phase === 'detecting') {
+          const time = Date.now() * 0.001;
+          
+          // Animated dot size for scanning effect
+          const baseSize = 2;
+          const pulse = Math.sin(time * 3 + index * 0.15) * 0.5 + 1;
+          const size = baseSize * pulse;
+          
+          // Glowing effect
+          ctx.fillStyle = currentPhase.color;
+          ctx.shadowColor = currentPhase.color;
+          ctx.shadowBlur = 8 * pulse;
+          
+          // Key features get stronger emphasis
+          const isKeyFeature = index % 5 === 0 || index < 10;
+          ctx.globalAlpha = isKeyFeature ? 0.8 : 0.5;
+          
+          // Draw outer ring for key features
+          if (isKeyFeature) {
+            ctx.save();
+            ctx.strokeStyle = currentPhase.color;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(x, y, size + 3, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.restore();
+          }
+          
+          // Draw main dot
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Add coordinate display for some points
+          if (index % 15 === 0) {
+            ctx.save();
+            ctx.font = '8px monospace';
+            ctx.fillStyle = currentPhase.color;
+            ctx.globalAlpha = 0.4;
+            ctx.fillText(`[${Math.round(landmark.x * 100)},${Math.round(landmark.y * 100)}]`, x + 5, y - 5);
+            ctx.restore();
+          }
+        } else {
+          // Original dots for other phases
+          const baseSize = 2.5;
+          const sizeVariation = Math.sin(index * 0.5) * 0.5 + baseSize;
+          
+          ctx.fillStyle = currentPhase.color;
+          ctx.shadowColor = currentPhase.color;
+          ctx.shadowBlur = 8;
+          ctx.globalAlpha = 0.6 + Math.sin(index * 0.3) * 0.4;
+          
+          ctx.beginPath();
+          ctx.arc(x, y, sizeVariation, 0, 2 * Math.PI);
+          ctx.fill();
+        }
       });
       
       // Reset alpha
@@ -574,7 +742,32 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     }
   }, [detector, detectLandmarks]);
 
-  // No animation loop - draw once when phase changes
+  // Animation loop for detecting phase with performance optimization
+  useEffect(() => {
+    let animationId: number;
+    
+    const animate = () => {
+      if (animationPhase === 'detecting' && landmarks.length > 0) {
+        // Update every 2 frames for balance between smoothness and performance
+        if (frameCountRef.current % 2 === 0) {
+          drawLandmarks(landmarks, 'detecting');
+        }
+        frameCountRef.current++;
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    
+    if (animationPhase === 'detecting' && landmarks.length > 0) {
+      frameCountRef.current = 0;
+      animate();
+    }
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [animationPhase, landmarks, drawLandmarks]);
 
   // Synchronize animation phase with external analysis step
   useEffect(() => {
