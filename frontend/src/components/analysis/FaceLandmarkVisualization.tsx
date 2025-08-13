@@ -447,7 +447,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
 
       // Manually clean up any tensors that might have been created
-      const tf = await getTensorFlow();
+      // tf is already declared above
       if (tf && tf.engine) {
         const numTensorsBeforeCleanup = tf.memory().numTensors;
         tf.engine().startScope();
