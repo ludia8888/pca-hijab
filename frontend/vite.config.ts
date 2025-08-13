@@ -37,40 +37,38 @@ export default defineConfig(({ command, mode }) => ({
     // Minify for production
     minify: mode === 'production' ? 'esbuild' : false,
     // Browser compatibility
-    target: ['es2015', 'edge88', 'firefox78', 'chrome87', 'safari14'],
-    // Chunk size warnings
-    chunkSizeWarningLimit: 1000,
-    // Increase module preload timeout
-    modulePreload: {
-      polyfill: true
-    },
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+    // Increase chunk size limit to avoid over-splitting
+    chunkSizeWarningLimit: 2000,
+    // Disable module preload polyfill that might cause issues
+    modulePreload: false,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Vendor chunks
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            if (id.includes('zustand') || id.includes('@tanstack/react-query')) {
-              return 'ui-vendor';
-            }
-            if (id.includes('@tensorflow') || id.includes('face-landmarks-detection')) {
-              return 'tensorflow-vendor';
-            }
-            // Other vendor libraries
-            return 'vendor';
-          }
-        },
-        // Stable chunk names for better caching
-        chunkFileNames: mode === 'production' ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash].js',
-        entryFileNames: mode === 'production' ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash].js',
-        assetFileNames: mode === 'production' ? 'assets/[name]-[hash].[ext]' : 'assets/[name]-[hash].[ext]'
+        // Don't split vendor chunks - keep everything together for reliability
+        manualChunks: undefined,
+        // Increase max parallel requests to reduce chunk splitting
+        maxParallelFileOps: 10,
+        // Use simpler naming
+        chunkFileNames: 'assets/[name].[hash].js',
+        entryFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]'
       },
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'zustand',
+      '@tanstack/react-query',
+      'clsx',
+      'tailwind-merge'
+    ],
+    exclude: [
+      '@tensorflow/tfjs',
+      '@tensorflow-models/face-landmarks-detection'
+    ]
   },
   define: {
     // Only expose necessary environment variables

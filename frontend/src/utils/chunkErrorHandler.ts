@@ -73,31 +73,46 @@ export const retryChunkLoad = async <T>(
   // If all retries failed, try cache-busting reload as last resort
   console.error('All chunk loading attempts failed. Attempting cache-busting reload.', lastError);
   
-  // Try to reload with cache busting
-  const currentUrl = new URL(window.location.href);
-  currentUrl.searchParams.set('_cb', Date.now().toString());
-  
-  // For critical errors, automatically reload without asking user
-  // This ensures users don't get stuck in broken states
-  console.log('🔄 Automatically reloading page with cache busting...');
+  // Check if it's a vendor chunk error (more critical)
+  const isVendorError = lastError.message.includes('vendor') || 
+                        lastError.message.includes('react') ||
+                        lastError.message.includes('node_modules');
   
   // Add a flag to prevent infinite reload loops
   const reloadCount = parseInt(sessionStorage.getItem('chunk_reload_count') || '0');
   
-  if (reloadCount < 3) {
+  if (reloadCount < 2) {
     sessionStorage.setItem('chunk_reload_count', (reloadCount + 1).toString());
-    window.location.href = currentUrl.toString();
-    return;
-  } else {
-    // After 3 auto-reloads, ask user
-    sessionStorage.removeItem('chunk_reload_count');
-    const shouldReload = confirm(
-      'Multiple resource loading failures detected. Would you like to try refreshing the page one more time?'
-    );
     
-    if (shouldReload) {
-      window.location.reload();
-      return;
+    // For vendor errors, do a hard reload to clear everything
+    if (isVendorError) {
+      console.log('🔄 Vendor chunk failed - performing hard reload...');
+      // Clear all caches and reload
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      // Hard reload with cache bypass
+      window.location.reload(true);
+    } else {
+      console.log('🔄 Automatically reloading page with cache busting...');
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('_cb', Date.now().toString());
+      window.location.href = currentUrl.toString();
+    }
+    
+    // Return a never-resolving promise to prevent further execution
+    return new Promise(() => {});
+  } else {
+    // After 2 auto-reloads, clear counter and show error
+    sessionStorage.removeItem('chunk_reload_count');
+    
+    // For production, redirect to home page as fallback
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      console.log('🏠 Redirecting to home page after multiple failures...');
+      window.location.href = '/';
+      return new Promise(() => {});
     }
   }
   

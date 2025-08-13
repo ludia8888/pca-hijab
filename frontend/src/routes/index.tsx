@@ -6,7 +6,7 @@ import RootLayout from '@/components/layout/RootLayout';
 import { env } from '@/config/environment';
 import { retryChunkLoad } from '@/utils/chunkErrorHandler';
 
-// Lazy load pages for code splitting with retry mechanism
+// Critical pages - load with retry mechanism
 const HomePage = lazy(() => retryChunkLoad(() => import('@/pages/HomePage')));
 const HIGLandingPage = lazy(() => retryChunkLoad(() => import('@/pages/HIGLandingPage')));
 const UploadPage = lazy(() => retryChunkLoad(() => import('@/pages/UploadPage')));
@@ -14,24 +14,24 @@ const AnalyzingPage = lazy(() => retryChunkLoad(() => import('@/pages/AnalyzingP
 const ResultPage = lazy(() => retryChunkLoad(() => import('@/pages/ResultPage')));
 const CompletionPage = lazy(() => retryChunkLoad(() => import('@/pages/CompletionPage')));
 
-// Auth pages
-const LoginPage = lazy(() => import('@/pages/LoginPage'));
-const SignupPage = lazy(() => import('@/pages/SignupPage'));
-const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
-const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
-const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
+// Auth pages - also use retry for better reliability
+const LoginPage = lazy(() => retryChunkLoad(() => import('@/pages/LoginPage')));
+const SignupPage = lazy(() => retryChunkLoad(() => import('@/pages/SignupPage')));
+const ForgotPasswordPage = lazy(() => retryChunkLoad(() => import('@/pages/ForgotPasswordPage')));
+const ResetPasswordPage = lazy(() => retryChunkLoad(() => import('@/pages/ResetPasswordPage')));
+const TermsOfServicePage = lazy(() => retryChunkLoad(() => import('@/pages/TermsOfServicePage')));
+const PrivacyPolicyPage = lazy(() => retryChunkLoad(() => import('@/pages/PrivacyPolicyPage')));
 
 // Main app pages
-const ProductsPage = lazy(() => import('@/pages/ProductsCatalogPage'));
-const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
-const ContentDetailPage = lazy(() => import('@/pages/ContentDetailPage'));
-const MyPage = lazy(() => import('@/pages/MyPage'));
+const ProductsPage = lazy(() => retryChunkLoad(() => import('@/pages/ProductsCatalogPage')));
+const ProductDetailPage = lazy(() => retryChunkLoad(() => import('@/pages/ProductDetailPage')));
+const ContentDetailPage = lazy(() => retryChunkLoad(() => import('@/pages/ContentDetailPage')));
+const MyPage = lazy(() => retryChunkLoad(() => import('@/pages/MyPage')));
 
 // Admin pages
-const AdminLoginPage = lazy(() => import('@/pages/admin/AdminLoginPage'));
-const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
-const AdminRecommendationDetail = lazy(() => import('@/pages/admin/AdminRecommendationDetail'));
+const AdminLoginPage = lazy(() => retryChunkLoad(() => import('@/pages/admin/AdminLoginPage')));
+const AdminDashboard = lazy(() => retryChunkLoad(() => import('@/pages/admin/AdminDashboard')));
+const AdminRecommendationDetail = lazy(() => retryChunkLoad(() => import('@/pages/admin/AdminRecommendationDetail')));
 
 // Loading component
 const PageLoader = (): JSX.Element => (
