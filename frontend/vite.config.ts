@@ -65,10 +65,9 @@ export default defineConfig(({ command, mode }) => ({
       'clsx',
       'tailwind-merge'
     ],
-    exclude: [
-      '@tensorflow/tfjs',
-      '@tensorflow-models/face-landmarks-detection'
-    ]
+    // TensorFlow MUST be pre-bundled for production
+    // DO NOT exclude these or face detection will fail!
+    exclude: []
   },
   define: {
     // Only expose necessary environment variables

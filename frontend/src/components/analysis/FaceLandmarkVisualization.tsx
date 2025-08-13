@@ -60,8 +60,14 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         console.log('🔧 [TensorFlow] Initializing backend and WebGL...');
         const backendStart = performance.now();
         await tf.ready();
+        await tf.setBackend('webgl');
         const backendTime = performance.now() - backendStart;
         console.log(`✅ [TensorFlow] Backend ready in ${Math.round(backendTime)}ms`);
+        
+        // Verify TensorFlow is working
+        const testTensor = tf.tensor([1, 2, 3]);
+        testTensor.dispose();
+        console.log('✅ [TensorFlow] Test tensor created and disposed successfully');
         
         console.log('🔧 [MediaPipe] Loading Face Mesh model weights...');
         const modelStart = performance.now();
@@ -69,6 +75,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         const detectorConfig = {
           runtime: 'tfjs' as const,
           refineLandmarks: true,
+          maxFaces: 1,  // Only detect one face for better performance
         };
         
         const faceDetector = await faceLandmarksDetection.createDetector(model, detectorConfig);
@@ -378,43 +385,30 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         ctx.strokeStyle = currentPhase.color;
         ctx.lineWidth = 0.5;
         
-        // Create Delaunay-like triangulation effect
-        for (let i = 0; i < currentPhase.points.length; i++) {
+        // Simplified mesh - connect only adjacent points to reduce computation
+        ctx.strokeStyle = currentPhase.color;
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.3;
+        
+        for (let i = 0; i < currentPhase.points.length - 1; i++) {
           const point1 = currentPhase.points[i];
-          if (!point1) continue;
+          const point2 = currentPhase.points[i + 1];
+          if (!point1 || !point2) continue;
           
           const x1 = point1.x * canvas.width;
           const y1 = point1.y * canvas.height;
+          const x2 = point2.x * canvas.width;
+          const y2 = point2.y * canvas.height;
           
-          // Find nearest neighbors for triangulation
-          const neighbors = currentPhase.points
-            .map((p, idx) => {
-              if (!p || idx === i) return null;
-              const dist = Math.sqrt(
-                Math.pow(p.x * canvas.width - x1, 2) + 
-                Math.pow(p.y * canvas.height - y1, 2)
-              );
-              return { point: p, index: idx, distance: dist };
-            })
-            .filter(n => n && n.distance < 80) // Only nearby points
-            .sort((a, b) => (a?.distance || 0) - (b?.distance || 0))
-            .slice(0, 3); // Connect to 3 nearest points
+          const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
           
-          // Draw lines to neighbors with pulsing effect
-          neighbors.forEach((neighbor) => {
-            if (!neighbor) return;
-            const x2 = neighbor.point.x * canvas.width;
-            const y2 = neighbor.point.y * canvas.height;
-            
-            // Pulsing alpha based on time and distance
-            const pulse = Math.sin(time * 3 + i * 0.1) * 0.3 + 0.4;
-            ctx.globalAlpha = pulse * (1 - neighbor.distance / 80);
-            
+          // Only connect if points are close enough
+          if (distance < 50) {
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
             ctx.stroke();
-          });
+          }
         }
         
         // Draw feature detection boxes
@@ -587,9 +581,24 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   // Detect face landmarks with memory management
   const detectLandmarks = useCallback(async () => {
     if (!detector || !imageRef.current) return;
+    
+    // Ensure image is fully loaded
+    if (!imageRef.current.complete || imageRef.current.naturalWidth === 0) {
+      console.warn('⚠️ Image not fully loaded, retrying...');
+      setTimeout(() => detectLandmarks(), 500);
+      return;
+    }
 
     try {
       console.log('🔍 [Synchronized] Starting face landmark detection...');
+      console.log(`📐 Image dimensions: ${imageRef.current.width}x${imageRef.current.height}`);
+      
+      // Ensure TensorFlow is ready
+      if (!tf.engine()) {
+        console.error('❌ TensorFlow engine not initialized');
+        setError('AI engine not ready. Please refresh the page.');
+        return;
+      }
       
       // Async operations cannot be wrapped with tf.tidy - use manual cleanup
       const faces = await detector.estimateFaces(imageRef.current);
@@ -665,7 +674,27 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
     } catch (err) {
       console.error('❌ Face detection failed:', err);
-      setError('Face detection failed');
+      
+      // Check if it's a TensorFlow initialization error
+      if (err instanceof Error && err.message.includes('is not a function')) {
+        console.error('🔄 TensorFlow initialization error detected, reinitializing...');
+        setError('AI model initialization failed. Retrying...');
+        
+        // Try to reinitialize after a delay
+        setTimeout(async () => {
+          try {
+            await tf.ready();
+            await tf.setBackend('webgl');
+            detectLandmarks();
+          } catch (reinitError) {
+            console.error('Reinitialization failed:', reinitError);
+            setError('Please refresh the page to continue');
+          }
+        }, 1000);
+      } else {
+        // For other errors, show generic message
+        setError('Face detection failed. Please ensure your face is clearly visible.');
+      }
       
       // Force cleanup on error to prevent memory buildup
       if (typeof tf !== 'undefined' && tf.engine) {
@@ -685,10 +714,13 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     canvas.width = image.width;
     canvas.height = image.height;
 
-    // Start detection if detector is ready
-    if (detector) {
-      detectLandmarks();
-    }
+    // Add a small delay to ensure image is fully rendered
+    setTimeout(() => {
+      // Start detection if detector is ready
+      if (detector) {
+        detectLandmarks();
+      }
+    }, 100);
   }, [detector, detectLandmarks]);
 
   // Start detection when detector is ready and image is loaded
@@ -698,13 +730,18 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     }
   }, [detector, detectLandmarks]);
 
-  // Animation loop for detecting phase
+  // Animation loop for detecting phase - with reduced frequency
   useEffect(() => {
     let animationId: number;
+    let frameCount = 0;
     
     const animate = () => {
       if (animationPhase === 'detecting' && landmarks.length > 0) {
-        drawLandmarks(landmarks, 'detecting');
+        // Only update every 3rd frame to reduce CPU load
+        if (frameCount % 3 === 0) {
+          drawLandmarks(landmarks, 'detecting');
+        }
+        frameCount++;
         animationId = requestAnimationFrame(animate);
       }
     };
