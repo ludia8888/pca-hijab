@@ -2,6 +2,11 @@
   "buildCommand": "npm run build:clean",
   "outputDirectory": "dist",
   "framework": "vite",
+  "build": {
+    "env": {
+      "FORCE_REBUILD": "2025-01-13-v2"
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!assets/).*)",

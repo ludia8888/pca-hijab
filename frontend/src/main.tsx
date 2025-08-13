@@ -6,6 +6,7 @@ import { QueryProvider } from './hooks/QueryProvider'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { preloadEnvironment } from './utils/preload'
 import { setupChunkErrorHandler } from './utils/chunkErrorHandler'
+import { initializeTensorFlow } from './utils/tensorflowInit'
 import './index.css'
 import './styles/admin-theme.css'
 import App from './App.tsx'
@@ -42,8 +43,14 @@ window.addEventListener('unhandledrejection', (event) => {
 
 console.log('[MAIN] Starting preloadEnvironment...');
 
-// Preload environment before rendering
-preloadEnvironment().then(() => {
+// Preload environment and TensorFlow before rendering
+Promise.all([
+  preloadEnvironment(),
+  initializeTensorFlow().catch(err => {
+    console.error('[MAIN] TensorFlow initialization failed:', err);
+    // Continue anyway, will retry later
+  })
+]).then(() => {
   console.log('[MAIN] preloadEnvironment complete, finding root element...');
   const rootElement = document.getElementById('root');
   

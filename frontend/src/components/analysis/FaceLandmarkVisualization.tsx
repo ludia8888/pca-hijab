@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import '@tensorflow/tfjs-backend-webgl';
-import * as tf from '@tensorflow/tfjs';
 import { COLOR_PALETTES } from '@/utils/constants';
+import { initializeTensorFlow, getTensorFlow } from '@/utils/tensorflowInit';
 
 interface FaceLandmarkVisualizationProps {
   imageUrl: string;
@@ -55,19 +54,15 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       const startTime = performance.now();
       
       try {
-        console.log('🔧 [TensorFlow] Starting initialization at', new Date().toISOString());
+        console.log('🔧 [FaceLandmark] Starting detector initialization at', new Date().toISOString());
         
-        console.log('🔧 [TensorFlow] Initializing backend and WebGL...');
-        const backendStart = performance.now();
-        await tf.ready();
-        await tf.setBackend('webgl');
-        const backendTime = performance.now() - backendStart;
-        console.log(`✅ [TensorFlow] Backend ready in ${Math.round(backendTime)}ms`);
+        // Initialize TensorFlow using centralized module
+        console.log('🔧 [FaceLandmark] Ensuring TensorFlow is initialized...');
+        await initializeTensorFlow();
         
-        // Verify TensorFlow is working
-        const testTensor = tf.tensor([1, 2, 3]);
-        testTensor.dispose();
-        console.log('✅ [TensorFlow] Test tensor created and disposed successfully');
+        // Get TensorFlow instance
+        const tf = await getTensorFlow();
+        console.log('✅ [FaceLandmark] TensorFlow ready, backend:', tf.getBackend());
         
         console.log('🔧 [MediaPipe] Loading Face Mesh model weights...');
         const modelStart = performance.now();
@@ -440,7 +435,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       console.log(`📐 Image dimensions: ${imageRef.current.width}x${imageRef.current.height}`);
       
       // Ensure TensorFlow is ready
-      if (!tf.engine()) {
+      const tf = await getTensorFlow();
+      if (!tf || !tf.engine()) {
         console.error('❌ TensorFlow engine not initialized');
         setError('AI engine not ready. Please refresh the page.');
         return;
@@ -451,7 +447,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
 
       // Manually clean up any tensors that might have been created
-      if (typeof tf !== 'undefined' && tf.engine) {
+      const tf = await getTensorFlow();
+      if (tf && tf.engine) {
         const numTensorsBeforeCleanup = tf.memory().numTensors;
         tf.engine().startScope();
         tf.engine().endScope();
@@ -522,30 +519,35 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       console.error('❌ Face detection failed:', err);
       
       // Check if it's a TensorFlow initialization error
-      if (err instanceof Error && err.message.includes('is not a function')) {
+      if (err instanceof Error && (err.message.includes('is not a function') || err.message.includes('tf.'))) {
         console.error('🔄 TensorFlow initialization error detected, reinitializing...');
-        setError('AI model initialization failed. Retrying...');
+        setError('AI model initialization failed. Reloading page...');
         
-        // Try to reinitialize after a delay
-        setTimeout(async () => {
-          try {
-            await tf.ready();
-            await tf.setBackend('webgl');
-            detectLandmarks();
-          } catch (reinitError) {
-            console.error('Reinitialization failed:', reinitError);
-            setError('Please refresh the page to continue');
-          }
-        }, 1000);
+        // Clear service worker cache and reload
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => caches.delete(name));
+          });
+        }
+        
+        // Force hard reload after a short delay
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 1500);
       } else {
         // For other errors, show generic message
         setError('Face detection failed. Please ensure your face is clearly visible.');
       }
       
       // Force cleanup on error to prevent memory buildup
-      if (typeof tf !== 'undefined' && tf.engine) {
-        tf.engine().startScope();
-        tf.engine().endScope();
+      try {
+        const tf = await getTensorFlow();
+        if (tf && tf.engine) {
+          tf.engine().startScope();
+          tf.engine().endScope();
+        }
+      } catch (cleanupError) {
+        console.warn('Cleanup error:', cleanupError);
       }
     }
   }, [detector, onLandmarksDetected]);

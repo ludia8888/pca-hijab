@@ -44,8 +44,15 @@ export default defineConfig(({ command, mode }) => ({
     modulePreload: false,
     rollupOptions: {
       output: {
-        // Don't split vendor chunks - keep everything together for reliability
-        manualChunks: undefined,
+        // Keep TensorFlow in a separate chunk to ensure proper loading
+        manualChunks: (id) => {
+          if (id.includes('@tensorflow') || id.includes('face-landmarks-detection')) {
+            return 'tensorflow';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
         // Increase max parallel requests to reduce chunk splitting
         maxParallelFileOps: 10,
         // Use simpler naming
@@ -63,11 +70,16 @@ export default defineConfig(({ command, mode }) => ({
       'zustand',
       '@tanstack/react-query',
       'clsx',
-      'tailwind-merge'
+      'tailwind-merge',
+      // CRITICAL: Force TensorFlow to be pre-bundled
+      '@tensorflow/tfjs',
+      '@tensorflow/tfjs-core',
+      '@tensorflow/tfjs-backend-webgl',
+      '@tensorflow-models/face-landmarks-detection'
     ],
-    // TensorFlow MUST be pre-bundled for production
-    // DO NOT exclude these or face detection will fail!
-    exclude: []
+    exclude: [],
+    // Force re-optimization on every build
+    force: true
   },
   define: {
     // Only expose necessary environment variables
