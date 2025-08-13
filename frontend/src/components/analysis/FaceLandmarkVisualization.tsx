@@ -80,14 +80,13 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         setDetector(faceDetector);
         
         const totalTime = performance.now() - startTime;
-        console.log(`🎯 [TensorFlow] Complete initialization in ${Math.round(totalTime)}ms`);
-        console.log(`📊 [Performance] Backend: ${Math.round(backendTime)}ms, Model: ${Math.round(modelTime)}ms`);
+        console.log(`🎯 [FaceLandmark] Complete initialization in ${Math.round(totalTime)}ms`);
+        console.log(`📊 [Performance] Model: ${Math.round(modelTime)}ms, Total: ${Math.round(totalTime)}ms`);
         
         // Track performance for analytics
         if (typeof window !== 'undefined' && (window as any).gtag) {
           (window as any).gtag('event', 'tensorflow_initialization', {
             'custom_parameter_3': totalTime, // load_time custom parameter
-            'backend_time': backendTime,
             'model_time': modelTime
           });
         }
