@@ -4,7 +4,12 @@
   "framework": "vite",
   "build": {
     "env": {
-      "FORCE_REBUILD": "2025-01-13-v2"
+      "FORCE_REBUILD": "2025-01-13-v3-nocache"
+    }
+  },
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

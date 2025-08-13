@@ -88,6 +88,37 @@
       // Clear error count on successful page load
       window.addEventListener('load', function() {
         sessionStorage.removeItem('chunk_error_count');
+        
+        // Force unregister old service workers if cache version changes
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            const currentVersion = 'v2-2025-01-13';
+            const storedVersion = localStorage.getItem('sw_version');
+            
+            if (storedVersion !== currentVersion) {
+              console.log('Service worker version changed, clearing cache...');
+              registrations.forEach(function(registration) {
+                registration.unregister();
+              });
+              
+              // Clear all caches
+              if ('caches' in window) {
+                caches.keys().then(function(names) {
+                  names.forEach(function(name) {
+                    caches.delete(name);
+                  });
+                });
+              }
+              
+              localStorage.setItem('sw_version', currentVersion);
+              
+              // Reload after cache clear
+              setTimeout(function() {
+                window.location.reload(true);
+              }, 100);
+            }
+          });
+        }
       });
     </script>
   </head>
