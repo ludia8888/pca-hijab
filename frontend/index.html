@@ -51,6 +51,44 @@
       if (!window.Promise || !window.fetch || !window.Symbol) {
         document.write('<script src="https://polyfill.io/v3/polyfill.min.js?features=Promise,fetch,Symbol,Object.assign,Array.from"><\/script>');
       }
+      
+      // Global error handler for chunk loading failures
+      window.addEventListener('error', function(e) {
+        if (e.filename && (e.filename.includes('.js') || e.filename.includes('.css'))) {
+          console.error('Resource loading error:', e.filename);
+          
+          // Check if this is a chunk loading error
+          const isChunkError = e.message && (
+            e.message.includes('Loading chunk') ||
+            e.message.includes('Failed to fetch dynamically imported module')
+          );
+          
+          if (isChunkError) {
+            // Increment error count
+            const errorCount = parseInt(sessionStorage.getItem('chunk_error_count') || '0');
+            sessionStorage.setItem('chunk_error_count', (errorCount + 1).toString());
+            
+            // Auto-reload on first error to try to recover
+            if (errorCount === 0) {
+              console.log('Auto-reloading due to chunk error...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 100);
+            } else if (errorCount < 3) {
+              // Show user message after multiple failures
+              if (confirm('Some resources failed to load. Would you like to refresh the page?')) {
+                sessionStorage.removeItem('chunk_error_count');
+                window.location.reload();
+              }
+            }
+          }
+        }
+      }, true);
+      
+      // Clear error count on successful page load
+      window.addEventListener('load', function() {
+        sessionStorage.removeItem('chunk_error_count');
+      });
     </script>
   </head>
   <body>

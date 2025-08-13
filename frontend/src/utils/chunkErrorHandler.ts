@@ -23,7 +23,15 @@ export const retryChunkLoad = async <T>(
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await importFn();
+      const module = await importFn();
+      
+      // Validate that the module has a default export
+      if (module && typeof module === 'object' && 'default' in module) {
+        return module;
+      }
+      
+      // If module doesn't have default export, return as is
+      return module;
     } catch (error) {
       lastError = error as Error;
       
@@ -31,7 +39,8 @@ export const retryChunkLoad = async <T>(
       const isChunkError = error instanceof Error && (
         error.message.includes('Loading chunk') ||
         error.message.includes('Failed to fetch dynamically imported module') ||
-        error.message.includes('Loading CSS chunk')
+        error.message.includes('Loading CSS chunk') ||
+        error.message.includes('Cannot read properties of undefined')
       );
       
       if (!isChunkError) {
@@ -41,9 +50,22 @@ export const retryChunkLoad = async <T>(
       console.warn(`Chunk loading attempt ${attempt + 1} failed:`, error.message);
       
       if (attempt < maxRetries) {
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-        console.log(`Retrying chunk load in ${retryDelay}ms...`);
+        // Clear module cache to force fresh load
+        if (window.location.pathname !== '/') {
+          // Don't clear cache on home page to prevent infinite loops
+          const moduleUrl = error.message.match(/https?:\/\/[^\s]+\.js/)?.[0];
+          if (moduleUrl) {
+            // Try to clear the specific module from cache
+            try {
+              delete window.__vite_preload_cache?.[moduleUrl];
+            } catch {}
+          }
+        }
+        
+        // Wait before retry with exponential backoff
+        const delay = retryDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        console.log(`Retrying chunk load in ${delay}ms...`);
       }
     }
   }

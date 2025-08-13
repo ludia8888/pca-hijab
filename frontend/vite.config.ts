@@ -46,17 +46,21 @@ export default defineConfig(({ command, mode }) => ({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['zustand', '@tanstack/react-query'],
-          // Separate TensorFlow into its own chunk
-          'tensorflow-vendor': ['@tensorflow/tfjs', '@tensorflow-models/face-landmarks-detection'],
-          // Separate critical pages to prevent cross-contamination
-          'core-pages': [
-            'src/pages/HomePage.tsx',
-            'src/pages/AnalyzingPage.tsx', 
-            'src/pages/ResultPage.tsx'
-          ]
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            if (id.includes('zustand') || id.includes('@tanstack/react-query')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('@tensorflow') || id.includes('face-landmarks-detection')) {
+              return 'tensorflow-vendor';
+            }
+            // Other vendor libraries
+            return 'vendor';
+          }
         },
         // Stable chunk names for better caching
         chunkFileNames: mode === 'production' ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash].js',
