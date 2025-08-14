@@ -88,7 +88,7 @@ export const detectFaceInVideo = async (video: HTMLVideoElement): Promise<FaceRe
       y: centerY - faceHeight / 2,
       width: faceWidth,
       height: faceHeight,
-      confidence: 0.5 // Lower confidence for fallback
+      confidence: 0.7 // Increase confidence for fallback to enable auto-capture
     };
     
     console.log('📦 [detectFaceInVideo] Fallback result:', fallbackResult);
@@ -118,8 +118,8 @@ export const isFaceWellPositioned = (
   const faceAreaRatio = (face.width * face.height) / (videoWidth * videoHeight);
   const isSizeGood = faceAreaRatio > 0.08; // At least 8% of frame
   
-  // Check confidence
-  const isConfident = face.confidence > 0.6;
+  // Check confidence (lower threshold for fallback mode)
+  const isConfident = face.confidence >= 0.5; // Accept fallback confidence
   
   const result = isXCentered && isYCentered && isSizeGood && isConfident;
   

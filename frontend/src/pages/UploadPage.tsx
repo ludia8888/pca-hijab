@@ -400,13 +400,15 @@ const UploadPage = (): JSX.Element => {
           setFaceQuality(quality);
           
           // Auto capture if face is well positioned and quality is good (always enabled)
-          if (isWellPositioned && quality > 70 && !captureCountdown) {
+          // Lower threshold for fallback mode (since we're using fallback)
+          if (isWellPositioned && quality > 65 && !captureCountdown) {
             console.log('✅ [FACE DETECTION] Good face detected, starting countdown...');
             startCaptureCountdown();
           } else {
             console.log('⚠️ [FACE DETECTION] Face detected but not ready for capture:', {
               isWellPositioned,
               quality,
+              qualityThreshold: 65,
               hasCountdown: !!captureCountdown
             });
           }
