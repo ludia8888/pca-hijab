@@ -17,18 +17,24 @@ let faceDetector: any = null;
  * Initialize face detector
  */
 export const initFaceDetector = async (): Promise<boolean> => {
+  console.log('🔧 [FaceDetector] Checking browser support...');
+  console.log('🔧 [FaceDetector] Window object:', typeof window);
+  console.log('🔧 [FaceDetector] FaceDetector available:', 'FaceDetector' in window);
+  
   try {
     // Check if browser supports FaceDetector API
     if ('FaceDetector' in window) {
+      console.log('🔧 [FaceDetector] Attempting to create FaceDetector instance...');
       // @ts-ignore - FaceDetector is experimental
       faceDetector = new window.FaceDetector();
-      console.log('✅ Native FaceDetector API initialized');
+      console.log('✅ [FaceDetector] Native FaceDetector API initialized successfully');
+      console.log('✅ [FaceDetector] FaceDetector instance:', faceDetector);
       return true;
     }
-    console.log('ℹ️ FaceDetector API not available, using fallback');
+    console.log('ℹ️ [FaceDetector] FaceDetector API not available, will use fallback');
     return false;
   } catch (error) {
-    console.error('Failed to initialize face detector:', error);
+    console.error('❌ [FaceDetector] Failed to initialize face detector:', error);
     return false;
   }
 };
@@ -37,38 +43,58 @@ export const initFaceDetector = async (): Promise<boolean> => {
  * Detect faces in video element
  */
 export const detectFaceInVideo = async (video: HTMLVideoElement): Promise<FaceRect | null> => {
+  console.log('🎯 [detectFaceInVideo] Called with video:', {
+    videoWidth: video.videoWidth,
+    videoHeight: video.videoHeight,
+    readyState: video.readyState,
+    paused: video.paused
+  });
+  
   try {
     // If native FaceDetector is available, use it
     if (faceDetector) {
+      console.log('🔍 [detectFaceInVideo] Using native FaceDetector...');
       const faces = await faceDetector.detect(video);
+      console.log('📊 [detectFaceInVideo] FaceDetector results:', faces);
+      
       if (faces.length > 0) {
         const face = faces[0].boundingBox;
-        return {
+        const result = {
           x: face.x,
           y: face.y,
           width: face.width,
           height: face.height,
           confidence: 0.9
         };
+        console.log('✅ [detectFaceInVideo] Face detected with native API:', result);
+        return result;
+      } else {
+        console.log('❌ [detectFaceInVideo] No faces detected by native API');
       }
+    } else {
+      console.log('⚠️ [detectFaceInVideo] FaceDetector not available, using fallback');
     }
     
     // Fallback: Simple center detection
     // Assume face is in center of video
+    console.log('🔄 [detectFaceInVideo] Using fallback detection...');
     const centerX = video.videoWidth / 2;
     const centerY = video.videoHeight / 2;
     const faceWidth = video.videoWidth * 0.3; // Assume face is 30% of frame width
     const faceHeight = video.videoHeight * 0.4; // Assume face is 40% of frame height
     
-    return {
+    const fallbackResult = {
       x: centerX - faceWidth / 2,
       y: centerY - faceHeight / 2,
       width: faceWidth,
       height: faceHeight,
       confidence: 0.5 // Lower confidence for fallback
     };
+    
+    console.log('📦 [detectFaceInVideo] Fallback result:', fallbackResult);
+    return fallbackResult;
   } catch (error) {
-    console.error('Face detection error:', error);
+    console.error('❌ [detectFaceInVideo] Face detection error:', error);
     return null;
   }
 };
@@ -95,7 +121,21 @@ export const isFaceWellPositioned = (
   // Check confidence
   const isConfident = face.confidence > 0.6;
   
-  return isXCentered && isYCentered && isSizeGood && isConfident;
+  const result = isXCentered && isYCentered && isSizeGood && isConfident;
+  
+  console.log('📏 [isFaceWellPositioned] Position check:', {
+    centerX,
+    centerY,
+    isXCentered,
+    isYCentered,
+    faceAreaRatio,
+    isSizeGood,
+    confidence: face.confidence,
+    isConfident,
+    result
+  });
+  
+  return result;
 };
 
 /**
@@ -121,5 +161,20 @@ export const getFaceQualityScore = (
   // Confidence score
   const confidenceScore = face.confidence * 30;
   
-  return Math.round(centeringScore + sizeScore + confidenceScore);
+  const totalScore = Math.round(centeringScore + sizeScore + confidenceScore);
+  
+  console.log('💯 [getFaceQualityScore] Quality calculation:', {
+    centerX,
+    centerY,
+    xOffset,
+    yOffset,
+    centeringScore,
+    faceAreaRatio,
+    sizeScore,
+    confidence: face.confidence,
+    confidenceScore,
+    totalScore
+  });
+  
+  return totalScore;
 };

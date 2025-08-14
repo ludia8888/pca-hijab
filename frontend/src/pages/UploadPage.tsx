@@ -58,9 +58,14 @@ const UploadPage = (): JSX.Element => {
 
   // Initialize face detector on mount
   useEffect(() => {
-    initFaceDetector().catch(err => {
-      console.error('Failed to initialize face detector:', err);
-    });
+    console.log('🚀 [FACE DETECTION] Initializing face detector...');
+    initFaceDetector()
+      .then(result => {
+        console.log('✅ [FACE DETECTION] Face detector initialized, result:', result);
+      })
+      .catch(err => {
+        console.error('❌ [FACE DETECTION] Failed to initialize face detector:', err);
+      });
   }, []);
 
   // Start camera on component mount
@@ -332,21 +337,41 @@ const UploadPage = (): JSX.Element => {
 
   // Face detection logic
   const startFaceDetection = (): void => {
+    console.log('🎯 [FACE DETECTION] startFaceDetection called');
+    console.log('🎯 [FACE DETECTION] Current state:', {
+      videoRef: !!videoRef.current,
+      isCameraActive,
+      isProcessingFace,
+      captureCountdown
+    });
+    
     if (faceDetectionIntervalRef.current) {
+      console.log('🔄 [FACE DETECTION] Clearing existing interval');
       clearInterval(faceDetectionIntervalRef.current);
     }
     
-    console.log('👤 Starting face detection...');
+    console.log('👤 [FACE DETECTION] Starting face detection interval...');
     
+    let detectionCount = 0;
     faceDetectionIntervalRef.current = setInterval(async () => {
+      detectionCount++;
+      
       if (!videoRef.current || !isCameraActive || isProcessingFace || captureCountdown !== null) {
+        console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCount}:`, {
+          hasVideo: !!videoRef.current,
+          isCameraActive,
+          isProcessingFace,
+          captureCountdown
+        });
         return;
       }
       
+      console.log(`🔍 [FACE DETECTION] Running detection #${detectionCount}`);
       setIsProcessingFace(true);
       
       try {
         const face = await detectFaceInVideo(videoRef.current);
+        console.log(`📊 [FACE DETECTION] Detection #${detectionCount} result:`, face);
         
         if (face) {
           const isWellPositioned = isFaceWellPositioned(
@@ -361,35 +386,55 @@ const UploadPage = (): JSX.Element => {
             videoRef.current.videoHeight
           );
           
+          console.log(`✨ [FACE DETECTION] Face found:`, {
+            isWellPositioned,
+            quality,
+            face
+          });
+          
           setFaceDetected(true);
           setFaceQuality(quality);
           
           // Auto capture if face is well positioned and quality is good (always enabled)
           if (isWellPositioned && quality > 70 && !captureCountdown) {
-            console.log('✅ Good face detected, starting countdown...');
+            console.log('✅ [FACE DETECTION] Good face detected, starting countdown...');
             startCaptureCountdown();
+          } else {
+            console.log('⚠️ [FACE DETECTION] Face detected but not ready for capture:', {
+              isWellPositioned,
+              quality,
+              hasCountdown: !!captureCountdown
+            });
           }
         } else {
+          console.log(`❌ [FACE DETECTION] No face detected in #${detectionCount}`);
           setFaceDetected(false);
           setFaceQuality(0);
           
           // Cancel countdown if face is lost
           if (captureCountdown !== null) {
+            console.log('🚫 [FACE DETECTION] Canceling countdown - face lost');
             cancelCaptureCountdown();
           }
         }
       } catch (error) {
-        console.error('Face detection error:', error);
+        console.error(`❌ [FACE DETECTION] Error in detection #${detectionCount}:`, error);
       } finally {
         setIsProcessingFace(false);
       }
     }, 200); // Check every 200ms
+    
+    console.log('✅ [FACE DETECTION] Interval started');
   };
   
   const stopFaceDetection = (): void => {
+    console.log('🛑 [FACE DETECTION] Stopping face detection...');
     if (faceDetectionIntervalRef.current) {
       clearInterval(faceDetectionIntervalRef.current);
       faceDetectionIntervalRef.current = null;
+      console.log('✅ [FACE DETECTION] Face detection interval cleared');
+    } else {
+      console.log('ℹ️ [FACE DETECTION] No active interval to stop');
     }
     setFaceDetected(false);
     setFaceQuality(0);
