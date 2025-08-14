@@ -1,14 +1,10 @@
 /**
- * Client-side Image Validation using face-api.js
+ * Client-side Image Validation using centralized face detection service
  * Provides immediate feedback before sending images to AI API
  */
 
-import * as faceapi from 'face-api.js';
+import { faceDetectionService } from '@/services/faceDetectionService';
 import { ImageAnalysisErrorType } from './imageAnalysisErrors';
-
-// Face-api.js model loading state
-let modelsLoaded = false;
-let modelsLoading = false;
 
 /**
  * Image validation result
@@ -31,38 +27,13 @@ export interface ImageValidationResult {
 }
 
 /**
- * Load face-api.js models (only once)
+ * Initialize face detection models (delegates to centralized service)
  */
 export async function loadFaceApiModels(): Promise<void> {
-  if (modelsLoaded) return;
-  if (modelsLoading) {
-    // Wait for existing loading to complete
-    while (modelsLoading) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return;
-  }
-
-  try {
-    modelsLoading = true;
-    console.log('Loading face-api.js models...');
-
-    // Load models from CDN for better performance
-    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model';
-    
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    ]);
-
-    modelsLoaded = true;
-    console.log('Face-api.js models loaded successfully');
-  } catch (error) {
-    console.error('Failed to load face-api.js models:', error);
+  // Delegate to centralized service
+  const success = await faceDetectionService.initialize();
+  if (!success) {
     throw new Error('Face detection models failed to load');
-  } finally {
-    modelsLoading = false;
   }
 }
 
@@ -71,7 +42,7 @@ export async function loadFaceApiModels(): Promise<void> {
  */
 export async function validateImageClientSide(file: File): Promise<ImageValidationResult> {
   try {
-    // Ensure models are loaded
+    // Ensure face detection service is initialized
     await loadFaceApiModels();
 
     // Create image element for processing
@@ -214,32 +185,24 @@ async function analyzeFaces(img: HTMLImageElement): Promise<{
   faceArea?: number;
   facePosition?: { x: number; y: number; width: number; height: number };
 }> {
-  const detections = await faceapi
-    .detectAllFaces(img, new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks();
+  // Use centralized face detection service
+  const face = await faceDetectionService.detectFaceInImage(img);
 
-  if (detections.length === 0) {
+  if (!face) {
     return { faceCount: 0 };
   }
 
-  if (detections.length > 1) {
-    return { faceCount: detections.length };
-  }
-
-  // Analyze single face
-  const detection = detections[0];
-  const box = detection.detection.box;
   const imageArea = img.width * img.height;
-  const faceArea = (box.width * box.height) / imageArea;
+  const faceArea = (face.width * face.height) / imageArea;
 
   return {
     faceCount: 1,
     faceArea,
     facePosition: {
-      x: box.x,
-      y: box.y,
-      width: box.width,
-      height: box.height
+      x: face.x,
+      y: face.y,
+      width: face.width,
+      height: face.height
     }
   };
 }
