@@ -1,12 +1,9 @@
 /**
  * Centralized Face Detection Service
- * Uses TensorFlow.js face-landmarks-detection directly (no face-api.js)
- * Implements proper singleton pattern and resource management
+ * Uses native browser FaceDetector API if available, 
+ * falls back to simple video analysis for basic face detection
+ * No external model dependencies for production stability
  */
-
-import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgl';
 
 interface FaceRect {
   x: number;
@@ -18,7 +15,7 @@ interface FaceRect {
 
 class FaceDetectionService {
   private static instance: FaceDetectionService | null = null;
-  private detector: faceLandmarksDetection.FaceLandmarksDetector | null = null;
+  private nativeFaceDetector: any = null;
   private initialized = false;
   private initPromise: Promise<void> | null = null;
 
@@ -37,7 +34,7 @@ class FaceDetectionService {
   }
 
   /**
-   * Initialize face detection with TensorFlow.js
+   * Initialize face detection - try native API only
    */
   async initialize(): Promise<boolean> {
     if (this.initialized) {
@@ -69,30 +66,24 @@ class FaceDetectionService {
    * Internal initialization logic
    */
   private async initializeInternal(): Promise<void> {
-    console.log('🔧 [FaceDetectionService] Initializing TensorFlow.js face detection...');
+    console.log('🔧 [FaceDetectionService] Initializing face detection...');
 
-    try {
-      // Ensure TensorFlow.js is ready
-      await tf.ready();
-      console.log('✅ [FaceDetectionService] TensorFlow.js ready');
-
-      // Create MediaPipeFaceMesh detector for better accuracy and performance
-      const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
-      const detectorConfig: faceLandmarksDetection.MediaPipeFaceMeshTfjsModelConfig = {
-        runtime: 'tfjs',
-        refineLandmarks: false, // Disable for better performance
-        maxFaces: 1, // Only detect one face
-        modelUrl: undefined, // Use default CDN model
-      };
-
-      this.detector = await faceLandmarksDetection.createDetector(model, detectorConfig);
-      this.initialized = true;
-      console.log('✅ [FaceDetectionService] Face detector initialized successfully');
-    } catch (error) {
-      console.error('❌ [FaceDetectionService] Failed to initialize:', error);
-      this.initialized = false;
-      throw error;
+    // Try native FaceDetector API first (Chrome/Edge experimental feature)
+    if ('FaceDetector' in window) {
+      try {
+        // @ts-ignore - FaceDetector is experimental
+        this.nativeFaceDetector = new window.FaceDetector();
+        this.initialized = true;
+        console.log('✅ [FaceDetectionService] Native FaceDetector API initialized');
+        return;
+      } catch (error) {
+        console.warn('⚠️ [FaceDetectionService] Native FaceDetector failed:', error);
+      }
     }
+
+    // No external models - use simple fallback
+    console.log('✅ [FaceDetectionService] Using simple fallback detection');
+    this.initialized = true;
   }
 
   /**
@@ -114,66 +105,160 @@ class FaceDetectionService {
       return null;
     }
 
-    if (!this.detector) {
-      console.error('❌ [FaceDetectionService] Detector not available');
-      return null;
-    }
-
     try {
-      // Detect faces using MediaPipeFaceMesh
-      const predictions = await this.detector.estimateFaces(video);
-      
-      if (!predictions || predictions.length === 0) {
+      // Use native API if available
+      if (this.nativeFaceDetector) {
+        const faces = await this.nativeFaceDetector.detect(video);
+        if (faces && faces.length > 0) {
+          const face = faces[0].boundingBox;
+          console.log('✅ [FaceDetectionService] Native detection found face');
+          return {
+            x: face.x,
+            y: face.y,
+            width: face.width,
+            height: face.height,
+            confidence: 0.9
+          };
+        }
         return null;
       }
 
-      const face = predictions[0];
-      
-      // MediaPipeFaceMesh provides a bounding box
-      if (face.box) {
-        const box = face.box;
-        
-        // Calculate confidence based on number of detected keypoints
-        // MediaPipeFaceMesh has 468 keypoints when fully detected
-        const confidence = face.keypoints ? 
-          Math.min(face.keypoints.length / 468, 1.0) : 0.8;
-        
-        return {
-          x: box.xMin,
-          y: box.yMin,
-          width: box.xMax - box.xMin,
-          height: box.yMax - box.yMin,
-          confidence: confidence
-        };
-      }
-      
-      // Fallback: calculate bounding box from keypoints if box not provided
-      if (face.keypoints && face.keypoints.length > 0) {
-        const points = face.keypoints;
-        let minX = Infinity, minY = Infinity;
-        let maxX = -Infinity, maxY = -Infinity;
-        
-        for (const point of points) {
-          minX = Math.min(minX, point.x);
-          minY = Math.min(minY, point.y);
-          maxX = Math.max(maxX, point.x);
-          maxY = Math.max(maxY, point.y);
-        }
-        
-        return {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY,
-          confidence: 0.8
-        };
-      }
-
-      return null;
+      // Simple fallback: Use basic image analysis
+      return this.simpleFaceDetection(video);
     } catch (error) {
       console.error('❌ [FaceDetectionService] Detection error:', error);
       return null;
     }
+  }
+
+  /**
+   * Simple face detection fallback using basic image analysis
+   */
+  private simpleFaceDetection(video: HTMLVideoElement): FaceRect | null {
+    try {
+      // Create canvas for analysis
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        return null;
+      }
+
+      // Draw current frame
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Get image data for analysis
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Simple skin tone detection for face area
+      let minX = canvas.width, minY = canvas.height;
+      let maxX = 0, maxY = 0;
+      let skinPixelCount = 0;
+      
+      // Scan center region where face is likely to be
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const scanRadius = Math.min(canvas.width, canvas.height) * 0.4;
+      
+      for (let y = Math.max(0, centerY - scanRadius); y < Math.min(canvas.height, centerY + scanRadius); y += 2) {
+        for (let x = Math.max(0, centerX - scanRadius); x < Math.min(canvas.width, centerX + scanRadius); x += 2) {
+          const idx = (y * canvas.width + x) * 4;
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          
+          // Simple skin tone detection (works for various skin tones)
+          const isSkinTone = this.isSkinTone(r, g, b);
+          
+          if (isSkinTone) {
+            skinPixelCount++;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      
+      // Need minimum skin pixels to consider it a face
+      const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
+      const skinRatio = skinPixelCount / totalScannedPixels;
+      
+      if (skinRatio > 0.15) { // At least 15% skin pixels
+        // Expand the bounding box slightly
+        const expansion = 20;
+        const faceRect: FaceRect = {
+          x: Math.max(0, minX - expansion),
+          y: Math.max(0, minY - expansion),
+          width: Math.min(canvas.width - minX, maxX - minX + expansion * 2),
+          height: Math.min(canvas.height - minY, maxY - minY + expansion * 2),
+          confidence: Math.min(skinRatio * 2, 0.8) // Convert ratio to confidence
+        };
+        
+        // Validate face size
+        const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
+        if (faceArea > 0.05) { // Face should be at least 5% of frame
+          console.log('✅ [FaceDetectionService] Fallback detection found face with confidence:', faceRect.confidence);
+          return faceRect;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ [FaceDetectionService] Fallback detection error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if RGB values represent a skin tone
+   */
+  private isSkinTone(r: number, g: number, b: number): boolean {
+    // Multiple skin tone detection rules for inclusivity
+    
+    // Rule 1: RGB rule (works for lighter skin)
+    const rule1 = r > 95 && g > 40 && b > 20 &&
+                  Math.max(r, g, b) - Math.min(r, g, b) > 15 &&
+                  Math.abs(r - g) > 15 && r > g && r > b;
+    
+    // Rule 2: Normalized RGB (works for medium skin)
+    const sum = r + g + b;
+    if (sum > 0) {
+      const nr = r / sum;
+      const ng = g / sum;
+      const rule2 = nr > 0.36 && ng > 0.28 && ng < 0.4;
+      
+      // Rule 3: HSV-based (works for darker skin)
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const diff = max - min;
+      
+      let h = 0;
+      if (diff > 0) {
+        if (max === r) {
+          h = ((g - b) / diff) % 6;
+        } else if (max === g) {
+          h = (b - r) / diff + 2;
+        } else {
+          h = (r - g) / diff + 4;
+        }
+        h = h * 60;
+        if (h < 0) h += 360;
+      }
+      
+      const s = max === 0 ? 0 : diff / max;
+      const v = max / 255;
+      
+      // Skin hue is typically 0-50 degrees
+      const rule3 = (h >= 0 && h <= 50) && s >= 0.15 && s <= 0.8 && v >= 0.2;
+      
+      return rule1 || rule2 || rule3;
+    }
+    
+    return rule1;
   }
 
   /**
@@ -184,39 +269,31 @@ class FaceDetectionService {
       await this.initialize();
     }
 
-    if (!this.detector) {
-      console.error('❌ [FaceDetectionService] Detector not available');
+    // Create temporary video element for image
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
       return null;
     }
-
-    try {
-      const predictions = await this.detector.estimateFaces(image);
-      
-      if (!predictions || predictions.length === 0) {
-        return null;
-      }
-
-      const face = predictions[0];
-      
-      if (face.box) {
-        const box = face.box;
-        const confidence = face.keypoints ? 
-          Math.min(face.keypoints.length / 468, 1.0) : 0.8;
-        
-        return {
-          x: box.xMin,
-          y: box.yMin,
-          width: box.xMax - box.xMin,
-          height: box.yMax - box.yMin,
-          confidence: confidence
-        };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('❌ [FaceDetectionService] Image detection error:', error);
-      return null;
-    }
+    
+    ctx.drawImage(image, 0, 0);
+    
+    // Create a temporary video element to reuse video detection logic
+    const tempVideo = document.createElement('video');
+    tempVideo.width = image.width;
+    tempVideo.height = image.height;
+    
+    // Use the simple detection directly on the image
+    return this.simpleFaceDetection({
+      videoWidth: image.width,
+      videoHeight: image.height,
+      readyState: 4,
+      getContext: () => ctx,
+      drawImage: () => ctx.drawImage(image, 0, 0)
+    } as any);
   }
 
   /**
@@ -235,7 +312,7 @@ class FaceDetectionService {
     const isSizeGood = faceAreaRatio > 0.08; // At least 8% of frame
     
     // Check confidence
-    const isConfident = face.confidence >= 0.5;
+    const isConfident = face.confidence >= 0.3; // Lower threshold for fallback
     
     return isXCentered && isYCentered && isSizeGood && isConfident;
   }
@@ -266,10 +343,7 @@ class FaceDetectionService {
    * Cleanup resources
    */
   dispose(): void {
-    if (this.detector) {
-      this.detector.dispose();
-      this.detector = null;
-    }
+    this.nativeFaceDetector = null;
     this.initialized = false;
   }
 }
