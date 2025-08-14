@@ -1,10 +1,12 @@
 /**
  * Centralized Face Detection Service
- * Manages face detection using native FaceDetector API or face-api.js fallback
+ * Uses TensorFlow.js face-landmarks-detection directly (no face-api.js)
  * Implements proper singleton pattern and resource management
  */
 
-import * as faceapi from 'face-api.js';
+import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgl';
 
 interface FaceRect {
   x: number;
@@ -16,11 +18,9 @@ interface FaceRect {
 
 class FaceDetectionService {
   private static instance: FaceDetectionService | null = null;
-  private nativeFaceDetector: any = null;
-  private modelsLoaded = false;
-  private modelsLoading = false;
-  private modelLoadPromise: Promise<void> | null = null;
+  private detector: faceLandmarksDetection.FaceLandmarksDetector | null = null;
   private initialized = false;
+  private initPromise: Promise<void> | null = null;
 
   private constructor() {
     // Private constructor for singleton
@@ -37,84 +37,60 @@ class FaceDetectionService {
   }
 
   /**
-   * Initialize face detection (native API or face-api.js)
+   * Initialize face detection with TensorFlow.js
    */
   async initialize(): Promise<boolean> {
     if (this.initialized) {
       return true;
     }
 
-    console.log('🔧 [FaceDetectionService] Initializing...');
-
-    // Try native FaceDetector API first
-    if ('FaceDetector' in window) {
+    // Return existing promise if initialization is in progress
+    if (this.initPromise) {
       try {
-        // @ts-ignore - FaceDetector is experimental
-        this.nativeFaceDetector = new window.FaceDetector();
-        this.initialized = true;
-        console.log('✅ [FaceDetectionService] Native FaceDetector API initialized');
-        return true;
-      } catch (error) {
-        console.warn('⚠️ [FaceDetectionService] Native FaceDetector failed:', error);
+        await this.initPromise;
+        return this.initialized;
+      } catch {
+        return false;
       }
     }
 
-    // Fall back to face-api.js
+    // Start new initialization
+    this.initPromise = this.initializeInternal();
+    
     try {
-      await this.loadFaceApiModels();
+      await this.initPromise;
+      return this.initialized;
+    } finally {
+      this.initPromise = null;
+    }
+  }
+
+  /**
+   * Internal initialization logic
+   */
+  private async initializeInternal(): Promise<void> {
+    console.log('🔧 [FaceDetectionService] Initializing TensorFlow.js face detection...');
+
+    try {
+      // Ensure TensorFlow.js is ready
+      await tf.ready();
+      console.log('✅ [FaceDetectionService] TensorFlow.js ready');
+
+      // Create MediaPipeFaceMesh detector for better accuracy and performance
+      const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
+      const detectorConfig: faceLandmarksDetection.MediaPipeFaceMeshTfjsModelConfig = {
+        runtime: 'tfjs',
+        refineLandmarks: false, // Disable for better performance
+        maxFaces: 1, // Only detect one face
+        modelUrl: undefined, // Use default CDN model
+      };
+
+      this.detector = await faceLandmarksDetection.createDetector(model, detectorConfig);
       this.initialized = true;
-      console.log('✅ [FaceDetectionService] face-api.js initialized as fallback');
-      return true;
+      console.log('✅ [FaceDetectionService] Face detector initialized successfully');
     } catch (error) {
       console.error('❌ [FaceDetectionService] Failed to initialize:', error);
       this.initialized = false;
-      return false;
-    }
-  }
-
-  /**
-   * Load face-api.js models (singleton pattern)
-   */
-  private async loadFaceApiModels(): Promise<void> {
-    // Return if already loaded
-    if (this.modelsLoaded) {
-      return;
-    }
-
-    // Return existing promise if loading in progress
-    if (this.modelLoadPromise) {
-      return this.modelLoadPromise;
-    }
-
-    // Create new loading promise
-    this.modelLoadPromise = this.loadModelsInternal();
-    
-    try {
-      await this.modelLoadPromise;
-    } finally {
-      this.modelLoadPromise = null;
-    }
-  }
-
-  /**
-   * Internal model loading logic
-   */
-  private async loadModelsInternal(): Promise<void> {
-    console.log('🔧 [FaceDetectionService] Loading face-api.js models...');
-    
-    try {
-      // Models must be loaded from external files
-      const modelPath = '/models';
-      
-      // Load from local models (required for face-api.js to work)
-      await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
-      console.log('✅ [FaceDetectionService] Loaded models from local path');
-      
-      this.modelsLoaded = true;
-      console.log('✅ [FaceDetectionService] face-api.js models ready');
-    } catch (error) {
-      console.error('❌ [FaceDetectionService] Failed to load models:', error);
-      console.error('❌ [FaceDetectionService] Make sure model files exist in /public/models directory');
       throw error;
     }
   }
@@ -138,84 +114,66 @@ class FaceDetectionService {
       return null;
     }
 
+    if (!this.detector) {
+      console.error('❌ [FaceDetectionService] Detector not available');
+      return null;
+    }
+
     try {
-      // Use native API if available
-      if (this.nativeFaceDetector) {
-        const faces = await this.nativeFaceDetector.detect(video);
-        if (faces && faces.length > 0) {
-          const face = faces[0].boundingBox;
-          return {
-            x: face.x,
-            y: face.y,
-            width: face.width,
-            height: face.height,
-            confidence: 0.9
-          };
-        }
+      // Detect faces using MediaPipeFaceMesh
+      const predictions = await this.detector.estimateFaces(video);
+      
+      if (!predictions || predictions.length === 0) {
         return null;
       }
 
-      // Use face-api.js fallback
-      if (this.modelsLoaded) {
-        return await this.detectWithFaceApi(video);
+      const face = predictions[0];
+      
+      // MediaPipeFaceMesh provides a bounding box
+      if (face.box) {
+        const box = face.box;
+        
+        // Calculate confidence based on number of detected keypoints
+        // MediaPipeFaceMesh has 468 keypoints when fully detected
+        const confidence = face.keypoints ? 
+          Math.min(face.keypoints.length / 468, 1.0) : 0.8;
+        
+        return {
+          x: box.xMin,
+          y: box.yMin,
+          width: box.xMax - box.xMin,
+          height: box.yMax - box.yMin,
+          confidence: confidence
+        };
+      }
+      
+      // Fallback: calculate bounding box from keypoints if box not provided
+      if (face.keypoints && face.keypoints.length > 0) {
+        const points = face.keypoints;
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+        
+        for (const point of points) {
+          minX = Math.min(minX, point.x);
+          minY = Math.min(minY, point.y);
+          maxX = Math.max(maxX, point.x);
+          maxY = Math.max(maxY, point.y);
+        }
+        
+        return {
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          confidence: 0.8
+        };
       }
 
-      console.error('❌ [FaceDetectionService] No detection method available');
       return null;
     } catch (error) {
       console.error('❌ [FaceDetectionService] Detection error:', error);
       return null;
     }
-  }
-
-  /**
-   * Detect face using face-api.js
-   */
-  private async detectWithFaceApi(video: HTMLVideoElement): Promise<FaceRect | null> {
-    // Create canvas for video frame
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) {
-      console.error('❌ [FaceDetectionService] Failed to create canvas context');
-      return null;
-    }
-
-    // Draw current frame
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Detect faces
-    const detections = await faceapi.detectAllFaces(
-      canvas,
-      new faceapi.TinyFaceDetectorOptions({
-        inputSize: 416,
-        scoreThreshold: 0.5
-      })
-    );
-
-    if (detections.length === 0) {
-      return null;
-    }
-
-    const face = detections[0];
-    const box = face.box;
-    
-    // Validate face size (at least 2% of frame)
-    const faceArea = (box.width * box.height) / (canvas.width * canvas.height);
-    if (faceArea < 0.02) {
-      console.log('⚠️ [FaceDetectionService] Face too small:', faceArea);
-      return null;
-    }
-
-    return {
-      x: box.x,
-      y: box.y,
-      width: box.width,
-      height: box.height,
-      confidence: face.score
-    };
   }
 
   /**
@@ -226,34 +184,35 @@ class FaceDetectionService {
       await this.initialize();
     }
 
-    if (!this.modelsLoaded) {
-      console.error('❌ [FaceDetectionService] Models not loaded for image detection');
+    if (!this.detector) {
+      console.error('❌ [FaceDetectionService] Detector not available');
       return null;
     }
 
     try {
-      const detections = await faceapi.detectAllFaces(
-        image,
-        new faceapi.TinyFaceDetectorOptions({
-          inputSize: 416,
-          scoreThreshold: 0.5
-        })
-      );
-
-      if (detections.length === 0) {
+      const predictions = await this.detector.estimateFaces(image);
+      
+      if (!predictions || predictions.length === 0) {
         return null;
       }
 
-      const face = detections[0];
-      const box = face.box;
+      const face = predictions[0];
       
-      return {
-        x: box.x,
-        y: box.y,
-        width: box.width,
-        height: box.height,
-        confidence: face.score
-      };
+      if (face.box) {
+        const box = face.box;
+        const confidence = face.keypoints ? 
+          Math.min(face.keypoints.length / 468, 1.0) : 0.8;
+        
+        return {
+          x: box.xMin,
+          y: box.yMin,
+          width: box.xMax - box.xMin,
+          height: box.yMax - box.yMin,
+          confidence: confidence
+        };
+      }
+
+      return null;
     } catch (error) {
       console.error('❌ [FaceDetectionService] Image detection error:', error);
       return null;
@@ -307,9 +266,11 @@ class FaceDetectionService {
    * Cleanup resources
    */
   dispose(): void {
-    this.nativeFaceDetector = null;
+    if (this.detector) {
+      this.detector.dispose();
+      this.detector = null;
+    }
     this.initialized = false;
-    // Note: face-api.js models stay in memory for reuse
   }
 }
 

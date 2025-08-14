@@ -161,7 +161,7 @@ export async function validateImageClientSide(file: File): Promise<ImageValidati
   } catch (error) {
     console.error('Client-side validation failed:', error);
     // Return valid result if client-side validation fails
-    // This ensures the flow continues even if face-api.js has issues
+    // This ensures the flow continues even if face detection has issues
     return {
       isValid: true,
       details: {
