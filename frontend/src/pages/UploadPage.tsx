@@ -365,7 +365,7 @@ const UploadPage = (): JSX.Element => {
     detectionCountRef.current = 0; // Reset consecutive detection count
     faceDetectionIntervalRef.current = setInterval(async () => {
       
-      if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current || captureCountdown !== null) {
+      if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current) {
         console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCountRef.current}:`, {
           hasVideo: !!videoRef.current,
           isCameraActive: isCameraActiveRef.current,
@@ -407,28 +407,40 @@ const UploadPage = (): JSX.Element => {
           setFaceDetected(true);
           setFaceQuality(quality);
           
-          // Increment consecutive detection count
-          detectionCountRef.current++;
-          
-          // Trigger auto-capture after 5 consecutive face detections
-          if (detectionCountRef.current >= 5 && !captureCountdown) {
-            console.log('✅ [FACE DETECTION] Auto-capturing after 5 consecutive detections...');
-            startCaptureCountdown();
-          } else if (!captureCountdown) {
-            console.log(`⏳ [FACE DETECTION] Consecutive faces: ${detectionCountRef.current}/5 before auto-capture`);
+          // During countdown, just maintain face status
+          if (captureCountdown !== null) {
+            console.log(`📸 [FACE DETECTION] Face maintained during countdown: ${captureCountdown}s`);
+            // Face is still detected, countdown continues
+          } else {
+            // Increment consecutive detection count only when not in countdown
+            detectionCountRef.current++;
+            
+            // Trigger auto-capture after 5 consecutive face detections
+            if (detectionCountRef.current >= 5) {
+              console.log('✅ [FACE DETECTION] Auto-capturing after 5 consecutive detections...');
+              startCaptureCountdown();
+            } else {
+              console.log(`⏳ [FACE DETECTION] Consecutive faces: ${detectionCountRef.current}/5 before auto-capture`);
+            }
           }
         } else {
           console.log(`❌ [FACE DETECTION] No face detected in #${detectionCountRef.current}`);
           setFaceDetected(false);
           setFaceQuality(0);
           
-          // Reset detection count when face is lost
-          detectionCountRef.current = 0;
-          
-          // Cancel countdown if face is lost
+          // Cancel countdown if face is lost during countdown
           if (captureCountdown !== null) {
-            console.log('🚫 [FACE DETECTION] Canceling countdown - face lost');
+            console.log('🚫 [FACE DETECTION] Canceling countdown - face lost during countdown!');
             cancelCaptureCountdown();
+            // Reset detection count to require full 5 detections again
+            detectionCountRef.current = 0;
+            
+            // Show warning message
+            setCameraError('Face lost during countdown. Please keep your face in the frame.');
+            setTimeout(() => setCameraError(null), 3000);
+          } else {
+            // Reset detection count when face is lost normally
+            detectionCountRef.current = 0;
           }
         }
       } catch (error) {
@@ -460,9 +472,8 @@ const UploadPage = (): JSX.Element => {
     let countdown = 3;
     setCaptureCountdown(countdown);
     
-    // Stop face detection while counting down
-    console.log('⏸️ [FACE DETECTION] Pausing detection during countdown...');
-    stopFaceDetection();
+    // Continue face detection during countdown to ensure face is still present
+    console.log('📸 [FACE DETECTION] Starting countdown while continuing face detection...');
     
     const countdownInterval = setInterval(() => {
       countdown--;
@@ -473,15 +484,23 @@ const UploadPage = (): JSX.Element => {
         clearInterval(countdownInterval);
         setCaptureCountdown(null);
         
-        // Take photo
-        console.log('📸 Auto-capturing photo...');
-        capturePhoto();
-        
-        // Track auto capture
-        trackEvent('auto_capture', {
-          face_quality: faceQuality,
-          page: 'upload'
-        });
+        // Only capture if face is still detected
+        if (faceDetected) {
+          console.log('📸 Auto-capturing photo - face confirmed present');
+          capturePhoto();
+          
+          // Track auto capture
+          trackEvent('auto_capture', {
+            face_quality: faceQuality,
+            page: 'upload'
+          });
+        } else {
+          console.log('⚠️ [FACE DETECTION] Capture aborted - no face detected at capture time');
+          setCameraError('Face not detected. Please try again.');
+          setTimeout(() => setCameraError(null), 3000);
+          // Reset detection count
+          detectionCountRef.current = 0;
+        }
       }
     }, 1000);
     
