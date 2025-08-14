@@ -8,6 +8,7 @@ import { ImageUpload } from '@/components/forms';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
+import { initFaceDetector, detectFaceInVideo, isFaceWellPositioned, getFaceQualityScore } from '@/utils/simpleFaceDetection';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -25,6 +26,15 @@ const UploadPage = (): JSX.Element => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState<string | null>(null);
+  
+  // Face detection states
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [faceQuality, setFaceQuality] = useState(0);
+  const [autoCapture, setAutoCapture] = useState(true);
+  const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
+  const [isProcessingFace, setIsProcessingFace] = useState(false);
+  const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Redirect if no session
   useEffect(() => {
@@ -46,6 +56,13 @@ const UploadPage = (): JSX.Element => {
       });
     }
   }, [sessionId, navigate]);
+
+  // Initialize face detector on mount
+  useEffect(() => {
+    initFaceDetector().catch(err => {
+      console.error('Failed to initialize face detector:', err);
+    });
+  }, []);
 
   // Start camera on component mount
   useEffect(() => {
@@ -97,6 +114,7 @@ const UploadPage = (): JSX.Element => {
     return () => {
       console.log('🔚 [Camera API] Component unmounting, cleaning up...');
       stopCamera();
+      stopFaceDetection();
     };
   }, []);
 
@@ -309,8 +327,112 @@ const UploadPage = (): JSX.Element => {
     }
   };
 
+  // Face detection logic
+  const startFaceDetection = (): void => {
+    if (faceDetectionIntervalRef.current) {
+      clearInterval(faceDetectionIntervalRef.current);
+    }
+    
+    console.log('👤 Starting face detection...');
+    
+    faceDetectionIntervalRef.current = setInterval(async () => {
+      if (!videoRef.current || !isCameraActive || isProcessingFace || captureCountdown !== null) {
+        return;
+      }
+      
+      setIsProcessingFace(true);
+      
+      try {
+        const face = await detectFaceInVideo(videoRef.current);
+        
+        if (face) {
+          const isWellPositioned = isFaceWellPositioned(
+            face,
+            videoRef.current.videoWidth,
+            videoRef.current.videoHeight
+          );
+          
+          const quality = getFaceQualityScore(
+            face,
+            videoRef.current.videoWidth,
+            videoRef.current.videoHeight
+          );
+          
+          setFaceDetected(true);
+          setFaceQuality(quality);
+          
+          // Auto capture if face is well positioned and quality is good
+          if (isWellPositioned && quality > 70 && autoCapture && !captureCountdown) {
+            console.log('✅ Good face detected, starting countdown...');
+            startCaptureCountdown();
+          }
+        } else {
+          setFaceDetected(false);
+          setFaceQuality(0);
+          
+          // Cancel countdown if face is lost
+          if (captureCountdown !== null) {
+            cancelCaptureCountdown();
+          }
+        }
+      } catch (error) {
+        console.error('Face detection error:', error);
+      } finally {
+        setIsProcessingFace(false);
+      }
+    }, 200); // Check every 200ms
+  };
+  
+  const stopFaceDetection = (): void => {
+    if (faceDetectionIntervalRef.current) {
+      clearInterval(faceDetectionIntervalRef.current);
+      faceDetectionIntervalRef.current = null;
+    }
+    setFaceDetected(false);
+    setFaceQuality(0);
+  };
+  
+  const startCaptureCountdown = (): void => {
+    let countdown = 3;
+    setCaptureCountdown(countdown);
+    
+    const countdownInterval = setInterval(() => {
+      countdown--;
+      
+      if (countdown > 0) {
+        setCaptureCountdown(countdown);
+      } else {
+        clearInterval(countdownInterval);
+        setCaptureCountdown(null);
+        
+        // Take photo
+        console.log('📸 Auto-capturing photo...');
+        capturePhoto();
+        
+        // Track auto capture
+        trackEvent('auto_capture', {
+          face_quality: faceQuality,
+          page: 'upload'
+        });
+      }
+    }, 1000);
+    
+    captureTimeoutRef.current = countdownInterval;
+  };
+  
+  const cancelCaptureCountdown = (): void => {
+    if (captureTimeoutRef.current) {
+      clearInterval(captureTimeoutRef.current);
+      captureTimeoutRef.current = null;
+    }
+    setCaptureCountdown(null);
+  };
+
   const stopCamera = (): void => {
     console.log('🛑 [Camera API] Stopping camera...');
+    
+    stopFaceDetection();
+    cancelCaptureCountdown();
     
     if (stream) {
       const tracks = stream.getTracks();
