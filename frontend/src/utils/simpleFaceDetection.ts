@@ -1,7 +1,9 @@
 /**
  * Simple face detection using browser's built-in face detection API
- * Falls back to basic heuristics if not available
+ * Falls back to face-api.js if not available
  */
+
+import * as faceapi from 'face-api.js';
 
 interface FaceRect {
   x: number;
@@ -12,6 +14,42 @@ interface FaceRect {
 }
 
 let faceDetector: any = null;
+let faceApiModelsLoaded = false;
+let faceApiModelsLoading = false;
+
+/**
+ * Load face-api.js models for fallback detection
+ */
+const loadFaceApiModels = async (): Promise<void> => {
+  if (faceApiModelsLoaded) {
+    return;
+  }
+  
+  if (faceApiModelsLoading) {
+    // Wait for models to load
+    while (faceApiModelsLoading) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return;
+  }
+
+  try {
+    faceApiModelsLoading = true;
+    console.log('🔧 [FaceDetector] Loading face-api.js models for fallback...');
+
+    // Load models from CDN
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model';
+    
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    
+    faceApiModelsLoaded = true;
+    console.log('✅ [FaceDetector] face-api.js models loaded successfully');
+  } catch (error) {
+    console.error('❌ [FaceDetector] Failed to load face-api.js models:', error);
+  } finally {
+    faceApiModelsLoading = false;
+  }
+};
 
 /**
  * Initialize face detector
@@ -31,8 +69,13 @@ export const initFaceDetector = async (): Promise<boolean> => {
       console.log('✅ [FaceDetector] FaceDetector instance:', faceDetector);
       return true;
     }
-    console.log('ℹ️ [FaceDetector] FaceDetector API not available, will use fallback');
-    return false;
+    console.log('ℹ️ [FaceDetector] FaceDetector API not available, will use face-api.js fallback');
+    
+    // Pre-load face-api.js models for fallback
+    console.log('🔧 [FaceDetector] Pre-loading face-api.js models...');
+    await loadFaceApiModels();
+    
+    return faceApiModelsLoaded;
   } catch (error) {
     console.error('❌ [FaceDetector] Failed to initialize face detector:', error);
     return false;
@@ -75,9 +118,71 @@ export const detectFaceInVideo = async (video: HTMLVideoElement): Promise<FaceRe
       console.log('⚠️ [detectFaceInVideo] FaceDetector not available, using fallback');
     }
     
-    // No fallback detection available - return null
-    console.log('🔄 [detectFaceInVideo] No face detection available, returning null');
-    return null;
+    // Use face-api.js as fallback
+    console.log('🔄 [detectFaceInVideo] Using face-api.js fallback detection...');
+    
+    try {
+      // Load models if not already loaded
+      await loadFaceApiModels();
+      
+      if (!faceApiModelsLoaded) {
+        console.log('❌ [detectFaceInVideo] face-api.js models not loaded');
+        return null;
+      }
+      
+      // Create canvas to capture current video frame
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        console.log('❌ [detectFaceInVideo] Could not create canvas context');
+        return null;
+      }
+      
+      // Draw current video frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Detect faces using face-api.js with stricter threshold
+      const detections = await faceapi
+        .detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions({
+          inputSize: 416,  // Larger input for better accuracy
+          scoreThreshold: 0.6  // Stricter threshold to avoid false positives
+        }));
+      
+      console.log(`📊 [detectFaceInVideo] face-api.js detected ${detections.length} face(s)`);
+      
+      if (detections.length > 0) {
+        const face = detections[0];
+        const box = face.box;
+        
+        // Additional validation: check if face is reasonable size
+        const faceArea = (box.width * box.height) / (canvas.width * canvas.height);
+        if (faceArea < 0.01) { // Face too small (less than 1% of frame)
+          console.log('❌ [detectFaceInVideo] Face too small, likely false positive');
+          return null;
+        }
+        
+        const result = {
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          confidence: face.score
+        };
+        
+        console.log('✅ [detectFaceInVideo] Face detected with face-api.js:', result);
+        console.log(`📏 [detectFaceInVideo] Face area: ${(faceArea * 100).toFixed(2)}% of frame`);
+        return result;
+      } else {
+        console.log('❌ [detectFaceInVideo] No faces detected by face-api.js');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ [detectFaceInVideo] face-api.js detection error:', error);
+      return null;
+    }
   } catch (error) {
     console.error('❌ [detectFaceInVideo] Face detection error:', error);
     return null;
