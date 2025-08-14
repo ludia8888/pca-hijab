@@ -36,6 +36,7 @@ const UploadPage = (): JSX.Element => {
   const isProcessingFaceRef = useRef(false); // Add ref to avoid closure issues
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const detectionCountRef = useRef(0); // Add ref for detection count to avoid closure
 
   // Redirect if no session
   useEffect(() => {
@@ -357,12 +358,12 @@ const UploadPage = (): JSX.Element => {
     
     console.log('👤 [FACE DETECTION] Starting face detection interval...');
     
-    let detectionCount = 0;
+    detectionCountRef.current = 0; // Reset detection count
     faceDetectionIntervalRef.current = setInterval(async () => {
-      detectionCount++;
+      detectionCountRef.current++;
       
       if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current || captureCountdown !== null) {
-        console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCount}:`, {
+        console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCountRef.current}:`, {
           hasVideo: !!videoRef.current,
           isCameraActive: isCameraActiveRef.current,
           isProcessingFace: isProcessingFaceRef.current, // Use ref value
@@ -371,14 +372,14 @@ const UploadPage = (): JSX.Element => {
         return;
       }
       
-      console.log(`🔍 [FACE DETECTION] Running detection #${detectionCount}`);
+      console.log(`🔍 [FACE DETECTION] Running detection #${detectionCountRef.current}`);
       setIsProcessingFace(true);
       isProcessingFaceRef.current = true; // Update ref as well
       
       try {
         console.log(`📷 [FACE DETECTION] Calling detectFaceInVideo...`);
         const face = await detectFaceInVideo(videoRef.current);
-        console.log(`📊 [FACE DETECTION] Detection #${detectionCount} result:`, face);
+        console.log(`📊 [FACE DETECTION] Detection #${detectionCountRef.current} result:`, face);
         
         if (face) {
           // Simplified logic for fallback mode - always trigger after 2 seconds
@@ -403,15 +404,15 @@ const UploadPage = (): JSX.Element => {
           setFaceDetected(true);
           setFaceQuality(quality);
           
-          // Simplified: In fallback mode, always trigger after detecting for 2 seconds (10 detections)
-          if (detectionCount >= 10 && !captureCountdown) {
-            console.log('✅ [FACE DETECTION] Auto-capturing after 2 seconds of detection...');
+          // Simplified: In fallback mode, always trigger after detecting for 1 second (5 detections)
+          if (detectionCountRef.current >= 5 && !captureCountdown) {
+            console.log('✅ [FACE DETECTION] Auto-capturing after 1 second of detection...');
             startCaptureCountdown();
           } else if (!captureCountdown) {
-            console.log(`⏳ [FACE DETECTION] Waiting... ${detectionCount}/10 detections before auto-capture`);
+            console.log(`⏳ [FACE DETECTION] Waiting... ${detectionCountRef.current}/5 detections before auto-capture`);
           }
         } else {
-          console.log(`❌ [FACE DETECTION] No face detected in #${detectionCount}`);
+          console.log(`❌ [FACE DETECTION] No face detected in #${detectionCountRef.current}`);
           setFaceDetected(false);
           setFaceQuality(0);
           
@@ -422,7 +423,7 @@ const UploadPage = (): JSX.Element => {
           }
         }
       } catch (error) {
-        console.error(`❌ [FACE DETECTION] Error in detection #${detectionCount}:`, error);
+        console.error(`❌ [FACE DETECTION] Error in detection #${detectionCountRef.current}:`, error);
         console.error(`❌ [FACE DETECTION] Error stack:`, error instanceof Error ? error.stack : 'No stack');
       } finally {
         setIsProcessingFace(false);
@@ -449,6 +450,10 @@ const UploadPage = (): JSX.Element => {
   const startCaptureCountdown = (): void => {
     let countdown = 3;
     setCaptureCountdown(countdown);
+    
+    // Stop face detection while counting down
+    console.log('⏸️ [FACE DETECTION] Pausing detection during countdown...');
+    stopFaceDetection();
     
     const countdownInterval = setInterval(() => {
       countdown--;
