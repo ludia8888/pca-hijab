@@ -22,6 +22,7 @@ const AnalyzingPage = (): JSX.Element => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [canSkip, setCanSkip] = useState(false);
   const [showNavButtons, setShowNavButtons] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false); // Track if API analysis is done
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -98,10 +99,12 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Enable skip for draping phases and final result
       const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison' || step.id === 'final-result';
-      setCanSkip(isDrapingPhase);
       
-      // Show navigation buttons for phases 3, 4, and 5
-      setShowNavButtons(isDrapingPhase);
+      // Allow skip if it's a draping phase OR if analysis is already complete
+      setCanSkip(isDrapingPhase || analysisComplete);
+      
+      // Show navigation buttons for phases 3, 4, and 5 OR if analysis is complete
+      setShowNavButtons(isDrapingPhase || analysisComplete);
       
       // Set progress immediately
       setProgress(step.progress);
@@ -122,14 +125,15 @@ const AnalyzingPage = (): JSX.Element => {
       });
       
       // Auto-advance for non-draping phases, manual control for draping phases
-      if (!isDrapingPhase) {
+      // BUT if analysis is complete, allow manual control for all phases
+      if (!isDrapingPhase && !analysisComplete) {
         stepTimerRef.current = setTimeout(() => {
           if (currentStep < ANALYSIS_STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
           }
         }, step.duration);
       }
-      // For draping phases, wait for user interaction (no timer)
+      // For draping phases or when analysis is complete, wait for user interaction (no timer)
 
       return () => {
         if (stepTimerRef.current) {
@@ -138,7 +142,7 @@ const AnalyzingPage = (): JSX.Element => {
       };
     }
     return undefined;
-  }, [currentStep, imageUrl]);
+  }, [currentStep, imageUrl, analysisComplete]);
 
   const performAnalysis = async (): Promise<void> => {
     if (!uploadedFile) return;
@@ -181,6 +185,9 @@ const AnalyzingPage = (): JSX.Element => {
       // Store result
       setAnalysisResult(result);
       
+      // Mark analysis as complete - this will allow skipping through UI steps
+      setAnalysisComplete(true);
+      
       // Save analysis result to backend with automatic session recovery
       try {
         if (sessionId) {
@@ -198,7 +205,7 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Store result but DON'T navigate automatically
       // Navigation will happen when user completes all steps manually
-      console.log('Analysis complete, waiting for user to complete all steps');
+      console.log('Analysis complete, user can now navigate through steps freely');
       
       // Track that analysis is ready
       trackEvent('analysis_ready', {
