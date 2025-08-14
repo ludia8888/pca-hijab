@@ -24,6 +24,7 @@ const UploadPage = (): JSX.Element => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const isCameraActiveRef = useRef(false); // Add ref to avoid closure issues
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState<string | null>(null);
   
@@ -172,6 +173,7 @@ const UploadPage = (): JSX.Element => {
       console.error('🚨 [Camera API] getUserMedia not supported in this browser');
       setCameraError('Camera not supported in this browser');
       setIsCameraActive(false);
+      isCameraActiveRef.current = false;
       return;
     }
     
@@ -278,10 +280,11 @@ const UploadPage = (): JSX.Element => {
       
       setStream(mediaStream);
       setIsCameraActive(true);
+      isCameraActiveRef.current = true; // Update ref as well
       
       console.log('🎉 [Camera API] Camera initialization completed successfully');
       
-      // Start face detection after camera is ready
+      // Start face detection immediately (no closure issue with ref)
       startFaceDetection();
       console.log('👤 [Camera API] Face detection started');
       
@@ -329,6 +332,7 @@ const UploadPage = (): JSX.Element => {
       
       setCameraError('Camera access denied or not available');
       setIsCameraActive(false);
+      isCameraActiveRef.current = false;
       
       // Track camera error
       trackError('camera_access_denied', error instanceof Error ? error.message : 'Camera not available', 'upload_page');
@@ -340,7 +344,7 @@ const UploadPage = (): JSX.Element => {
     console.log('🎯 [FACE DETECTION] startFaceDetection called');
     console.log('🎯 [FACE DETECTION] Current state:', {
       videoRef: !!videoRef.current,
-      isCameraActive,
+      isCameraActive: isCameraActiveRef.current, // Use ref value
       isProcessingFace,
       captureCountdown
     });
@@ -356,10 +360,10 @@ const UploadPage = (): JSX.Element => {
     faceDetectionIntervalRef.current = setInterval(async () => {
       detectionCount++;
       
-      if (!videoRef.current || !isCameraActive || isProcessingFace || captureCountdown !== null) {
+      if (!videoRef.current || !isCameraActiveRef.current || isProcessingFace || captureCountdown !== null) {
         console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCount}:`, {
           hasVideo: !!videoRef.current,
-          isCameraActive,
+          isCameraActive: isCameraActiveRef.current, // Use ref value
           isProcessingFace,
           captureCountdown
         });
@@ -502,6 +506,7 @@ const UploadPage = (): JSX.Element => {
     }
     
     setIsCameraActive(false);
+    isCameraActiveRef.current = false;
     console.log('✅ [Camera API] Camera stopped successfully');
   };
 
@@ -519,7 +524,7 @@ const UploadPage = (): JSX.Element => {
       handleImageError('Canvas not available for capture');
       return;
     }
-    if (!isCameraActive || !stream) {
+    if (!isCameraActiveRef.current || !stream) {
       console.error('🚨 [Camera API] Camera not active - cannot capture');
       handleImageError('Camera not active');
       return;
