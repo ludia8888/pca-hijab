@@ -277,6 +277,10 @@ const UploadPage = (): JSX.Element => {
       
       console.log('🎉 [Camera API] Camera initialization completed successfully');
       
+      // Start face detection after camera is ready
+      startFaceDetection();
+      console.log('👤 [Camera API] Face detection started');
+      
       // Track camera access
       trackEvent('camera_access', {
         facing_mode: facingMode,
@@ -830,7 +834,7 @@ const UploadPage = (): JSX.Element => {
             {!previewUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
-                  className="border-4 border-white border-dashed opacity-70 animate-pulse"
+                  className={`border-4 ${faceDetected ? 'border-green-500' : 'border-white'} border-dashed opacity-70 ${faceDetected ? '' : 'animate-pulse'}`}
                   style={{
                     width: '60%',
                     height: '75%',
@@ -839,6 +843,36 @@ const UploadPage = (): JSX.Element => {
                     borderRadius: '50%'
                   }}
                 />
+              </div>
+            )}
+            
+            {/* Face detection status */}
+            {!previewUrl && isCameraActive && (
+              <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 z-30">
+                {/* Face quality score */}
+                {faceDetected && (
+                  <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                    얼굴 품질: {faceQuality}%
+                  </div>
+                )}
+                
+                {/* Auto capture countdown */}
+                {captureCountdown !== null && (
+                  <div className="bg-primary-600 text-white px-4 py-2 rounded-full text-lg font-bold animate-pulse">
+                    {captureCountdown}초 후 촬영...
+                  </div>
+                )}
+                
+                {/* Auto capture toggle */}
+                <button
+                  onClick={() => setAutoCapture(!autoCapture)}
+                  className="bg-black/50 text-white px-3 py-1 rounded-full text-xs flex items-center gap-2"
+                >
+                  <span>자동 촬영</span>
+                  <div className={`w-8 h-4 rounded-full ${autoCapture ? 'bg-green-500' : 'bg-gray-500'} relative transition-colors`}>
+                    <div className={`absolute top-0.5 ${autoCapture ? 'left-4' : 'left-0.5'} w-3 h-3 bg-white rounded-full transition-all`}></div>
+                  </div>
+                </button>
               </div>
             )}
             {previewUrl ? (
