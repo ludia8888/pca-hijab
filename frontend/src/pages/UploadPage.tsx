@@ -17,6 +17,7 @@ const UploadPage = (): JSX.Element => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
+  const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [showPrivacyAssurance, setShowPrivacyAssurance] = useState(true);
   
   // Camera states
@@ -38,6 +39,7 @@ const UploadPage = (): JSX.Element => {
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const detectionCountRef = useRef(0); // Add ref for detection count to avoid closure
+  let faceDetector: any = null; // Face detector for validating uploaded images
 
   // Redirect if no session
   useEffect(() => {
@@ -810,9 +812,75 @@ const UploadPage = (): JSX.Element => {
     setSelectedFile(file);
     setPreviewUrl(preview);
     setError(null);
+    setIsValidatingFace(true);
     
-    // Track image upload success
-    trackImageUpload(true, file.size, file.type);
+    try {
+      // Initialize face detector if not already done
+      if (!faceDetector && 'FaceDetector' in window) {
+        try {
+          // @ts-ignore - FaceDetector is experimental
+          faceDetector = new window.FaceDetector();
+          console.log('✅ [Face Validation] FaceDetector initialized for image validation');
+        } catch (error) {
+          console.warn('⚠️ [Face Validation] Could not initialize FaceDetector:', error);
+        }
+      }
+      
+      // Validate face in image
+      const img = new Image();
+      img.src = preview;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      // Create canvas to extract image data
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Could not create canvas context');
+      }
+      ctx.drawImage(img, 0, 0);
+      
+      // Check for face using FaceDetector API if available
+      let faceDetected = false;
+      if (faceDetector) {
+        try {
+          const faces = await faceDetector.detect(canvas);
+          faceDetected = faces && faces.length > 0;
+          console.log('🔍 [Face Validation] Detected faces in uploaded image:', faces.length);
+          
+          if (!faceDetected) {
+            // No face detected - reject the image
+            setError('얼굴이 감지되지 않았습니다. 얼굴이 잘 보이는 사진을 업로드해주세요.');
+            setSelectedFile(null);
+            setPreviewUrl(null);
+            trackImageUpload(false, file.size, file.type, 'no_face_detected');
+            trackError('no_face_in_upload', 'No face detected in uploaded image', 'upload_page');
+            return;
+          }
+        } catch (error) {
+          console.warn('⚠️ [Face Validation] FaceDetector failed, accepting image with warning:', error);
+          // Fallback: Accept the image but warn the user
+          faceDetected = true;
+        }
+      } else {
+        // No FaceDetector available, accept with warning
+        console.warn('⚠️ [Face Validation] No FaceDetector available, accepting image without validation');
+        faceDetected = true;
+      }
+      
+      // Track image upload success
+      trackImageUpload(true, file.size, file.type);
+    } catch (error) {
+      console.error('❌ [Face Validation] Error validating face:', error);
+      // On error, accept the image but log the issue
+      trackImageUpload(true, file.size, file.type, 'face_validation_error');
+    } finally {
+      setIsValidatingFace(false);
+    }
   };
 
   const handleImageError = (error: string): void => {
@@ -900,7 +968,7 @@ const UploadPage = (): JSX.Element => {
             {!previewUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
-                  className={`border-4 ${faceDetected ? 'border-green-500' : 'border-white'} border-dashed opacity-70 ${faceDetected ? '' : 'animate-pulse'}`}
+                  className={`border-4 ${faceDetected ? 'border-green-500' : 'border-gray-400'} border-dashed opacity-70 ${faceDetected ? '' : 'animate-pulse'}`}
                   style={{
                     width: '60%',
                     height: '75%',
@@ -944,6 +1012,20 @@ const UploadPage = (): JSX.Element => {
                     }}
                   />
                 </div>
+                {/* Face validation loading overlay */}
+                {isValidatingFace && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-3xl z-40">
+                    <div className="bg-white rounded-xl p-4 shadow-xl">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">얼굴 인식 확인중</p>
+                          <p className="text-xs text-gray-500">잠시만 기다려주세요...</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               // Show live camera feed
