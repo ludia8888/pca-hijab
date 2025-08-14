@@ -30,7 +30,6 @@ const UploadPage = (): JSX.Element => {
   // Face detection states
   const [faceDetected, setFaceDetected] = useState(false);
   const [faceQuality, setFaceQuality] = useState(0);
-  const [autoCapture, setAutoCapture] = useState(true);
   const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
   const [isProcessingFace, setIsProcessingFace] = useState(false);
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -365,8 +364,8 @@ const UploadPage = (): JSX.Element => {
           setFaceDetected(true);
           setFaceQuality(quality);
           
-          // Auto capture if face is well positioned and quality is good
-          if (isWellPositioned && quality > 70 && autoCapture && !captureCountdown) {
+          // Auto capture if face is well positioned and quality is good (always enabled)
+          if (isWellPositioned && quality > 70 && !captureCountdown) {
             console.log('✅ Good face detected, starting countdown...');
             startCaptureCountdown();
           }
@@ -849,30 +848,12 @@ const UploadPage = (): JSX.Element => {
             {/* Face detection status */}
             {!previewUrl && isCameraActive && (
               <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 z-30">
-                {/* Face quality score */}
-                {faceDetected && (
-                  <div className="bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                    얼굴 품질: {faceQuality}%
-                  </div>
-                )}
-                
                 {/* Auto capture countdown */}
                 {captureCountdown !== null && (
                   <div className="bg-primary-600 text-white px-4 py-2 rounded-full text-lg font-bold animate-pulse">
                     {captureCountdown}초 후 촬영...
                   </div>
                 )}
-                
-                {/* Auto capture toggle */}
-                <button
-                  onClick={() => setAutoCapture(!autoCapture)}
-                  className="bg-black/50 text-white px-3 py-1 rounded-full text-xs flex items-center gap-2"
-                >
-                  <span>자동 촬영</span>
-                  <div className={`w-8 h-4 rounded-full ${autoCapture ? 'bg-green-500' : 'bg-gray-500'} relative transition-colors`}>
-                    <div className={`absolute top-0.5 ${autoCapture ? 'left-4' : 'left-0.5'} w-3 h-3 bg-white rounded-full transition-all`}></div>
-                  </div>
-                </button>
               </div>
             )}
             {previewUrl ? (
@@ -1020,7 +1001,7 @@ const UploadPage = (): JSX.Element => {
 
         {/* Bottom Controls */}
         <div className="pb-20 pb-[env(safe-area-inset-bottom)]" style={{ paddingBottom: 'max(5rem, env(safe-area-inset-bottom))' }}>
-          <div className="flex items-center justify-center gap-8 px-8">
+          <div className="flex items-center justify-center gap-4 px-8">
             {/* Gallery/Upload Button */}
             <button
               onClick={() => {
@@ -1041,42 +1022,46 @@ const UploadPage = (): JSX.Element => {
                 input.click();
               }}
               disabled={isCompressing}
-              className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="w-14 h-14 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
 
-            {/* Capture Photo Button */}
-            <button
-              onClick={previewUrl ? handleAnalyze : capturePhoto}
-              disabled={isCompressing || (!isCameraActive && !previewUrl)}
-              className="w-16 h-16 bg-white border-4 border-black rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCompressing ? (
-                <svg className="animate-spin w-6 h-6 text-black" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                </svg>
-              ) : previewUrl ? (
-                // Show analyze icon when photo is captured
-                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              ) : (
-                // Show shutter button when camera is active
-                <div className="w-12 h-12 bg-white rounded-full"></div>
-              )}
-            </button>
+            {/* Analyze Button - Only show when photo is captured */}
+            {previewUrl && (
+              <button
+                onClick={handleAnalyze}
+                disabled={isCompressing}
+                className="bg-primary-600 text-white px-6 py-3 rounded-full font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isCompressing ? (
+                  <>
+                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    <span>처리 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>분석 시작</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Flip Camera Button */}
             <button
               onClick={switchCamera}
-              disabled={!isCameraActive || cameraError !== null}
-              className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!isCameraActive || cameraError !== null || previewUrl !== null}
+              className="w-14 h-14 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
