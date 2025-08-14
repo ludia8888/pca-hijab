@@ -75,24 +75,9 @@ export const detectFaceInVideo = async (video: HTMLVideoElement): Promise<FaceRe
       console.log('⚠️ [detectFaceInVideo] FaceDetector not available, using fallback');
     }
     
-    // Fallback: Simple center detection
-    // Assume face is in center of video
-    console.log('🔄 [detectFaceInVideo] Using fallback detection...');
-    const centerX = video.videoWidth / 2;
-    const centerY = video.videoHeight / 2;
-    const faceWidth = video.videoWidth * 0.3; // Assume face is 30% of frame width
-    const faceHeight = video.videoHeight * 0.4; // Assume face is 40% of frame height
-    
-    const fallbackResult = {
-      x: centerX - faceWidth / 2,
-      y: centerY - faceHeight / 2,
-      width: faceWidth,
-      height: faceHeight,
-      confidence: 0.7 // Increase confidence for fallback to enable auto-capture
-    };
-    
-    console.log('📦 [detectFaceInVideo] Fallback result:', fallbackResult);
-    return fallbackResult;
+    // No fallback detection available - return null
+    console.log('🔄 [detectFaceInVideo] No face detection available, returning null');
+    return null;
   } catch (error) {
     console.error('❌ [detectFaceInVideo] Face detection error:', error);
     return null;

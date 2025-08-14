@@ -362,9 +362,8 @@ const UploadPage = (): JSX.Element => {
     
     console.log('👤 [FACE DETECTION] Starting face detection interval...');
     
-    detectionCountRef.current = 0; // Reset detection count
+    detectionCountRef.current = 0; // Reset consecutive detection count
     faceDetectionIntervalRef.current = setInterval(async () => {
-      detectionCountRef.current++;
       
       if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current || captureCountdown !== null) {
         console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCountRef.current}:`, {
@@ -408,17 +407,23 @@ const UploadPage = (): JSX.Element => {
           setFaceDetected(true);
           setFaceQuality(quality);
           
-          // Simplified: In fallback mode, always trigger after detecting for 1 second (5 detections)
+          // Increment consecutive detection count
+          detectionCountRef.current++;
+          
+          // Trigger auto-capture after 5 consecutive face detections
           if (detectionCountRef.current >= 5 && !captureCountdown) {
-            console.log('✅ [FACE DETECTION] Auto-capturing after 1 second of detection...');
+            console.log('✅ [FACE DETECTION] Auto-capturing after 5 consecutive detections...');
             startCaptureCountdown();
           } else if (!captureCountdown) {
-            console.log(`⏳ [FACE DETECTION] Waiting... ${detectionCountRef.current}/5 detections before auto-capture`);
+            console.log(`⏳ [FACE DETECTION] Consecutive faces: ${detectionCountRef.current}/5 before auto-capture`);
           }
         } else {
           console.log(`❌ [FACE DETECTION] No face detected in #${detectionCountRef.current}`);
           setFaceDetected(false);
           setFaceQuality(0);
+          
+          // Reset detection count when face is lost
+          detectionCountRef.current = 0;
           
           // Cancel countdown if face is lost
           if (captureCountdown !== null) {
