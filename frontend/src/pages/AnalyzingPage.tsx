@@ -12,7 +12,7 @@ import { updateSessionWithRecovery } from '@/utils/sessionHelper';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { uploadedFile, sessionId, uploadedImage, setAnalysisResult } = useAppStore();
+  const { uploadedFile, sessionId, uploadedImage, analysisResult, setAnalysisResult } = useAppStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -196,35 +196,15 @@ const AnalyzingPage = (): JSX.Element => {
         // Don't block user flow for backend save errors
       }
       
-      // Track navigation to results
-      trackEvent('navigation_start', {
-        from_page: 'analyzing',
-        to_page: 'result',
-        personal_color: result.personal_color_en,
-        user_flow_step: 'navigating_to_results'
-      });
+      // Store result but DON'T navigate automatically
+      // Navigation will happen when user completes all steps manually
+      console.log('Analysis complete, waiting for user to complete all steps');
       
-      // Wait for animation to complete
-      const totalDuration = ANALYSIS_STEPS.reduce((acc, step) => acc + step.duration, 0) + 1000;
-      navigationTimeoutRef.current = setTimeout(() => {
-        try {
-          navigate(ROUTES.RESULT);
-        } catch (navigationError) {
-          console.error('Navigation to result page failed:', navigationError);
-          
-          // If navigation fails (likely due to chunk loading), try direct URL change
-          const isChunkError = navigationError instanceof Error && 
-            navigationError.message.includes('Failed to fetch dynamically imported module');
-          
-          if (isChunkError) {
-            console.log('Attempting direct navigation to result page...');
-            window.location.href = ROUTES.RESULT + `?cb=${Date.now()}`;
-          } else {
-            // For non-chunk errors, still try to navigate
-            window.location.href = ROUTES.RESULT;
-          }
-        }
-      }, totalDuration);
+      // Track that analysis is ready
+      trackEvent('analysis_ready', {
+        personal_color: result.personal_color_en,
+        user_flow_step: 'analysis_complete_waiting_for_user'
+      });
     } catch (err) {
       console.error('Analysis error:', err);
       
@@ -309,7 +289,25 @@ const AnalyzingPage = (): JSX.Element => {
 
   // Handle forward navigation (for all phases)
   const handleGoForward = () => {
-    if (currentStep < ANALYSIS_STEPS.length - 1) {
+    // Check if we're on the final step and analysis is complete
+    if (currentStep === ANALYSIS_STEPS.length - 1) {
+      // Final step - navigate to results if analysis is ready
+      if (analysisResult) {
+        trackEvent('navigation_to_results', {
+          from_step: currentStep,
+          step_name: currentStepData.id,
+          user_flow_step: 'user_completed_analysis'
+        });
+        
+        trackEngagement('analysis_completed', 'manual_completion');
+        
+        navigate(ROUTES.RESULT);
+      } else {
+        console.warn('Analysis not yet complete, waiting for results...');
+        // Could show a message to the user here
+      }
+    } else if (currentStep < ANALYSIS_STEPS.length - 1) {
+      // Not on final step - move to next step
       // Clear current timer if any
       if (stepTimerRef.current) {
         clearTimeout(stepTimerRef.current);
@@ -375,11 +373,13 @@ const AnalyzingPage = (): JSX.Element => {
                   뒤로가기
                 </button>
                 <button
-                  onClick={canSkip ? handleProceedToNext : handleGoForward}
+                  onClick={currentStep === ANALYSIS_STEPS.length - 1 ? handleGoForward : (canSkip ? handleProceedToNext : handleGoForward)}
                   className="bg-primary-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={currentStep === ANALYSIS_STEPS.length - 1}
+                  disabled={currentStep === ANALYSIS_STEPS.length - 1 && !analysisResult}  // Disable on final step if no result yet
                 >
-                  앞으로가기
+                  {currentStep === ANALYSIS_STEPS.length - 1 ? 
+                    (analysisResult ? '결과 보기' : '분석 중...') : 
+                    '앞으로가기'}
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

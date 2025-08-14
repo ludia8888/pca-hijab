@@ -8,7 +8,6 @@ import { AuthRequired, PersonalColorRequired } from '@/components/auth';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { Text, LoadingSpinner } from '@/components/ui';
 import { tokens } from '@/design-system';
-import { env } from '@/config/environment';
 import type { Content, Product } from '@/types';
 
 const HomePage = (): JSX.Element => {
@@ -36,13 +35,7 @@ const HomePage = (): JSX.Element => {
     try {
       setLoading(true);
       
-      // Skip loading content and products in production
-      if (env.isProduction) {
-        setLoading(false);
-        return;
-      }
-      
-      // Load featured contents
+      // Load featured contents and products
       const [contentsRes, productsRes] = await Promise.all([
         ContentAPI.getPopularContents(5),
         ProductAPI.getProducts()
@@ -96,62 +89,56 @@ const HomePage = (): JSX.Element => {
     );
   }
 
-  // Production-only view
-  if (env.isProduction) {
-    return (
-      <PageLayout>
-        <div className="max-w-2xl mx-auto px-4 py-12 text-center">
-          <div className="mb-8">
+  return (
+    <PageLayout>
+      <div className="max-w-7xl mx-auto">
+        {/* Hero Section - Always show */}
+        <div className="mb-12 px-4">
+          <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               AI Personal Color Analysis
             </h1>
             <p className="text-xl text-gray-600 mb-8">
               Find your perfect hijab colors with AI
             </p>
-          </div>
-          
-          <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-8 mb-8">
-            <div className="text-6xl mb-4">🎨</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Discover Your Personal Color
-            </h2>
-            <p className="text-gray-700 mb-6">
-              Our AI analyzes your skin tone to recommend the most flattering hijab colors for you
-            </p>
-            <button
-              onClick={() => navigate('/diagnosis')}
-              className="px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-full hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              🎯 Start Analysis
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl mb-3">📸</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Upload Photo</h3>
-              <p className="text-gray-600 text-sm">Take or upload a clear selfie in natural lighting</p>
+            
+            <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-8 mb-8">
+              <div className="text-6xl mb-4">🎨</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Discover Your Personal Color
+              </h2>
+              <p className="text-gray-700 mb-6">
+                Our AI analyzes your skin tone to recommend the most flattering hijab colors for you
+              </p>
+              <button
+                onClick={() => navigate('/diagnosis')}
+                className="px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-full hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                🎯 Start Analysis
+              </button>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl mb-3">🤖</div>
-              <h3 className="font-semibold text-gray-900 mb-2">AI Analysis</h3>
-              <p className="text-gray-600 text-sm">Our AI analyzes your skin tone and features</p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl mb-3">🎨</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Get Results</h3>
-              <p className="text-gray-600 text-sm">Receive your personal color palette instantly</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="text-3xl mb-3">📸</div>
+                <h3 className="font-semibold text-gray-900 mb-2">Upload Photo</h3>
+                <p className="text-gray-600 text-sm">Take or upload a clear selfie in natural lighting</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="text-3xl mb-3">🤖</div>
+                <h3 className="font-semibold text-gray-900 mb-2">AI Analysis</h3>
+                <p className="text-gray-600 text-sm">Our AI analyzes your skin tone and features</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="text-3xl mb-3">🎨</div>
+                <h3 className="font-semibold text-gray-900 mb-2">Get Results</h3>
+                <p className="text-gray-600 text-sm">Receive your personal color palette instantly</p>
+              </div>
             </div>
           </div>
         </div>
-      </PageLayout>
-    );
-  }
 
-  return (
-    <PageLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Content Carousel */}
+        {/* Content Carousel - Optional */}
         {featuredContents.length > 0 ? (
           <div className="relative mb-8 -mx-4 md:mx-0">
             <div className="relative h-[400px] md:h-[500px] overflow-hidden rounded-none md:rounded-2xl">

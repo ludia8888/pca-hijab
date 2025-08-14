@@ -2,7 +2,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
-import { env } from '@/config/environment';
 
 interface BottomNavItem {
   id: string;
@@ -48,10 +47,8 @@ const BottomNavigation = (): JSX.Element => {
   const location = useLocation();
   const { sessionId, setSessionData } = useAppStore();
 
-  // Filter navigation items based on environment
-  const visibleNavItems = env.isProduction 
-    ? NAV_ITEMS.filter(item => item.id === 'home' || item.id === 'diagnosis')
-    : NAV_ITEMS;
+  // Show all navigation items
+  const visibleNavItems = NAV_ITEMS;
 
   const isActive = (route: string): boolean => {
     if (route === ROUTES.HOME) {

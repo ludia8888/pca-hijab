@@ -10,7 +10,6 @@ import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
 import { trackAIAnalysis, trackEvent, trackResultDownload, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import { toast } from 'react-hot-toast';
-import { env } from '@/config/environment';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -426,36 +425,34 @@ const ResultPage = (): JSX.Element => {
           </div>
         </div>
 
-        {/* CTA Section - Elegant Design - Only show in development */}
-        {!env.isProduction && (
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-500 rounded-2xl blur-xl opacity-30" />
-            <div className="relative bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 text-white shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-1 drop-shadow-sm">Find Your Perfect Hijab</h3>
-                  <p className="text-white/90 text-sm font-medium">
-                    Hijab recommendations for your {seasonInfo?.en}
-                  </p>
-                </div>
-                <div className="text-4xl drop-shadow-sm">🧕</div>
+        {/* CTA Section - Elegant Design */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-500 rounded-2xl blur-xl opacity-30" />
+          <div className="relative bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 text-white shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold mb-1 drop-shadow-sm">Find Your Perfect Hijab</h3>
+                <p className="text-white/90 text-sm font-medium">
+                  Hijab recommendations for your {seasonInfo?.en}
+                </p>
               </div>
-              <button
-                onClick={() => {
-                  // Track next step button click
-                  trackEvent('button_click', {
-                    button_name: 'get_hijab_recommendations',
-                    page: 'result'
-                  });
-                  navigate(ROUTES.PRODUCTS);
-                }}
-                className="w-full bg-white text-primary-700 font-bold py-4 rounded-xl hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-md"
-              >
-                🛍️ Get Hijab Recommendations
-              </button>
+              <div className="text-4xl drop-shadow-sm">🧕</div>
             </div>
+            <button
+              onClick={() => {
+                // Track next step button click
+                trackEvent('button_click', {
+                  button_name: 'get_hijab_recommendations',
+                  page: 'result'
+                });
+                navigate(ROUTES.PRODUCTS);
+              }}
+              className="w-full bg-white text-primary-700 font-bold py-4 rounded-xl hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-md"
+            >
+              🛍️ Get Hijab Recommendations
+            </button>
           </div>
-        )}
+        </div>
         
         {/* Secondary Action */}
         <div className="text-center mt-6">

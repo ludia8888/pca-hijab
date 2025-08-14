@@ -5,7 +5,6 @@ import { validateInstagramId } from '@/utils/validators';
 import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
 import { trackSessionStart, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
-import { env } from '@/config/environment';
 import styles from './HIGLandingPage.module.css';
 
 const HIGLandingPage = (): JSX.Element => {
@@ -417,18 +416,14 @@ const HIGLandingPage = (): JSX.Element => {
       <footer className={styles.footer}>
         <p className={styles.footerText}>
           © 2025 Noor.AI · Privacy-first color analysis
-          {!env.isProduction && (
-            <>
-              {' · '}
-              <Link to={ROUTES.TERMS_OF_SERVICE} className={styles.footerLink}>
-                Terms of Service
-              </Link>
-              {' · '}
-              <Link to={ROUTES.PRIVACY_POLICY} className={styles.footerLink}>
-                Privacy Policy
-              </Link>
-            </>
-          )}
+          {' · '}
+          <Link to={ROUTES.TERMS_OF_SERVICE} className={styles.footerLink}>
+            Terms of Service
+          </Link>
+          {' · '}
+          <Link to={ROUTES.PRIVACY_POLICY} className={styles.footerLink}>
+            Privacy Policy
+          </Link>
         </p>
       </footer>
 
