@@ -33,6 +33,7 @@ const UploadPage = (): JSX.Element => {
   const [faceQuality, setFaceQuality] = useState(0);
   const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
   const [isProcessingFace, setIsProcessingFace] = useState(false);
+  const isProcessingFaceRef = useRef(false); // Add ref to avoid closure issues
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -360,11 +361,11 @@ const UploadPage = (): JSX.Element => {
     faceDetectionIntervalRef.current = setInterval(async () => {
       detectionCount++;
       
-      if (!videoRef.current || !isCameraActiveRef.current || isProcessingFace || captureCountdown !== null) {
+      if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current || captureCountdown !== null) {
         console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCount}:`, {
           hasVideo: !!videoRef.current,
-          isCameraActive: isCameraActiveRef.current, // Use ref value
-          isProcessingFace,
+          isCameraActive: isCameraActiveRef.current,
+          isProcessingFace: isProcessingFaceRef.current, // Use ref value
           captureCountdown
         });
         return;
@@ -372,12 +373,15 @@ const UploadPage = (): JSX.Element => {
       
       console.log(`🔍 [FACE DETECTION] Running detection #${detectionCount}`);
       setIsProcessingFace(true);
+      isProcessingFaceRef.current = true; // Update ref as well
       
       try {
+        console.log(`📷 [FACE DETECTION] Calling detectFaceInVideo...`);
         const face = await detectFaceInVideo(videoRef.current);
         console.log(`📊 [FACE DETECTION] Detection #${detectionCount} result:`, face);
         
         if (face) {
+          // Simplified logic for fallback mode - always trigger after 2 seconds
           const isWellPositioned = isFaceWellPositioned(
             face,
             videoRef.current.videoWidth,
@@ -399,18 +403,12 @@ const UploadPage = (): JSX.Element => {
           setFaceDetected(true);
           setFaceQuality(quality);
           
-          // Auto capture if face is well positioned and quality is good (always enabled)
-          // Lower threshold for fallback mode (since we're using fallback)
-          if (isWellPositioned && quality > 65 && !captureCountdown) {
-            console.log('✅ [FACE DETECTION] Good face detected, starting countdown...');
+          // Simplified: In fallback mode, always trigger after detecting for 2 seconds (10 detections)
+          if (detectionCount >= 10 && !captureCountdown) {
+            console.log('✅ [FACE DETECTION] Auto-capturing after 2 seconds of detection...');
             startCaptureCountdown();
-          } else {
-            console.log('⚠️ [FACE DETECTION] Face detected but not ready for capture:', {
-              isWellPositioned,
-              quality,
-              qualityThreshold: 65,
-              hasCountdown: !!captureCountdown
-            });
+          } else if (!captureCountdown) {
+            console.log(`⏳ [FACE DETECTION] Waiting... ${detectionCount}/10 detections before auto-capture`);
           }
         } else {
           console.log(`❌ [FACE DETECTION] No face detected in #${detectionCount}`);
@@ -425,8 +423,10 @@ const UploadPage = (): JSX.Element => {
         }
       } catch (error) {
         console.error(`❌ [FACE DETECTION] Error in detection #${detectionCount}:`, error);
+        console.error(`❌ [FACE DETECTION] Error stack:`, error instanceof Error ? error.stack : 'No stack');
       } finally {
         setIsProcessingFace(false);
+        isProcessingFaceRef.current = false; // Reset ref as well
       }
     }, 200); // Check every 200ms
     
