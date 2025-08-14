@@ -555,6 +555,38 @@ const UploadPage = (): JSX.Element => {
     }
     
     console.log('✅ [Camera API] Pre-capture validation passed');
+    
+    // Create flash effect
+    const flashOverlay = document.createElement('div');
+    flashOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      z-index: 9999;
+      pointer-events: none;
+      animation: cameraFlash 0.3s ease-out;
+    `;
+    
+    // Add animation keyframes if not already present
+    if (!document.querySelector('#camera-flash-animation')) {
+      const style = document.createElement('style');
+      style.id = 'camera-flash-animation';
+      style.textContent = `
+        @keyframes cameraFlash {
+          0% { opacity: 0; }
+          50% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Trigger flash effect
+    document.body.appendChild(flashOverlay);
+    setTimeout(() => flashOverlay.remove(), 300);
 
     try {
       const video = videoRef.current;
