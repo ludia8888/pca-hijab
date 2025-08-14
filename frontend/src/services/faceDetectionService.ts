@@ -103,27 +103,18 @@ class FaceDetectionService {
     console.log('🔧 [FaceDetectionService] Loading face-api.js models...');
     
     try {
-      // Check if models are available locally first
+      // Models must be loaded from external files
       const modelPath = '/models';
       
-      // Try to load from local models first
-      try {
-        await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
-        console.log('✅ [FaceDetectionService] Loaded models from local path');
-      } catch (localError) {
-        console.warn('⚠️ [FaceDetectionService] Local models not found, using weights from bundle');
-        
-        // Load the tiny face detector only (smallest model)
-        // The weights should be bundled with face-api.js
-        if (!faceapi.nets.tinyFaceDetector.isLoaded) {
-          throw new Error('TinyFaceDetector model not available');
-        }
-      }
+      // Load from local models (required for face-api.js to work)
+      await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
+      console.log('✅ [FaceDetectionService] Loaded models from local path');
       
       this.modelsLoaded = true;
       console.log('✅ [FaceDetectionService] face-api.js models ready');
     } catch (error) {
       console.error('❌ [FaceDetectionService] Failed to load models:', error);
+      console.error('❌ [FaceDetectionService] Make sure model files exist in /public/models directory');
       throw error;
     }
   }
