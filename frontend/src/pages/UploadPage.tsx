@@ -23,6 +23,7 @@ const UploadPage = (): JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null); // Add ref to avoid closure issues
   const [isCameraActive, setIsCameraActive] = useState(false);
   const isCameraActiveRef = useRef(false); // Add ref to avoid closure issues
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -281,6 +282,7 @@ const UploadPage = (): JSX.Element => {
       }
       
       setStream(mediaStream);
+      streamRef.current = mediaStream; // Update ref as well
       setIsCameraActive(true);
       isCameraActiveRef.current = true; // Update ref as well
       
@@ -507,6 +509,7 @@ const UploadPage = (): JSX.Element => {
       });
       
       setStream(null);
+      streamRef.current = null; // Clear ref as well
       console.log('✅ [Camera API] All tracks stopped and stream cleared');
     } else {
       console.log('ℹ️ [Camera API] No active stream to stop');
@@ -521,7 +524,7 @@ const UploadPage = (): JSX.Element => {
     console.log('📸 [Camera API] Starting photo capture...');
     console.log('📸 [Camera API] Current camera state:', {
       isCameraActive: isCameraActiveRef.current,
-      hasStream: !!stream,
+      hasStream: !!streamRef.current,  // Use ref instead of state
       videoRef: !!videoRef.current,
       canvasRef: !!canvasRef.current
     });
@@ -537,8 +540,8 @@ const UploadPage = (): JSX.Element => {
       handleImageError('Canvas not available for capture');
       return;
     }
-    // Only check if stream exists, not isCameraActiveRef (which might be incorrectly false)
-    if (!stream) {
+    // Use streamRef to avoid closure issues
+    if (!streamRef.current) {
       console.error('🚨 [Camera API] No stream available - cannot capture');
       handleImageError('Camera stream not available');
       return;
