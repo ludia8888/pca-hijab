@@ -519,6 +519,12 @@ const UploadPage = (): JSX.Element => {
 
   const capturePhoto = async (): Promise<void> => {
     console.log('📸 [Camera API] Starting photo capture...');
+    console.log('📸 [Camera API] Current camera state:', {
+      isCameraActive: isCameraActiveRef.current,
+      hasStream: !!stream,
+      videoRef: !!videoRef.current,
+      canvasRef: !!canvasRef.current
+    });
     
     // Pre-capture validation
     if (!videoRef.current) {
@@ -531,9 +537,10 @@ const UploadPage = (): JSX.Element => {
       handleImageError('Canvas not available for capture');
       return;
     }
-    if (!isCameraActiveRef.current || !stream) {
-      console.error('🚨 [Camera API] Camera not active - cannot capture');
-      handleImageError('Camera not active');
+    // Only check if stream exists, not isCameraActiveRef (which might be incorrectly false)
+    if (!stream) {
+      console.error('🚨 [Camera API] No stream available - cannot capture');
+      handleImageError('Camera stream not available');
       return;
     }
     
