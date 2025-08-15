@@ -63,20 +63,27 @@ apiClient.interceptors.request.use(
     
     // Add CSRF token for non-GET requests
     if (config.method && config.method.toUpperCase() !== 'GET') {
+      console.log('🔐 [API Client] CSRF token needed for:', config.method, config.url);
       try {
         const { CSRFAPI } = await import('./csrf');
         let token = CSRFAPI.getCurrentToken();
+        console.log('🎫 [API Client] Current CSRF token exists:', !!token);
         
         // Get new token if we don't have one
         if (!token && config.url !== '/csrf-token') {
+          console.log('🔄 [API Client] Getting new CSRF token...');
           token = await CSRFAPI.getToken();
+          console.log('✅ [API Client] New CSRF token obtained:', !!token);
         }
         
         if (token) {
           config.headers['x-csrf-token'] = token;
+          console.log('✅ [API Client] CSRF token added to headers');
+        } else {
+          console.warn('⚠️ [API Client] No CSRF token available');
         }
       } catch (error) {
-        console.warn('Failed to get CSRF token:', error);
+        console.error('❌ [API Client] Failed to get CSRF token:', error);
       }
     }
     

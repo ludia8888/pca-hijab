@@ -57,12 +57,28 @@ export interface UserResponse {
 export const AuthAPI = {
   // User signup
   signup: async (email: string, password: string, fullName: string): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/signup', {
+    console.log('🚀 [Frontend] Signup request:', {
+      email,
+      fullName,
+      passwordLength: password.length
+    });
+    
+    const payload = {
       email: sanitizeEmail(email),
       password, // Don't sanitize passwords as they need to remain exactly as entered
       fullName: sanitizeName(fullName)
-    });
-    return response.data;
+    };
+    
+    console.log('📤 [Frontend] Sending signup payload:', payload);
+    
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/signup', payload);
+      console.log('✅ [Frontend] Signup response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [Frontend] Signup error:', error);
+      throw error;
+    }
   },
 
   // User login

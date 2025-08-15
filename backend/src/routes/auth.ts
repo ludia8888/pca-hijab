@@ -42,23 +42,41 @@ const cookieOptions = {
 
 // POST /api/auth/signup - User registration
 router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
+  console.log('🚀 [SIGNUP] Request received:', {
+    body: req.body,
+    headers: {
+      'content-type': req.headers['content-type'],
+      'x-csrf-token': req.headers['x-csrf-token'],
+      origin: req.headers.origin
+    }
+  });
+  
   try {
     const { email, password, fullName } = req.body;
+    console.log('📧 [SIGNUP] Processing signup for email:', email);
 
     // Check if user already exists
+    console.log('🔍 [SIGNUP] Checking if user exists...');
     const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
+      console.log('❌ [SIGNUP] User already exists:', email);
       throw new AppError(409, 'User with this email already exists');
     }
+    console.log('✅ [SIGNUP] User does not exist, proceeding...');
 
     // Hash password
+    console.log('🔐 [SIGNUP] Hashing password...');
     const passwordHash = await hashPassword(password);
+    console.log('✅ [SIGNUP] Password hashed');
 
     // Generate verification token with expiry
+    console.log('🎫 [SIGNUP] Generating verification token...');
     const verificationToken = generateRandomToken();
     const verificationTokenExpires = getVerificationTokenExpiryDate();
+    console.log('✅ [SIGNUP] Token generated');
 
     // Create user
+    console.log('👤 [SIGNUP] Creating user in database...');
     const user = await db.createUser({
       email,
       passwordHash,
@@ -67,9 +85,12 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
       verificationToken,
       verificationTokenExpires
     });
+    console.log('✅ [SIGNUP] User created with ID:', user.id);
 
     // Generate tokens
+    console.log('🔑 [SIGNUP] Generating JWT tokens...');
     const tokens = generateTokens(user.id);
+    console.log('✅ [SIGNUP] JWT tokens generated');
 
     // Create refresh token in database
     await db.createRefreshToken({
@@ -90,29 +111,45 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
     });
 
     // Send verification email
+    console.log('📨 [SIGNUP] Attempting to send verification email...');
     try {
       await emailService.sendVerificationEmail({
         userEmail: user.email,
         userName: user.fullName,
         verificationToken
       });
+      console.log(`✅ [SIGNUP] Verification email sent to: ${user.email}`);
       console.info(`Verification email sent to user: ${maskUserId(user.id)}`);
     } catch (emailError) {
+      console.error('❌ [SIGNUP] Email send failed:', {
+        error: emailError instanceof Error ? emailError.message : emailError,
+        user: user.email
+      });
       console.error(`Failed to send verification email to user: ${maskUserId(user.id)}`, emailError);
       // Don't fail registration if email fails - user can request resend
     }
 
+    console.log('🎉 [SIGNUP] Registration successful, sending response...');
     console.info(`User registered successfully - ID: ${maskUserId(user.id)}`);
 
-    res.status(201).json({
+    const response = {
       success: true,
       message: 'User registered successfully. Please check your email to verify your account.',
       data: {
         user: sanitizeUser(user)
       }
-    });
+    };
+    
+    console.log('📤 [SIGNUP] Sending response:', response);
+    res.status(201).json(response);
+    console.log('✅ [SIGNUP] Response sent successfully');
+    
   } catch (error) {
-    console.error('Signup failed');
+    console.error('❌ [SIGNUP] Signup failed:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      body: req.body
+    });
     next(error);
   }
 });
