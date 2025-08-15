@@ -90,6 +90,8 @@ class FaceDetectionService {
    * Detect face in video element
    */
   async detectFaceInVideo(video: HTMLVideoElement): Promise<FaceRect | null> {
+    console.log('👁️ [FaceDetectionService] detectFaceInVideo called');
+    
     if (!this.initialized) {
       console.warn('⚠️ [FaceDetectionService] Not initialized, initializing now...');
       const success = await this.initialize();
@@ -100,14 +102,28 @@ class FaceDetectionService {
     }
 
     // Validate video element
-    if (!video || video.readyState < 2) {
-      console.warn('⚠️ [FaceDetectionService] Video not ready');
+    if (!video) {
+      console.error('❌ [FaceDetectionService] Video element is null');
       return null;
     }
+    
+    if (video.readyState < 2) {
+      console.warn('⚠️ [FaceDetectionService] Video not ready, readyState:', video.readyState);
+      return null;
+    }
+    
+    console.log('📹 [FaceDetectionService] Video state:', {
+      readyState: video.readyState,
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight,
+      currentTime: video.currentTime,
+      paused: video.paused
+    });
 
     try {
       // Use native API if available
       if (this.nativeFaceDetector) {
+        console.log('🔄 [FaceDetectionService] Using native FaceDetector API...');
         const faces = await this.nativeFaceDetector.detect(video);
         if (faces && faces.length > 0) {
           const face = faces[0].boundingBox;
@@ -120,13 +136,18 @@ class FaceDetectionService {
             confidence: 0.9
           };
         }
+        console.log('❌ [FaceDetectionService] Native API: No faces detected');
         return null;
       }
 
       // Simple fallback: Use basic image analysis
-      return this.simpleFaceDetection(video);
+      console.log('🔄 [FaceDetectionService] Using fallback detection...');
+      const result = this.simpleFaceDetection(video);
+      console.log('📊 [FaceDetectionService] Fallback result:', result ? 'Face found' : 'No face');
+      return result;
     } catch (error) {
       console.error('❌ [FaceDetectionService] Detection error:', error);
+      console.error('❌ [FaceDetectionService] Error stack:', error instanceof Error ? error.stack : 'No stack');
       return null;
     }
   }
@@ -135,20 +156,34 @@ class FaceDetectionService {
    * Simple face detection fallback using basic image analysis
    */
   private simpleFaceDetection(video: HTMLVideoElement): FaceRect | null {
+    console.log('🎨 [FaceDetectionService] simpleFaceDetection started');
+    
     try {
       // Create canvas for analysis
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth || 640; // Fallback dimensions
+      canvas.height = video.videoHeight || 480;
+      
+      console.log('📐 [FaceDetectionService] Creating canvas:', {
+        width: canvas.width,
+        height: canvas.height
+      });
+      
       const ctx = canvas.getContext('2d');
       
       if (!ctx) {
-        console.warn('⚠️ [FaceDetectionService] Cannot get canvas context');
+        console.error('❌ [FaceDetectionService] Cannot get canvas context');
         return null;
       }
 
       // Draw current frame
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      try {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        console.log('✅ [FaceDetectionService] Video frame drawn to canvas');
+      } catch (drawError) {
+        console.error('❌ [FaceDetectionService] Error drawing video to canvas:', drawError);
+        return null;
+      }
       
       // Debug: log canvas dimensions
       console.log('🔍 [FaceDetectionService] Canvas dimensions:', {
@@ -157,7 +192,15 @@ class FaceDetectionService {
       });
       
       // Get image data for analysis
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let imageData;
+      try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        console.log('✅ [FaceDetectionService] Got image data, size:', imageData.data.length);
+      } catch (imageError) {
+        console.error('❌ [FaceDetectionService] Error getting image data:', imageError);
+        return null;
+      }
+      
       const data = imageData.data;
       
       // Simple skin tone detection for face area
@@ -169,6 +212,12 @@ class FaceDetectionService {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const scanRadius = Math.min(canvas.width, canvas.height) * 0.4;
+      
+      console.log('🔍 [FaceDetectionService] Starting skin detection scan:', {
+        centerX,
+        centerY,
+        scanRadius
+      });
       
       for (let y = Math.max(0, centerY - scanRadius); y < Math.min(canvas.height, centerY + scanRadius); y += 2) {
         for (let x = Math.max(0, centerX - scanRadius); x < Math.min(canvas.width, centerX + scanRadius); x += 2) {
