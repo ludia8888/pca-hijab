@@ -32,6 +32,7 @@ const UploadPage = (): JSX.Element => {
   
   // Face detection states
   const [faceDetected, setFaceDetected] = useState(false);
+  const faceDetectedRef = useRef(false); // Add ref to avoid closure issues in setTimeout/setInterval
   const [faceQuality, setFaceQuality] = useState(0);
   const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
   const [isProcessingFace, setIsProcessingFace] = useState(false);
@@ -405,6 +406,7 @@ const UploadPage = (): JSX.Element => {
           });
           
           setFaceDetected(true);
+          faceDetectedRef.current = true; // Update ref as well
           setFaceQuality(quality);
           
           // During countdown, just maintain face status
@@ -426,6 +428,7 @@ const UploadPage = (): JSX.Element => {
         } else {
           console.log(`❌ [FACE DETECTION] No face detected in #${detectionCountRef.current}`);
           setFaceDetected(false);
+          faceDetectedRef.current = false; // Update ref as well
           setFaceQuality(0);
           
           // Cancel countdown if face is lost during countdown
@@ -463,6 +466,7 @@ const UploadPage = (): JSX.Element => {
       console.log('ℹ️ [FACE DETECTION] No active interval to stop');
     }
     setFaceDetected(false);
+    faceDetectedRef.current = false; // Update ref as well
     setFaceQuality(0);
   };
   
@@ -482,8 +486,8 @@ const UploadPage = (): JSX.Element => {
         clearInterval(countdownInterval);
         setCaptureCountdown(null);
         
-        // Only capture if face is still detected
-        if (faceDetected) {
+        // Only capture if face is still detected (use ref to avoid closure issue)
+        if (faceDetectedRef.current) {
           console.log('📸 Auto-capturing photo - face confirmed present');
           capturePhoto();
           
