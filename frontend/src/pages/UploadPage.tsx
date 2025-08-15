@@ -486,44 +486,51 @@ const UploadPage = (): JSX.Element => {
       return;
     }
     
+    // Check face position immediately before starting
+    if (!isWellPositionedRef.current) {
+      console.log('⚠️ [FACE DETECTION] Face not in position, aborting countdown start');
+      return;
+    }
+    
     console.log('🎬 [FACE DETECTION] Starting NEW countdown sequence...');
-    console.log('   Previous countdown ref:', countdownValueRef.current);
-    console.log('   Previous countdown state:', captureCountdown);
-    console.log('   Timer ref status:', captureTimeoutRef.current ? 'active' : 'null');
+    console.log('   Face is well positioned: ', isWellPositionedRef.current);
     
     let countdown = 3;
     setCaptureCountdown(countdown);
     countdownValueRef.current = countdown; // Update ref immediately
     
-    // Continue face detection during countdown to ensure face is still present
-    console.log('📸 [FACE DETECTION] Countdown started: 3 seconds...');
-    
+    // Store interval ID immediately to prevent race conditions
     const countdownInterval = setInterval(() => {
-      // Check if face is still in position before continuing countdown
+      // Decrement first (so 3→2→1→capture, not 3→2→1→0→capture)
+      countdown--;
+      countdownValueRef.current = countdown;
+      
+      // Check if face is still in position
       if (!isWellPositionedRef.current) {
-        console.log('🚫 [COUNTDOWN] Face lost during countdown - cancelling!');
+        console.log(`🚫 [COUNTDOWN] Face lost at ${countdown}s - cancelling!`);
+        clearInterval(countdownInterval);
+        setCaptureCountdown(null);
+        countdownValueRef.current = null;
+        // Don't set captureTimeoutRef to null here - let cancelCaptureCountdown handle it
+        if (captureTimeoutRef.current === countdownInterval) {
+          captureTimeoutRef.current = null;
+        }
+        return;
+      }
+      
+      if (countdown > 0) {
+        setCaptureCountdown(countdown);
+        console.log(`⏰ [COUNTDOWN] ${countdown}s remaining (face in position)`);
+      } else {
+        // countdown === 0, time to capture
         clearInterval(countdownInterval);
         setCaptureCountdown(null);
         countdownValueRef.current = null;
         captureTimeoutRef.current = null;
-        return;
-      }
-      
-      countdown--;
-      countdownValueRef.current = countdown; // Update ref immediately
-      
-      if (countdown > 0) {
-        setCaptureCountdown(countdown);
-        console.log(`⏰ [COUNTDOWN] Countdown: ${countdown}s (face still in position)`);
-      } else {
-        clearInterval(countdownInterval);
-        setCaptureCountdown(null);
-        countdownValueRef.current = null; // Clear countdown ref
-        captureTimeoutRef.current = null; // Clear timer ref
         
-        // Double-check face is still well positioned before capture
+        // Final check before capture
         if (isWellPositionedRef.current) {
-          console.log('📸 Auto-capturing photo - face confirmed in oval position');
+          console.log('📸 Capturing photo NOW - face confirmed in position');
           capturePhoto();
           
           // Track auto capture
@@ -532,13 +539,13 @@ const UploadPage = (): JSX.Element => {
             page: 'upload'
           });
         } else {
-          console.log('⚠️ [FACE DETECTION] Capture aborted - face not in oval at capture time');
-          // No need for text message - visual feedback is enough
+          console.log('⚠️ [COUNTDOWN] Capture aborted - face lost at last moment');
         }
       }
     }, 1000);
     
     captureTimeoutRef.current = countdownInterval;
+    console.log('📸 [FACE DETECTION] Countdown started: 3 seconds...');
   };
   
   const cancelCaptureCountdown = (): void => {
