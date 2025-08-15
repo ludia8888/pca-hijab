@@ -199,25 +199,28 @@ class FaceDetectionService {
         skinPixelCount,
         totalScannedPixels,
         skinRatio: (skinRatio * 100).toFixed(2) + '%',
-        threshold: '15%',
-        passed: skinRatio > 0.15
+        threshold: '10%',
+        passed: skinRatio > 0.10
       });
       
-      if (skinRatio > 0.15) { // At least 15% skin pixels
+      if (skinRatio > 0.10) { // At least 10% skin pixels (more lenient)
         // Expand the bounding box slightly
-        const expansion = 20;
+        const expansion = 30; // More expansion for better coverage
         const faceRect: FaceRect = {
           x: Math.max(0, minX - expansion),
           y: Math.max(0, minY - expansion),
-          width: Math.min(canvas.width - minX, maxX - minX + expansion * 2),
-          height: Math.min(canvas.height - minY, maxY - minY + expansion * 2),
-          confidence: Math.min(skinRatio * 2, 0.8) // Convert ratio to confidence
+          width: Math.min(canvas.width - (minX - expansion), (maxX - minX) + expansion * 2),
+          height: Math.min(canvas.height - (minY - expansion), (maxY - minY) + expansion * 2),
+          confidence: Math.min(skinRatio * 3, 0.9) // Higher confidence conversion
         };
         
         // Validate face size
         const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
-        if (faceArea > 0.05) { // Face should be at least 5% of frame
-          console.log('✅ [FaceDetectionService] Fallback detection found face with confidence:', faceRect.confidence);
+        if (faceArea > 0.03) { // Face should be at least 3% of frame (more lenient)
+          console.log('✅ [FaceDetectionService] Fallback detection found face:');
+          console.log('  - Bounding box:', `x:${faceRect.x}, y:${faceRect.y}, w:${faceRect.width}, h:${faceRect.height}`);
+          console.log('  - Face area:', (faceArea * 100).toFixed(1) + '%');
+          console.log('  - Confidence:', faceRect.confidence);
           return faceRect;
         }
       }
@@ -326,28 +329,30 @@ class FaceDetectionService {
     const ovalRadiusY = frameHeight * 0.375; // 75% height = radius of 37.5%
     
     // Check if face center is within the oval using ellipse equation
-    // (x-h)²/a² + (y-k)²/b² ≤ 1
+    // (x-h)²/a² + (y-k)²/b² ≤ 1.2 (slightly more lenient, 1.2 instead of 1)
     const normalizedX = (faceCenterX - ovalCenterX) / ovalRadiusX;
     const normalizedY = (faceCenterY - ovalCenterY) / ovalRadiusY;
-    const isInOval = (normalizedX * normalizedX + normalizedY * normalizedY) <= 1;
+    const distanceFromCenter = normalizedX * normalizedX + normalizedY * normalizedY;
+    const isInOval = distanceFromCenter <= 1.2; // Allow 20% margin beyond perfect oval
     
     // Check face size (should fill a good portion of the oval)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.10 && faceAreaRatio < 0.35; // 10-35% of frame
+    const isSizeGood = faceAreaRatio > 0.05 && faceAreaRatio < 0.40; // 5-40% of frame (more lenient)
     
     // Check confidence
     const isConfident = face.confidence >= 0.3;
     
-    console.log('🎯 [FaceDetectionService] Face position check:', {
-      faceCenterX,
-      faceCenterY,
-      normalizedPosition: { x: normalizedX.toFixed(2), y: normalizedY.toFixed(2) },
-      isInOval,
-      faceAreaRatio: (faceAreaRatio * 100).toFixed(1) + '%',
-      isSizeGood,
-      isConfident,
-      result: isInOval && isSizeGood && isConfident
-    });
+    console.log('🎯 [FaceDetectionService] Face position check:');
+    console.log('  - Face center:', `(${faceCenterX.toFixed(0)}, ${faceCenterY.toFixed(0)})`);
+    console.log('  - Oval center:', `(${ovalCenterX.toFixed(0)}, ${ovalCenterY.toFixed(0)})`);
+    console.log('  - Normalized position:', `(${normalizedX.toFixed(2)}, ${normalizedY.toFixed(2)})`);
+    console.log('  - Distance from center:', distanceFromCenter.toFixed(2), '(threshold: 1.2)');
+    console.log('  - Is in oval:', isInOval);
+    console.log('  - Face area ratio:', (faceAreaRatio * 100).toFixed(1) + '%', '(need: 5-40%)');
+    console.log('  - Size good:', isSizeGood);
+    console.log('  - Confidence:', face.confidence.toFixed(2), '(need: 0.3+)');
+    console.log('  - Is confident:', isConfident);
+    console.log('  - ✅ Result:', isInOval && isSizeGood && isConfident);
     
     return isInOval && isSizeGood && isConfident;
   }
