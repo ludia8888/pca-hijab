@@ -32,6 +32,7 @@ const UploadPage = (): JSX.Element => {
   
   // Face detection states
   const [faceDetected, setFaceDetected] = useState(false);
+  const [faceWellPositioned, setFaceWellPositioned] = useState(false);
   const faceDetectedRef = useRef(false); // Add ref to avoid closure issues in setTimeout/setInterval
   const isWellPositionedRef = useRef(false); // Track if face is well positioned in oval
   const [faceQuality, setFaceQuality] = useState(0);
@@ -412,8 +413,9 @@ const UploadPage = (): JSX.Element => {
           });
           
           // Update face detection states
-          setFaceDetected(isWellPositioned);
-          faceDetectedRef.current = isWellPositioned; // Update ref as well
+          setFaceDetected(true); // Face is detected
+          setFaceWellPositioned(isWellPositioned); // Face position status
+          faceDetectedRef.current = true; // Update ref as well
           isWellPositionedRef.current = isWellPositioned; // Track position status
           setFaceQuality(isWellPositioned ? quality : 0);
           
@@ -442,6 +444,7 @@ const UploadPage = (): JSX.Element => {
         } else {
           console.log(`❌ [FACE DETECTION] No face detected`);
           setFaceDetected(false);
+          setFaceWellPositioned(false);
           faceDetectedRef.current = false; // Update ref as well
           isWellPositionedRef.current = false; // No face means not well positioned
           setFaceQuality(0);
@@ -477,6 +480,7 @@ const UploadPage = (): JSX.Element => {
       console.log('ℹ️ [FACE DETECTION] No active interval to stop');
     }
     setFaceDetected(false);
+    setFaceWellPositioned(false);
     faceDetectedRef.current = false; // Update ref as well
     isWellPositionedRef.current = false; // Reset position status
     setFaceQuality(0);
@@ -1162,7 +1166,15 @@ const UploadPage = (): JSX.Element => {
             {!previewUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
-                  className={`border-4 ${faceDetected ? 'border-green-500' : 'border-gray-400'} border-dashed opacity-70 ${faceDetected ? '' : 'animate-pulse'}`}
+                  className={`border-4 ${
+                    faceWellPositioned ? 'border-green-500' : 
+                    faceDetected ? 'border-yellow-500' : 
+                    'border-gray-400'
+                  } border-dashed ${
+                    faceWellPositioned ? 'opacity-90' : 'opacity-70'
+                  } ${
+                    !faceDetected ? 'animate-pulse' : ''
+                  }`}
                   style={{
                     width: '60%',
                     height: '75%',
