@@ -287,31 +287,95 @@ class FaceDetectionService {
       await this.initialize();
     }
 
-    // Create temporary video element for image
-    const canvas = document.createElement('canvas');
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) {
+    try {
+      // Create canvas for analysis
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width || 640; // Fallback dimensions
+      canvas.height = image.height || 480;
+      
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        console.error('❌ [FaceDetectionService] Cannot get canvas context');
+        return null;
+      }
+
+      // Draw image to canvas
+      try {
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      } catch (drawError) {
+        console.error('❌ [FaceDetectionService] Error drawing image to canvas:', drawError);
+        return null;
+      }
+      
+      // Get image data for analysis
+      let imageData;
+      try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      } catch (imageError) {
+        console.error('❌ [FaceDetectionService] Error getting image data:', imageError);
+        return null;
+      }
+      
+      const data = imageData.data;
+      
+      // Simple skin tone detection for face area
+      let minX = canvas.width, minY = canvas.height;
+      let maxX = 0, maxY = 0;
+      let skinPixelCount = 0;
+      
+      // Scan center region where face is likely to be
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const scanRadius = Math.min(canvas.width, canvas.height) * 0.4;
+      
+      for (let y = Math.max(0, centerY - scanRadius); y < Math.min(canvas.height, centerY + scanRadius); y += 2) {
+        for (let x = Math.max(0, centerX - scanRadius); x < Math.min(canvas.width, centerX + scanRadius); x += 2) {
+          const idx = (y * canvas.width + x) * 4;
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          
+          // Simple skin tone detection (works for various skin tones)
+          const isSkinTone = this.isSkinTone(r, g, b);
+          
+          if (isSkinTone) {
+            skinPixelCount++;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      
+      // Need minimum skin pixels to consider it a face
+      const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
+      const skinRatio = skinPixelCount / totalScannedPixels;
+      
+      if (skinRatio > 0.10) { // At least 10% skin pixels (more lenient)
+        // Expand the bounding box slightly
+        const expansion = 30; // More expansion for better coverage
+        const faceRect: FaceRect = {
+          x: Math.max(0, minX - expansion),
+          y: Math.max(0, minY - expansion),
+          width: Math.min(canvas.width - (minX - expansion), (maxX - minX) + expansion * 2),
+          height: Math.min(canvas.height - (minY - expansion), (maxY - minY) + expansion * 2),
+          confidence: Math.min(skinRatio * 3, 0.9) // Higher confidence conversion
+        };
+        
+        // Validate face size
+        const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
+        if (faceArea > 0.03) { // Face should be at least 3% of frame (more lenient)
+          return faceRect;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ [FaceDetectionService] Image detection error:', error);
       return null;
     }
-    
-    ctx.drawImage(image, 0, 0);
-    
-    // Create a temporary video element to reuse video detection logic
-    const tempVideo = document.createElement('video');
-    tempVideo.width = image.width;
-    tempVideo.height = image.height;
-    
-    // Use the simple detection directly on the image
-    return this.simpleFaceDetection({
-      videoWidth: image.width,
-      videoHeight: image.height,
-      readyState: 4,
-      getContext: () => ctx,
-      drawImage: () => ctx.drawImage(image, 0, 0)
-    } as any);
   }
 
   /**
