@@ -487,6 +487,12 @@ const UploadPage = (): JSX.Element => {
   };
   
   const startCaptureCountdown = (): void => {
+    // Prevent starting multiple countdowns
+    if (captureCountdown !== null || captureTimeoutRef.current) {
+      console.log('⏰ [FACE DETECTION] Countdown already in progress, skipping...');
+      return;
+    }
+    
     let countdown = 3;
     setCaptureCountdown(countdown);
     
@@ -769,6 +775,10 @@ const UploadPage = (): JSX.Element => {
       });
       
       console.log('🎉 [Camera API] Photo capture process completed successfully');
+      
+      // Reset detection count and clear timer to prevent immediate re-capture
+      detectionCountRef.current = 0;
+      captureTimeoutRef.current = null;
     } catch (error) {
       console.error('🚨 [Camera API] Photo capture error:', error);
       
@@ -935,14 +945,54 @@ const UploadPage = (): JSX.Element => {
             return;
           }
         } catch (error) {
-          console.warn('⚠️ [Face Validation] FaceDetector failed, accepting image with warning:', error);
-          // Fallback: Accept the image but warn the user
-          faceDetected = true;
+          console.warn('⚠️ [Face Validation] FaceDetector failed, using faceDetectionService:', error);
+          // Fallback to our faceDetectionService
+          try {
+            const detectedFace = await faceDetectionService.detectFaceInImage(img);
+            faceDetected = detectedFace !== null;
+            
+            if (!faceDetected) {
+              console.log('❌ [Face Validation] No face detected by fallback service');
+              setError('얼굴이 감지되지 않았습니다. 얼굴이 잘 보이는 사진을 업로드해주세요.');
+              setSelectedFile(null);
+              setPreviewUrl(null);
+              trackImageUpload(false, file.size, file.type, 'no_face_detected');
+              return;
+            }
+          } catch (fallbackError) {
+            console.error('❌ [Face Validation] Fallback detection also failed:', fallbackError);
+            setError('얼굴 인식에 실패했습니다. 다시 시도해주세요.');
+            setSelectedFile(null);
+            setPreviewUrl(null);
+            return;
+          }
         }
       } else {
-        // No FaceDetector available, accept with warning
-        console.warn('⚠️ [Face Validation] No FaceDetector available, accepting image without validation');
-        faceDetected = true;
+        // Use our faceDetectionService as fallback
+        console.log('🔄 [Face Validation] Using faceDetectionService for validation...');
+        try {
+          const detectedFace = await faceDetectionService.detectFaceInImage(img);
+          faceDetected = detectedFace !== null;
+          
+          if (!faceDetected) {
+            console.log('❌ [Face Validation] No face detected by faceDetectionService');
+            setError('얼굴이 감지되지 않았습니다. 얼굴이 잘 보이는 사진을 업로드해주세요.');
+            setSelectedFile(null);
+            setPreviewUrl(null);
+            trackImageUpload(false, file.size, file.type, 'no_face_detected');
+            trackError('no_face_in_upload', 'No face detected in uploaded image', 'upload_page');
+            return;
+          } else {
+            console.log('✅ [Face Validation] Face detected by faceDetectionService');
+          }
+        } catch (error) {
+          console.error('❌ [Face Validation] faceDetectionService failed:', error);
+          // If detection fails, reject the image for safety
+          setError('얼굴 인식에 실패했습니다. 다시 시도해주세요.');
+          setSelectedFile(null);
+          setPreviewUrl(null);
+          return;
+        }
       }
       
       // Track image upload success
