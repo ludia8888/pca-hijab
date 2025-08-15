@@ -1166,21 +1166,17 @@ const UploadPage = (): JSX.Element => {
             {!previewUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <div 
-                  className={`border-4 ${
-                    faceWellPositioned ? 'border-green-500' : 
-                    faceDetected ? 'border-yellow-500' : 
-                    'border-gray-400'
-                  } border-dashed ${
-                    faceWellPositioned ? 'opacity-90' : 'opacity-70'
-                  } ${
+                  className={`${
                     !faceDetected ? 'animate-pulse' : ''
                   }`}
                   style={{
                     width: '60%',
                     height: '75%',
                     borderStyle: 'dashed',
-                    borderWidth: '3px',
-                    borderRadius: '50%'
+                    borderWidth: '4px',
+                    borderRadius: '50%',
+                    borderColor: faceWellPositioned ? '#10b981' : faceDetected ? '#eab308' : '#9ca3af',
+                    opacity: faceWellPositioned ? 0.9 : 0.7
                   }}
                 />
               </div>
