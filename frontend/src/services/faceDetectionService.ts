@@ -313,24 +313,43 @@ class FaceDetectionService {
   }
 
   /**
-   * Check if face is well positioned
+   * Check if face is well positioned within the oval guide
    */
   isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number): boolean {
-    const centerX = face.x + face.width / 2;
-    const centerY = face.y + face.height / 2;
+    const faceCenterX = face.x + face.width / 2;
+    const faceCenterY = face.y + face.height / 2;
     
-    // Check centering
-    const isXCentered = centerX > frameWidth * 0.3 && centerX < frameWidth * 0.7;
-    const isYCentered = centerY > frameHeight * 0.2 && centerY < frameHeight * 0.8;
+    // Oval guide dimensions (60% width, 75% height as per UI)
+    const ovalCenterX = frameWidth / 2;
+    const ovalCenterY = frameHeight / 2;
+    const ovalRadiusX = frameWidth * 0.3; // 60% width = radius of 30%
+    const ovalRadiusY = frameHeight * 0.375; // 75% height = radius of 37.5%
     
-    // Check size
+    // Check if face center is within the oval using ellipse equation
+    // (x-h)²/a² + (y-k)²/b² ≤ 1
+    const normalizedX = (faceCenterX - ovalCenterX) / ovalRadiusX;
+    const normalizedY = (faceCenterY - ovalCenterY) / ovalRadiusY;
+    const isInOval = (normalizedX * normalizedX + normalizedY * normalizedY) <= 1;
+    
+    // Check face size (should fill a good portion of the oval)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.08; // At least 8% of frame
+    const isSizeGood = faceAreaRatio > 0.10 && faceAreaRatio < 0.35; // 10-35% of frame
     
     // Check confidence
-    const isConfident = face.confidence >= 0.3; // Lower threshold for fallback
+    const isConfident = face.confidence >= 0.3;
     
-    return isXCentered && isYCentered && isSizeGood && isConfident;
+    console.log('🎯 [FaceDetectionService] Face position check:', {
+      faceCenterX,
+      faceCenterY,
+      normalizedPosition: { x: normalizedX.toFixed(2), y: normalizedY.toFixed(2) },
+      isInOval,
+      faceAreaRatio: (faceAreaRatio * 100).toFixed(1) + '%',
+      isSizeGood,
+      isConfident,
+      result: isInOval && isSizeGood && isConfident
+    });
+    
+    return isInOval && isSizeGood && isConfident;
   }
 
   /**

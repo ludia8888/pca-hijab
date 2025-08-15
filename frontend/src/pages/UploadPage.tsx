@@ -405,24 +405,40 @@ const UploadPage = (): JSX.Element => {
             face
           });
           
-          setFaceDetected(true);
-          faceDetectedRef.current = true; // Update ref as well
-          setFaceQuality(quality);
+          // Only set face detected if face is well positioned within the oval guide
+          setFaceDetected(isWellPositioned);
+          faceDetectedRef.current = isWellPositioned; // Update ref as well
+          setFaceQuality(isWellPositioned ? quality : 0);
           
-          // During countdown, just maintain face status
-          if (captureCountdown !== null) {
-            console.log(`📸 [FACE DETECTION] Face maintained during countdown: ${captureCountdown}s`);
-            // Face is still detected, countdown continues
-          } else {
-            // Increment consecutive detection count only when not in countdown
-            detectionCountRef.current++;
-            
-            // Trigger auto-capture after 5 consecutive face detections
-            if (detectionCountRef.current >= 5) {
-              console.log('✅ [FACE DETECTION] Auto-capturing after 5 consecutive detections...');
-              startCaptureCountdown();
+          if (isWellPositioned) {
+            // During countdown, check if face is still well positioned
+            if (captureCountdown !== null) {
+              console.log(`📸 [FACE DETECTION] Face well positioned during countdown: ${captureCountdown}s`);
+              // Face is still well positioned, countdown continues
             } else {
-              console.log(`⏳ [FACE DETECTION] Consecutive faces: ${detectionCountRef.current}/5 before auto-capture`);
+              // Increment consecutive detection count only when not in countdown
+              detectionCountRef.current++;
+              
+              // Trigger auto-capture after 5 consecutive well-positioned face detections
+              if (detectionCountRef.current >= 5) {
+                console.log('✅ [FACE DETECTION] Auto-capturing after 5 consecutive well-positioned detections...');
+                startCaptureCountdown();
+              } else {
+                console.log(`⏳ [FACE DETECTION] Well-positioned faces: ${detectionCountRef.current}/5 before auto-capture`);
+              }
+            }
+          } else {
+            // Face detected but not well positioned
+            console.log('⚠️ [FACE DETECTION] Face detected but not well positioned within the oval guide');
+            
+            // Cancel countdown if face is not well positioned during countdown
+            if (captureCountdown !== null) {
+              console.log('🚫 [FACE DETECTION] Canceling countdown - face not well positioned!');
+              cancelCaptureCountdown();
+              detectionCountRef.current = 0;
+            } else {
+              // Reset detection count when face is not well positioned
+              detectionCountRef.current = 0;
             }
           }
         } else {
