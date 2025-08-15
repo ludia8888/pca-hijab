@@ -784,8 +784,7 @@ const UploadPage = (): JSX.Element => {
       
       console.log('🎉 [Camera API] Photo capture process completed successfully');
       
-      // Reset detection count and clear timer to prevent immediate re-capture
-      detectionCountRef.current = 0;
+      // Clear timer to prevent immediate re-capture
       captureTimeoutRef.current = null;
     } catch (error) {
       console.error('🚨 [Camera API] Photo capture error:', error);
