@@ -366,13 +366,19 @@ const UploadPage = (): JSX.Element => {
     
     faceDetectionIntervalRef.current = setInterval(async () => {
       
-      if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current) {
-        console.log(`⏭️ [FACE DETECTION] Skipping detection:`, {
+      if (!videoRef.current || !isCameraActiveRef.current) {
+        console.log(`⏭️ [FACE DETECTION] Skipping detection - no video:`, {
           hasVideo: !!videoRef.current,
-          isCameraActive: isCameraActiveRef.current,
-          isProcessingFace: isProcessingFaceRef.current, // Use ref value
-          captureCountdown
+          isCameraActive: isCameraActiveRef.current
         });
+        // If we can't detect, assume face is not in position
+        isWellPositionedRef.current = false;
+        return;
+      }
+      
+      if (isProcessingFaceRef.current) {
+        console.log(`⏭️ [FACE DETECTION] Still processing previous detection`);
+        // Don't update position during processing - maintain last known state
         return;
       }
       
@@ -500,17 +506,39 @@ const UploadPage = (): JSX.Element => {
     countdownValueRef.current = countdown; // Update ref immediately
     
     // Store interval ID immediately to prevent race conditions
-    const countdownInterval = setInterval(() => {
+    const countdownInterval = setInterval(async () => {
       // Decrement first (so 3→2→1→capture, not 3→2→1→0→capture)
       countdown--;
       countdownValueRef.current = countdown;
       
+      // Double-check face position with fresh detection
+      let faceStillInPosition = false;
+      if (videoRef.current && !isProcessingFaceRef.current) {
+        try {
+          const freshFace = await faceDetectionService.detectFaceInVideo(videoRef.current);
+          if (freshFace) {
+            faceStillInPosition = faceDetectionService.isFaceWellPositioned(
+              freshFace,
+              videoRef.current.videoWidth,
+              videoRef.current.videoHeight
+            );
+          }
+          console.log(`🔍 [COUNTDOWN] Fresh face check: ${faceStillInPosition ? 'IN' : 'OUT'} of position`);
+        } catch (err) {
+          console.log('⚠️ [COUNTDOWN] Fresh detection failed, using ref value');
+          faceStillInPosition = isWellPositionedRef.current;
+        }
+      } else {
+        faceStillInPosition = isWellPositionedRef.current;
+      }
+      
       // Check if face is still in position
-      if (!isWellPositionedRef.current) {
+      if (!faceStillInPosition) {
         console.log(`🚫 [COUNTDOWN] Face lost at ${countdown}s - cancelling!`);
         clearInterval(countdownInterval);
         setCaptureCountdown(null);
         countdownValueRef.current = null;
+        isWellPositionedRef.current = false; // Update ref
         // Don't set captureTimeoutRef to null here - let cancelCaptureCountdown handle it
         if (captureTimeoutRef.current === countdownInterval) {
           captureTimeoutRef.current = null;
@@ -528,8 +556,26 @@ const UploadPage = (): JSX.Element => {
         countdownValueRef.current = null;
         captureTimeoutRef.current = null;
         
-        // Final check before capture
-        if (isWellPositionedRef.current) {
+        // Final check before capture with fresh detection
+        let canCapture = false;
+        if (videoRef.current && !isProcessingFaceRef.current) {
+          try {
+            const finalFace = await faceDetectionService.detectFaceInVideo(videoRef.current);
+            if (finalFace) {
+              canCapture = faceDetectionService.isFaceWellPositioned(
+                finalFace,
+                videoRef.current.videoWidth,
+                videoRef.current.videoHeight
+              );
+            }
+            console.log(`🎯 [COUNTDOWN] Final face check: ${canCapture ? 'READY' : 'NOT READY'}`);
+          } catch (err) {
+            console.log('⚠️ [COUNTDOWN] Final detection failed');
+            canCapture = false;
+          }
+        }
+        
+        if (canCapture) {
           console.log('📸 Capturing photo NOW - face confirmed in position');
           capturePhoto();
           

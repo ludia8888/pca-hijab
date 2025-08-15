@@ -206,20 +206,20 @@ class FaceDetectionService {
       const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
       const skinRatio = skinPixelCount / totalScannedPixels;
       
-      if (skinRatio > 0.10) { // At least 10% skin pixels (more lenient)
+      if (skinRatio > 0.20) { // At least 20% skin pixels (stricter to avoid false positives)
         // Expand the bounding box slightly
-        const expansion = 30; // More expansion for better coverage
+        const expansion = 20; // Moderate expansion
         const faceRect: FaceRect = {
           x: Math.max(0, minX - expansion),
           y: Math.max(0, minY - expansion),
           width: Math.min(canvas.width - (minX - expansion), (maxX - minX) + expansion * 2),
           height: Math.min(canvas.height - (minY - expansion), (maxY - minY) + expansion * 2),
-          confidence: Math.min(skinRatio * 3, 0.9) // Higher confidence conversion
+          confidence: Math.min(skinRatio * 2, 0.9) // More conservative confidence
         };
         
-        // Validate face size
+        // Validate face size - must be substantial
         const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
-        if (faceArea > 0.03) { // Face should be at least 3% of frame (more lenient)
+        if (faceArea > 0.08) { // Face should be at least 8% of frame (stricter)
           return faceRect;
         }
       }
@@ -353,20 +353,20 @@ class FaceDetectionService {
       const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
       const skinRatio = skinPixelCount / totalScannedPixels;
       
-      if (skinRatio > 0.10) { // At least 10% skin pixels (more lenient)
+      if (skinRatio > 0.20) { // At least 20% skin pixels (stricter to avoid false positives)
         // Expand the bounding box slightly
-        const expansion = 30; // More expansion for better coverage
+        const expansion = 20; // Moderate expansion
         const faceRect: FaceRect = {
           x: Math.max(0, minX - expansion),
           y: Math.max(0, minY - expansion),
           width: Math.min(canvas.width - (minX - expansion), (maxX - minX) + expansion * 2),
           height: Math.min(canvas.height - (minY - expansion), (maxY - minY) + expansion * 2),
-          confidence: Math.min(skinRatio * 3, 0.9) // Higher confidence conversion
+          confidence: Math.min(skinRatio * 2, 0.9) // More conservative confidence
         };
         
-        // Validate face size
+        // Validate face size - must be substantial
         const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
-        if (faceArea > 0.03) { // Face should be at least 3% of frame (more lenient)
+        if (faceArea > 0.08) { // Face should be at least 8% of frame (stricter)
           return faceRect;
         }
       }
@@ -392,18 +392,18 @@ class FaceDetectionService {
     const ovalRadiusY = frameHeight * 0.375; // 75% height = radius of 37.5%
     
     // Check if face center is within the oval using ellipse equation
-    // (x-h)²/a² + (y-k)²/b² ≤ 1.2 (slightly more lenient, 1.2 instead of 1)
+    // (x-h)²/a² + (y-k)²/b² ≤ 1.0 (strict - must be within perfect oval)
     const normalizedX = (faceCenterX - ovalCenterX) / ovalRadiusX;
     const normalizedY = (faceCenterY - ovalCenterY) / ovalRadiusY;
     const distanceFromCenter = normalizedX * normalizedX + normalizedY * normalizedY;
-    const isInOval = distanceFromCenter <= 1.2; // Allow 20% margin beyond perfect oval
+    const isInOval = distanceFromCenter <= 1.0; // Must be within perfect oval (stricter)
     
     // Check face size (should fill a good portion of the oval)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.05 && faceAreaRatio < 0.50; // 5-50% of frame (allow closer faces)
+    const isSizeGood = faceAreaRatio > 0.08 && faceAreaRatio < 0.45; // 8-45% of frame (stricter bounds)
     
-    // Check confidence
-    const isConfident = face.confidence >= 0.3;
+    // Check confidence - require higher confidence to avoid false positives
+    const isConfident = face.confidence >= 0.5;
     
     const result = isInOval && isSizeGood && isConfident;
     
@@ -411,7 +411,7 @@ class FaceDetectionService {
     if (!result) {
       console.log('⚠️ [FaceDetectionService] Face position check failed:');
       if (!isInOval) console.log('  - Not in oval (distance:', distanceFromCenter.toFixed(2), ')');
-      if (!isSizeGood) console.log('  - Size issue:', (faceAreaRatio * 100).toFixed(1) + '% (need: 5-50%)');
+      if (!isSizeGood) console.log('  - Size issue:', (faceAreaRatio * 100).toFixed(1) + '% (need: 8-45%)');
       if (!isConfident) console.log('  - Low confidence:', face.confidence.toFixed(2));
     }
     
