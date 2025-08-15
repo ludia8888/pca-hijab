@@ -435,9 +435,7 @@ const UploadPage = (): JSX.Element => {
             // Reset detection count to require full 5 detections again
             detectionCountRef.current = 0;
             
-            // Show warning message
-            setCameraError('Face lost during countdown. Please keep your face in the frame.');
-            setTimeout(() => setCameraError(null), 3000);
+            // Just cancel countdown, visual feedback (border color) is enough
           } else {
             // Reset detection count when face is lost normally
             detectionCountRef.current = 0;
@@ -496,8 +494,7 @@ const UploadPage = (): JSX.Element => {
           });
         } else {
           console.log('⚠️ [FACE DETECTION] Capture aborted - no face detected at capture time');
-          setCameraError('Face not detected. Please try again.');
-          setTimeout(() => setCameraError(null), 3000);
+          // No need for text message - visual feedback is enough
           // Reset detection count
           detectionCountRef.current = 0;
         }
