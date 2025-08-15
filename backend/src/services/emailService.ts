@@ -1,10 +1,10 @@
 /**
- * Secure Email Service for PCA-HIJAB
+ * Production Email Service using Resend
  * Handles email verification and password reset emails
- * SECURITY: All email templates sanitized, rate limited, and logged securely
  */
 
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from '../config/environment';
 import { maskEmail } from '../utils/logging';
 
@@ -29,14 +29,32 @@ interface PasswordResetEmailData {
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend | null = null;
   private isEnabled: boolean;
+  private useResend: boolean;
 
   constructor() {
     this.isEnabled = config.EMAIL_ENABLED || process.env.NODE_ENV === 'development';
+    this.useResend = !!process.env.RESEND_API_KEY;
+    
     if (this.isEnabled) {
-      this.initializeTransporter();
+      if (this.useResend) {
+        this.initializeResend();
+      } else {
+        this.initializeTransporter();
+      }
     } else {
       console.warn('📧 Email service is disabled - emails will be logged instead of sent');
+    }
+  }
+
+  private initializeResend(): void {
+    try {
+      this.resend = new Resend(process.env.RESEND_API_KEY!);
+      console.info('✅ Email service initialized with Resend');
+    } catch (error) {
+      console.error('❌ Failed to initialize Resend:', error);
+      this.isEnabled = false;
     }
   }
 
@@ -46,7 +64,7 @@ class EmailService {
       if (process.env.NODE_ENV === 'development' && !config.SMTP_HOST) {
         const testAccount = await nodemailer.createTestAccount();
         
-        this.transporter = nodemailer.createTransport({
+        this.transporter = nodemailer.createTransporter({
           host: 'smtp.ethereal.email',
           port: 587,
           secure: false,
@@ -64,19 +82,17 @@ class EmailService {
         });
       } else {
         // Production or custom SMTP settings
-        this.transporter = nodemailer.createTransport({
+        this.transporter = nodemailer.createTransporter({
         host: config.SMTP_HOST,
         port: config.SMTP_PORT || 587,
-        secure: config.SMTP_SECURE || false, // Use TLS
+        secure: config.SMTP_SECURE || false,
         auth: {
           user: config.SMTP_USER,
           pass: config.SMTP_PASS,
         },
-        // Security options
         tls: {
           rejectUnauthorized: process.env.NODE_ENV === 'production'
         },
-        // Connection timeout
         connectionTimeout: 10000,
         greetingTimeout: 5000,
         socketTimeout: 10000,
@@ -91,12 +107,10 @@ class EmailService {
   }
 
   private async sendEmail(options: EmailOptions): Promise<void> {
-    if (!this.isEnabled || !this.transporter) {
-      // In development or when disabled, log the email instead
+    if (!this.isEnabled) {
       console.info('📧 Email would be sent (service disabled):', {
         to: maskEmail(options.to),
         subject: options.subject,
-        // Don't log full content for security
         hasHtml: !!options.html,
         hasText: !!options.text
       });
@@ -104,36 +118,52 @@ class EmailService {
     }
 
     try {
-      const mailOptions = {
-        from: {
-          name: config.EMAIL_FROM_NAME || 'PCA-HIJAB',
-          address: config.EMAIL_FROM!
-        },
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-        // Security headers
-        headers: {
-          'X-Mailer': 'PCA-HIJAB-Service',
-          'X-Priority': '3'
-        }
-      };
+      if (this.useResend && this.resend) {
+        // Use Resend API
+        const result = await this.resend.emails.send({
+          from: config.EMAIL_FROM || 'PCA-HIJAB <onboarding@resend.dev>',
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+        });
+        
+        console.info('✅ Email sent via Resend:', {
+          to: maskEmail(options.to),
+          subject: options.subject,
+          id: result.data?.id
+        });
+      } else if (this.transporter) {
+        // Use SMTP
+        const mailOptions = {
+          from: {
+            name: config.EMAIL_FROM_NAME || 'PCA-HIJAB',
+            address: config.EMAIL_FROM || 'noreply@pca-hijab.com'
+          },
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+          headers: {
+            'X-Mailer': 'PCA-HIJAB-Service',
+            'X-Priority': '3'
+          }
+        };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      
-      console.info('✅ Email sent successfully:', {
-        to: maskEmail(options.to),
-        subject: options.subject,
-        messageId: result.messageId
-      });
-      
-      // For development with Ethereal, show preview URL
-      if (process.env.NODE_ENV === 'development' && !config.SMTP_HOST) {
-        const previewUrl = nodemailer.getTestMessageUrl(result);
-        if (previewUrl) {
-          console.info('📧 Preview URL:', previewUrl);
-          console.info('🌐 View email at:', previewUrl);
+        const result = await this.transporter.sendMail(mailOptions);
+        
+        console.info('✅ Email sent via SMTP:', {
+          to: maskEmail(options.to),
+          subject: options.subject,
+          messageId: result.messageId
+        });
+        
+        // For development with Ethereal, show preview URL
+        if (process.env.NODE_ENV === 'development' && !config.SMTP_HOST) {
+          const previewUrl = nodemailer.getTestMessageUrl(result);
+          if (previewUrl) {
+            console.info('📧 Preview URL:', previewUrl);
+          }
         }
       }
     } catch (error) {
@@ -150,14 +180,14 @@ class EmailService {
    * Send email verification email
    */
   async sendVerificationEmail(data: VerificationEmailData): Promise<void> {
-    const verificationUrl = `${config.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${data.verificationToken}`;
+    const verificationUrl = `${config.CLIENT_URL || 'https://pca-hijab.vercel.app'}/verify-email?token=${data.verificationToken}`;
     
     const html = this.createVerificationEmailHTML(data.userName, verificationUrl);
     const text = this.createVerificationEmailText(data.userName, verificationUrl);
 
     await this.sendEmail({
       to: data.userEmail,
-      subject: '✅ PCA-HIJAB 이메일 인증',
+      subject: '✅ Verify your PCA-HIJAB account',
       html,
       text
     });
@@ -167,71 +197,83 @@ class EmailService {
    * Send password reset email
    */
   async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
-    const resetUrl = `${config.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${data.resetToken}`;
+    const resetUrl = `${config.CLIENT_URL || 'https://pca-hijab.vercel.app'}/reset-password?token=${data.resetToken}`;
     
     const html = this.createPasswordResetEmailHTML(data.userName, resetUrl);
     const text = this.createPasswordResetEmailText(data.userName, resetUrl);
 
     await this.sendEmail({
       to: data.userEmail,
-      subject: '🔐 PCA-HIJAB 비밀번호 재설정',
+      subject: '🔐 Reset your PCA-HIJAB password',
       html,
       text
     });
   }
 
   private createVerificationEmailHTML(userName: string, verificationUrl: string): string {
-    // Sanitize user input to prevent XSS
     const safeName = this.sanitizeForEmail(userName);
     
     return `
     <!DOCTYPE html>
-    <html lang="ko">
+    <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>이메일 인증</title>
+        <title>Verify Your Email</title>
         <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-            .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
             .header { text-align: center; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 10px; }
-            .button { display: inline-block; padding: 12px 30px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 20px 0; }
-            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #666; }
-            .warning { background-color: #fef3cd; border: 1px solid #fecba1; border-radius: 4px; padding: 15px; margin: 20px 0; color: #856404; }
+            .logo { font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+            h1 { color: #1a1a1a; font-size: 24px; margin: 20px 0; }
+            p { color: #4a4a4a; line-height: 1.6; margin: 15px 0; }
+            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 25px 0; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: transform 0.2s; }
+            .button:hover { transform: translateY(-2px); }
+            .url-box { background-color: #f8f9fa; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; word-break: break-all; margin: 20px 0; border: 1px solid #e9ecef; }
+            .warning { background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 25px 0; }
+            .warning-title { color: #856404; font-weight: bold; margin-bottom: 10px; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; }
+            .footer p { font-size: 13px; color: #999; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <div class="logo">PCA-HIJAB</div>
-                <h1>이메일 인증</h1>
+                <h1>Verify Your Email Address</h1>
             </div>
             
-            <p>안녕하세요, <strong>${safeName}</strong>님!</p>
+            <p>Hi ${safeName},</p>
             
-            <p>PCA-HIJAB 서비스에 가입해 주셔서 감사합니다. 계정을 활성화하려면 아래 버튼을 클릭하여 이메일 주소를 인증해 주세요.</p>
+            <p>Welcome to PCA-HIJAB! We're excited to have you on board. To get started with your AI-powered personal color analysis journey, please verify your email address by clicking the button below:</p>
             
             <div style="text-align: center;">
-                <a href="${verificationUrl}" class="button">이메일 인증하기</a>
+                <a href="${verificationUrl}" class="button">Verify Email Address</a>
             </div>
             
-            <p>버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 직접 입력해 주세요:</p>
-            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace;">
-                ${verificationUrl}
-            </p>
+            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <div class="url-box">${verificationUrl}</div>
             
             <div class="warning">
-                <strong>⚠️ 보안 안내:</strong>
-                <ul>
-                    <li>이 링크는 24시간 후 만료됩니다</li>
-                    <li>본인이 요청하지 않았다면 이 이메일을 무시하세요</li>
-                    <li>링크를 다른 사람과 공유하지 마세요</li>
+                <div class="warning-title">⚠️ Important Security Information</div>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This link expires in 24 hours</li>
+                    <li>If you didn't create an account, please ignore this email</li>
+                    <li>Never share this link with anyone</li>
                 </ul>
             </div>
             
+            <p>Once verified, you'll be able to:</p>
+            <ul style="color: #4a4a4a; line-height: 1.8;">
+                <li>Get your AI-powered personal color analysis</li>
+                <li>Receive personalized hijab color recommendations</li>
+                <li>Save your color profile and results</li>
+                <li>Access exclusive style tips and content</li>
+            </ul>
+            
             <div class="footer">
-                <p>이 이메일은 자동으로 발송되었습니다. 문의사항이 있으시면 고객지원팀에 연락해 주세요.</p>
+                <p>This is an automated message from PCA-HIJAB. Please do not reply to this email.</p>
+                <p>Need help? Contact our support team at support@pca-hijab.com</p>
                 <p>&copy; 2024 PCA-HIJAB. All rights reserved.</p>
             </div>
         </div>
@@ -243,19 +285,29 @@ class EmailService {
     const safeName = this.sanitizeForEmail(userName);
     
     return `
-PCA-HIJAB 이메일 인증
+PCA-HIJAB Email Verification
 
-안녕하세요, ${safeName}님!
+Hi ${safeName},
 
-PCA-HIJAB 서비스에 가입해 주셔서 감사합니다. 
-계정을 활성화하려면 아래 링크를 클릭하여 이메일 주소를 인증해 주세요.
+Welcome to PCA-HIJAB! We're excited to have you on board.
 
-인증 링크: ${verificationUrl}
+To get started with your AI-powered personal color analysis journey, please verify your email address by clicking the link below:
 
-⚠️ 보안 안내:
-- 이 링크는 24시간 후 만료됩니다
-- 본인이 요청하지 않았다면 이 이메일을 무시하세요
-- 링크를 다른 사람과 공유하지 마세요
+${verificationUrl}
+
+This link expires in 24 hours.
+
+Once verified, you'll be able to:
+- Get your AI-powered personal color analysis
+- Receive personalized hijab color recommendations
+- Save your color profile and results
+- Access exclusive style tips and content
+
+Security Notice:
+- If you didn't create an account, please ignore this email
+- Never share this verification link with anyone
+
+Need help? Contact our support team at support@pca-hijab.com
 
 © 2024 PCA-HIJAB. All rights reserved.
 `;
@@ -266,53 +318,66 @@ PCA-HIJAB 서비스에 가입해 주셔서 감사합니다.
     
     return `
     <!DOCTYPE html>
-    <html lang="ko">
+    <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>비밀번호 재설정</title>
+        <title>Reset Your Password</title>
         <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-            .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
             .header { text-align: center; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: bold; color: #dc2626; margin-bottom: 10px; }
-            .button { display: inline-block; padding: 12px 30px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 20px 0; }
-            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #666; }
-            .warning { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 15px; margin: 20px 0; color: #991b1b; }
+            .logo { font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+            h1 { color: #1a1a1a; font-size: 24px; margin: 20px 0; }
+            p { color: #4a4a4a; line-height: 1.6; margin: 15px 0; }
+            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 25px 0; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); transition: transform 0.2s; }
+            .button:hover { transform: translateY(-2px); }
+            .url-box { background-color: #f8f9fa; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; word-break: break-all; margin: 20px 0; border: 1px solid #e9ecef; }
+            .warning { background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 25px 0; }
+            .warning-title { color: #856404; font-weight: bold; margin-bottom: 10px; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; }
+            .footer p { font-size: 13px; color: #999; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <div class="logo">PCA-HIJAB</div>
-                <h1>비밀번호 재설정</h1>
+                <h1>Reset Your Password</h1>
             </div>
             
-            <p>안녕하세요, <strong>${safeName}</strong>님!</p>
+            <p>Hi ${safeName},</p>
             
-            <p>비밀번호 재설정을 요청하셨습니다. 아래 버튼을 클릭하여 새로운 비밀번호를 설정해 주세요.</p>
+            <p>We received a request to reset your password for your PCA-HIJAB account. Click the button below to create a new password:</p>
             
             <div style="text-align: center;">
-                <a href="${resetUrl}" class="button">비밀번호 재설정하기</a>
+                <a href="${resetUrl}" class="button">Reset Password</a>
             </div>
             
-            <p>버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 직접 입력해 주세요:</p>
-            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace;">
-                ${resetUrl}
-            </p>
+            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <div class="url-box">${resetUrl}</div>
             
             <div class="warning">
-                <strong>🔐 보안 안내:</strong>
-                <ul>
-                    <li>이 링크는 1시간 후 만료됩니다</li>
-                    <li>본인이 요청하지 않았다면 이 이메일을 무시하고 즉시 계정 보안을 확인하세요</li>
-                    <li>링크를 다른 사람과 공유하지 마세요</li>
-                    <li>비밀번호 재설정 후 모든 기기에서 재로그인이 필요합니다</li>
+                <div class="warning-title">⚠️ Important Security Information</div>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This link expires in 1 hour</li>
+                    <li>If you didn't request a password reset, please ignore this email</li>
+                    <li>Your password won't change until you create a new one</li>
+                    <li>Never share this link with anyone</li>
                 </ul>
             </div>
             
+            <p><strong>Tips for creating a strong password:</strong></p>
+            <ul style="color: #4a4a4a; line-height: 1.8;">
+                <li>Use at least 8 characters</li>
+                <li>Include uppercase and lowercase letters</li>
+                <li>Add numbers and special characters</li>
+                <li>Don't use personal information</li>
+            </ul>
+            
             <div class="footer">
-                <p>이 이메일은 자동으로 발송되었습니다. 문의사항이 있으시면 고객지원팀에 연락해 주세요.</p>
+                <p>This is an automated message from PCA-HIJAB. Please do not reply to this email.</p>
+                <p>Need help? Contact our support team at support@pca-hijab.com</p>
                 <p>&copy; 2024 PCA-HIJAB. All rights reserved.</p>
             </div>
         </div>
@@ -324,68 +389,44 @@ PCA-HIJAB 서비스에 가입해 주셔서 감사합니다.
     const safeName = this.sanitizeForEmail(userName);
     
     return `
-PCA-HIJAB 비밀번호 재설정
+PCA-HIJAB Password Reset
 
-안녕하세요, ${safeName}님!
+Hi ${safeName},
 
-비밀번호 재설정을 요청하셨습니다. 
-아래 링크를 클릭하여 새로운 비밀번호를 설정해 주세요.
+We received a request to reset your password for your PCA-HIJAB account.
 
-재설정 링크: ${resetUrl}
+Click the link below to create a new password:
 
-🔐 보안 안내:
-- 이 링크는 1시간 후 만료됩니다
-- 본인이 요청하지 않았다면 이 이메일을 무시하고 즉시 계정 보안을 확인하세요
-- 링크를 다른 사람과 공유하지 마세요
-- 비밀번호 재설정 후 모든 기기에서 재로그인이 필요합니다
+${resetUrl}
+
+This link expires in 1 hour.
+
+Security Notice:
+- If you didn't request a password reset, please ignore this email
+- Your password won't change until you create a new one
+- Never share this reset link with anyone
+
+Tips for creating a strong password:
+- Use at least 8 characters
+- Include uppercase and lowercase letters
+- Add numbers and special characters
+- Don't use personal information
+
+Need help? Contact our support team at support@pca-hijab.com
 
 © 2024 PCA-HIJAB. All rights reserved.
 `;
   }
 
-  /**
-   * Sanitize user input for email templates to prevent XSS
-   */
   private sanitizeForEmail(input: string): string {
+    // Remove any HTML tags and escape special characters
     return input
-      .replace(/[<>&"']/g, (char) => {
-        switch (char) {
-          case '<': return '&lt;';
-          case '>': return '&gt;';
-          case '&': return '&amp;';
-          case '"': return '&quot;';
-          case "'": return '&#x27;';
-          default: return char;
-        }
-      })
-      .trim()
-      .substring(0, 100); // Limit length
-  }
-
-  /**
-   * Check if email service is available
-   */
-  isAvailable(): boolean {
-    return this.isEnabled && this.transporter !== null;
-  }
-
-  /**
-   * Test email configuration (for health checks)
-   */
-  async testConnection(): Promise<boolean> {
-    if (!this.isEnabled || !this.transporter) {
-      return false;
-    }
-
-    try {
-      await this.transporter.verify();
-      return true;
-    } catch (error) {
-      console.error('Email service connection test failed:', error);
-      return false;
-    }
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }
 
-// Export singleton instance
 export const emailService = new EmailService();

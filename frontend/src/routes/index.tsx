@@ -18,6 +18,7 @@ const LoginPage = lazy(() => retryChunkLoad(() => import('@/pages/LoginPage')));
 const SignupPage = lazy(() => retryChunkLoad(() => import('@/pages/SignupPage')));
 const ForgotPasswordPage = lazy(() => retryChunkLoad(() => import('@/pages/ForgotPasswordPage')));
 const ResetPasswordPage = lazy(() => retryChunkLoad(() => import('@/pages/ResetPasswordPage')));
+const VerifyEmailPage = lazy(() => retryChunkLoad(() => import('@/pages/VerifyEmailPage')));
 const TermsOfServicePage = lazy(() => retryChunkLoad(() => import('@/pages/TermsOfServicePage')));
 const PrivacyPolicyPage = lazy(() => retryChunkLoad(() => import('@/pages/PrivacyPolicyPage')));
 
@@ -191,6 +192,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ResetPasswordPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/verify-email',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <VerifyEmailPage />
           </Suspense>
         ),
       },
