@@ -163,13 +163,20 @@ class EnvironmentValidator {
       return false;
     }
     
+    // Check if Resend API key is available (preferred)
+    if (process.env.RESEND_API_KEY) {
+      console.info('✅ Email service enabled with Resend API');
+      return true;
+    }
+    
     // If in production, validate email configuration
     if (process.env.NODE_ENV === 'production') {
-      const requiredEmailVars = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'EMAIL_FROM'];
-      const missing = requiredEmailVars.filter(varName => !process.env[varName]);
+      // Either Resend or SMTP is required
+      const hasResend = !!process.env.RESEND_API_KEY;
+      const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.EMAIL_FROM;
       
-      if (missing.length > 0) {
-        console.warn(`⚠️  Email service disabled - missing variables: ${missing.join(', ')}`);
+      if (!hasResend && !hasSmtp) {
+        console.warn('⚠️  Email service disabled - missing Resend API key or SMTP configuration');
         return false;
       }
       
@@ -177,9 +184,11 @@ class EnvironmentValidator {
       return true;
     } else {
       // In development, email is optional
+      const hasResend = !!process.env.RESEND_API_KEY;
       const hasBasicConfig = process.env.SMTP_HOST && process.env.EMAIL_FROM;
-      if (!hasBasicConfig) {
-        console.warn('📧 Email service disabled in development - set SMTP_HOST and EMAIL_FROM to enable');
+      
+      if (!hasResend && !hasBasicConfig) {
+        console.warn('📧 Email service disabled in development - set RESEND_API_KEY or SMTP configuration');
         return false;
       }
       
