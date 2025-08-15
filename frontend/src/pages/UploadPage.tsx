@@ -487,17 +487,23 @@ const UploadPage = (): JSX.Element => {
   };
   
   const startCaptureCountdown = (): void => {
-    // Prevent starting multiple countdowns
-    if (captureCountdown !== null || captureTimeoutRef.current) {
+    // Prevent starting multiple countdowns (only check if countdown is active)
+    if (captureCountdown !== null) {
       console.log('⏰ [FACE DETECTION] Countdown already in progress, skipping...');
+      console.log('   Current countdown value:', captureCountdown);
+      console.log('   Timer ref status:', captureTimeoutRef.current ? 'active' : 'null');
       return;
     }
+    
+    console.log('🎬 [FACE DETECTION] Starting NEW countdown sequence...');
+    console.log('   Previous countdown:', captureCountdown);
+    console.log('   Timer ref status:', captureTimeoutRef.current ? 'active' : 'null');
     
     let countdown = 3;
     setCaptureCountdown(countdown);
     
     // Continue face detection during countdown to ensure face is still present
-    console.log('📸 [FACE DETECTION] Starting countdown while continuing face detection...');
+    console.log('📸 [FACE DETECTION] Countdown started: 3 seconds...');
     
     const countdownInterval = setInterval(() => {
       countdown--;
@@ -507,6 +513,7 @@ const UploadPage = (): JSX.Element => {
       } else {
         clearInterval(countdownInterval);
         setCaptureCountdown(null);
+        captureTimeoutRef.current = null; // Clear the ref when countdown completes
         
         // Only capture if face is still detected (use ref to avoid closure issue)
         if (faceDetectedRef.current) {
@@ -521,7 +528,7 @@ const UploadPage = (): JSX.Element => {
         } else {
           console.log('⚠️ [FACE DETECTION] Capture aborted - no face detected at capture time');
           // No need for text message - visual feedback is enough
-          // Reset detection count
+          // Reset detection count so user needs 5 new detections
           detectionCountRef.current = 0;
         }
       }
@@ -531,11 +538,17 @@ const UploadPage = (): JSX.Element => {
   };
   
   const cancelCaptureCountdown = (): void => {
+    console.log('🛑 [FACE DETECTION] Cancelling countdown...');
+    console.log('   Current countdown value:', captureCountdown);
+    console.log('   Timer ref status:', captureTimeoutRef.current ? 'active' : 'null');
+    
     if (captureTimeoutRef.current) {
       clearInterval(captureTimeoutRef.current);
       captureTimeoutRef.current = null;
+      console.log('   ✅ Timer cleared');
     }
     setCaptureCountdown(null);
+    console.log('   ✅ Countdown state reset to null');
   };
 
   const stopCamera = (): void => {
