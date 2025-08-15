@@ -206,21 +206,53 @@ class FaceDetectionService {
       const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
       const skinRatio = skinPixelCount / totalScannedPixels;
       
-      if (skinRatio > 0.20) { // At least 20% skin pixels (stricter to avoid false positives)
-        // Expand the bounding box slightly
-        const expansion = 20; // Moderate expansion
-        const faceRect: FaceRect = {
-          x: Math.max(0, minX - expansion),
-          y: Math.max(0, minY - expansion),
-          width: Math.min(canvas.width - (minX - expansion), (maxX - minX) + expansion * 2),
-          height: Math.min(canvas.height - (minY - expansion), (maxY - minY) + expansion * 2),
-          confidence: Math.min(skinRatio * 2, 0.9) // More conservative confidence
-        };
+      // Much stricter validation to prevent false positives
+      if (skinRatio > 0.30) { // At least 30% skin pixels (much stricter)
+        const width = maxX - minX;
+        const height = maxY - minY;
         
-        // Validate face size - must be substantial
-        const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
-        if (faceArea > 0.08) { // Face should be at least 8% of frame (stricter)
+        // Face shape validation - faces are roughly oval/rectangular
+        const aspectRatio = width / height;
+        const isValidShape = aspectRatio > 0.5 && aspectRatio < 1.5; // Face should be somewhat square/oval
+        
+        // Check if skin pixels are concentrated (not scattered)
+        const boundingArea = width * height;
+        const actualSkinPixelsInBounds = skinPixelCount * 4; // We skip pixels, so multiply back
+        const density = actualSkinPixelsInBounds / boundingArea;
+        const isDense = density > 0.4; // At least 40% of bounding box should be skin
+        
+        // Size validation - face should be substantial but not too large
+        const faceArea = (width * height) / (canvas.width * canvas.height);
+        const isValidSize = faceArea > 0.10 && faceArea < 0.40; // 10-40% of frame
+        
+        // All conditions must be met
+        if (isValidShape && isDense && isValidSize) {
+          const expansion = 15; // Conservative expansion
+          const faceRect: FaceRect = {
+            x: Math.max(0, minX - expansion),
+            y: Math.max(0, minY - expansion),
+            width: Math.min(canvas.width - (minX - expansion), width + expansion * 2),
+            height: Math.min(canvas.height - (minY - expansion), height + expansion * 2),
+            confidence: Math.min(skinRatio * 1.5, 0.7) // Lower max confidence
+          };
+          
+          console.log('🎯 [FaceDetection] Detection metrics:', {
+            skinRatio: (skinRatio * 100).toFixed(1) + '%',
+            aspectRatio: aspectRatio.toFixed(2),
+            density: (density * 100).toFixed(1) + '%',
+            faceArea: (faceArea * 100).toFixed(1) + '%'
+          });
+          
           return faceRect;
+        } else {
+          console.log('⚠️ [FaceDetection] Failed validation:', {
+            skinRatio: (skinRatio * 100).toFixed(1) + '%',
+            aspectRatio: aspectRatio.toFixed(2),
+            density: density ? (density * 100).toFixed(1) + '%' : 'N/A',
+            isValidShape,
+            isDense,
+            isValidSize
+          });
         }
       }
       
@@ -353,21 +385,53 @@ class FaceDetectionService {
       const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
       const skinRatio = skinPixelCount / totalScannedPixels;
       
-      if (skinRatio > 0.20) { // At least 20% skin pixels (stricter to avoid false positives)
-        // Expand the bounding box slightly
-        const expansion = 20; // Moderate expansion
-        const faceRect: FaceRect = {
-          x: Math.max(0, minX - expansion),
-          y: Math.max(0, minY - expansion),
-          width: Math.min(canvas.width - (minX - expansion), (maxX - minX) + expansion * 2),
-          height: Math.min(canvas.height - (minY - expansion), (maxY - minY) + expansion * 2),
-          confidence: Math.min(skinRatio * 2, 0.9) // More conservative confidence
-        };
+      // Much stricter validation to prevent false positives
+      if (skinRatio > 0.30) { // At least 30% skin pixels (much stricter)
+        const width = maxX - minX;
+        const height = maxY - minY;
         
-        // Validate face size - must be substantial
-        const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
-        if (faceArea > 0.08) { // Face should be at least 8% of frame (stricter)
+        // Face shape validation - faces are roughly oval/rectangular
+        const aspectRatio = width / height;
+        const isValidShape = aspectRatio > 0.5 && aspectRatio < 1.5; // Face should be somewhat square/oval
+        
+        // Check if skin pixels are concentrated (not scattered)
+        const boundingArea = width * height;
+        const actualSkinPixelsInBounds = skinPixelCount * 4; // We skip pixels, so multiply back
+        const density = actualSkinPixelsInBounds / boundingArea;
+        const isDense = density > 0.4; // At least 40% of bounding box should be skin
+        
+        // Size validation - face should be substantial but not too large
+        const faceArea = (width * height) / (canvas.width * canvas.height);
+        const isValidSize = faceArea > 0.10 && faceArea < 0.40; // 10-40% of frame
+        
+        // All conditions must be met
+        if (isValidShape && isDense && isValidSize) {
+          const expansion = 15; // Conservative expansion
+          const faceRect: FaceRect = {
+            x: Math.max(0, minX - expansion),
+            y: Math.max(0, minY - expansion),
+            width: Math.min(canvas.width - (minX - expansion), width + expansion * 2),
+            height: Math.min(canvas.height - (minY - expansion), height + expansion * 2),
+            confidence: Math.min(skinRatio * 1.5, 0.7) // Lower max confidence
+          };
+          
+          console.log('🎯 [FaceDetection] Detection metrics:', {
+            skinRatio: (skinRatio * 100).toFixed(1) + '%',
+            aspectRatio: aspectRatio.toFixed(2),
+            density: (density * 100).toFixed(1) + '%',
+            faceArea: (faceArea * 100).toFixed(1) + '%'
+          });
+          
           return faceRect;
+        } else {
+          console.log('⚠️ [FaceDetection] Failed validation:', {
+            skinRatio: (skinRatio * 100).toFixed(1) + '%',
+            aspectRatio: aspectRatio.toFixed(2),
+            density: density ? (density * 100).toFixed(1) + '%' : 'N/A',
+            isValidShape,
+            isDense,
+            isValidSize
+          });
         }
       }
       
@@ -400,10 +464,10 @@ class FaceDetectionService {
     
     // Check face size (should fill a good portion of the oval)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.08 && faceAreaRatio < 0.45; // 8-45% of frame (stricter bounds)
+    const isSizeGood = faceAreaRatio > 0.10 && faceAreaRatio < 0.40; // 10-40% of frame (match detection bounds)
     
     // Check confidence - require higher confidence to avoid false positives
-    const isConfident = face.confidence >= 0.5;
+    const isConfident = face.confidence >= 0.6; // Even stricter confidence requirement
     
     const result = isInOval && isSizeGood && isConfident;
     
