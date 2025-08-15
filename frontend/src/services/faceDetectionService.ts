@@ -90,8 +90,6 @@ class FaceDetectionService {
    * Detect face in video element
    */
   async detectFaceInVideo(video: HTMLVideoElement): Promise<FaceRect | null> {
-    console.log('👁️ [FaceDetectionService] detectFaceInVideo called');
-    
     if (!this.initialized) {
       console.warn('⚠️ [FaceDetectionService] Not initialized, initializing now...');
       const success = await this.initialize();
@@ -111,19 +109,10 @@ class FaceDetectionService {
       console.warn('⚠️ [FaceDetectionService] Video not ready, readyState:', video.readyState);
       return null;
     }
-    
-    console.log('📹 [FaceDetectionService] Video state:', {
-      readyState: video.readyState,
-      videoWidth: video.videoWidth,
-      videoHeight: video.videoHeight,
-      currentTime: video.currentTime,
-      paused: video.paused
-    });
 
     try {
       // Use native API if available
       if (this.nativeFaceDetector) {
-        console.log('🔄 [FaceDetectionService] Using native FaceDetector API...');
         const faces = await this.nativeFaceDetector.detect(video);
         if (faces && faces.length > 0) {
           const face = faces[0].boundingBox;
@@ -136,18 +125,13 @@ class FaceDetectionService {
             confidence: 0.9
           };
         }
-        console.log('❌ [FaceDetectionService] Native API: No faces detected');
         return null;
       }
 
       // Simple fallback: Use basic image analysis
-      console.log('🔄 [FaceDetectionService] Using fallback detection...');
-      const result = this.simpleFaceDetection(video);
-      console.log('📊 [FaceDetectionService] Fallback result:', result ? 'Face found' : 'No face');
-      return result;
+      return this.simpleFaceDetection(video);
     } catch (error) {
       console.error('❌ [FaceDetectionService] Detection error:', error);
-      console.error('❌ [FaceDetectionService] Error stack:', error instanceof Error ? error.stack : 'No stack');
       return null;
     }
   }
@@ -156,18 +140,11 @@ class FaceDetectionService {
    * Simple face detection fallback using basic image analysis
    */
   private simpleFaceDetection(video: HTMLVideoElement): FaceRect | null {
-    console.log('🎨 [FaceDetectionService] simpleFaceDetection started');
-    
     try {
       // Create canvas for analysis
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth || 640; // Fallback dimensions
       canvas.height = video.videoHeight || 480;
-      
-      console.log('📐 [FaceDetectionService] Creating canvas:', {
-        width: canvas.width,
-        height: canvas.height
-      });
       
       const ctx = canvas.getContext('2d');
       
@@ -179,23 +156,15 @@ class FaceDetectionService {
       // Draw current frame
       try {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        console.log('✅ [FaceDetectionService] Video frame drawn to canvas');
       } catch (drawError) {
         console.error('❌ [FaceDetectionService] Error drawing video to canvas:', drawError);
         return null;
       }
       
-      // Debug: log canvas dimensions
-      console.log('🔍 [FaceDetectionService] Canvas dimensions:', {
-        width: canvas.width,
-        height: canvas.height
-      });
-      
       // Get image data for analysis
       let imageData;
       try {
         imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        console.log('✅ [FaceDetectionService] Got image data, size:', imageData.data.length);
       } catch (imageError) {
         console.error('❌ [FaceDetectionService] Error getting image data:', imageError);
         return null;
@@ -212,12 +181,6 @@ class FaceDetectionService {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const scanRadius = Math.min(canvas.width, canvas.height) * 0.4;
-      
-      console.log('🔍 [FaceDetectionService] Starting skin detection scan:', {
-        centerX,
-        centerY,
-        scanRadius
-      });
       
       for (let y = Math.max(0, centerY - scanRadius); y < Math.min(canvas.height, centerY + scanRadius); y += 2) {
         for (let x = Math.max(0, centerX - scanRadius); x < Math.min(canvas.width, centerX + scanRadius); x += 2) {
@@ -243,15 +206,6 @@ class FaceDetectionService {
       const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
       const skinRatio = skinPixelCount / totalScannedPixels;
       
-      // Debug: log skin detection results
-      console.log('🔍 [FaceDetectionService] Skin detection results:', {
-        skinPixelCount,
-        totalScannedPixels,
-        skinRatio: (skinRatio * 100).toFixed(2) + '%',
-        threshold: '10%',
-        passed: skinRatio > 0.10
-      });
-      
       if (skinRatio > 0.10) { // At least 10% skin pixels (more lenient)
         // Expand the bounding box slightly
         const expansion = 30; // More expansion for better coverage
@@ -266,10 +220,6 @@ class FaceDetectionService {
         // Validate face size
         const faceArea = (faceRect.width * faceRect.height) / (canvas.width * canvas.height);
         if (faceArea > 0.03) { // Face should be at least 3% of frame (more lenient)
-          console.log('✅ [FaceDetectionService] Fallback detection found face:');
-          console.log('  - Bounding box:', `x:${faceRect.x}, y:${faceRect.y}, w:${faceRect.width}, h:${faceRect.height}`);
-          console.log('  - Face area:', (faceArea * 100).toFixed(1) + '%');
-          console.log('  - Confidence:', faceRect.confidence);
           return faceRect;
         }
       }
@@ -386,24 +336,22 @@ class FaceDetectionService {
     
     // Check face size (should fill a good portion of the oval)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.05 && faceAreaRatio < 0.40; // 5-40% of frame (more lenient)
+    const isSizeGood = faceAreaRatio > 0.05 && faceAreaRatio < 0.50; // 5-50% of frame (allow closer faces)
     
     // Check confidence
     const isConfident = face.confidence >= 0.3;
     
-    console.log('🎯 [FaceDetectionService] Face position check:');
-    console.log('  - Face center:', `(${faceCenterX.toFixed(0)}, ${faceCenterY.toFixed(0)})`);
-    console.log('  - Oval center:', `(${ovalCenterX.toFixed(0)}, ${ovalCenterY.toFixed(0)})`);
-    console.log('  - Normalized position:', `(${normalizedX.toFixed(2)}, ${normalizedY.toFixed(2)})`);
-    console.log('  - Distance from center:', distanceFromCenter.toFixed(2), '(threshold: 1.2)');
-    console.log('  - Is in oval:', isInOval);
-    console.log('  - Face area ratio:', (faceAreaRatio * 100).toFixed(1) + '%', '(need: 5-40%)');
-    console.log('  - Size good:', isSizeGood);
-    console.log('  - Confidence:', face.confidence.toFixed(2), '(need: 0.3+)');
-    console.log('  - Is confident:', isConfident);
-    console.log('  - ✅ Result:', isInOval && isSizeGood && isConfident);
+    const result = isInOval && isSizeGood && isConfident;
     
-    return isInOval && isSizeGood && isConfident;
+    // Only log when position check fails
+    if (!result) {
+      console.log('⚠️ [FaceDetectionService] Face position check failed:');
+      if (!isInOval) console.log('  - Not in oval (distance:', distanceFromCenter.toFixed(2), ')');
+      if (!isSizeGood) console.log('  - Size issue:', (faceAreaRatio * 100).toFixed(1) + '% (need: 5-50%)');
+      if (!isConfident) console.log('  - Low confidence:', face.confidence.toFixed(2));
+    }
+    
+    return result;
   }
 
   /**
