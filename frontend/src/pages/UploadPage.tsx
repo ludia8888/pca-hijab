@@ -33,6 +33,7 @@ const UploadPage = (): JSX.Element => {
   // Face detection states
   const [faceDetected, setFaceDetected] = useState(false);
   const faceDetectedRef = useRef(false); // Add ref to avoid closure issues in setTimeout/setInterval
+  const isWellPositionedRef = useRef(false); // Track if face is well positioned in oval
   const [faceQuality, setFaceQuality] = useState(0);
   const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
   const countdownValueRef = useRef<number | null>(null); // Track actual countdown value to prevent multiple timers
@@ -40,7 +41,6 @@ const UploadPage = (): JSX.Element => {
   const isProcessingFaceRef = useRef(false); // Add ref to avoid closure issues
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const detectionCountRef = useRef(0); // Add ref for detection count to avoid closure
   let faceDetector: any = null; // Face detector for validating uploaded images
 
   // Redirect if no session
@@ -364,11 +364,10 @@ const UploadPage = (): JSX.Element => {
     
     console.log('👤 [FACE DETECTION] Starting face detection interval...');
     
-    detectionCountRef.current = 0; // Reset consecutive detection count
     faceDetectionIntervalRef.current = setInterval(async () => {
       
       if (!videoRef.current || !isCameraActiveRef.current || isProcessingFaceRef.current) {
-        console.log(`⏭️ [FACE DETECTION] Skipping detection #${detectionCountRef.current}:`, {
+        console.log(`⏭️ [FACE DETECTION] Skipping detection:`, {
           hasVideo: !!videoRef.current,
           isCameraActive: isCameraActiveRef.current,
           isProcessingFace: isProcessingFaceRef.current, // Use ref value
@@ -377,14 +376,14 @@ const UploadPage = (): JSX.Element => {
         return;
       }
       
-      console.log(`🔍 [FACE DETECTION] Running detection #${detectionCountRef.current}`);
+      console.log(`🔍 [FACE DETECTION] Running detection`);
       setIsProcessingFace(true);
       isProcessingFaceRef.current = true; // Update ref as well
       
       try {
         console.log(`📷 [FACE DETECTION] Calling detectFaceInVideo...`);
         const face = await faceDetectionService.detectFaceInVideo(videoRef.current);
-        console.log(`📊 [FACE DETECTION] Detection #${detectionCountRef.current} result:`, face);
+        console.log(`📊 [FACE DETECTION] Detection result:`, face);
         
         if (face) {
           // Simplified logic for fallback mode - always trigger after 2 seconds
@@ -406,9 +405,10 @@ const UploadPage = (): JSX.Element => {
             face
           });
           
-          // Only set face detected if face is well positioned within the oval guide
+          // Update face detection states
           setFaceDetected(isWellPositioned);
           faceDetectedRef.current = isWellPositioned; // Update ref as well
+          isWellPositionedRef.current = isWellPositioned; // Track position status
           setFaceQuality(isWellPositioned ? quality : 0);
           
           if (isWellPositioned) {
@@ -416,18 +416,10 @@ const UploadPage = (): JSX.Element => {
             if (countdownValueRef.current !== null || captureTimeoutRef.current !== null) {
               console.log(`📸 [FACE DETECTION] Face well positioned during countdown: ${countdownValueRef.current}s`);
               // Face is still well positioned, countdown continues
-              // Don't increment detection count during countdown
             } else {
-              // Increment consecutive detection count only when not in countdown
-              detectionCountRef.current++;
-              
-              // Trigger auto-capture after 5 consecutive well-positioned face detections
-              if (detectionCountRef.current >= 5) {
-                console.log('✅ [FACE DETECTION] Auto-capturing after 5 consecutive well-positioned detections...');
-                startCaptureCountdown();
-              } else {
-                console.log(`⏳ [FACE DETECTION] Well-positioned faces: ${detectionCountRef.current}/5 before auto-capture`);
-              }
+              // Face entered oval - start countdown immediately
+              console.log('✅ [FACE DETECTION] Face entered oval - starting countdown immediately...');
+              startCaptureCountdown();
             }
           } else {
             // Face detected but not well positioned
@@ -439,16 +431,13 @@ const UploadPage = (): JSX.Element => {
               console.log('   Countdown ref value:', countdownValueRef.current);
               console.log('   Timer ref status:', captureTimeoutRef.current ? 'active' : 'null');
               cancelCaptureCountdown();
-              detectionCountRef.current = 0;
-            } else {
-              // Reset detection count when face is not well positioned
-              detectionCountRef.current = 0;
             }
           }
         } else {
-          console.log(`❌ [FACE DETECTION] No face detected in #${detectionCountRef.current}`);
+          console.log(`❌ [FACE DETECTION] No face detected`);
           setFaceDetected(false);
           faceDetectedRef.current = false; // Update ref as well
+          isWellPositionedRef.current = false; // No face means not well positioned
           setFaceQuality(0);
           
           // Cancel countdown if face is lost during countdown - check ref for immediate value
@@ -457,17 +446,11 @@ const UploadPage = (): JSX.Element => {
             console.log('   Countdown ref value:', countdownValueRef.current);
             console.log('   Timer ref status:', captureTimeoutRef.current ? 'active' : 'null');
             cancelCaptureCountdown();
-            // Reset detection count to require full 5 detections again
-            detectionCountRef.current = 0;
-            
             // Just cancel countdown, visual feedback (border color) is enough
-          } else {
-            // Reset detection count when face is lost normally
-            detectionCountRef.current = 0;
           }
         }
       } catch (error) {
-        console.error(`❌ [FACE DETECTION] Error in detection #${detectionCountRef.current}:`, error);
+        console.error(`❌ [FACE DETECTION] Error in detection:`, error);
         console.error(`❌ [FACE DETECTION] Error stack:`, error instanceof Error ? error.stack : 'No stack');
       } finally {
         setIsProcessingFace(false);
@@ -489,6 +472,7 @@ const UploadPage = (): JSX.Element => {
     }
     setFaceDetected(false);
     faceDetectedRef.current = false; // Update ref as well
+    isWellPositionedRef.current = false; // Reset position status
     setFaceQuality(0);
   };
   
@@ -511,9 +495,6 @@ const UploadPage = (): JSX.Element => {
     setCaptureCountdown(countdown);
     countdownValueRef.current = countdown; // Update ref immediately
     
-    // Reset detection count to prevent re-triggering
-    detectionCountRef.current = 0;
-    
     // Continue face detection during countdown to ensure face is still present
     console.log('📸 [FACE DETECTION] Countdown started: 3 seconds...');
     
@@ -529,9 +510,9 @@ const UploadPage = (): JSX.Element => {
         countdownValueRef.current = null; // Clear countdown ref
         captureTimeoutRef.current = null; // Clear timer ref
         
-        // Only capture if face is still detected (use ref to avoid closure issue)
-        if (faceDetectedRef.current) {
-          console.log('📸 Auto-capturing photo - face confirmed present');
+        // Only capture if face is still well positioned in oval (use ref to avoid closure issue)
+        if (isWellPositionedRef.current) {
+          console.log('📸 Auto-capturing photo - face confirmed in oval position');
           capturePhoto();
           
           // Track auto capture
@@ -540,10 +521,8 @@ const UploadPage = (): JSX.Element => {
             page: 'upload'
           });
         } else {
-          console.log('⚠️ [FACE DETECTION] Capture aborted - no face detected at capture time');
+          console.log('⚠️ [FACE DETECTION] Capture aborted - face not in oval at capture time');
           // No need for text message - visual feedback is enough
-          // Reset detection count so user needs 5 new detections
-          detectionCountRef.current = 0;
         }
       }
     }, 1000);
