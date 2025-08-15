@@ -64,7 +64,7 @@ class EmailService {
       if (process.env.NODE_ENV === 'development' && !config.SMTP_HOST) {
         const testAccount = await nodemailer.createTestAccount();
         
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: 'smtp.ethereal.email',
           port: 587,
           secure: false,
@@ -82,7 +82,7 @@ class EmailService {
         });
       } else {
         // Production or custom SMTP settings
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
         host: config.SMTP_HOST,
         port: config.SMTP_PORT || 587,
         secure: config.SMTP_SECURE || false,
