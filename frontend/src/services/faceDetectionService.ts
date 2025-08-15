@@ -143,11 +143,18 @@ class FaceDetectionService {
       const ctx = canvas.getContext('2d');
       
       if (!ctx) {
+        console.warn('⚠️ [FaceDetectionService] Cannot get canvas context');
         return null;
       }
 
       // Draw current frame
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Debug: log canvas dimensions
+      console.log('🔍 [FaceDetectionService] Canvas dimensions:', {
+        width: canvas.width,
+        height: canvas.height
+      });
       
       // Get image data for analysis
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -186,6 +193,15 @@ class FaceDetectionService {
       // Need minimum skin pixels to consider it a face
       const totalScannedPixels = (scanRadius * 2) * (scanRadius * 2) / 4; // Divided by 4 because we skip pixels
       const skinRatio = skinPixelCount / totalScannedPixels;
+      
+      // Debug: log skin detection results
+      console.log('🔍 [FaceDetectionService] Skin detection results:', {
+        skinPixelCount,
+        totalScannedPixels,
+        skinRatio: (skinRatio * 100).toFixed(2) + '%',
+        threshold: '15%',
+        passed: skinRatio > 0.15
+      });
       
       if (skinRatio > 0.15) { // At least 15% skin pixels
         // Expand the bounding box slightly

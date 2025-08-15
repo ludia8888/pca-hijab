@@ -8,7 +8,7 @@ import { ImageUpload } from '@/components/forms';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
-import { initFaceDetector, detectFaceInVideo, isFaceWellPositioned, getFaceQualityScore } from '@/utils/simpleFaceDetection';
+import { faceDetectionService } from '@/services/faceDetectionService';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ const UploadPage = (): JSX.Element => {
   // Initialize face detector on mount
   useEffect(() => {
     console.log('🚀 [FACE DETECTION] Initializing face detector...');
-    initFaceDetector()
+    faceDetectionService.initialize()
       .then(result => {
         console.log('✅ [FACE DETECTION] Face detector initialized, result:', result);
       })
@@ -381,18 +381,18 @@ const UploadPage = (): JSX.Element => {
       
       try {
         console.log(`📷 [FACE DETECTION] Calling detectFaceInVideo...`);
-        const face = await detectFaceInVideo(videoRef.current);
+        const face = await faceDetectionService.detectFaceInVideo(videoRef.current);
         console.log(`📊 [FACE DETECTION] Detection #${detectionCountRef.current} result:`, face);
         
         if (face) {
           // Simplified logic for fallback mode - always trigger after 2 seconds
-          const isWellPositioned = isFaceWellPositioned(
+          const isWellPositioned = faceDetectionService.isFaceWellPositioned(
             face,
             videoRef.current.videoWidth,
             videoRef.current.videoHeight
           );
           
-          const quality = getFaceQualityScore(
+          const quality = faceDetectionService.getFaceQualityScore(
             face,
             videoRef.current.videoWidth,
             videoRef.current.videoHeight
