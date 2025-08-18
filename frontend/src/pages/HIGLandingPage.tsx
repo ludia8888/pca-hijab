@@ -317,8 +317,11 @@ const HIGLandingPage = (): JSX.Element => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        // Remove white background - let the image show through
-        background: 'transparent',
+        // Use background image directly for full coverage
+        backgroundImage: `url(${landingBgOriginal})`,
+        backgroundSize: 'cover',
+        backgroundPosition: '35% center',
+        backgroundRepeat: 'no-repeat',
         overflow: 'hidden', // Keep for scrollbar prevention only
         position: 'fixed',
         top: 0,
