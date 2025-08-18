@@ -264,7 +264,9 @@ const HIGLandingPage = (): JSX.Element => {
             height: '84.1%', // 1018px / 1210px
             transform: 'rotate(90deg)',
             flexShrink: 0,
-            background: `url(${landingBgOriginal}) lightgray 50% / cover no-repeat`
+            background: `url(${landingBgOriginal}) lightgray 50% / cover no-repeat`,
+            filter: 'saturate(1.3) contrast(1.1) brightness(0.95)',
+            opacity: 1
           }}
         />
       </div>
