@@ -302,7 +302,13 @@ const HIGLandingPage = (): JSX.Element => {
             flexShrink: 0,
             background: `url(${landingBgOriginal}) lightgray 50% / cover no-repeat`,
             filter: 'saturate(1.3) contrast(1.1) brightness(0.95)',
-            opacity: 1
+            opacity: 1,
+            // Improve mobile rendering quality
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            WebkitTransform: 'rotate(90deg) translateZ(0)',
+            willChange: 'transform',
+            imageRendering: '-webkit-optimize-contrast'
           }}
         />
       </div>
