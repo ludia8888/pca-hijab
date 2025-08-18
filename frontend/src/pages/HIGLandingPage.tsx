@@ -207,10 +207,42 @@ const HIGLandingPage = (): JSX.Element => {
   };
 
   const [scaleFactor, setScaleFactor] = useState(1);
+  const [backgroundPosition, setBackgroundPosition] = useState({ left: -131.6, top: -1.83 });
+  const [backgroundScale, setBackgroundScale] = useState(1);
 
   useEffect(() => {
     const updateScale = () => {
-      setScaleFactor(getScaleFactor());
+      const scale = getScaleFactor();
+      setScaleFactor(scale);
+      
+      // Calculate viewport coverage requirements
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const scaledContainerWidth = BASE_WIDTH * scale;
+      const scaledContainerHeight = BASE_HEIGHT * scale;
+      
+      // Background dimensions at scale 1
+      const bgWidth = 1017.984; // pixels
+      const bgOriginalLeft = -529; // pixels
+      const bgRightEdge = bgWidth + bgOriginalLeft; // 488.984px
+      
+      // Check if current background can cover the viewport
+      const currentCoverage = bgRightEdge * scale;
+      
+      // Keep original position as anchor, only adjust scale if needed
+      setBackgroundPosition({ left: -131.6, top: -1.83 }); // Fixed anchor position
+      
+      // Calculate if we need extra scale to prevent white edges
+      const viewportAspect = window.innerWidth / window.innerHeight;
+      
+      // For very wide screens, slightly increase background scale
+      if (viewportAspect > 1.2) {
+        setBackgroundScale(1.2); // 20% larger for ultra-wide screens
+      } else if (viewportAspect > 0.8) {
+        setBackgroundScale(1.1); // 10% larger for wide screens
+      } else {
+        setBackgroundScale(1); // Original scale for normal screens
+      }
     };
     
     updateScale();
@@ -226,8 +258,9 @@ const HIGLandingPage = (): JSX.Element => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#ffffff',
-        overflow: 'hidden',
+        // Remove white background - let the image show through
+        background: 'transparent',
+        overflow: 'hidden', // Keep for scrollbar prevention only
         position: 'fixed',
         top: 0,
         left: 0
@@ -238,7 +271,7 @@ const HIGLandingPage = (): JSX.Element => {
           width: `${BASE_WIDTH}px`,
           height: `${BASE_HEIGHT}px`,
           position: 'relative',
-          overflow: 'hidden',
+          overflow: 'visible', // Allow background to extend beyond container
           transform: `scale(${scaleFactor})`,
           transformOrigin: 'center',
           flexShrink: 0
@@ -249,15 +282,15 @@ const HIGLandingPage = (): JSX.Element => {
         style={{
           position: 'absolute',
           width: `${(1017.984 / 402) * 100}%`, // 253.2% of container
-          height: `${(1210 / 874) * 100}%`, // 138.4% of container
-          left: `${(-529 / 402) * 100}%`, // -131.6% offset
-          top: `${(-16 / 874) * 100}%`, // -1.83% offset
+          height: `${(1210 / 874) * 100}%`, // 138.4% of container  
+          left: `${backgroundPosition.left}%`,
+          top: `${backgroundPosition.top}%`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transform: `scale(${1 + (scaleFactor - 1) * 0.2})`, // Subtle zoom on larger screens
+          transform: `scale(${backgroundScale * (1 + (scaleFactor - 1) * 0.2)})`, // Apply both scales
           transformOrigin: 'center',
-          transition: 'transform 0.3s ease'
+          transition: 'transform 0.3s ease, left 0.3s ease'
         }}
       >
         {/* Rotated Background Image */}
