@@ -227,7 +227,10 @@ const HIGLandingPage = (): JSX.Element => {
         alignItems: 'center',
         justifyContent: 'center',
         background: '#ffffff',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0
       }}
     >
       <div
