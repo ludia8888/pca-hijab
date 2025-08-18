@@ -7,6 +7,8 @@ import { SessionAPI } from '@/services/api/session';
 import { trackSessionStart, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import styles from './HIGLandingPage.module.css';
 import landingBgOriginal from '@/assets/landing-bg-original.jpg';
+import frame175 from '@/assets/frame-175.png';
+import group176 from '@/assets/group-176.svg';
 
 const HIGLandingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -228,6 +230,113 @@ const HIGLandingPage = (): JSX.Element => {
           }}
         />
       </div>
+
+      {/* Group 176 - Illustration (behind text) */}
+      <div
+        style={{
+          position: 'absolute',
+          width: '547px',
+          height: '531px',
+          left: '-70px',
+          top: '201px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1
+        }}
+      >
+        <img 
+          src={group176}
+          alt="Hijab illustration"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain'
+          }}
+        />
+      </div>
+
+      {/* Frame 175 - Logo with stars */}
+      <img 
+        src={frame175}
+        alt="myNoor logo"
+        style={{
+          position: 'absolute',
+          width: '402px',
+          height: '177px',
+          flexShrink: 0,
+          top: '66px',
+          left: '0',
+          zIndex: 2
+        }}
+      />
+
+      {/* Tagline Text */}
+      <p
+        style={{
+          position: 'absolute',
+          color: '#3B1389',
+          textAlign: 'center',
+          fontFamily: '"Plus Jakarta Sans", sans-serif',
+          fontSize: '20px',
+          fontStyle: 'normal',
+          fontWeight: 800,
+          lineHeight: '140%',
+          top: '270px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          zIndex: 2
+        }}
+      >
+        Find Your Color. Glow in Hijab.
+      </p>
+
+      {/* Start Analysis Button */}
+      <button
+        onClick={handleStartAnalysis}
+        disabled={isLoading}
+        style={{
+          position: 'absolute',
+          display: 'flex',
+          width: '338px',
+          height: '37px',
+          padding: '10px 16px',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '10px',
+          borderRadius: '10px',
+          background: '#FFF3A1',
+          border: 'none',
+          color: '#3B1389',
+          textAlign: 'center',
+          fontFamily: 'Pretendard, sans-serif',
+          fontSize: '20px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: '140%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: '90px',
+          boxSizing: 'content-box',
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          opacity: isLoading ? 0.7 : 1,
+          transition: 'all 0.2s ease',
+          zIndex: 3
+        }}
+        onMouseEnter={(e) => {
+          if (!isLoading) {
+            e.currentTarget.style.transform = 'translateX(-50%) translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 19, 137, 0.15)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) translateY(0)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+      >
+        {isLoading ? 'Starting...' : 'Start Analysis'}
+      </button>
 
     </div>
   );
