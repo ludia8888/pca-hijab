@@ -209,15 +209,20 @@ const HIGLandingPage = (): JSX.Element => {
   const [scaleFactor, setScaleFactor] = useState(1);
   const [backgroundPosition, setBackgroundPosition] = useState({ left: -131.6, top: -1.83 });
   const [backgroundScale, setBackgroundScale] = useState(1);
+  const [viewportHeight, setViewportHeight] = useState('100vh');
 
   useEffect(() => {
     const updateScale = () => {
+      // Use visualViewport API for accurate mobile viewport
+      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      setViewportHeight(`${vh}px`);
+      
       const scale = getScaleFactor();
       setScaleFactor(scale);
       
       // Calculate viewport coverage requirements
       const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      const viewportHeight = vh;
       const scaledContainerWidth = BASE_WIDTH * scale;
       const scaledContainerHeight = BASE_HEIGHT * scale;
       
@@ -233,7 +238,7 @@ const HIGLandingPage = (): JSX.Element => {
       setBackgroundPosition({ left: -131.6, top: -1.83 }); // Fixed anchor position
       
       // Calculate if we need extra scale to prevent white edges
-      const viewportAspect = window.innerWidth / window.innerHeight;
+      const viewportAspect = window.innerWidth / vh;
       
       // For very wide screens, slightly increase background scale
       if (viewportAspect > 1.2) {
@@ -247,14 +252,68 @@ const HIGLandingPage = (): JSX.Element => {
     
     updateScale();
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    window.addEventListener('orientationchange', updateScale);
+    
+    // Listen to visualViewport changes for mobile browsers
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateScale);
+      window.visualViewport.addEventListener('scroll', updateScale);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      window.removeEventListener('orientationchange', updateScale);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateScale);
+        window.visualViewport.removeEventListener('scroll', updateScale);
+      }
+    };
+  }, []);
+
+  // Prevent scrolling and bounce on mobile
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+    
+    // Prevent all touch scrolling
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
+    
+    // Add event listeners to prevent scrolling
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('scroll', preventScroll, { passive: false });
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.touchAction = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('scroll', preventScroll);
+    };
   }, []);
 
   return (
     <div 
       style={{
         width: '100vw',
-        height: '100vh',
+        height: viewportHeight, // Dynamic height based on actual viewport
+        minHeight: '-webkit-fill-available', // iOS Safari fallback
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -263,7 +322,10 @@ const HIGLandingPage = (): JSX.Element => {
         overflow: 'hidden', // Keep for scrollbar prevention only
         position: 'fixed',
         top: 0,
-        left: 0
+        left: 0,
+        touchAction: 'none', // Prevent all touch interactions that cause scrolling
+        WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS (but prevented)
+        overscrollBehavior: 'none' // Prevent bounce on newer browsers
       }}
     >
       <div
