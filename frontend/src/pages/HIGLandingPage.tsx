@@ -195,8 +195,8 @@ const HIGLandingPage = (): JSX.Element => {
   };
 
   // Base dimensions for scaling
-  const BASE_WIDTH = 390;
-  const BASE_HEIGHT = 844;
+  const BASE_WIDTH = 402;
+  const BASE_HEIGHT = 874;
   
   // Calculate scale factor based on viewport
   const getScaleFactor = () => {
@@ -245,10 +245,10 @@ const HIGLandingPage = (): JSX.Element => {
       <div 
         style={{
           position: 'absolute',
-          width: `${(1017.984 / 390) * 100}%`, // 261% of container
-          height: `${(1210 / 844) * 100}%`, // 143.4% of container
-          left: `${(-529 / 390) * 100}%`, // -135.6% offset
-          top: `${(-16 / 844) * 100}%`, // -1.9% offset
+          width: `${(1017.984 / 402) * 100}%`, // 253.2% of container
+          height: `${(1210 / 874) * 100}%`, // 138.4% of container
+          left: `${(-529 / 402) * 100}%`, // -131.6% offset
+          top: `${(-16 / 874) * 100}%`, // -1.83% offset
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -273,11 +273,11 @@ const HIGLandingPage = (): JSX.Element => {
       <div
         style={{
           position: 'absolute',
-          width: `${(547 / 390) * 100}%`, // 140.3% of container
+          width: `${(547 / 402) * 100}%`, // 136.1% of container
           height: 'auto',
           aspectRatio: '547 / 531',
-          left: `${(-70 / 390) * 100}%`, // -17.9% offset
-          top: `${(201 / 844) * 100}%`, // 23.8% from top
+          left: `${(-70 / 402) * 100}%`, // -17.4% offset
+          top: `${(201 / 874) * 100}%`, // 23% from top
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -301,10 +301,10 @@ const HIGLandingPage = (): JSX.Element => {
         alt="myNoor logo"
         style={{
           position: 'absolute',
-          width: '100%', // Full width of container (390px)
+          width: '100%', // Full width of container (402px)
           height: 'auto',
-          aspectRatio: '390 / 177', // Maintain aspect ratio
-          top: `${(66 / 844) * 100}%`, // 7.8% from top
+          aspectRatio: '402 / 177', // Maintain aspect ratio
+          top: `${(66 / 874) * 100}%`, // 7.55% from top
           left: '0',
           zIndex: 2
         }}
@@ -321,7 +321,7 @@ const HIGLandingPage = (): JSX.Element => {
           fontStyle: 'normal',
           fontWeight: 800,
           lineHeight: '140%',
-          top: `${(270 / 844) * 100}%`, // 32% from top
+          top: `${(270 / 874) * 100}%`, // 30.89% from top
           left: '50%',
           transform: 'translateX(-50%)',
           whiteSpace: 'nowrap',
@@ -339,13 +339,13 @@ const HIGLandingPage = (): JSX.Element => {
         style={{
           position: 'absolute',
           display: 'flex',
-          width: `${(338 / 390) * 100}%`, // 86.7% of container
-          height: `${(57 / 844) * 100}%`, // 6.75% of container height (37px + padding)
-          minHeight: '50px', // Minimum height for usability
+          width: `${(370 / 402) * 100}%`, // 92% of container (402 - 16*2 = 370)
+          height: '57px', // Fixed height as per spec
           padding: '10px 16px',
           justifyContent: 'center',
           alignItems: 'center',
           gap: '10px',
+          alignSelf: 'stretch',
           borderRadius: '10px',
           background: '#FFF3A1',
           border: 'none',
@@ -358,7 +358,7 @@ const HIGLandingPage = (): JSX.Element => {
           lineHeight: '140%',
           left: '50%',
           transform: 'translateX(-50%)',
-          bottom: `${(90 / 844) * 100}%`, // 10.7% from bottom
+          bottom: `${(90 / 874) * 100}%`, // 10.3% from bottom
           boxSizing: 'border-box',
           cursor: isLoading ? 'not-allowed' : 'pointer',
           opacity: isLoading ? 0.7 : 1,
