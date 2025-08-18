@@ -194,36 +194,74 @@ const HIGLandingPage = (): JSX.Element => {
     }
   };
 
+  // Base dimensions for scaling
+  const BASE_WIDTH = 390;
+  const BASE_HEIGHT = 844;
+  
+  // Calculate scale factor based on viewport
+  const getScaleFactor = () => {
+    if (typeof window === 'undefined') return 1;
+    const scaleX = window.innerWidth / BASE_WIDTH;
+    const scaleY = window.innerHeight / BASE_HEIGHT;
+    return Math.min(scaleX, scaleY);
+  };
+
+  const [scaleFactor, setScaleFactor] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      setScaleFactor(getScaleFactor());
+    };
+    
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   return (
     <div 
       style={{
-        width: '402px',
-        height: '874px',
-        flexShrink: 0,
-        position: 'relative',
-        overflow: 'hidden',
-        margin: '0 auto',
-        background: '#ffffff'
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#ffffff',
+        overflow: 'hidden'
       }}
     >
-      {/* Background Image Container */}
+      <div
+        style={{
+          width: `${BASE_WIDTH}px`,
+          height: `${BASE_HEIGHT}px`,
+          position: 'relative',
+          overflow: 'hidden',
+          transform: `scale(${scaleFactor})`,
+          transformOrigin: 'center',
+          flexShrink: 0
+        }}
+      >
+      {/* Background Image Container - scales with viewport for zoom effect */}
       <div 
         style={{
           position: 'absolute',
-          width: '1017.984px',
-          height: '1210px',
-          left: '-529px',
-          top: '-16px',
+          width: `${(1017.984 / 390) * 100}%`, // 261% of container
+          height: `${(1210 / 844) * 100}%`, // 143.4% of container
+          left: `${(-529 / 390) * 100}%`, // -135.6% offset
+          top: `${(-16 / 844) * 100}%`, // -1.9% offset
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          transform: `scale(${1 + (scaleFactor - 1) * 0.2})`, // Subtle zoom on larger screens
+          transformOrigin: 'center',
+          transition: 'transform 0.3s ease'
         }}
       >
         {/* Rotated Background Image */}
         <div
           style={{
-            width: '1210px',
-            height: '1018px',
+            width: '118.9%', // 1210px / 1017.984px
+            height: '84.1%', // 1018px / 1210px
             transform: 'rotate(90deg)',
             flexShrink: 0,
             background: `url(${landingBgOriginal}) lightgray 50% / cover no-repeat`
@@ -235,10 +273,11 @@ const HIGLandingPage = (): JSX.Element => {
       <div
         style={{
           position: 'absolute',
-          width: '547px',
-          height: '531px',
-          left: '-70px',
-          top: '201px',
+          width: `${(547 / 390) * 100}%`, // 140.3% of container
+          height: 'auto',
+          aspectRatio: '547 / 531',
+          left: `${(-70 / 390) * 100}%`, // -17.9% offset
+          top: `${(201 / 844) * 100}%`, // 23.8% from top
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -262,10 +301,10 @@ const HIGLandingPage = (): JSX.Element => {
         alt="myNoor logo"
         style={{
           position: 'absolute',
-          width: '402px',
-          height: '177px',
-          flexShrink: 0,
-          top: '66px',
+          width: '100%', // Full width of container (390px)
+          height: 'auto',
+          aspectRatio: '390 / 177', // Maintain aspect ratio
+          top: `${(66 / 844) * 100}%`, // 7.8% from top
           left: '0',
           zIndex: 2
         }}
@@ -278,15 +317,16 @@ const HIGLandingPage = (): JSX.Element => {
           color: '#3B1389',
           textAlign: 'center',
           fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontSize: '20px',
+          fontSize: '20px', // Will scale with container
           fontStyle: 'normal',
           fontWeight: 800,
           lineHeight: '140%',
-          top: '270px',
+          top: `${(270 / 844) * 100}%`, // 32% from top
           left: '50%',
           transform: 'translateX(-50%)',
           whiteSpace: 'nowrap',
-          zIndex: 2
+          zIndex: 2,
+          width: '100%'
         }}
       >
         Find Your Color. Glow in Hijab.
@@ -299,8 +339,9 @@ const HIGLandingPage = (): JSX.Element => {
         style={{
           position: 'absolute',
           display: 'flex',
-          width: '338px',
-          height: '37px',
+          width: `${(338 / 390) * 100}%`, // 86.7% of container
+          height: `${(57 / 844) * 100}%`, // 6.75% of container height (37px + padding)
+          minHeight: '50px', // Minimum height for usability
           padding: '10px 16px',
           justifyContent: 'center',
           alignItems: 'center',
@@ -311,14 +352,14 @@ const HIGLandingPage = (): JSX.Element => {
           color: '#3B1389',
           textAlign: 'center',
           fontFamily: 'Pretendard, sans-serif',
-          fontSize: '20px',
+          fontSize: '20px', // Will scale with container
           fontStyle: 'normal',
           fontWeight: 700,
           lineHeight: '140%',
           left: '50%',
           transform: 'translateX(-50%)',
-          bottom: '90px',
-          boxSizing: 'content-box',
+          bottom: `${(90 / 844) * 100}%`, // 10.7% from bottom
+          boxSizing: 'border-box',
           cursor: isLoading ? 'not-allowed' : 'pointer',
           opacity: isLoading ? 0.7 : 1,
           transition: 'all 0.2s ease',
@@ -337,7 +378,7 @@ const HIGLandingPage = (): JSX.Element => {
       >
         {isLoading ? 'Starting...' : 'Start Analysis'}
       </button>
-
+      </div>
     </div>
   );
 };
