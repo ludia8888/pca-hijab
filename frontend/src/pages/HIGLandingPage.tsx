@@ -336,7 +336,12 @@ const HIGLandingPage = (): JSX.Element => {
           overflow: 'visible', // Allow background to extend beyond container
           transform: `scale(${scaleFactor})`,
           transformOrigin: 'center',
-          flexShrink: 0
+          flexShrink: 0,
+          // Improve rendering quality
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          textRendering: 'optimizeLegibility',
+          shapeRendering: 'geometricPrecision'
         }}
       >
       {/* Background Image Container - scales with viewport for zoom effect */}
@@ -396,7 +401,12 @@ const HIGLandingPage = (): JSX.Element => {
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'contain'
+            objectFit: 'contain',
+            // SVG rendering optimization
+            imageRendering: 'crisp-edges',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            willChange: 'auto' // Prevent unnecessary layer promotion
           }}
         />
       </div>
@@ -412,7 +422,12 @@ const HIGLandingPage = (): JSX.Element => {
           aspectRatio: '402 / 177', // Maintain aspect ratio
           top: `${(66 / 874) * 100}%`, // 7.55% from top
           left: '0',
-          zIndex: 2
+          zIndex: 2,
+          // SVG rendering optimization
+          imageRendering: 'crisp-edges',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+          willChange: 'auto' // Prevent unnecessary layer promotion
         }}
       />
 
