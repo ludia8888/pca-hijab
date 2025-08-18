@@ -7,7 +7,7 @@ import { SessionAPI } from '@/services/api/session';
 import { trackSessionStart, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import styles from './HIGLandingPage.module.css';
 import landingBgOriginal from '@/assets/landing-bg-original.jpg';
-import frame175 from '@/assets/frame-175.png';
+import frame175 from '@/assets/frame-175.svg';
 import group176 from '@/assets/group-176.svg';
 
 const HIGLandingPage = (): JSX.Element => {
