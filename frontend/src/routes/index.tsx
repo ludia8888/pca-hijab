@@ -8,6 +8,7 @@ import { retryChunkLoad } from '@/utils/chunkErrorHandler';
 // Critical pages - load with retry mechanism
 const HomePage = lazy(() => retryChunkLoad(() => import('@/pages/HomePage')));
 const HIGLandingPage = lazy(() => retryChunkLoad(() => import('@/pages/HIGLandingPage')));
+const PhotoGuide = lazy(() => retryChunkLoad(() => import('@/pages/PhotoGuide')));
 const UploadPage = lazy(() => retryChunkLoad(() => import('@/pages/UploadPage')));
 const AnalyzingPage = lazy(() => retryChunkLoad(() => import('@/pages/AnalyzingPage')));
 const ResultPage = lazy(() => retryChunkLoad(() => import('@/pages/ResultPage')));
@@ -94,6 +95,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <HIGLandingPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.PHOTOGUIDE,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <PhotoGuide />
           </Suspense>
         ),
       },

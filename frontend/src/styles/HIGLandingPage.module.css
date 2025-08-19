@@ -1,0 +1,209 @@
+/* HIGLandingPage Responsive Styles */
+
+.container {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  background-color: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 4rem;
+  padding-bottom: 2rem;
+}
+
+.logo {
+  width: 50%;
+  max-width: 200px;
+  height: auto;
+  position: relative;
+  z-index: 10;
+}
+
+.mainContent {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.characterGroup {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.characterContainer {
+  position: relative;
+  width: min(136vw, 547px);
+  height: auto;
+}
+
+.subtitle {
+  position: relative;
+  z-index: 10;
+  margin-bottom: auto;
+  margin-top: 2rem;
+  text-align: center;
+  color: #3B1389;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 800;
+  line-height: 140%;
+}
+
+.footer {
+  position: relative;
+  z-index: 10;
+  padding: 1rem 1.5rem 5rem;
+}
+
+.ctaButton {
+  width: 100%;
+  max-width: 370px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(3rem, 8vw, 3.5rem);
+  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  background: #FFF3A1;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 19, 137, 0.15);
+}
+
+.ctaButton:active {
+  transform: translateY(0);
+}
+
+.buttonText {
+  color: #3B1389;
+  font-family: 'Pretendard', sans-serif;
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 700;
+  line-height: 140%;
+}
+
+/* Tablet Styles */
+@media (min-width: 768px) {
+  .header {
+    padding-top: 5rem;
+    padding-bottom: 3rem;
+  }
+  
+  .logo {
+    width: 40%;
+    max-width: 250px;
+  }
+  
+  .characterContainer {
+    width: min(80vw, 547px);
+  }
+  
+  .subtitle {
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+  }
+  
+  .footer {
+    padding-bottom: 6rem;
+  }
+  
+  .ctaButton {
+    height: 3.5rem;
+  }
+  
+  .buttonText {
+    font-size: 1.25rem;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    padding-top: 6rem;
+  }
+  
+  .logo {
+    width: auto;
+    max-width: 280px;
+  }
+  
+  .characterContainer {
+    width: 547px;
+  }
+  
+  .subtitle {
+    font-size: 1.5rem;
+    margin-top: 3rem;
+  }
+  
+  .ctaButton {
+    height: 4rem;
+    max-width: 400px;
+  }
+  
+  .buttonText {
+    font-size: 1.375rem;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1440px) {
+  .subtitle {
+    font-size: 1.625rem;
+  }
+  
+  .buttonText {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mobile Landscape Orientation */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+  }
+  
+  .logo {
+    max-width: 150px;
+  }
+  
+  .characterContainer {
+    width: min(60vw, 400px);
+  }
+  
+  .subtitle {
+    margin-top: 1rem;
+  }
+  
+  .footer {
+    padding-bottom: 2rem;
+  }
+}

@@ -160,6 +160,7 @@ export const COLOR_PALETTES = {
 export const ROUTES = {
   HOME: '/',
   LANDING: '/landing',
+  PHOTOGUIDE: '/photoguide',
   DIAGNOSIS: '/diagnosis',
   ANALYZING: '/analyzing',
   RESULT: '/result',

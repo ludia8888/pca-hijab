@@ -17,7 +17,7 @@ const HIGLandingPage: React.FC = () => {
   const [scaleFactor, setScaleFactor] = useState(1);
   
   const handleStartAnalysis = () => {
-    navigate(ROUTES.DIAGNOSIS);
+    navigate(ROUTES.PHOTOGUIDE);
   };
 
   // Calculate optimal scale to prevent overlapping
