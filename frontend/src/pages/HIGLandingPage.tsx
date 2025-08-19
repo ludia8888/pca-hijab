@@ -12,6 +12,9 @@ import star3 from '../assets/별3.png';
 import closedEye from '../assets/감은눈.png';
 import openEye from '../assets/뜬눈.png';
 
+const BASE_W = 402;
+const BASE_H = 874;
+
 const HIGLandingPage: React.FC = () => {
   const navigate = useNavigate();
   
@@ -19,247 +22,195 @@ const HIGLandingPage: React.FC = () => {
     navigate(ROUTES.DIAGNOSIS);
   };
 
-  return (
-    <main 
-      className="relative w-full overflow-hidden bg-white"
-      style={{
-        minHeight: '100vh',
-        minHeight: '100dvh',
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-        backgroundImage: `url(${backgroundImage_1x})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        display: 'grid',
-        gridTemplateRows: 'auto 1fr auto auto',
-        gap: 'clamp(1rem, 3vw, 2rem)',
-      }}
-    >
-      {/* Header Section - Semantic Flex Layout */}
-      <header 
-        className="relative flex justify-center items-center"
-        style={{
-          paddingTop: 'clamp(2rem, 7.5vh, 4rem)',
-          paddingBottom: 'clamp(1rem, 2vh, 1.5rem)',
-          minHeight: 'clamp(150px, 20vh, 200px)',
-        }}
-      >
-        {/* Decorative Star 1 - Absolute */}
-        <img 
-          src={star1} 
-          alt="" 
-          className="absolute"
-          style={{
-            width: 'clamp(1.5rem, 9vw, 2.375rem)',
-            height: 'auto',
-            left: '7.8%',
-            top: 'clamp(1rem, 12%, 2.5rem)',
-          }}
-        />
-        
-        {/* Logo - Responsive Sizing */}
-        <img 
-          src={mynoorLogo} 
-          alt="Mynoor"
-          style={{
-            width: 'min(50%, 200px)',
-            height: 'auto',
-            aspectRatio: '200 / 151',
-            zIndex: 2,
-          }}
-        />
-        
-        {/* Decorative Star 2 - Absolute */}
-        <img 
-          src={star2} 
-          alt="" 
-          className="absolute"
-          style={{
-            width: 'clamp(1.3rem, 8vw, 2.1rem)',
-            height: 'auto',
-            right: '7.8%',
-            bottom: 'clamp(2rem, 35%, 3.5rem)',
-          }}
-        />
-      </header>
+  // CSS 변수로 스케일 계산: min(vw/BASE_W, dvh/BASE_H)
+  const scaleStyle: React.CSSProperties = {
+    // iOS 사파리 대응: 100dvh 사용
+    // --scale = min(100vw/402, 100dvh/874)
+    ['--scale' as any]: `min(calc(100vw / ${BASE_W}), calc(100dvh / ${BASE_H}))`,
+  };
 
-      {/* Hero Decorative Section - Absolute Positioned Elements */}
-      <section 
-        className="relative flex items-center justify-center"
-        style={{
-          minHeight: 'clamp(300px, 50vh, 530px)',
-        }}
-      >
-        {/* Decorative Container */}
-        <div 
-          className="relative flex items-center justify-center"
+  return (
+    <div className="fixed inset-0 bg-white overflow-hidden">
+      {/* 아트보드 래퍼: 화면 중앙 정렬 */}
+      <div className="w-full h-full flex items-center justify-center" style={scaleStyle}>
+        {/* 실제 아트보드(기준 크기) */}
+        <div
+          className="relative"
           style={{
-            width: 'min(136%, 550px)',
-            height: '100%',
-            maxWidth: '100vw',
+            width: `${BASE_W}px`,
+            height: `${BASE_H}px`,
+            transform: 'scale(var(--scale))',
+            transformOrigin: 'center center',
+            // iOS 노치 대응 여유
+            paddingTop: 'max(env(safe-area-inset-top), 0px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
+            paddingLeft: 'max(env(safe-area-inset-left), 0px)',
+            paddingRight: 'max(env(safe-area-inset-right), 0px)',
+            // 배경 이미지
+            backgroundImage: `url(${backgroundImage_1x})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            borderRadius: '16px', // 선택(테스트용)
           }}
         >
-          {/* Body Character - Centered */}
-          <img 
-            src={bodyImage} 
-            alt=""
-            style={{
-              width: 'min(100%, 547px)',
-              height: 'auto',
-              opacity: 0.84,
-              zIndex: 1,
-            }}
-          />
-          
-          {/* Orbit - Percentage Positioned */}
-          <img 
-            src={orbitImage} 
-            alt=""
-            className="absolute"
-            style={{
-              width: 'min(92.3%, 505px)',
-              height: 'auto',
-              bottom: '18.8%',
-              right: '2.6%',
-              zIndex: 2,
-            }}
-          />
-          
-          {/* Star on Orbit - Percentage Positioned */}
-          <img 
-            src={starOnOrbit} 
-            alt=""
-            className="absolute"
-            style={{
-              width: 'clamp(1.5rem, 5.8vw, 2rem)',
-              height: 'auto',
-              top: '53.1%',
-              left: '74.8%',
-              zIndex: 3,
-            }}
-          />
-          
-          {/* Star 3 - Percentage Positioned */}
-          <img 
-            src={star3} 
-            alt=""
-            className="absolute"
-            style={{
-              width: 'clamp(3rem, 14vw, 4.8rem)',
-              height: 'auto',
-              top: '17.7%',
-              left: '17.4%',
-              zIndex: 2,
-            }}
-          />
-          
-          {/* Eyes Group - Percentage Positioned */}
+          {/* ↓↓↓ 아래는 기존 내용 그대로 (px 좌표/크기 유지) ↓↓↓ */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2"
+            style={{ width: '402px', height: '177px', top: '66px' }}
+          >
+            <img src={star1} alt="Star" style={{ width: '38px', height: '56.682px', position: 'absolute', left: '31.34px', top: '22.32px' }} />
+            <img src={mynoorLogo} alt="Mynoor" style={{ width: '200px', height: '151.291px', marginTop: '14.5px', marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
+            <img src={star2} alt="Star 2" style={{ width: '34.069px', height: '50.818px', position: 'absolute', right: '31.42px', bottom: '62px' }} />
+          </div>
+
+          {/* Character Group - 하나의 이미지처럼 동작 */}
           <div 
             className="absolute"
-            style={{
-              width: 'min(45%, 246px)',
-              height: 'min(31%, 166px)',
-              top: '36.9%',
-              left: '26.7%',
-              zIndex: 3,
+            style={{ 
+              width: '547.161px', 
+              height: '530.778px', 
+              top: '201px', 
+              left: '50%',
+              transform: 'translateX(-50%)',
+              transformOrigin: 'center center',
             }}
           >
-            <img 
-              src={closedEye} 
-              alt=""
-              className="absolute"
+            {/* Inner Container - 실제 요소들을 담는 컨테이너 */}
+            <div 
+              className="relative w-full h-full"
               style={{
-                width: '48.1%',
-                height: 'auto',
-                top: '36%',
-                right: '48%',
+                transform: 'scale(1)', // 필요시 이 값을 조정하여 전체 크기 조절
+                transformOrigin: 'center center',
               }}
-            />
-            <img 
-              src={openEye} 
-              alt=""
-              className="absolute"
-              style={{
-                width: '45.6%',
-                height: 'auto',
-                left: '46.8%',
-                bottom: '1.3%',
-              }}
-            />
+            >
+              {/* Body Character - 중앙 정렬 */}
+              <img 
+                src={bodyImage} 
+                alt="Body" 
+                className="absolute"
+                style={{ 
+                  opacity: 0.84,
+                  width: '100%',
+                  height: '100%',
+                  top: '0',
+                  left: '0',
+                  objectFit: 'contain',
+                }} 
+              />
+              
+              {/* Orbit */}
+              <img 
+                src={orbitImage} 
+                alt="Orbit" 
+                className="absolute"
+                style={{ 
+                  bottom: '100px', 
+                  right: '14px', 
+                  width: '505.2px', 
+                  height: '341.16px' 
+                }} 
+              />
+              
+              {/* Star on Orbit */}
+              <img 
+                src={starOnOrbit} 
+                alt="Star on Orbit" 
+                className="absolute"
+                style={{ 
+                  width: '32px', 
+                  height: '59px', 
+                  top: '282px', 
+                  left: '409px' 
+                }} 
+              />
+              
+              {/* Star 3 */}
+              <img 
+                src={star3} 
+                alt="Star 3" 
+                className="absolute"
+                style={{ 
+                  width: '77px', 
+                  height: '143px', 
+                  top: '94.1px', 
+                  left: '95.3px' 
+                }} 
+              />
+              
+              {/* Eyes Group */}
+              <div 
+                className="absolute"
+                style={{ 
+                  width: '245.732px', 
+                  height: '166.493px', 
+                  top: '196px', 
+                  left: '146px' 
+                }}
+              >
+                <img 
+                  src={closedEye} 
+                  alt="Closed Eye" 
+                  className="absolute"
+                  style={{ 
+                    width: '118.267px', 
+                    height: '94.293px', 
+                    top: '59.9px', 
+                    right: '118px' 
+                  }} 
+                />
+                <img 
+                  src={openEye} 
+                  alt="Open Eye" 
+                  className="absolute"
+                  style={{ 
+                    width: '111.931px', 
+                    height: '150.984px', 
+                    left: '115px', 
+                    bottom: '2.21px' 
+                  }} 
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Tagline Section - Semantic Flex Layout */}
-      <section 
-        className="flex justify-center items-center"
-        style={{
-          padding: '0 clamp(1rem, 4vw, 2rem)',
-        }}
-      >
-        <h1 
-          style={{
-            color: '#3B1389',
-            textAlign: 'center',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
-            fontWeight: 800,
-            lineHeight: '140%',
-            maxWidth: '100%',
-          }}
-        >
-          Find Your Color. Glow in Hijab.
-        </h1>
-      </section>
-
-      {/* CTA Button Section - Semantic Flex Layout */}
-      <footer 
-        className="flex justify-center items-center"
-        style={{
-          padding: '0 clamp(1rem, 4vw, 2rem)',
-          marginTop: 'auto',
-          paddingBottom: 'max(clamp(2rem, 10vh, 5rem), env(safe-area-inset-bottom))',
-        }}
-      >
-        <button 
-          onClick={handleStartAnalysis}
-          className="flex items-center justify-center cursor-pointer"
-          style={{ 
-            width: 'min(90%, 370px)',
-            height: 'clamp(3rem, 7vh, 3.5rem)',
-            padding: 'clamp(0.625rem, 2vw, 1rem) clamp(1rem, 4vw, 1.5rem)',
-            borderRadius: 'clamp(0.5rem, 1.5vw, 0.625rem)',
-            background: '#FFF3A1',
-            border: 'none',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <span 
-            style={{ 
+          <div className="flex flex-col justify-center items-center absolute left-1/2 -translate-x-1/2" style={{ width: '402px', gap: '10px', bottom: '589px' }}>
+            <span style={{
               color: '#3B1389',
               textAlign: 'center',
-              fontFamily: 'Pretendard',
-              fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
-              fontWeight: 700,
-              lineHeight: '140%'
-            }}
-          >
-            Start Analysis
-          </span>
-        </button>
-      </footer>
-    </main>
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              // 폰트는 스케일 대상이므로 여기 px 유지 가능
+              fontSize: '20px', fontWeight: 800, lineHeight: '140%', zIndex: 10
+            }}>
+              Find Your Color. Glow in Hijab.
+            </span>
+          </div>
+
+          <div className="flex flex-col justify-center items-center absolute left-1/2 -translate-x-1/2" style={{ width: '402px', padding: '0 16px', gap: '10px', bottom: '90px' }}>
+            <button 
+              onClick={handleStartAnalysis}
+              style={{ 
+                height: '57px', 
+                padding: '10px 16px', 
+                borderRadius: '10px', 
+                background: '#FFF3A1', 
+                width: '100%',
+                cursor: 'pointer',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <span style={{ color: '#3B1389', textAlign: 'center', fontFamily: 'Pretendard', fontSize: '20px', fontWeight: 700, lineHeight: '140%' }}>
+                Start Analysis
+              </span>
+            </button>
+          </div>
+          {/* ↑↑↑ 기존 내용 끝 */}
+        </div>
+      </div>
+    </div>
   );
 };
 
