@@ -20,6 +20,19 @@ const HIGLandingPage: React.FC = () => {
   };
 
   useEffect(() => {
+    // Prevent scrolling on this page
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    
+    // Prevent pull-to-refresh on mobile
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
+    
     // Create and inject responsive scale styles
     const styleId = 'hig-landing-responsive-styles';
     let styleElement = document.getElementById(styleId) as HTMLStyleElement;
@@ -120,26 +133,54 @@ const HIGLandingPage: React.FC = () => {
           --button-scale: 2.5;
         }
       }
+      
+      /* Prevent any scrolling */
+      html, body {
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
     `;
     
     return () => {
       // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.touchAction = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+      
       if (styleElement && styleElement.parentNode) {
         styleElement.parentNode.removeChild(styleElement);
       }
     };
   }, []);
 
+  // Prevent touch move events for scroll
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventScroll);
+    };
+  }, []);
+
   return (
     <main 
-      className="relative w-full overflow-hidden bg-white"
+      className="fixed inset-0 w-screen h-screen overflow-hidden bg-white"
       style={{
-        minHeight: '100vh',
-        minHeight: '100dvh',
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
+        width: '100vw',
+        height: '100vh',
+        height: '100dvh',
         backgroundImage: `url(${backgroundImage_1x})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -147,6 +188,14 @@ const HIGLandingPage: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        touchAction: 'none',
+        overscrollBehavior: 'none',
+        WebkitOverflowScrolling: 'touch',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
       }}
     >
       {/* Main Container - 402x874 기준 */}
@@ -350,7 +399,7 @@ const HIGLandingPage: React.FC = () => {
             width: 'calc(402px * var(--scale-factor))',
             padding: `0 calc(16px * var(--scale-factor))`,
             gap: 'calc(10px * var(--scale-factor))',
-            bottom: `max(calc(90px * var(--scale-factor)), calc(env(safe-area-inset-bottom) + 1rem))`,
+            bottom: 'calc(90px * var(--scale-factor))',
           }}
         >
           <button 
