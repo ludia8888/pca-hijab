@@ -6,6 +6,9 @@ import star2 from '../assets/별2.png';
 import bodyImage from '../assets/몸뚱아리.svg';
 import orbitImage from '../assets/궤도.svg';
 import starOnOrbit from '../assets/궤도위의별.png';
+import star3 from '../assets/별3.png';
+import closedEye from '../assets/감은눈.png';
+import openEye from '../assets/뜬눈.png';
 
 const HIGLandingPage: React.FC = () => {
   return (
@@ -25,8 +28,7 @@ const HIGLandingPage: React.FC = () => {
             width: '402px',
             height: '177px',
             flexShrink: 0,
-            top: '66px',
-            border: '1px solid rgba(0, 0, 0, 0.2)'
+            top: '66px'
           }}
         >
           <img 
@@ -74,8 +76,7 @@ const HIGLandingPage: React.FC = () => {
             height: '530.778px',
             flexShrink: 0,
             top: '201px',
-            left: '-70px',
-            border: '1px solid rgba(0, 0, 0, 0.2)'
+            left: '-70px'
           }}
         >
           <img 
@@ -107,6 +108,54 @@ const HIGLandingPage: React.FC = () => {
               left: '409px'
             }}
           />
+          <img 
+            src={star3}
+            alt="Star 3"
+            style={{
+              width: '77px',
+              height: '143px',
+              flexShrink: 0,
+              aspectRatio: '7/13',
+              position: 'absolute',
+              top: '94.1px',
+              left: '95.3px'
+            }}
+          />
+          <div
+            style={{
+              width: '245.732px',
+              height: '166.493px',
+              flexShrink: 0,
+              position: 'absolute',
+              top: '196px',
+              left: '146px'
+            }}
+          >
+            <img 
+              src={closedEye}
+              alt="Closed Eye"
+              style={{
+                width: '118.267px',
+                height: '94.293px',
+                position: 'absolute',
+                top: '59.9px',
+                right: '118px'
+              }}
+            />
+            <img 
+              src={openEye}
+              alt="Open Eye"
+              style={{
+                width: '111.931px',
+                height: '150.984px',
+                flexShrink: 0,
+                aspectRatio: '43/58',
+                position: 'absolute',
+                left: '115px',
+                bottom: '2.21px'
+              }}
+            />
+          </div>
         </div>
         <div
           className="flex flex-col justify-center items-center absolute left-1/2 transform -translate-x-1/2"
@@ -117,8 +166,7 @@ const HIGLandingPage: React.FC = () => {
             justifyContent: 'center',
             alignItems: 'center',
             gap: '10px',
-            bottom: '589px',
-            border: '1px solid rgba(0, 0, 0, 0.2)'
+            bottom: '589px'
           }}
         >
           <span
@@ -146,8 +194,7 @@ const HIGLandingPage: React.FC = () => {
             justifyContent: 'center',
             alignItems: 'center',
             gap: '10px',
-            bottom: '90px',
-            border: '1px solid rgba(0, 0, 0, 0.2)'
+            bottom: '90px'
           }}
         >
           <button
