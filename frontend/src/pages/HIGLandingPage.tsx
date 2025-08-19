@@ -6,7 +6,7 @@ import mynoorLogo from '../assets/Mynoor.png';
 import star1 from '../assets/별1.png';
 import star2 from '../assets/별2.png';
 import bodyImage from '../assets/몸뚱아리.svg';
-import orbitImage from '../assets/궤도.svg';
+import orbitImage from '../assets/궤도.png';
 import starOnOrbit from '../assets/궤도위의별.png';
 import star3 from '../assets/별3.png';
 import closedEye from '../assets/감은눈.png';
@@ -66,7 +66,7 @@ const HIGLandingPage: React.FC = () => {
 
           <div className="absolute flex items-center justify-center" style={{ width: '547.161px', height: '530.778px', top: '201px', left: '-70px' }}>
             <img src={bodyImage} alt="Body" style={{ opacity: 0.84 }} />
-            <img src={orbitImage} alt="Orbit" style={{ position: 'absolute', bottom: '100px', right: '70.3px' }} />
+            <img src={orbitImage} alt="Orbit" style={{ position: 'absolute', bottom: '100px', right: '14px', width: '505.2px', height: '341.16px' }} />
             <img src={starOnOrbit} alt="Star on Orbit" style={{ width: '32px', height: '59px', position: 'absolute', top: '282px', left: '409px' }} />
             <img src={star3} alt="Star 3" style={{ width: '77px', height: '143px', position: 'absolute', top: '94.1px', left: '95.3px' }} />
             <div style={{ width: '245.732px', height: '166.493px', position: 'absolute', top: '196px', left: '146px' }}>
