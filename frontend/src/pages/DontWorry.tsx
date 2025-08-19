@@ -89,6 +89,32 @@ const DontWorry: React.FC = () => {
   }, []);
 
   return (
+    <>
+      <style>
+        {`
+          @keyframes twinkle {
+            0%, 100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.6;
+              transform: scale(0.95);
+            }
+          }
+          
+          @keyframes twinkle-slow {
+            0%, 100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.7;
+              transform: scale(0.97);
+            }
+          }
+        `}
+      </style>
     <main 
       className="fixed inset-0 w-screen h-screen overflow-hidden bg-white"
       style={{
@@ -133,6 +159,7 @@ const DontWorry: React.FC = () => {
             height: `${58 * scaleFactor}px`,
             top: `${88 * scaleFactor}px`,
             left: `${16 * scaleFactor}px`,
+            animation: 'twinkle 3s ease-in-out infinite',
           }}
         />
 
@@ -183,6 +210,7 @@ const DontWorry: React.FC = () => {
             height: `${99 * scaleFactor}px`,
             aspectRatio: '53/99',
             zIndex: 999,
+            animation: 'twinkle-slow 4s ease-in-out infinite 0.5s',
           }}
         />
 
@@ -200,6 +228,7 @@ const DontWorry: React.FC = () => {
             height: `${41 * scaleFactor}px`,
             aspectRatio: '20/37',
             zIndex: 999,
+            animation: 'twinkle 3s ease-in-out infinite 2s',
           }}
         />
 
@@ -366,6 +395,7 @@ const DontWorry: React.FC = () => {
         </div>
       </div>
     </main>
+    </>
   );
 };
 

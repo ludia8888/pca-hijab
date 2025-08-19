@@ -90,6 +90,32 @@ const HIGLandingPage: React.FC = () => {
   }, []);
 
   return (
+    <>
+      <style>
+        {`
+          @keyframes twinkle {
+            0%, 100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.6;
+              transform: scale(0.95);
+            }
+          }
+          
+          @keyframes twinkle-slow {
+            0%, 100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.7;
+              transform: scale(0.97);
+            }
+          }
+        `}
+      </style>
     <main 
       className="fixed inset-0 w-screen h-screen overflow-hidden bg-white"
       style={{
@@ -143,6 +169,7 @@ const HIGLandingPage: React.FC = () => {
               height: `${56.682 * scaleFactor}px`,
               left: `${31.34 * scaleFactor}px`,
               top: `${22.32 * scaleFactor}px`,
+              animation: 'twinkle 3s ease-in-out infinite',
             }}
           />
           
@@ -171,6 +198,7 @@ const HIGLandingPage: React.FC = () => {
               height: `${50.818 * scaleFactor}px`,
               right: `${31.42 * scaleFactor}px`,
               bottom: `${62 * scaleFactor}px`,
+              animation: 'twinkle-slow 4s ease-in-out infinite 1s',
             }}
           />
         </div>
@@ -227,6 +255,7 @@ const HIGLandingPage: React.FC = () => {
               height: `${59 * scaleFactor}px`,
               top: `${282 * scaleFactor}px`,
               left: `${409 * scaleFactor}px`,
+              animation: 'twinkle 2.5s ease-in-out infinite 0.5s',
             }} 
           />
           
@@ -241,6 +270,7 @@ const HIGLandingPage: React.FC = () => {
               height: `${143 * scaleFactor}px`,
               top: `${94.1 * scaleFactor}px`,
               left: `${95.3 * scaleFactor}px`,
+              animation: 'twinkle-slow 3.5s ease-in-out infinite 2s',
             }} 
           />
           
@@ -360,6 +390,7 @@ const HIGLandingPage: React.FC = () => {
         </div>
       </div>
     </main>
+    </>
   );
 };
 
