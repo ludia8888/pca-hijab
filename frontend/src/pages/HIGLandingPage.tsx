@@ -1,507 +1,183 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ROUTES } from '@/utils/constants';
-import { validateInstagramId } from '@/utils/validators';
-import { useAppStore } from '@/store';
-import { SessionAPI } from '@/services/api/session';
-import { trackSessionStart, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
-import styles from './HIGLandingPage.module.css';
-import landingBgOriginal from '@/assets/landing-bg-original.jpg';
-import frame175 from '@/assets/frame-175.svg';
-import group176 from '@/assets/group-176.svg';
+import React from 'react';
+import backgroundImage from '../assets/배경1.png';
+import mynoorLogo from '../assets/Mynoor.png';
+import star1 from '../assets/별1.png';
+import star2 from '../assets/별2.png';
+import bodyImage from '../assets/몸뚱아리.svg';
+import orbitImage from '../assets/궤도.svg';
+import starOnOrbit from '../assets/궤도위의별.png';
 
-const HIGLandingPage = (): JSX.Element => {
-  const navigate = useNavigate();
-  const setSessionData = useAppStore((state) => state.setSessionData);
-  const [instagramId, setInstagramId] = useState('');
-  const [isValid, setIsValid] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const heroRef = useRef<HTMLElement>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showFloatingCTA, setShowFloatingCTA] = useState(false);
-
-  // Track landing page entry
-  useEffect(() => {
-    trackEvent('page_enter', {
-      page: 'landing',
-      user_flow_step: 'landing_page_entered',
-      entry_type: 'initial_visit'
-    });
-  }, []);
-
-  // Track scroll progress
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrolled = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = Math.min(scrolled / maxScroll, 1);
-      setScrollProgress(progress);
-      setIsScrolled(scrolled > 20);
-      
-      // Show floating CTA when scrolled past hero section
-      if (heroRef.current) {
-        const heroBottom = heroRef.current.offsetTop + heroRef.current.offsetHeight;
-        setShowFloatingCTA(scrolled > heroBottom);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initial check
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-
-  const handleIdChange = (value: string): void => {
-    const cleanedValue = value.replace('@', '').toLowerCase();
-    setInstagramId(cleanedValue);
-    
-    // Track form interaction
-    if (cleanedValue.length === 1) {
-      // First character typed
-      trackEngagement('form_start', 'instagram_id_input');
-      trackEvent('form_interaction', {
-        field_name: 'instagram_id',
-        interaction_type: 'input_start',
-        user_flow_step: 'form_started'
-      });
-    }
-    
-    if (cleanedValue.length === 0) {
-      setError('');
-      setIsValid(false);
-      return;
-    }
-
-    const valid = validateInstagramId(cleanedValue);
-    setIsValid(valid);
-    setError(valid ? '' : 'Please enter a valid Instagram ID');
-
-    // Track validation result
-    if (cleanedValue.length >= 3) { // Only track after meaningful input
-      trackEvent('form_validation', {
-        field_name: 'instagram_id',
-        is_valid: valid,
-        input_length: cleanedValue.length,
-        user_flow_step: 'form_validation'
-      });
-    }
-  };
-
-  const handleScrollToTop = (): void => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-    
-    // Track CTA click
-    trackEvent('floating_cta_click', {
-      action: 'scroll_to_top',
-      scroll_position: window.scrollY
-    });
-  };
-
-  const handleStartAnalysis = async (): Promise<void> => {
-    if (isLoading) return;
-
-    console.log('[HIGLandingPage] Starting analysis...');
-    setIsLoading(true);
-    
-    // Track CTA click
-    trackEvent('cta_click', {
-      button_name: 'find_my_personal_color',
-      user_flow_step: 'session_creation_started',
-      page: 'landing'
-    });
-
-    try {
-      console.log('[HIGLandingPage] Creating session...');
-      const response = await SessionAPI.createSession();
-      console.log('[HIGLandingPage] Session created:', response.data);
-      
-      setSessionData(response.data.sessionId);
-      console.log('[HIGLandingPage] Session data set in store, sessionId:', response.data.sessionId);
-      
-      // Debug: Check store state
-      const currentState = useAppStore.getState();
-      console.log('[HIGLandingPage] Current store state:', {
-        sessionId: currentState.sessionId,
-        instagramId: currentState.instagramId
-      });
-      
-      // Track successful session creation
-      trackSessionStart();
-      trackEvent('session_create_success', {
-        session_id: response.data.sessionId,
-        user_flow_step: 'session_created_successfully'
-      });
-      
-      console.log('[HIGLandingPage] Navigating to diagnosis page...');
-      navigate(ROUTES.DIAGNOSIS);
-    } catch (error) {
-      console.error('[HIGLandingPage] Error creating session:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setError('Failed to start analysis. Please try again.');
-      
-      // Track session creation failure
-      trackError('session_create_failed', errorMessage, 'landing_page');
-      trackDropOff('landing_page', 'session_creation_error');
-      
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (!isValid || isLoading) return;
-
-    setIsLoading(true);
-    
-    // Track form submission attempt
-    trackEvent('form_submit', {
-      form_name: 'instagram_id_form',
-      instagram_id_length: instagramId.length,
-      user_flow_step: 'session_creation_started',
-      submit_type: 'form_submit'
-    });
-
-    try {
-      const response = await SessionAPI.createSession(instagramId);
-      setSessionData(response.data.sessionId, response.data.instagramId);
-      
-      // Track successful session creation with enhanced data
-      trackSessionStart(instagramId);
-      trackEvent('session_create_success', {
-        session_id: response.data.sessionId,
-        instagram_id: instagramId,
-        user_flow_step: 'session_created_successfully'
-      });
-
-      navigate(ROUTES.DIAGNOSIS);
-    } catch (error) {
-      setError('Failed to create session. Please try again.');
-      
-      // Track session creation failure
-      trackError('session_creation_failed', error instanceof Error ? error.message : 'Unknown session error', 'landing_page');
-      trackEvent('form_submit_failed', {
-        form_name: 'instagram_id_form',
-        error_type: 'session_creation_failed',
-        user_flow_step: 'session_creation_failed'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Base dimensions for scaling
-  const BASE_WIDTH = 402;
-  const BASE_HEIGHT = 874;
-  
-  // Calculate scale factor based on viewport
-  const getScaleFactor = () => {
-    if (typeof window === 'undefined') return 1;
-    const scaleX = window.innerWidth / BASE_WIDTH;
-    const scaleY = window.innerHeight / BASE_HEIGHT;
-    return Math.min(scaleX, scaleY);
-  };
-
-  const [scaleFactor, setScaleFactor] = useState(1);
-  const [backgroundPosition, setBackgroundPosition] = useState({ left: -131.6, top: -1.83 });
-  const [backgroundScale, setBackgroundScale] = useState(1);
-  const [viewportHeight, setViewportHeight] = useState('100vh');
-
-  useEffect(() => {
-    const updateScale = () => {
-      // Use visualViewport API for accurate mobile viewport
-      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      setViewportHeight(`${vh}px`);
-      
-      const scale = getScaleFactor();
-      setScaleFactor(scale);
-      
-      // Calculate viewport coverage requirements
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = vh;
-      const scaledContainerWidth = BASE_WIDTH * scale;
-      const scaledContainerHeight = BASE_HEIGHT * scale;
-      
-      // Background dimensions at scale 1
-      const bgWidth = 1017.984; // pixels
-      const bgOriginalLeft = -529; // pixels
-      const bgRightEdge = bgWidth + bgOriginalLeft; // 488.984px
-      
-      // Check if current background can cover the viewport
-      const currentCoverage = bgRightEdge * scale;
-      
-      // Keep original position as anchor, only adjust scale if needed
-      setBackgroundPosition({ left: -131.6, top: -1.83 }); // Fixed anchor position
-      
-      // Calculate if we need extra scale to prevent white edges
-      const viewportAspect = window.innerWidth / vh;
-      
-      // For very wide screens, slightly increase background scale
-      if (viewportAspect > 1.2) {
-        setBackgroundScale(1.2); // 20% larger for ultra-wide screens
-      } else if (viewportAspect > 0.8) {
-        setBackgroundScale(1.1); // 10% larger for wide screens
-      } else {
-        setBackgroundScale(1); // Original scale for normal screens
-      }
-    };
-    
-    updateScale();
-    window.addEventListener('resize', updateScale);
-    window.addEventListener('orientationchange', updateScale);
-    
-    // Listen to visualViewport changes for mobile browsers
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateScale);
-      window.visualViewport.addEventListener('scroll', updateScale);
-    }
-    
-    return () => {
-      window.removeEventListener('resize', updateScale);
-      window.removeEventListener('orientationchange', updateScale);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateScale);
-        window.visualViewport.removeEventListener('scroll', updateScale);
-      }
-    };
-  }, []);
-
-  // Prevent scrolling and bounce on mobile
-  useEffect(() => {
-    const preventScroll = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
-    
-    // Prevent all touch scrolling
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    document.body.style.touchAction = 'none';
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.position = 'fixed';
-    document.documentElement.style.width = '100%';
-    document.documentElement.style.height = '100%';
-    
-    // Add event listeners to prevent scrolling
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('scroll', preventScroll, { passive: false });
-    
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.body.style.touchAction = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.position = '';
-      document.documentElement.style.width = '';
-      document.documentElement.style.height = '';
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('scroll', preventScroll);
-    };
-  }, []);
-
+const HIGLandingPage: React.FC = () => {
   return (
-    <div 
-      style={{
-        width: '100vw',
-        height: viewportHeight, // Dynamic height based on actual viewport
-        minHeight: '-webkit-fill-available', // iOS Safari fallback
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        // Use background image directly for full coverage
-        backgroundImage: `url(${landingBgOriginal})`,
-        backgroundSize: 'cover',
-        backgroundPosition: '35% center',
-        backgroundRepeat: 'no-repeat',
-        overflow: 'hidden', // Keep for scrollbar prevention only
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        touchAction: 'none', // Prevent all touch interactions that cause scrolling
-        WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS (but prevented)
-        overscrollBehavior: 'none' // Prevent bounce on newer browsers
-      }}
-    >
-      <div
-        style={{
-          width: `${BASE_WIDTH}px`,
-          height: `${BASE_HEIGHT}px`,
-          position: 'relative',
-          overflow: 'visible', // Allow background to extend beyond container
-          transform: `scale(${scaleFactor})`,
-          transformOrigin: 'center',
-          flexShrink: 0,
-          // Improve rendering quality
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-          textRendering: 'optimizeLegibility',
-          shapeRendering: 'geometricPrecision'
-        }}
-      >
-      {/* Background Image Container - scales with viewport for zoom effect */}
+    <div className="w-full h-screen bg-white overflow-hidden">
       <div 
-        style={{
-          position: 'absolute',
-          width: `${(1017.984 / 402) * 100}%`, // 253.2% of container
-          height: `${(1210 / 874) * 100}%`, // 138.4% of container  
-          left: `${backgroundPosition.left}%`,
-          top: `${backgroundPosition.top}%`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transform: `scale(${backgroundScale * (1 + (scaleFactor - 1) * 0.2)})`, // Apply both scales
-          transformOrigin: 'center',
-          transition: 'transform 0.3s ease, left 0.3s ease'
+        className="mx-auto bg-cover bg-center bg-no-repeat relative flex flex-col"
+        style={{ 
+          width: '402px', 
+          height: '874px',
+          maxWidth: '100%',
+          backgroundImage: `url(${backgroundImage})`
         }}
       >
-        {/* Rotated Background Image */}
         <div
+          className="absolute left-1/2 transform -translate-x-1/2"
           style={{
-            width: '118.9%', // 1210px / 1017.984px
-            height: '84.1%', // 1018px / 1210px
-            transform: 'rotate(90deg)',
+            width: '402px',
+            height: '177px',
             flexShrink: 0,
-            background: `url(${landingBgOriginal}) lightgray 50% / cover no-repeat`,
-            filter: 'saturate(1.3) contrast(1.1) brightness(0.95)',
-            opacity: 1,
-            // Improve mobile rendering quality
-            WebkitBackfaceVisibility: 'hidden',
-            backfaceVisibility: 'hidden',
-            WebkitTransform: 'rotate(90deg) translateZ(0)',
-            willChange: 'transform',
-            imageRendering: '-webkit-optimize-contrast'
+            top: '66px',
+            border: '1px solid rgba(0, 0, 0, 0.2)'
           }}
-        />
-      </div>
-
-      {/* Group 176 - Illustration (behind text) */}
-      <div
-        style={{
-          position: 'absolute',
-          width: `${(547 / 402) * 100}%`, // 136.1% of container
-          height: 'auto',
-          aspectRatio: '547 / 531',
-          left: `${(-70 / 402) * 100}%`, // -17.4% offset
-          top: `${(201 / 874) * 100}%`, // 23% from top
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1
-        }}
-      >
-        <img 
-          src={group176}
-          alt="Hijab illustration"
+        >
+          <img 
+            src={star1}
+            alt="Star"
+            style={{
+              width: '38px',
+              height: '56.682px',
+              flexShrink: 0,
+              position: 'absolute',
+              left: '31.34px',
+              top: '22.32px'
+            }}
+          />
+          <img 
+            src={mynoorLogo}
+            alt="Mynoor"
+            style={{
+              width: '200px',
+              height: '151.291px',
+              flexShrink: 0,
+              marginTop: '14.5px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              display: 'block'
+            }}
+          />
+          <img 
+            src={star2}
+            alt="Star 2"
+            style={{
+              width: '34.069px',
+              height: '50.818px',
+              flexShrink: 0,
+              position: 'absolute',
+              right: '31.42px',
+              bottom: '62px'
+            }}
+          />
+        </div>
+        <div
+          className="absolute flex items-center justify-center"
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            // SVG rendering optimization
-            imageRendering: 'crisp-edges',
-            WebkitBackfaceVisibility: 'hidden',
-            backfaceVisibility: 'hidden',
-            willChange: 'auto' // Prevent unnecessary layer promotion
+            width: '547.161px',
+            height: '530.778px',
+            flexShrink: 0,
+            top: '201px',
+            left: '-70px',
+            border: '1px solid rgba(0, 0, 0, 0.2)'
           }}
-        />
-      </div>
-
-      {/* Frame 175 - Logo with stars */}
-      <img 
-        src={frame175}
-        alt="myNoor logo"
-        style={{
-          position: 'absolute',
-          width: '100%', // Full width of container (402px)
-          height: 'auto',
-          aspectRatio: '402 / 177', // Maintain aspect ratio
-          top: `${(66 / 874) * 100}%`, // 7.55% from top
-          left: '0',
-          zIndex: 2,
-          // SVG rendering optimization
-          imageRendering: 'crisp-edges',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
-          willChange: 'auto' // Prevent unnecessary layer promotion
-        }}
-      />
-
-      {/* Tagline Text */}
-      <p
-        style={{
-          position: 'absolute',
-          color: '#3B1389',
-          textAlign: 'center',
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontSize: '20px', // Will scale with container
-          fontStyle: 'normal',
-          fontWeight: 800,
-          lineHeight: '140%',
-          top: `${(270 / 874) * 100}%`, // 30.89% from top
-          left: '50%',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          zIndex: 2,
-          width: '100%'
-        }}
-      >
-        Find Your Color. Glow in Hijab.
-      </p>
-
-      {/* Start Analysis Button */}
-      <button
-        onClick={handleStartAnalysis}
-        disabled={isLoading}
-        style={{
-          position: 'absolute',
-          display: 'flex',
-          width: `${(370 / 402) * 100}%`, // 92% of container (402 - 16*2 = 370)
-          height: '57px', // Fixed height as per spec
-          padding: '10px 16px',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '10px',
-          alignSelf: 'stretch',
-          borderRadius: '10px',
-          background: '#FFF3A1',
-          border: 'none',
-          color: '#3B1389',
-          textAlign: 'center',
-          fontFamily: 'Pretendard, sans-serif',
-          fontSize: '20px', // Will scale with container
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: '140%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bottom: `${(90 / 874) * 100}%`, // 10.3% from bottom
-          boxSizing: 'border-box',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          opacity: isLoading ? 0.7 : 1,
-          transition: 'all 0.2s ease',
-          zIndex: 3
-        }}
-        onMouseEnter={(e) => {
-          if (!isLoading) {
-            e.currentTarget.style.transform = 'translateX(-50%) translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 19, 137, 0.15)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateX(-50%) translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
-      >
-        {isLoading ? 'Starting...' : 'Start Analysis'}
-      </button>
+        >
+          <img 
+            src={bodyImage}
+            alt="Body"
+            style={{
+              opacity: 0.84
+            }}
+          />
+          <img 
+            src={orbitImage}
+            alt="Orbit"
+            style={{
+              position: 'absolute',
+              bottom: '100px',
+              right: '70.3px'
+            }}
+          />
+          <img 
+            src={starOnOrbit}
+            alt="Star on Orbit"
+            style={{
+              width: '32px',
+              height: '59px',
+              flexShrink: 0,
+              aspectRatio: '32/59',
+              position: 'absolute',
+              top: '282px',
+              left: '409px'
+            }}
+          />
+        </div>
+        <div
+          className="flex flex-col justify-center items-center absolute left-1/2 transform -translate-x-1/2"
+          style={{
+            display: 'flex',
+            width: '402px',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '10px',
+            bottom: '589px',
+            border: '1px solid rgba(0, 0, 0, 0.2)'
+          }}
+        >
+          <span
+            style={{
+              color: '#3B1389',
+              textAlign: 'center',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '20px',
+              fontStyle: 'normal',
+              fontWeight: '800',
+              lineHeight: '140%',
+              zIndex: 10
+            }}
+          >
+            Find Your Color. Glow in Hijab.
+          </span>
+        </div>
+        <div
+          className="flex flex-col justify-center items-center absolute left-1/2 transform -translate-x-1/2"
+          style={{
+            display: 'flex',
+            width: '402px',
+            padding: '0 16px',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '10px',
+            bottom: '90px',
+            border: '1px solid rgba(0, 0, 0, 0.2)'
+          }}
+        >
+          <button
+            style={{
+              display: 'flex',
+              height: '57px',
+              padding: '10px 16px',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '10px',
+              alignSelf: 'stretch',
+              borderRadius: '10px',
+              background: '#FFF3A1'
+            }}
+          >
+            <span
+              style={{
+                color: '#3B1389',
+                textAlign: 'center',
+                fontFamily: 'Pretendard',
+                fontSize: '20px',
+                fontStyle: 'normal',
+                fontWeight: '700',
+                lineHeight: '140%'
+              }}
+            >
+              Start Analysis
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );
