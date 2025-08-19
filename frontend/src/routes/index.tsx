@@ -9,6 +9,7 @@ import { retryChunkLoad } from '@/utils/chunkErrorHandler';
 const HomePage = lazy(() => retryChunkLoad(() => import('@/pages/HomePage')));
 const HIGLandingPage = lazy(() => retryChunkLoad(() => import('@/pages/HIGLandingPage')));
 const PhotoGuide = lazy(() => retryChunkLoad(() => import('@/pages/PhotoGuide')));
+const DontWorry = lazy(() => retryChunkLoad(() => import('@/pages/DontWorry')));
 const UploadPage = lazy(() => retryChunkLoad(() => import('@/pages/UploadPage')));
 const AnalyzingPage = lazy(() => retryChunkLoad(() => import('@/pages/AnalyzingPage')));
 const ResultPage = lazy(() => retryChunkLoad(() => import('@/pages/ResultPage')));
@@ -103,6 +104,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <PhotoGuide />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.DONTWORRY,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <DontWorry />
           </Suspense>
         ),
       },

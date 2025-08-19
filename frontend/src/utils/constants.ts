@@ -161,6 +161,7 @@ export const ROUTES = {
   HOME: '/',
   LANDING: '/landing',
   PHOTOGUIDE: '/photoguide',
+  DONTWORRY: '/dontworry',
   DIAGNOSIS: '/diagnosis',
   ANALYZING: '/analyzing',
   RESULT: '/result',
