@@ -34,8 +34,18 @@ export default defineConfig(({ command, mode }) => ({
     outDir: 'dist',
     // Disable source maps in production for security
     sourcemap: mode !== 'production',
-    // Minify for production
-    minify: mode === 'production' ? 'esbuild' : false,
+    // Minify for production and remove console logs
+    minify: mode === 'production' ? 'terser' : false,
+    terserOptions: mode === 'production' ? {
+      compress: {
+        drop_console: true, // Remove all console.* statements in production
+        drop_debugger: true, // Remove debugger statements
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+      },
+      format: {
+        comments: false // Remove comments
+      }
+    } : undefined,
     // Browser compatibility
     target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     // Increase chunk size limit to avoid over-splitting

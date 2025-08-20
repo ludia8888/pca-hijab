@@ -484,111 +484,119 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       // Enhanced scanning effect with 3D mesh for detecting phase (Step 1 only)
       if (phase === 'detecting') {
         const elapsed = Date.now() - animationStartTimeRef.current;
-        const scanDuration = 3000; // 3 seconds for one complete up-down cycle
+        const scanDuration = 3000; // 3 seconds for one complete cycle
         const scanProgress = Math.min(elapsed / scanDuration, 1);
-        
-        // Single scan cycle: 0 to 1 to 0 (top to bottom to top)
-        let scanPosition;
-        if (scanProgress < 0.5) {
-          // Scanning down (0 to 1)
-          scanPosition = scanProgress * 2;
-        } else {
-          // Scanning up (1 to 0)
-          scanPosition = 2 - (scanProgress * 2);
-        }
-        
-        const scanY = scanPosition * canvas.height;
-        const scanRange = 80; // Range of mesh visibility around scan line
         
         // Mark scan as complete after one cycle
         if (scanProgress >= 1 && !scanCompleteRef.current) {
           scanCompleteRef.current = true;
+          console.log('🎯 [FaceLandmark] Scan complete, triggering callback');
           // Trigger callback to enable continue button if provided
-          if (onLandmarksDetected && landmarks.length > 0) {
-            onLandmarksDetected([...landmarks, { scanComplete: true }]);
+          if (onLandmarksDetected) {
+            onLandmarksDetected([{ scanComplete: true, keypoints: [] }]);
           }
         }
         
-        // Get all landmark groups for mesh
-        const groups = getFaceLandmarkGroups(face.keypoints);
-        const allMeshPoints = [...groups.outline, ...groups.eyes, ...groups.nose, ...groups.mouth];
-        
-        // Filter points based on scan position - only show mesh near scan line
-        const activePoints = allMeshPoints.filter(point => {
-          const pointY = point.y * canvas.height;
-          const distFromScan = Math.abs(pointY - scanY);
-          return distFromScan < scanRange;
-        });
-        
-        // Draw scan line effect
-        ctx.save();
-        
-        // Main scan line
-        const scanGradient = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
-        scanGradient.addColorStop(0, 'rgba(252, 165, 165, 0)');
-        scanGradient.addColorStop(0.5, 'rgba(252, 165, 165, 0.4)');
-        scanGradient.addColorStop(1, 'rgba(252, 165, 165, 0)');
-        
-        ctx.fillStyle = scanGradient;
-        ctx.fillRect(0, scanY - 30, canvas.width, 60);
-        
-        // Bright scan line
-        ctx.strokeStyle = '#FCA5A5';
-        ctx.lineWidth = 2;
-        ctx.shadowColor = '#FCA5A5';
-        ctx.shadowBlur = 10;
-        ctx.globalAlpha = 0.8;
-        ctx.beginPath();
-        ctx.moveTo(0, scanY);
-        ctx.lineTo(canvas.width, scanY);
-        ctx.stroke();
-        
-        // Secondary scan lines
-        ctx.lineWidth = 0.5;
-        ctx.globalAlpha = 0.3;
-        ctx.shadowBlur = 5;
-        ctx.beginPath();
-        ctx.moveTo(0, scanY - 15);
-        ctx.lineTo(canvas.width, scanY - 15);
-        ctx.moveTo(0, scanY + 15);
-        ctx.lineTo(canvas.width, scanY + 15);
-        ctx.stroke();
-        
-        ctx.restore();
-        
-        // Draw 3D mesh for points near scan line with fade effect
-        activePoints.forEach((point, i) => {
-          const pointY = point.y * canvas.height;
-          const distFromScan = Math.abs(pointY - scanY);
-          const fadeOpacity = 1 - (distFromScan / scanRange);
+        // Only show scan animation if not complete
+        if (scanProgress < 1) {
+          // Single scan cycle: top to bottom to top ONCE
+          let scanY;
+          if (scanProgress < 0.5) {
+            // First half: top to bottom
+            const downProgress = scanProgress * 2; // 0 to 1
+            scanY = downProgress * canvas.height;
+          } else {
+            // Second half: bottom to top
+            const upProgress = (scanProgress - 0.5) * 2; // 0 to 1
+            scanY = (1 - upProgress) * canvas.height;
+          }
           
-          // Draw connections to nearby points
-          activePoints.forEach((otherPoint, j) => {
-            if (i >= j) return; // Avoid duplicate lines
-            
-            const x1 = point.x * canvas.width;
-            const y1 = point.y * canvas.height;
-            const x2 = otherPoint.x * canvas.width;
-            const y2 = otherPoint.y * canvas.height;
-            
-            const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-            
-            if (distance < 60 && distance > 10) {
-              ctx.save();
-              ctx.strokeStyle = '#FCA5A5';
-              ctx.lineWidth = 0.6;
-              ctx.globalAlpha = fadeOpacity * 0.3 * (1 - distance / 60);
-              ctx.beginPath();
-              ctx.moveTo(x1, y1);
-              ctx.lineTo(x2, y2);
-              ctx.stroke();
-              ctx.restore();
-            }
+          const scanRange = 80; // Range of mesh visibility around scan line
+          
+          // Get all landmark groups for mesh
+          const groups = getFaceLandmarkGroups(face.keypoints);
+          const allMeshPoints = [...groups.outline, ...groups.eyes, ...groups.nose, ...groups.mouth];
+          
+          // Filter points based on scan position - only show mesh near scan line
+          const activePoints = allMeshPoints.filter(point => {
+            const pointY = point.y * canvas.height;
+            const distFromScan = Math.abs(pointY - scanY);
+            return distFromScan < scanRange;
           });
-        });
+          
+          // Draw scan line effect
+          ctx.save();
+          
+          // Main scan line
+          const scanGradient = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
+          scanGradient.addColorStop(0, 'rgba(252, 165, 165, 0)');
+          scanGradient.addColorStop(0.5, 'rgba(252, 165, 165, 0.4)');
+          scanGradient.addColorStop(1, 'rgba(252, 165, 165, 0)');
+          
+          ctx.fillStyle = scanGradient;
+          ctx.fillRect(0, scanY - 30, canvas.width, 60);
+          
+          // Bright scan line
+          ctx.strokeStyle = '#FCA5A5';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#FCA5A5';
+          ctx.shadowBlur = 10;
+          ctx.globalAlpha = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(0, scanY);
+          ctx.lineTo(canvas.width, scanY);
+          ctx.stroke();
+          
+          // Secondary scan lines
+          ctx.lineWidth = 0.5;
+          ctx.globalAlpha = 0.3;
+          ctx.shadowBlur = 5;
+          ctx.beginPath();
+          ctx.moveTo(0, scanY - 15);
+          ctx.lineTo(canvas.width, scanY - 15);
+          ctx.moveTo(0, scanY + 15);
+          ctx.lineTo(canvas.width, scanY + 15);
+          ctx.stroke();
+          
+          ctx.restore();
         
-        // Override current phase points to show active mesh points
-        currentPhase.points = activePoints;
+          // Draw 3D mesh for points near scan line with fade effect
+          activePoints.forEach((point, i) => {
+            const pointY = point.y * canvas.height;
+            const distFromScan = Math.abs(pointY - scanY);
+            const fadeOpacity = 1 - (distFromScan / scanRange);
+            
+            // Draw connections to nearby points
+            activePoints.forEach((otherPoint, j) => {
+              if (i >= j) return; // Avoid duplicate lines
+              
+              const x1 = point.x * canvas.width;
+              const y1 = point.y * canvas.height;
+              const x2 = otherPoint.x * canvas.width;
+              const y2 = otherPoint.y * canvas.height;
+              
+              const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+              
+              if (distance < 60 && distance > 10) {
+                ctx.save();
+                ctx.strokeStyle = '#FCA5A5';
+                ctx.lineWidth = 0.6;
+                ctx.globalAlpha = fadeOpacity * 0.3 * (1 - distance / 60);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.restore();
+              }
+            });
+          });
+          
+          // Override current phase points to show active mesh points
+          currentPhase.points = activePoints;
+        } else {
+          // Scan complete - no points to show
+          currentPhase.points = [];
+        }
         
       } else {
         // Original mesh for other phases
@@ -641,18 +649,22 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           const scanDuration = 3000;
           const scanProgress = Math.min(elapsed / scanDuration, 1);
           
-          let scanPosition;
-          if (scanProgress < 0.5) {
-            scanPosition = scanProgress * 2;
-          } else {
-            scanPosition = 2 - (scanProgress * 2);
-          }
-          
-          const scanY = scanPosition * canvas.height;
-          const distFromScan = Math.abs(y - scanY);
-          const scanRange = 80;
-          
-          if (distFromScan < scanRange) {
+          // Only show dots if scan is still running
+          if (scanProgress < 1) {
+            let scanY;
+            if (scanProgress < 0.5) {
+              // First half: top to bottom
+              const downProgress = scanProgress * 2;
+              scanY = downProgress * canvas.height;
+            } else {
+              // Second half: bottom to top
+              const upProgress = (scanProgress - 0.5) * 2;
+              scanY = (1 - upProgress) * canvas.height;
+            }
+            const distFromScan = Math.abs(y - scanY);
+            const scanRange = 80;
+            
+            if (distFromScan < scanRange) {
             const fadeOpacity = 1 - (distFromScan / scanRange);
             const baseSize = 2.5;
             const size = baseSize;
@@ -684,6 +696,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             ctx.beginPath();
             ctx.arc(x, y, size * 0.3, 0, 2 * Math.PI);
             ctx.fill();
+            }
           }
         } else {
           // Original dots for other phases
@@ -887,6 +900,24 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     
     const animate = () => {
       if (animationPhase === 'detecting' && landmarks.length > 0) {
+        const elapsed = Date.now() - animationStartTimeRef.current;
+        const scanDuration = 3000;
+        
+        // Stop animation after scan completes
+        if (elapsed >= scanDuration) {
+          if (!scanCompleteRef.current) {
+            scanCompleteRef.current = true;
+            console.log('🎯 [Animation Loop] Scan complete after', elapsed, 'ms');
+            // Draw one final frame with scan complete
+            drawLandmarks(landmarks, 'detecting');
+            if (onLandmarksDetected) {
+              onLandmarksDetected([{ scanComplete: true, keypoints: [] }]);
+            }
+          }
+          // Don't continue animation after scan completes
+          return;
+        }
+        
         // Update every 2 frames for balance between smoothness and performance
         if (frameCountRef.current % 2 === 0) {
           drawLandmarks(landmarks, 'detecting');
@@ -910,7 +941,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         cancelAnimationFrame(animationId);
       }
     };
-  }, [animationPhase, landmarks, drawLandmarks]);
+  }, [animationPhase, landmarks, drawLandmarks, onLandmarksDetected]);
 
   // Synchronize animation phase with external analysis step
   useEffect(() => {

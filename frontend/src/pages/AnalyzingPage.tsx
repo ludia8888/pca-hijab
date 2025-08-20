@@ -130,8 +130,11 @@ const AnalyzingPage = (): JSX.Element => {
       const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison' || step.id === 'final-result';
       
       // Allow skip if it's a draping phase OR if analysis is already complete
-      // Note: For Step 1, canSkip will be set to true when scan completes via onLandmarksDetected
-      if (currentStep !== 0) { // Don't override Step 1's manual control
+      // For Step 1, start with disabled and wait for scan completion
+      if (currentStep === 0) {
+        // Step 1: canSkip will be set to true when scan completes via onLandmarksDetected
+        // Don't override if already set by scan completion
+      } else {
         setCanSkip(isDrapingPhase || analysisComplete);
       }
       
@@ -650,7 +653,7 @@ const AnalyzingPage = (): JSX.Element => {
               >
                 {currentStep === ANALYSIS_STEPS.length - 1 ? 
                   (analysisResult ? 'See My Colors!' : 'Almost ready...') : 
-                  (canSkip ? 'Continue' : 'Working on it...')}
+                  'Continue'}
               </span>
             </button>
             </div>
