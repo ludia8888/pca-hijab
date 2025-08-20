@@ -501,8 +501,8 @@ const AnalyzingPage = (): JSX.Element => {
                 top: `${(16 + 61 + 10 + 16 + 24*1.4 + 16 + 16) * scaleFactor}px`, // header top + header height + gap + text padding + text height + text padding + margin
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: `${348 * scaleFactor}px`,
-                height: `${475 * scaleFactor}px`,
+                width: '348px',
+                height: '475px',
                 flexShrink: 0,
                 borderRadius: `${10 * scaleFactor}px`,
                 background: '#D9D9D9',
