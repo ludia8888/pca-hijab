@@ -545,7 +545,7 @@ const AnalyzingPage = (): JSX.Element => {
                 width: `${402 * scaleFactor}px`,
                 padding: `0 ${16 * scaleFactor}px`,
                 gap: `${10 * scaleFactor}px`,
-                top: `${(16 + 61 + 10 + 16 + 24*1.4 + 16 + 16) * scaleFactor + 475 + 116}px`, // scan container top + container height + 116px gap
+                bottom: '51px',
               }}
             >
             {/* Left Button - White */}
