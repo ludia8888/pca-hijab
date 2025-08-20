@@ -470,10 +470,11 @@ const AnalyzingPage = (): JSX.Element => {
                 transform: 'translateX(-50%)',
                 display: 'flex',
                 width: `${402 * scaleFactor}px`,
-                padding: `${16 * scaleFactor}px 0`,
+                padding: '16px 0',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: `${10 * scaleFactor}px`,
+                gap: '10px',
+                alignSelf: 'stretch',
               }}
             >
             <h2
@@ -481,11 +482,10 @@ const AnalyzingPage = (): JSX.Element => {
                 color: 'var(--Color-7, #FFF)',
                 textAlign: 'center',
                 fontFamily: '"Plus Jakarta Sans"',
-                fontSize: `${24 * scaleFactor}px`,
+                fontSize: '24px',
                 fontStyle: 'normal',
                 fontWeight: 800,
                 lineHeight: '140%',
-                width: `${402 * scaleFactor}px`,
                 margin: 0,
               }}
             >
@@ -498,7 +498,7 @@ const AnalyzingPage = (): JSX.Element => {
             <div
               className="absolute overflow-hidden"
               style={{
-                top: `${(16 + 61) * scaleFactor + 16 + (16 * 2 + 24*1.4) * scaleFactor + 16}px`, // header + 16px + text container height (with padding) + 16px gap
+                top: `${(16 + 61) * scaleFactor + 16 + 65.6 + 16}px`, // header + 16px + text container height (16+33.6+16) + 16px gap
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: '348px',
