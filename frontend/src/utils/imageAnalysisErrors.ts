@@ -49,34 +49,34 @@ interface ImageAnalysisErrorInfo {
 
 export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysisErrorInfo> = {
   [ImageAnalysisErrorType.NO_FACE_DETECTED]: {
-    title: 'No face detected',
-    message: 'We couldn\'t detect a face in your photo.',
+    title: 'Oh! Where did you go?',
+    message: 'I can\'t seem to find your beautiful face in this photo!',
     solutions: [
-      'Take a clear front-facing photo where your face is visible',
-      'Maintain an appropriate distance from the camera',
-      'Use sufficient lighting when taking the photo'
+      'Let\'s try a clear selfie with your face visible',
+      'Come a bit closer to the camera',
+      'Find some nice natural light - you\'ll look amazing!'
     ],
     icon: '👤',
     severity: 'error'
   },
   
   [ImageAnalysisErrorType.MULTIPLE_FACES]: {
-    title: 'Multiple faces detected',
-    message: 'Please use a photo with only one person.',
+    title: 'Too many beautiful faces!',
+    message: 'This analysis is just for you! Let\'s use a solo photo.',
     solutions: [
-      'Take a selfie with just yourself in the photo',
-      'Make sure no other people are visible in the frame'
+      'Take a selfie with just you in the frame',
+      'We need to focus on your unique colors!'
     ],
     icon: '👥',
     severity: 'warning'
   },
   
   [ImageAnalysisErrorType.FACE_TOO_SMALL]: {
-    title: 'Face is too small',
-    message: 'Please take a photo where your face appears larger.',
+    title: 'Come closer, beautiful!',
+    message: 'I need to see your gorgeous face better!',
     solutions: [
-      'Move closer to the camera',
-      'Make sure your face takes up at least 60% of the frame'
+      'Move closer to the camera - don\'t be shy!',
+      'Let your face fill most of the frame'
     ],
     icon: '🔍',
     severity: 'warning'
@@ -106,24 +106,24 @@ export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysis
   },
   
   [ImageAnalysisErrorType.TOO_DARK]: {
-    title: 'Photo is too dark',
-    message: 'Insufficient lighting makes accurate analysis difficult.',
+    title: 'Let\'s add some light!',
+    message: 'It\'s a bit too dark for me to see your natural colors.',
     solutions: [
-      'Take the photo in a brighter location',
-      'Use natural light near a window',
-      'Turn on indoor lights before taking the photo'
+      'Find a bright spot - you deserve to shine!',
+      'Natural window light is perfect',
+      'Turn on those lights and let\'s try again!'
     ],
     icon: '🌙',
     severity: 'error'
   },
   
   [ImageAnalysisErrorType.TOO_BRIGHT]: {
-    title: 'Photo is too bright',
-    message: 'Overexposure makes accurate analysis difficult.',
+    title: 'Whoa, too bright!',
+    message: 'The light is washing out your beautiful colors!',
     solutions: [
-      'Avoid direct bright lighting',
-      'Position yourself beside (not in front of) a window',
-      'Turn off flash when taking the photo'
+      'Step away from direct bright light',
+      'Try soft, indirect lighting instead',
+      'No flash needed - you\'re glowing already!'
     ],
     icon: '☀️',
     severity: 'error'
@@ -154,12 +154,12 @@ export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysis
   },
   
   [ImageAnalysisErrorType.IMAGE_BLURRY]: {
-    title: 'Photo is blurry',
-    message: 'The image is not clear enough for accurate analysis.',
+    title: 'A bit fuzzy there!',
+    message: 'Let\'s get a crystal clear shot of your beauty!',
     solutions: [
-      'Hold the camera steady while taking the photo',
-      'Wait for the camera to focus before taking the photo',
-      'Use sufficient lighting when taking the photo'
+      'Hold still for just a moment',
+      'Tap to focus on your face first',
+      'Good lighting helps the camera focus better!'
     ],
     icon: '📸',
     severity: 'warning'
@@ -268,24 +268,24 @@ export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysis
   },
   
   [ImageAnalysisErrorType.PROCESSING_ERROR]: {
-    title: 'Processing error occurred',
-    message: 'A technical problem occurred during the analysis process.',
+    title: 'Oops, my bad!',
+    message: 'Something went wrong on my end. Let\'s try that again!',
     solutions: [
-      'Please try again in a moment',
-      'Try with a different image',
-      'Contact customer support if the problem persists'
+      'Give me another chance - click retry!',
+      'Maybe try a different photo?',
+      'If this keeps happening, let us know!'
     ],
     icon: '⚙️',
     severity: 'error'
   },
   
   [ImageAnalysisErrorType.UNKNOWN_ERROR]: {
-    title: 'Unknown error occurred',
-    message: 'An unexpected problem has occurred.',
+    title: 'Hmm, that\'s strange!',
+    message: 'I\'m not sure what happened there!',
     solutions: [
-      'Try again with a new photo',
-      'Restart the app',
-      'Contact customer support if the problem continues'
+      'Let\'s try a fresh photo',
+      'Maybe refresh and try again?',
+      'If I keep being confused, please let us know!'
     ],
     icon: '❓',
     severity: 'error'

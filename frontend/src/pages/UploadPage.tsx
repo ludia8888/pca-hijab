@@ -46,6 +46,7 @@ const UploadPage = (): JSX.Element => {
   const isProcessingFaceRef = useRef(false); // Add ref to avoid closure issues
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [aiInitializing, setAiInitializing] = useState(true); // Track AI initialization state
   let faceDetector: any = null; // Face detector for validating uploaded images
 
   // Calculate responsive scale factor
@@ -1129,7 +1130,7 @@ const UploadPage = (): JSX.Element => {
           
           if (!faceDetected) {
             // No face detected - reject the image
-            setError('얼굴이 감지되지 않았습니다. 얼굴이 잘 보이는 사진을 업로드해주세요.');
+            setError('Oops! I can\'t find your face. Let\'s try another photo with your face clearly visible!');
             setSelectedFile(null);
             setPreviewUrl(null);
             trackImageUpload(false, file.size, file.type, 'no_face_detected');
@@ -1145,7 +1146,7 @@ const UploadPage = (): JSX.Element => {
             
             if (!faceDetected) {
               console.log('❌ [Face Validation] No face detected by fallback service');
-              setError('얼굴이 감지되지 않았습니다. 얼굴이 잘 보이는 사진을 업로드해주세요.');
+              setError('Oops! I can\'t find your face. Let\'s try another photo with your face clearly visible!');
               setSelectedFile(null);
               setPreviewUrl(null);
               trackImageUpload(false, file.size, file.type, 'no_face_detected');
@@ -1153,7 +1154,7 @@ const UploadPage = (): JSX.Element => {
             }
           } catch (fallbackError) {
             console.error('❌ [Face Validation] Fallback detection also failed:', fallbackError);
-            setError('얼굴 인식에 실패했습니다. 다시 시도해주세요.');
+            setError('Hmm, something went wrong. Let\'s try that again!');
             setSelectedFile(null);
             setPreviewUrl(null);
             return;
@@ -1168,7 +1169,7 @@ const UploadPage = (): JSX.Element => {
           
           if (!faceDetected) {
             console.log('❌ [Face Validation] No face detected by faceDetectionService');
-            setError('얼굴이 감지되지 않았습니다. 얼굴이 잘 보이는 사진을 업로드해주세요.');
+            setError('Oops! I can\'t find your face. Let\'s try another photo with your face clearly visible!');
             setSelectedFile(null);
             setPreviewUrl(null);
             trackImageUpload(false, file.size, file.type, 'no_face_detected');
@@ -1180,7 +1181,7 @@ const UploadPage = (): JSX.Element => {
         } catch (error) {
           console.error('❌ [Face Validation] faceDetectionService failed:', error);
           // If detection fails, reject the image for safety
-          setError('얼굴 인식에 실패했습니다. 다시 시도해주세요.');
+          setError('Face detection failed. Please try again with a clearer photo.');
           setSelectedFile(null);
           setPreviewUrl(null);
           return;
@@ -1242,30 +1243,77 @@ const UploadPage = (): JSX.Element => {
     }
   };
 
-  // Disable body scroll on mount
+  // Disable body scroll on mount - more comprehensive like DontWorry page
   useEffect(() => {
+    // Prevent scrolling on this page
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    
+    // Prevent pull-to-refresh on mobile
     document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
     
     return () => {
+      // Cleanup on unmount
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.touchAction = '';
+      
       document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+    };
+  }, []);
+
+  // Prevent touch move events for scroll
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventScroll);
     };
   }, []);
 
   return (
     <PageLayout>
-      <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#FFF' }}>
+      <div 
+        className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col"
+        style={{ 
+          backgroundColor: '#FFF',
+          width: '100vw',
+          height: '100vh',
+          height: '100dvh',
+          touchAction: 'none',
+          overscrollBehavior: 'none',
+          WebkitOverflowScrolling: 'touch',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}>
         {/* Header - at the very top */}
         <div
           style={{
             display: 'flex',
-            width: '402px',
-            height: '88px',
-            padding: '16px 4px',
+            width: `${402 * scaleFactor}px`,
+            height: `${88 * scaleFactor}px`,
+            padding: `${16 * scaleFactor}px ${4 * scaleFactor}px`,
             justifyContent: 'center',
             alignItems: 'flex-end',
-            gap: '4px',
+            gap: `${4 * scaleFactor}px`,
             background: 'var(--black_white-color-white, #FFF)',
             margin: '0 auto 0 auto',
             marginTop: 0,
@@ -1288,8 +1336,8 @@ const UploadPage = (): JSX.Element => {
               style={{
                 position: 'absolute',
                 left: '0',
-                width: '40px',
-                height: '40px',
+                width: `${40 * scaleFactor}px`,
+                height: `${40 * scaleFactor}px`,
                 cursor: 'pointer',
               }}
               onClick={() => navigate(ROUTES.DONTWORRY)}
@@ -1301,7 +1349,7 @@ const UploadPage = (): JSX.Element => {
                 color: 'var(--black_white-color-black, #000)',
                 textAlign: 'center',
                 fontFamily: '"Plus Jakarta Sans"',
-                fontSize: '24px',
+                fontSize: `${24 * scaleFactor}px`,
                 fontStyle: 'normal',
                 fontWeight: 800,
                 lineHeight: '140%', /* 33.6px */
@@ -1320,7 +1368,7 @@ const UploadPage = (): JSX.Element => {
             height: `${667 * scaleFactor}px`,
             flexShrink: 0,
             borderRadius: `${10 * scaleFactor}px`,
-            margin: '20px auto',
+            margin: `${20 * scaleFactor}px auto`,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -1362,7 +1410,7 @@ const UploadPage = (): JSX.Element => {
                     height: `${667 * scaleFactor}px`,
                     zIndex: 10,
                   }}
-                  viewBox={`0 0 ${348.345} ${667}`}
+                  viewBox={`0 0 348.345 667`}
                   preserveAspectRatio="none"
                 >
                   <defs>
@@ -1372,10 +1420,10 @@ const UploadPage = (): JSX.Element => {
                       {/* Black ellipse = transparent (cutout) */}
                       {/* Position: top padding 34px, bottom padding 143px, so center Y = 34 + 490/2 = 34 + 245 = 279 */}
                       <ellipse 
-                        cx={348.345 / 2} 
-                        cy={34 + 490 / 2} 
-                        rx={299 / 2} 
-                        ry={490 / 2} 
+                        cx="174.1725" 
+                        cy="279" 
+                        rx="149.5" 
+                        ry="245" 
                         fill="black" 
                       />
                     </mask>
@@ -1518,9 +1566,9 @@ const UploadPage = (): JSX.Element => {
                         margin: 0,
                       }}
                     >
-                      완벽해요!
+                      Perfect! You look amazing!
                       <br />
-                      3초 후 촬영이 진행됩니다
+                      Capturing in 3 seconds...
                     </span>
                   ) : (
                     <span 
@@ -1540,65 +1588,63 @@ const UploadPage = (): JSX.Element => {
                       {!faceDetected 
                         ? (
                           <>
-                            얼굴을 프레임 안에
-                            <br />
-                            위치시켜주세요
+                            Say cheese!
                           </>
                         )
                         : (
                           faceDistance === 'too_far' 
                             ? (
                               <>
-                                얼굴이 너무 멀어요.
+                                Come a bit closer,
                                 <br />
-                                가까이 와주세요
+                                I can barely see you!
                               </>
                             )
                             : faceDistance === 'too_close'
                               ? (
                                 <>
-                                  얼굴이 너무 가까워요.
+                                  Whoa, too close!
                                   <br />
-                                  조금 멀리 떨어져주세요
+                                  Back up a little
                                 </>
                               )
                               : facePosition === 'left'
                                 ? (
                                   <>
-                                    얼굴을 왼쪽으로
+                                    Scoot a bit
                                     <br />
-                                    이동해주세요
+                                    to your left
                                   </>
                                 )
                                 : facePosition === 'right'
                                   ? (
                                     <>
-                                      얼굴을 오른쪽으로
+                                      Scoot a bit
                                       <br />
-                                      이동해주세요
+                                      to your right
                                     </>
                                   )
                                   : facePosition === 'up'
                                     ? (
                                       <>
-                                        얼굴을 아래로
+                                        Move down
                                         <br />
-                                        이동해주세요
+                                        just a touch
                                       </>
                                     )
                                     : facePosition === 'down'
                                       ? (
                                         <>
-                                          얼굴을 위로
+                                          Lift your chin
                                           <br />
-                                          이동해주세요
+                                          up a bit
                                         </>
                                       )
                                       : (
                                         <>
-                                          얼굴을 타원 안에
+                                          Center yourself
                                           <br />
-                                          맞춰주세요
+                                          in the frame
                                         </>
                                       )
                         )}
@@ -1625,13 +1671,59 @@ const UploadPage = (): JSX.Element => {
                 />
                 {/* Face validation loading overlay */}
                 {isValidatingFace && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-3xl z-40">
-                    <div className="bg-white rounded-xl p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      backdropFilter: 'blur(4px)',
+                      borderRadius: `${10 * scaleFactor}px`,
+                      zIndex: 40,
+                    }}
+                  >
+                    <div 
+                      style={{
+                        backgroundColor: 'white',
+                        borderRadius: `${12 * scaleFactor}px`,
+                        padding: `${16 * scaleFactor}px`,
+                      }}
+                    >
+                      <div 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: `${12 * scaleFactor}px`,
+                        }}
+                      >
+                        <div 
+                          className="animate-spin"
+                          style={{
+                            width: `${32 * scaleFactor}px`,
+                            height: `${32 * scaleFactor}px`,
+                            border: `${2 * scaleFactor}px solid #9333EA`,
+                            borderTopColor: 'transparent',
+                            borderRadius: '50%',
+                          }}
+                        ></div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">얼굴 인식 확인중</p>
-                          <p className="text-xs text-gray-500">잠시만 기다려주세요...</p>
+                          <p 
+                            style={{
+                              fontSize: `${14 * scaleFactor}px`,
+                              fontWeight: 600,
+                              color: '#1F2937',
+                              margin: 0,
+                            }}
+                          >
+                            Looking for your face
+                          </p>
+                          <p 
+                            style={{
+                              fontSize: `${12 * scaleFactor}px`,
+                              color: '#6B7280',
+                              margin: 0,
+                            }}
+                          >
+                            Just a moment...
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1651,14 +1743,52 @@ const UploadPage = (): JSX.Element => {
                 {/* Show error only if there's an actual camera error */}
                 {cameraError && (
                   // Camera error state
-                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center" style={{ zIndex: 10 }}>
-                    <div className="text-center text-white px-6">
-                      <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ 
+                      backgroundColor: '#1F2937',
+                      zIndex: 10 
+                    }}
+                  >
+                    <div 
+                      style={{
+                        textAlign: 'center',
+                        color: 'white',
+                        padding: `0 ${24 * scaleFactor}px`,
+                      }}
+                    >
+                      <svg 
+                        style={{
+                          width: `${48 * scaleFactor}px`,
+                          height: `${48 * scaleFactor}px`,
+                          margin: `0 auto ${16 * scaleFactor}px`,
+                          color: '#9CA3AF',
+                        }}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
                       </svg>
-                      <h3 className="text-lg font-semibold mb-2">Camera Not Available</h3>
-                      <p className="text-sm text-gray-300 mb-4">{cameraError}</p>
+                      <h3 
+                        style={{
+                          fontSize: `${18 * scaleFactor}px`,
+                          fontWeight: 600,
+                          marginBottom: `${8 * scaleFactor}px`,
+                        }}
+                      >
+                        Camera Not Available
+                      </h3>
+                      <p 
+                        style={{
+                          fontSize: `${14 * scaleFactor}px`,
+                          color: '#D1D5DB',
+                          marginBottom: `${16 * scaleFactor}px`,
+                        }}
+                      >
+                        {cameraError}
+                      </p>
                       <button
                         onClick={() => {
                           const input = document.createElement('input');
@@ -1677,7 +1807,23 @@ const UploadPage = (): JSX.Element => {
                           };
                           input.click();
                         }}
-                        className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        style={{
+                          backgroundColor: 'white',
+                          color: '#1F2937',
+                          padding: `${8 * scaleFactor}px ${16 * scaleFactor}px`,
+                          borderRadius: `${8 * scaleFactor}px`,
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: `${14 * scaleFactor}px`,
+                          fontWeight: 500,
+                          transition: 'background-color 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#F3F4F6';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                        }}
                       >
                         Upload Photo Instead
                       </button>
@@ -1688,13 +1834,40 @@ const UploadPage = (): JSX.Element => {
                 {/* Show loading only when camera is not initialized and no error */}
                 {!cameraInitialized && !cameraError && !previewUrl && (
                   // Loading camera state
-                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center" style={{ zIndex: 10 }}>
-                    <div className="text-center text-white">
-                      <svg className="animate-spin w-8 h-8 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ 
+                      backgroundColor: '#1F2937',
+                      zIndex: 10 
+                    }}
+                  >
+                    <div 
+                      style={{
+                        textAlign: 'center',
+                        color: 'white',
+                      }}
+                    >
+                      <svg 
+                        className="animate-spin"
+                        style={{
+                          width: `${32 * scaleFactor}px`,
+                          height: `${32 * scaleFactor}px`,
+                          margin: `0 auto ${16 * scaleFactor}px`,
+                        }}
+                        fill="none" 
+                        viewBox="0 0 24 24"
+                      >
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                       </svg>
-                      <p className="text-sm">Starting camera...</p>
+                      <p 
+                        style={{
+                          fontSize: `${14 * scaleFactor}px`,
+                          margin: 0,
+                        }}
+                      >
+                        Starting camera...
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1704,8 +1877,27 @@ const UploadPage = (): JSX.Element => {
 
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl max-w-sm w-full">
-              <p className="text-red-600 text-sm text-center">{error}</p>
+            <div 
+              style={{
+                marginBottom: `${16 * scaleFactor}px`,
+                padding: `${12 * scaleFactor}px`,
+                backgroundColor: '#FEF2F2',
+                border: `${1 * scaleFactor}px solid #FECACA`,
+                borderRadius: `${12 * scaleFactor}px`,
+                maxWidth: `${320 * scaleFactor}px`,
+                width: '90%',
+              }}
+            >
+              <p 
+                style={{
+                  color: '#DC2626',
+                  fontSize: `${14 * scaleFactor}px`,
+                  textAlign: 'center',
+                  margin: 0,
+                }}
+              >
+                {error}
+              </p>
             </div>
           )}
 
@@ -1713,10 +1905,32 @@ const UploadPage = (): JSX.Element => {
 
         {/* Debug Controls (Development only) */}
         {import.meta.env.DEV && (
-          <div className="fixed top-4 left-4 z-50">
+          <div 
+            style={{
+              position: 'fixed',
+              top: `${16 * scaleFactor}px`,
+              left: `${16 * scaleFactor}px`,
+              zIndex: 50,
+            }}
+          >
             <button
               onClick={testCameraAPI}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+              style={{
+                backgroundColor: '#2563EB',
+                color: 'white',
+                padding: `${4 * scaleFactor}px ${12 * scaleFactor}px`,
+                borderRadius: `${4 * scaleFactor}px`,
+                fontSize: `${12 * scaleFactor}px`,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#1D4ED8';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563EB';
+              }}
             >
               🧪 Test Camera API
             </button>
@@ -1724,8 +1938,20 @@ const UploadPage = (): JSX.Element => {
         )}
 
         {/* Bottom Controls */}
-        <div className="pb-20 pb-[env(safe-area-inset-bottom)]" style={{ paddingBottom: 'max(5rem, env(safe-area-inset-bottom))' }}>
-          <div className="flex items-center justify-center gap-4 px-8">
+        <div 
+          style={{ 
+            paddingBottom: `max(${80 * scaleFactor}px, env(safe-area-inset-bottom))` 
+          }}
+        >
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: `${16 * scaleFactor}px`,
+              padding: `0 ${32 * scaleFactor}px`,
+            }}
+          >
             {/* Gallery/Upload Button */}
             <button
               onClick={() => {
@@ -1829,7 +2055,7 @@ const UploadPage = (): JSX.Element => {
                       lineHeight: '140%'
                     }}
                   >
-                    처리 중...
+                    Getting ready...
                   </span>
                 </div>
               ) : (
@@ -1843,7 +2069,7 @@ const UploadPage = (): JSX.Element => {
                     lineHeight: '140%'
                   }}
                 >
-                  분석 시작
+                  Color Me!
                 </span>
               )}
             </button>

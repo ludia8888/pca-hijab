@@ -384,7 +384,7 @@ const HIGLandingPage: React.FC = () => {
                 lineHeight: '140%'
               }}
             >
-              Start Analysis
+              Let's Find Your Colors!
             </span>
           </button>
         </div>

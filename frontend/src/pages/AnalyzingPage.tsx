@@ -481,8 +481,8 @@ const AnalyzingPage = (): JSX.Element => {
                 margin: 0,
               }}
             >
-              AI가 당신의 얼굴 구조를<br />
-              3D로 분석하고 있어요
+              I'm analyzing your beautiful features<br />
+              This won't take long!
             </h2>
             </div>
 
@@ -536,7 +536,10 @@ const AnalyzingPage = (): JSX.Element => {
             {/* Left Button - White */}
             <button 
               onClick={() => {
-                if (currentStep > 0) {
+                if (currentStep === 0) {
+                  // On first step, go back to diagnosis page
+                  navigate(ROUTES.DIAGNOSIS);
+                } else {
                   handleGoBack();
                 }
               }}
@@ -550,24 +553,20 @@ const AnalyzingPage = (): JSX.Element => {
                 background: '#FFFFFF',
                 border: '1px solid #E0E0E0',
                 transition: 'all 0.2s ease',
-                opacity: currentStep > 0 ? 1 : 0.5,
-                pointerEvents: currentStep > 0 ? 'auto' : 'none',
+                opacity: 1, // Always enabled
+                pointerEvents: 'auto', // Always clickable
                 marginRight: `${18 * scaleFactor}px`,
               }}
               onMouseEnter={(e) => {
-                if (currentStep > 0) {
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                }
+                e.currentTarget.style.transform = 'scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
               onTouchStart={(e) => {
-                if (currentStep > 0) {
-                  e.currentTarget.style.transform = 'scale(0.98)';
-                }
+                e.currentTarget.style.transform = 'scale(0.98)';
               }}
               onTouchEnd={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
@@ -583,7 +582,7 @@ const AnalyzingPage = (): JSX.Element => {
                   lineHeight: '140%'
                 }}
               >
-                Back
+                Go Back
               </span>
             </button>
 
@@ -639,8 +638,8 @@ const AnalyzingPage = (): JSX.Element => {
                 }}
               >
                 {currentStep === ANALYSIS_STEPS.length - 1 ? 
-                  (analysisResult ? '결과 보기' : '분석 중...') : 
-                  (canSkip ? 'Next' : '분석 중...')}
+                  (analysisResult ? 'See My Colors!' : 'Almost ready...') : 
+                  (canSkip ? 'Continue' : 'Working on it...')}
               </span>
             </button>
             </div>
@@ -666,7 +665,7 @@ const AnalyzingPage = (): JSX.Element => {
                   </div>
                   {/* Character name badge */}
                   <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">
-                    AI {currentStepData.character}
+                    Noor
                   </div>
                 </div>
 

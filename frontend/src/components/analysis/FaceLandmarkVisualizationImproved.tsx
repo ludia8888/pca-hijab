@@ -48,6 +48,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const animationFrameRef = useRef<number>(0);
   const animationTimeRef = useRef<number>(0);
   const frameCountRef = useRef<number>(0);
+  const animationStartTimeRef = useRef<number>(0);
 
   // Initialize TensorFlow and face detector
   useEffect(() => {
@@ -148,36 +149,104 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   };
 
   // Draw color draping overlay as background
-  const drawColorDraping = (
-    ctx: CanvasRenderingContext2D, 
-    canvas: HTMLCanvasElement, 
-    colors: string[], 
-    side: 'left' | 'right' | 'full',
-    face: DetectedFace
-  ) => {
-    // Calculate face center for split
-    const faceKeypoints = face.keypoints;
-    const xs = faceKeypoints.map(kp => kp.x * canvas.width);
-    const faceCenterX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
+  const drawColorDraping = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, colors: string[], side: 'left' | 'right', face: DetectedFace) => {
+    const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
     
-    // Determine which side to apply color
-    let rectX = 0;
-    let rectWidth = canvas.width;
-    
-    if (side === 'left') {
-      rectWidth = faceCenterX;
-    } else if (side === 'right') {
-      rectX = faceCenterX;
-      rectWidth = canvas.width - faceCenterX;
-    }
-    
-    // Draw solid color background for the entire side
-    const mainColor = colors[Math.floor(colors.length / 2)];
-    ctx.fillStyle = mainColor;
-    ctx.fillRect(rectX, 0, rectWidth, canvas.height);
+    colors.forEach((color, i) => {
+      const yOffset = (canvas.height / colors.length) * i;
+      
+      // Create gradient that respects face center
+      const gradient = ctx.createLinearGradient(
+        side === 'left' ? 0 : canvas.width,
+        yOffset,
+        side === 'left' ? faceCenterX : faceCenterX,
+        yOffset
+      );
+      
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(0.8, color + 'CC');
+      gradient.addColorStop(1, color + '00');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(
+        side === 'left' ? 0 : faceCenterX,
+        yOffset,
+        side === 'left' ? faceCenterX : canvas.width - faceCenterX,
+        canvas.height / colors.length
+      );
+    });
   };
 
-  // Draw face landmarks on canvas with new effects
+  // Define face landmark groups for progressive activation
+  const getFaceLandmarkGroups = (keypoints: FaceLandmark[]) => {
+    // MediaPipe Face Mesh has 468 landmarks - group by facial features
+    return {
+      // Face outline (jaw and forehead)
+      outline: keypoints.filter((_, i) => 
+        (i >= 0 && i <= 16) ||     // Jaw line
+        (i >= 227 && i <= 233) ||   // Forehead
+        (i >= 172 && i <= 176) ||   // Left temple
+        (i >= 397 && i <= 401) ||   // Right temple
+        (i >= 10 && i <= 234 && i % 15 === 0) // Additional contour points
+      ),
+      // Eyes region
+      eyes: keypoints.filter((_, i) => 
+        (i >= 33 && i <= 46) ||     // Right eye area
+        (i >= 263 && i <= 276) ||   // Left eye area
+        (i >= 133 && i <= 145) ||   // Right eye details
+        (i >= 362 && i <= 374)      // Left eye details
+      ),
+      // Nose region
+      nose: keypoints.filter((_, i) => 
+        (i >= 1 && i <= 5) ||       // Nose bridge
+        (i >= 19 && i <= 20) ||     // Nose tip
+        (i >= 48 && i <= 50) ||     // Nostrils
+        (i >= 278 && i <= 280) ||   // Nose sides
+        (i >= 195 && i <= 197)      // Additional nose points
+      ),
+      // Mouth region
+      mouth: keypoints.filter((_, i) => 
+        (i >= 61 && i <= 84) ||     // Lips outer
+        (i >= 291 && i <= 307) ||   // Lips inner
+        (i >= 312 && i <= 324) ||   // Mouth corners
+        (i >= 13 && i <= 17)        // Additional mouth points
+      ),
+    };
+  };
+
+  // Draw curved bezier connections between points
+  const drawCurvedConnection = (ctx: CanvasRenderingContext2D, p1: FaceLandmark, p2: FaceLandmark, canvas: HTMLCanvasElement, opacity: number = 0.3) => {
+    const x1 = p1.x * canvas.width;
+    const y1 = p1.y * canvas.height;
+    const x2 = p2.x * canvas.width;
+    const y2 = p2.y * canvas.height;
+    
+    // Calculate control points for bezier curve
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+    const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    
+    // Create slight curve based on distance
+    const curvature = distance * 0.08;
+    const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2;
+    const ctrlX = midX + Math.cos(angle) * curvature;
+    const ctrlY = midY + Math.sin(angle) * curvature;
+    
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.strokeStyle = '#FCA5A5'; // Coral pink
+    ctx.lineWidth = 1.2;
+    ctx.shadowColor = '#FCA5A5';
+    ctx.shadowBlur = 6;
+    
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(ctrlX, ctrlY, x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // Draw face landmarks on canvas with improved effects
   const drawLandmarks = useCallback((faces: DetectedFace[], phase: string) => {
     const canvas = canvasRef.current;
     const image = imageRef.current;
@@ -186,17 +255,14 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
+    // Clear canvas and redraw image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw the image
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-    // Handle different visualization phases
+    
+    // Phase-specific visualizations for color comparisons
     if (phase === 'warm-cool') {
-      // Draw warm-cool comparison with face masking
+      // Draw warm vs cool comparison
       faces.forEach((face) => {
-        // Save state
         ctx.save();
         
         // Create inverse face mask (everything except face)
@@ -302,22 +368,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     faces.forEach((face, faceIndex) => {
       const simplePhases = {
         detecting: {
-          // More comprehensive points for better triangulation
-          points: face.keypoints.filter((_, i) => {
-            // Eye regions
-            if ((i >= 33 && i <= 46) || (i >= 263 && i <= 276)) return true;
-            // Nose
-            if ((i >= 1 && i <= 6) || (i >= 195 && i <= 197)) return true;
-            // Mouth
-            if ((i >= 13 && i <= 17) || (i >= 269 && i <= 271)) return true;
-            // Face contour
-            if ((i >= 10 && i <= 234 && i % 12 === 0) || 
-                (i >= 356 && i <= 454 && i % 12 === 0)) return true;
-            // Additional key points
-            if (i % 10 === 0) return true;
-            return false;
-          }).filter(Boolean),
-          color: '#00FF9F'
+          points: face.keypoints,
+          color: '#FCA5A5' // Coral pink for beauty/care tone
         },
         extracting: {
           points: face.keypoints.filter((_, i) => 
@@ -345,155 +397,107 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
       const currentPhase = simplePhases[phase as keyof typeof simplePhases] || simplePhases.detecting;
       
-      // Enhanced visualization for detecting phase
+      // Enhanced progressive visualization for detecting phase
       if (phase === 'detecting') {
-        const time = Date.now() * 0.001; // Time in seconds for animation
+        const elapsed = Date.now() - animationStartTimeRef.current;
+        const totalDuration = 4000; // 4 seconds for complete sequence
+        const progress = Math.min(elapsed / totalDuration, 1);
         
-        // Draw scanning lines effect
-        ctx.save();
-        ctx.strokeStyle = '#00FF9F';
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.3;
-        ctx.setLineDash([5, 10]);
+        // Get landmark groups
+        const groups = getFaceLandmarkGroups(face.keypoints);
+        const activePoints: FaceLandmark[] = [];
         
-        // Horizontal scanning line
-        const scanY = (Math.sin(time * 1.5) * 0.5 + 0.5) * canvas.height;
-        ctx.beginPath();
-        ctx.moveTo(0, scanY);
-        ctx.lineTo(canvas.width, scanY);
-        ctx.stroke();
+        // Progressive activation: outline → eyes → nose → mouth
+        if (progress > 0) {
+          // Phase 1: Face outline (0-30%)
+          const outlineProgress = Math.min(progress * 3.33, 1);
+          const outlineCount = Math.floor(groups.outline.length * outlineProgress);
+          activePoints.push(...groups.outline.slice(0, outlineCount));
+        }
         
-        // Vertical scanning line
-        const scanX = (Math.cos(time * 1.5) * 0.5 + 0.5) * canvas.width;
-        ctx.beginPath();
-        ctx.moveTo(scanX, 0);
-        ctx.lineTo(scanX, canvas.height);
-        ctx.stroke();
+        if (progress > 0.3) {
+          // Phase 2: Eyes (30-55%)
+          const eyesProgress = Math.min((progress - 0.3) * 4, 1);
+          const eyesCount = Math.floor(groups.eyes.length * eyesProgress);
+          activePoints.push(...groups.eyes.slice(0, eyesCount));
+        }
         
-        ctx.setLineDash([]); // Reset line dash
-        ctx.restore();
+        if (progress > 0.55) {
+          // Phase 3: Nose (55-75%)
+          const noseProgress = Math.min((progress - 0.55) * 5, 1);
+          const noseCount = Math.floor(groups.nose.length * noseProgress);
+          activePoints.push(...groups.nose.slice(0, noseCount));
+        }
         
-        // Optimized Delaunay-style triangulation
-        ctx.strokeStyle = currentPhase.color;
-        ctx.lineWidth = 0.5;
+        if (progress > 0.75) {
+          // Phase 4: Mouth (75-100%)
+          const mouthProgress = Math.min((progress - 0.75) * 4, 1);
+          const mouthCount = Math.floor(groups.mouth.length * mouthProgress);
+          activePoints.push(...groups.mouth.slice(0, mouthCount));
+        }
         
-        // Group points by regions for more efficient triangulation
-        const regions = {
-          leftEye: currentPhase.points.slice(0, Math.floor(currentPhase.points.length * 0.2)),
-          rightEye: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.2), Math.floor(currentPhase.points.length * 0.4)),
-          nose: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.4), Math.floor(currentPhase.points.length * 0.6)),
-          mouth: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.6), Math.floor(currentPhase.points.length * 0.8)),
-          outline: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.8))
-        };
-        
-        // Draw triangulation for each region
-        Object.values(regions).forEach((regionPoints) => {
-          for (let i = 0; i < regionPoints.length; i++) {
-            const point1 = regionPoints[i];
-            if (!point1) continue;
+        // Draw curved connections between active points
+        activePoints.forEach((point1, i) => {
+          if (!point1) return;
+          
+          // Connect to nearby points with curved lines
+          activePoints.slice(Math.max(0, i - 8), i).forEach((point2) => {
+            if (!point2) return;
             
-            const x1 = point1.x * canvas.width;
-            const y1 = point1.y * canvas.height;
+            const distance = Math.sqrt(
+              Math.pow((point2.x - point1.x) * canvas.width, 2) + 
+              Math.pow((point2.y - point1.y) * canvas.height, 2)
+            );
             
-            // Connect to 2-3 nearest points in the same region
-            for (let j = i + 1; j < Math.min(i + 3, regionPoints.length); j++) {
-              const point2 = regionPoints[j];
-              if (!point2) continue;
-              
-              const x2 = point2.x * canvas.width;
-              const y2 = point2.y * canvas.height;
-              
-              const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-              
-              if (distance < 60) {
-                // Pulsing effect based on time
-                const pulse = Math.sin(time * 2 + i * 0.1) * 0.2 + 0.3;
-                ctx.globalAlpha = pulse;
-                
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-              }
+            if (distance < 50 && distance > 5) {
+              const opacity = 0.25 * (1 - distance / 50) * Math.min(progress * 2, 1);
+              drawCurvedConnection(ctx, point1, point2, canvas, opacity);
             }
-          }
+          });
         });
         
-        // Draw feature detection boxes
+        // Override points for dot drawing
+        currentPhase.points = activePoints;
+        
+        // Draw subtle scanning effect
+        const time = Date.now() * 0.001;
         ctx.save();
-        ctx.strokeStyle = '#00FF9F';
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = 0.5;
-        ctx.setLineDash([3, 3]);
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        gradient.addColorStop(0, 'rgba(252, 165, 165, 0)');
+        gradient.addColorStop(0.5, 'rgba(252, 165, 165, 0.1)');
+        gradient.addColorStop(1, 'rgba(252, 165, 165, 0)');
         
-        // Eye detection boxes with corner brackets
-        const leftEyePoints = face.keypoints.slice(33, 46);
-        const rightEyePoints = face.keypoints.slice(263, 276);
-        
-        [leftEyePoints, rightEyePoints].forEach((eyePoints) => {
-          if (eyePoints.length > 0) {
-            const xs = eyePoints.map(p => p.x * canvas.width);
-            const ys = eyePoints.map(p => p.y * canvas.height);
-            const minX = Math.min(...xs) - 10;
-            const maxX = Math.max(...xs) + 10;
-            const minY = Math.min(...ys) - 10;
-            const maxY = Math.max(...ys) + 10;
-            
-            const cornerSize = 8;
-            ctx.beginPath();
-            // Top-left corner
-            ctx.moveTo(minX + cornerSize, minY);
-            ctx.lineTo(minX, minY);
-            ctx.lineTo(minX, minY + cornerSize);
-            // Top-right corner
-            ctx.moveTo(maxX - cornerSize, minY);
-            ctx.lineTo(maxX, minY);
-            ctx.lineTo(maxX, minY + cornerSize);
-            // Bottom-left corner
-            ctx.moveTo(minX + cornerSize, maxY);
-            ctx.lineTo(minX, maxY);
-            ctx.lineTo(minX, maxY - cornerSize);
-            // Bottom-right corner
-            ctx.moveTo(maxX - cornerSize, maxY);
-            ctx.lineTo(maxX, maxY);
-            ctx.lineTo(maxX, maxY - cornerSize);
-            ctx.stroke();
-          }
-        });
-        
-        ctx.setLineDash([]);
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = 0.3 * Math.sin(time * 2);
+        const scanY = (Math.sin(time * 1.5) * 0.5 + 0.5) * canvas.height;
+        ctx.fillRect(0, scanY - 20, canvas.width, 40);
         ctx.restore();
       } else {
-        // Original mesh for other phases
+        // Simple connections for other phases
         ctx.strokeStyle = currentPhase.color;
         ctx.lineWidth = 0.5;
-        ctx.globalAlpha = 0.2;
         
-        currentPhase.points.forEach((point1, i) => {
-          if (!point1) return;
+        for (let i = 0; i < currentPhase.points.length - 1; i++) {
+          const point1 = currentPhase.points[i];
+          const point2 = currentPhase.points[i + 1];
+          if (!point1 || !point2) continue;
           
           const x1 = point1.x * canvas.width;
           const y1 = point1.y * canvas.height;
+          const x2 = point2.x * canvas.width;
+          const y2 = point2.y * canvas.height;
           
-          for (let j = i + 1; j < Math.min(i + 4, currentPhase.points.length); j++) {
-            const point2 = currentPhase.points[j];
-            if (!point2) continue;
+          const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          
+          if (distance < 40) {
+            ctx.globalAlpha = Math.max(0.1, 0.4 - (distance / 100));
             
-            const x2 = point2.x * canvas.width;
-            const y2 = point2.y * canvas.height;
-            
-            const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-            
-            if (distance < 50) {
-              ctx.globalAlpha = Math.max(0.1, 0.3 - (distance / 100));
-              
-              ctx.beginPath();
-              ctx.moveTo(x1, y1);
-              ctx.lineTo(x2, y2);
-              ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
           }
-        });
+        }
       }
       
       // Reset alpha for dots
@@ -505,51 +509,45 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
         const x = landmark.x * canvas.width;
         const y = landmark.y * canvas.height;
+        const time = Date.now() * 0.001;
         
         if (phase === 'detecting') {
-          const time = Date.now() * 0.001;
-          
-          // Animated dot size for scanning effect
-          const baseSize = 2;
-          const pulse = Math.sin(time * 3 + index * 0.15) * 0.5 + 1;
+          // Smooth animated dots with coral pink glow
+          const baseSize = 2.5;
+          const pulse = Math.sin(time * 2 + index * 0.08) * 0.3 + 1;
           const size = baseSize * pulse;
           
-          // Glowing effect
-          ctx.fillStyle = currentPhase.color;
-          ctx.shadowColor = currentPhase.color;
-          ctx.shadowBlur = 8 * pulse;
+          // Create gradient for each dot
+          const dotGradient = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
+          dotGradient.addColorStop(0, 'rgba(255, 212, 212, 0.9)'); // Light coral core
+          dotGradient.addColorStop(0.3, 'rgba(252, 165, 165, 0.8)'); // Coral pink
+          dotGradient.addColorStop(1, 'rgba(252, 165, 165, 0)'); // Transparent edge
           
-          // Key features get stronger emphasis
-          const isKeyFeature = index % 5 === 0 || index < 10;
-          ctx.globalAlpha = isKeyFeature ? 0.8 : 0.5;
+          // Draw soft glow halo
+          ctx.save();
+          ctx.fillStyle = dotGradient;
+          ctx.globalAlpha = 0.6 * pulse;
+          ctx.beginPath();
+          ctx.arc(x, y, size * 3, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
           
-          // Draw outer ring for key features
-          if (isKeyFeature) {
-            ctx.save();
-            ctx.strokeStyle = currentPhase.color;
-            ctx.lineWidth = 1;
-            ctx.globalAlpha = 0.3;
-            ctx.beginPath();
-            ctx.arc(x, y, size + 3, 0, 2 * Math.PI);
-            ctx.stroke();
-            ctx.restore();
-          }
-          
-          // Draw main dot
-          ctx.globalAlpha = 0.7;
+          // Main dot with coral pink
+          ctx.fillStyle = '#FCA5A5';
+          ctx.shadowColor = '#FCA5A5';
+          ctx.shadowBlur = 10 * pulse;
+          ctx.globalAlpha = 0.85;
           ctx.beginPath();
           ctx.arc(x, y, size, 0, 2 * Math.PI);
           ctx.fill();
           
-          // Add coordinate display for some points
-          if (index % 15 === 0) {
-            ctx.save();
-            ctx.font = '8px monospace';
-            ctx.fillStyle = currentPhase.color;
-            ctx.globalAlpha = 0.4;
-            ctx.fillText(`[${Math.round(landmark.x * 100)},${Math.round(landmark.y * 100)}]`, x + 5, y - 5);
-            ctx.restore();
-          }
+          // Inner bright core for sparkle effect
+          ctx.fillStyle = '#FFE5E5';
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 0.95;
+          ctx.beginPath();
+          ctx.arc(x, y, size * 0.3, 0, 2 * Math.PI);
+          ctx.fill();
         } else {
           // Original dots for other phases
           const baseSize = 2.5;
@@ -577,129 +575,52 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   // Map analysis steps to animation phases
   const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'warm-cool' | 'season' | 'complete' => {
     const phaseMap = {
-      0: 'detecting' as const,    // face-detection
-      1: 'extracting' as const,   // color-extraction
-      2: 'warm-cool' as const,    // warm-cool-comparison
-      3: 'season' as const,       // season-comparison
-      4: 'complete' as const,     // final-result
-    };
+      0: 'detecting',
+      1: 'extracting',  
+      2: 'warm-cool',
+      3: 'season',
+      4: 'complete'
+    } as const;
+    
     return phaseMap[step as keyof typeof phaseMap] || 'detecting';
   };
 
-  // Detect face landmarks with memory management
+  // Detect face landmarks
   const detectLandmarks = useCallback(async () => {
     if (!detector || !imageRef.current) return;
-    
-    // Ensure image is fully loaded
-    if (!imageRef.current.complete || imageRef.current.naturalWidth === 0) {
-      console.warn('⚠️ Image not fully loaded, retrying...');
-      setTimeout(() => detectLandmarks(), 500);
-      return;
-    }
 
     try {
-      console.log('🔍 [Synchronized] Starting face landmark detection...');
-      console.log(`📐 Image dimensions: ${imageRef.current.width}x${imageRef.current.height}`);
+      const predictions = await detector.estimateFaces(imageRef.current);
       
-      // Ensure TensorFlow is ready
-      const tf = await getTensorFlow();
-      if (!tf || !tf.engine()) {
-        console.error('❌ TensorFlow engine not initialized');
-        setError('AI engine not ready. Please refresh the page.');
-        return;
-      }
-      
-      // Async operations cannot be wrapped with tf.tidy - use manual cleanup
-      const faces = await detector.estimateFaces(imageRef.current);
-      console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
-
-      // Manually clean up any tensors that might have been created
-      // tf is already declared above
-      if (tf && tf.engine) {
-        const numTensorsBeforeCleanup = tf.memory().numTensors;
-        tf.engine().startScope();
-        tf.engine().endScope();
-        const numTensorsAfterCleanup = tf.memory().numTensors;
+      if (predictions.length > 0) {
+        const faces: DetectedFace[] = predictions.map(prediction => ({
+          keypoints: prediction.keypoints as FaceLandmark[],
+          box: prediction.box as any
+        }));
         
-        if (numTensorsBeforeCleanup > numTensorsAfterCleanup) {
-          console.log(`🧹 [Memory] Cleaned ${numTensorsBeforeCleanup - numTensorsAfterCleanup} leaked tensors in static detection`);
+        setLandmarks(faces);
+        
+        // Initial draw
+        drawLandmarks(faces, animationPhase);
+        
+        // Notify parent component
+        if (onLandmarksDetected) {
+          onLandmarksDetected(faces);
         }
+      } else {
+        console.warn('⚠️ [FaceLandmark] No faces detected in image');
+        setError('No face detected. Please ensure your face is clearly visible in the photo.');
       }
-
-      if (faces.length === 0) {
-        setError('No faces detected in the image');
-        return;
-      }
-
-      // Convert to our interface format
-      const detectedFaces: DetectedFace[] = faces.map(face => {
-        // Handle cases where box might be undefined
-        let box: DetectedFace['box'];
-        
-        if (face.box) {
-          box = {
-            xMin: face.box.xMin / imageRef.current!.width,
-            yMin: face.box.yMin / imageRef.current!.height,
-            xMax: face.box.xMax / imageRef.current!.width,
-            yMax: face.box.yMax / imageRef.current!.height,
-            width: face.box.width / imageRef.current!.width,
-            height: face.box.height / imageRef.current!.height,
-          };
-        } else {
-          // Calculate bounding box from keypoints if box is not provided
-          const xs = face.keypoints.map(kp => kp.x);
-          const ys = face.keypoints.map(kp => kp.y);
-          const minX = Math.min(...xs) / imageRef.current!.width;
-          const maxX = Math.max(...xs) / imageRef.current!.width;
-          const minY = Math.min(...ys) / imageRef.current!.height;
-          const maxY = Math.max(...ys) / imageRef.current!.height;
-          
-          box = {
-            xMin: minX,
-            yMin: minY,
-            xMax: maxX,
-            yMax: maxY,
-            width: maxX - minX,
-            height: maxY - minY,
-          };
-        }
-        
-        return {
-          keypoints: face.keypoints.map(kp => ({
-            x: kp.x / imageRef.current!.width,
-            y: kp.y / imageRef.current!.height,
-            z: (kp as any).z || 0,
-            name: (kp as any).name
-          })),
-          box
-        };
-      });
-
-      setLandmarks(detectedFaces);
-      console.log('🎯 [Synchronized] Face landmarks ready - waiting for character sync');
-
-      if (onLandmarksDetected) {
-        onLandmarksDetected(detectedFaces);
-      }
-
     } catch (err) {
-      console.error('❌ Face detection failed:', err);
+      console.error('❌ [FaceLandmark] Detection error:', err);
       
-      // Check if it's a TensorFlow initialization error
-      if (err instanceof Error && (err.message.includes('is not a function') || err.message.includes('tf.'))) {
-        console.error('🔄 TensorFlow initialization error detected, reinitializing...');
-        setError('AI model initialization failed. Reloading page...');
-        
-        // Clear service worker cache and reload
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => caches.delete(name));
-          });
-        }
+      // Check if it's a memory/WebGL issue
+      if (err instanceof Error && err.message.includes('WebGL')) {
+        setError('Graphics memory issue. Refreshing page...');
         
         // Force hard reload after a short delay
         setTimeout(() => {
-          window.location.reload(true);
+          window.location.reload();
         }, 1500);
       } else {
         // For other errors, show generic message
@@ -717,7 +638,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         console.warn('Cleanup error:', cleanupError);
       }
     }
-  }, [detector, onLandmarksDetected]);
+  }, [detector, onLandmarksDetected, animationPhase, drawLandmarks]);
 
   // Handle image load
   const handleImageLoad = useCallback(() => {
@@ -731,6 +652,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
     // Start detection if detector is ready
     if (detector) {
+      animationStartTimeRef.current = Date.now(); // Record animation start time
       detectLandmarks();
     }
   }, [detector, detectLandmarks]);
@@ -738,27 +660,27 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   // Start detection when detector is ready and image is loaded
   useEffect(() => {
     if (detector && imageRef.current?.complete) {
+      animationStartTimeRef.current = Date.now(); // Record animation start time
       detectLandmarks();
     }
   }, [detector, detectLandmarks]);
 
-  // Animation loop for detecting phase with performance optimization
+  // Animation loop for detecting phase with smooth performance
   useEffect(() => {
     let animationId: number;
     
     const animate = () => {
       if (animationPhase === 'detecting' && landmarks.length > 0) {
-        // Update every 2 frames for balance between smoothness and performance
-        if (frameCountRef.current % 2 === 0) {
-          drawLandmarks(landmarks, 'detecting');
-        }
-        frameCountRef.current++;
+        // Smooth 60fps animation
+        drawLandmarks(landmarks, 'detecting');
         animationId = requestAnimationFrame(animate);
       }
     };
     
     if (animationPhase === 'detecting' && landmarks.length > 0) {
-      frameCountRef.current = 0;
+      if (animationStartTimeRef.current === 0) {
+        animationStartTimeRef.current = Date.now();
+      }
       animate();
     }
     

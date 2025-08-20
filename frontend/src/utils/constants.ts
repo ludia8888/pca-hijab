@@ -79,50 +79,50 @@ export const ANALYSIS_STEPS = [
     character: 'detective',
     characterImage: '/images/characters/detective-analyzing.png',
     speechBubble: '/images/speech-bubbles/bubble-1.png',
-    message: '얼굴의 478개 포인트를 정밀 스캔 중이에요! AI가 당신의 얼굴 구조를 3D로 분석하고 있어요 🕵️‍♀️',
+    message: "Wow, your face is gorgeous! I'm mapping 478 unique points to understand your features perfectly 🕵️‍♀️",
     progress: 20,
     duration: 4000,
-    techExplanation: 'MediaPipe Face Mesh로 얼굴 구조 매핑 중'
+    techExplanation: 'Creating your 3D facial structure map'
   },
   {
     id: 'color-extraction',
     character: 'scientist',
     characterImage: '/images/characters/scientist-extracting.png',
     speechBubble: '/images/speech-bubbles/bubble-2.png',
-    message: '피부톤, 홍조, 혈색을 추출하고 있어요! 이마, 볼, 턱에서 색상 데이터를 수집 중이에요 🔬',
+    message: "Looking at your natural skin tone now! I'm checking your forehead, cheeks, and jawline for the perfect color match 🔬",
     progress: 40,
     duration: 4000,
-    techExplanation: '주요 얼굴 부위에서 색상 샘플링 진행 중'
+    techExplanation: 'Extracting color data from key facial zones'
   },
   {
     id: 'warm-cool-comparison',
     character: 'wizard',
     characterImage: '/images/characters/wizard-converting.png',
     speechBubble: '/images/speech-bubbles/bubble-3.png',
-    message: '웜톤과 쿨톤을 비교 중이에요! 황색 언더톤과 핑크 언더톤 중 어느 것이 더 어울리는지 분석해요 🎨',
+    message: "Time for some color magic! Let me see if golden or rosy undertones suit you better 🎨",
     progress: 60,
     duration: 5000,
-    techExplanation: '피부 언더톤과 혈색을 기반으로 웜/쿨 판별'
+    techExplanation: 'Analyzing warm vs cool undertones'
   },
   {
     id: 'season-comparison',
     character: 'analyst',
     characterImage: '/images/characters/analyst-thinking.png',
     speechBubble: '/images/speech-bubbles/bubble-4.png',
-    message: '4계절 중 가장 어울리는 시즌을 찾고 있어요! 명도와 채도를 분석해서 최적의 계절을 선정해요 📊',
+    message: "Almost there! I'm finding which season's colors will make you absolutely glow 📊",
     progress: 80,
     duration: 5000,
-    techExplanation: '명도, 채도, 대비도를 기반으로 계절 타입 결정'
+    techExplanation: 'Determining your seasonal color type'
   },
   {
     id: 'final-result',
     character: 'artist',
     characterImage: '/images/characters/artist-creating.png',
     speechBubble: '/images/speech-bubbles/bubble-5.png',
-    message: '당신만의 퍼스널 컬러 팔레트를 완성하고 있어요! 맞춤형 히잡 색상을 추천 준비 중이에요 ✨',
+    message: "Yes! I've found your perfect colors! Let me create your personalized hijab palette ✨",
     progress: 100,
     duration: 3000,
-    techExplanation: '개인 맞춤 컬러 팔레트 생성 완료'
+    techExplanation: 'Finalizing your custom color recommendations'
   },
 ];
 

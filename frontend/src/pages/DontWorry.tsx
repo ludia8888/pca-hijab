@@ -19,6 +19,10 @@ const DontWorry: React.FC = () => {
     navigate(ROUTES.DIAGNOSIS);
   };
 
+  const handleBack = () => {
+    navigate(ROUTES.LANDING);
+  };
+
   // Calculate optimal scale to prevent overlapping
   useEffect(() => {
     const calculateScale = () => {
@@ -138,6 +142,42 @@ const DontWorry: React.FC = () => {
         bottom: 0,
       }}
     >
+      {/* Back Button - Top Left */}
+      <button
+        onClick={handleBack}
+        className="absolute z-50 transition-opacity hover:opacity-60"
+        style={{
+          top: `${20 * scaleFactor}px`,
+          left: `${20 * scaleFactor}px`,
+          width: `${32 * scaleFactor}px`,
+          height: `${32 * scaleFactor}px`,
+          background: 'transparent',
+          border: `${1 * scaleFactor}px solid rgba(59, 19, 137, 0.15)`,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+        aria-label="Go back"
+      >
+        <svg 
+          width={`${18 * scaleFactor}px`} 
+          height={`${18 * scaleFactor}px`} 
+          viewBox="0 0 24 24" 
+          fill="none"
+          style={{ marginRight: `${2 * scaleFactor}px` }}
+        >
+          <path 
+            d="M15 18L9 12L15 6" 
+            stroke="rgba(59, 19, 137, 0.4)" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
       {/* Main Container - 402x874 기준 with dynamic scale */}
       <div 
         className="relative"
@@ -389,7 +429,7 @@ const DontWorry: React.FC = () => {
                 lineHeight: '140%'
               }}
             >
-              Next
+              I'm Ready!
             </span>
           </button>
         </div>

@@ -44,18 +44,18 @@ export interface ProductFilters {
 
 // Category labels for UI
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  hijab: '히잡',
-  lens: '렌즈',
-  lip: '립',
-  eyeshadow: '아이쉐도우'
+  hijab: 'Hijab',
+  lens: 'Contact Lens',
+  lip: 'Lipstick',
+  eyeshadow: 'Eyeshadow'
 };
 
 // Personal color labels for UI
 export const PERSONAL_COLOR_LABELS: Record<PersonalColorType, string> = {
-  spring_warm: '봄 웜톤',
-  autumn_warm: '가을 웜톤',
-  summer_cool: '여름 쿨톤',
-  winter_cool: '겨울 쿨톤'
+  spring_warm: 'Spring Warm',
+  autumn_warm: 'Autumn Warm',
+  summer_cool: 'Summer Cool',
+  winter_cool: 'Winter Cool'
 };
 
 // Content-related types
@@ -97,15 +97,15 @@ export interface ContentFormData {
 
 // Content category labels for UI
 export const CONTENT_CATEGORY_LABELS: Record<ContentCategory, string> = {
-  beauty_tips: '뷰티 팁',
-  hijab_styling: '히잡 스타일링',
-  color_guide: '컬러 가이드',
-  trend: '트렌드',
-  tutorial: '튜토리얼'
+  beauty_tips: 'Beauty Tips',
+  hijab_styling: 'Hijab Styling',
+  color_guide: 'Color Guide',
+  trend: 'Trend',
+  tutorial: 'Tutorial'
 };
 
 // Content status labels for UI
 export const CONTENT_STATUS_LABELS: Record<ContentStatus, string> = {
-  draft: '임시저장',
-  published: '발행됨'
+  draft: 'Draft',
+  published: 'Published'
 };

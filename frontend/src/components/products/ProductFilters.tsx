@@ -34,7 +34,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
     <>
       {/* Categories */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">카테고리</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Category</h3>
         <div className="space-y-2">
           {categories.map((category) => (
             <button
@@ -54,7 +54,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
 
       {/* Personal Colors */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">퍼스널 컬러</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Personal Color</h3>
         <div className="space-y-2">
           {personalColors.map((color) => (
             <button
@@ -81,7 +81,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
           icon={<X className="w-4 h-4" />}
           fullWidth
         >
-          필터 초기화
+          Clear Filters
         </Button>
       )}
     </>
@@ -97,7 +97,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="상품 검색..."
+            placeholder="Search products..."
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
           {searchTerm && (
@@ -120,7 +120,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
           icon={<Filter className="w-4 h-4" />}
           fullWidth
         >
-          필터 {hasActiveFilters && `(${selectedCategories.length + selectedColors.length})`}
+          Filter {hasActiveFilters && `(${selectedCategories.length + selectedColors.length})`}
         </Button>
       </div>
 
@@ -137,7 +137,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">필터</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
               <button
                 onClick={() => setShowMobileFilters(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg"

@@ -117,7 +117,7 @@ const ResultPage = (): JSX.Element => {
             }
             
             setHasSavedToProfile(true);
-            toast.success('퍼스널 컬러 진단 결과가 프로필에 저장되었습니다');
+            toast.success('Your personal color analysis has been saved to your profile!');
             trackEvent('diagnosis_saved_to_profile', {
               personal_color: analysisResult.personal_color_en,
               confidence: analysisResult.confidence || 0

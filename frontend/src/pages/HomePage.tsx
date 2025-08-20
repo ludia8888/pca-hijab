@@ -82,7 +82,7 @@ const HomePage = (): JSX.Element => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <Text color="gray">로딩 중...</Text>
+            <Text color="gray">Loading...</Text>
           </div>
         </div>
       </PageLayout>
@@ -121,7 +121,7 @@ const HomePage = (): JSX.Element => {
                         </span>
                         {content.viewCount > 100 && (
                           <span className="px-3 py-1 bg-primary-400/80 backdrop-blur-sm rounded-full text-sm">
-                            🔥 인기
+                            🔥 Popular
                           </span>
                         )}
                       </div>
@@ -193,9 +193,9 @@ const HomePage = (): JSX.Element => {
                 <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Eye className="w-10 h-10 text-gray-400" />
                 </div>
-                <Text variant="h3" color="gray" mb="2">콘텐츠가 준비 중입니다</Text>
+                <Text variant="h3" color="gray" mb="2">Content coming soon!</Text>
                 <Text variant="body" color="gray" className="opacity-70">
-                  곧 유용한 뷰티 팁과 컬러 가이드를 만나보실 수 있습니다
+                  Amazing beauty tips and color guides are on the way!
                 </Text>
               </div>
             </div>
@@ -206,16 +206,16 @@ const HomePage = (): JSX.Element => {
         {products.length > 0 ? (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
-              <Text variant="h2" color="gray">추천 상품</Text>
+              <Text variant="h2" color="gray">Recommended for You</Text>
               <button
                 onClick={() => {
-                  if (checkAuth('상품 카탈로그')) {
+                  if (checkAuth('product catalog')) {
                     navigate('/products');
                   }
                 }}
                 className="px-4 py-2 text-primary-400 hover:text-primary-600 font-medium flex items-center gap-2 group transition-colors"
               >
-                더알아보기
+                See More
                 <svg 
                   className="w-4 h-4 group-hover:translate-x-1 transition-transform" 
                   fill="none" 
@@ -232,7 +232,7 @@ const HomePage = (): JSX.Element => {
                   key={product.id}
                   className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden"
                   onClick={() => {
-                    if (checkAuth('상품 상세정보')) {
+                    if (checkAuth('product details')) {
                       navigate(`/products/${product.id}`);
                     }
                   }}
@@ -270,7 +270,7 @@ const HomePage = (): JSX.Element => {
           /* Empty state for products */
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
-              <Text variant="h2" color="gray">추천 상품</Text>
+              <Text variant="h2" color="gray">Recommended for You</Text>
             </div>
             <div className="bg-gray-50 rounded-lg p-12 text-center">
               <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -278,15 +278,15 @@ const HomePage = (): JSX.Element => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
               </div>
-              <Text variant="h3" color="gray" mb="2">상품이 준비 중입니다</Text>
+              <Text variant="h3" color="gray" mb="2">Products coming soon!</Text>
               <Text variant="body" color="gray" className="opacity-70">
-                곧 아름다운 히잡과 뷰티 제품을 만나보실 수 있습니다
+                Beautiful hijabs and beauty products are on the way!
               </Text>
               <button
                 onClick={() => navigate('/diagnosis')}
                 className="mt-6 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-bold rounded-full hover:from-primary-700 hover:to-primary-800 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-primary-500"
               >
-                🎨 퍼스널 컬러 진단 받기
+                🎨 Find My Colors
               </button>
             </div>
           </div>

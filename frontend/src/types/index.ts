@@ -147,18 +147,18 @@ export interface Product {
 
 // Category labels for UI
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  hijab: '히잡',
-  lens: '렌즈',
-  lip: '립',
-  eyeshadow: '아이쉐도우'
+  hijab: 'Hijab',
+  lens: 'Contact Lens',
+  lip: 'Lipstick',
+  eyeshadow: 'Eyeshadow'
 };
 
 // Personal color labels for UI
 export const PERSONAL_COLOR_LABELS: Record<PersonalColorType, string> = {
-  spring_warm: '봄 웜톤',
-  autumn_warm: '가을 웜톤',
-  summer_cool: '여름 쿨톤',
-  winter_cool: '겨울 쿨톤'
+  spring_warm: 'Spring Warm',
+  autumn_warm: 'Autumn Warm',
+  summer_cool: 'Summer Cool',
+  winter_cool: 'Winter Cool'
 };
 
 // Content Types

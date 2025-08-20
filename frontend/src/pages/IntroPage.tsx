@@ -63,7 +63,7 @@ const IntroPage = (): JSX.Element => {
       // Provide more specific error messages
       if (error && typeof error === 'object' && 'detail' in error) {
         const apiError = error as { detail: string; error: string };
-        if (apiError.detail.includes('네트워크')) {
+        if (apiError.detail.includes('network') || apiError.detail.includes('네트워크')) {
           setError('Network connection error. Please check your internet connection.');
         } else {
           setError(apiError.detail || 'Failed to create session. Please try again.');

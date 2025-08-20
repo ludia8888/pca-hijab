@@ -146,7 +146,7 @@ const PhotoGuide: React.FC = () => {
                 margin: 0,
               }}
             >
-              촬영 가이드
+              Quick tips for the perfect selfie
             </p>
           </div>
           
@@ -257,7 +257,7 @@ const PhotoGuide: React.FC = () => {
                   lineHeight: '140%'
                 }}
               >
-                Next
+                Got It, Let's Go!
               </span>
             </button>
           </div>
