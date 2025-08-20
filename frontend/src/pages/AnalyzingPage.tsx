@@ -658,8 +658,8 @@ const AnalyzingPage = (): JSX.Element => {
             </button>
             </div>
 
-            {/* Character and Speech Bubble - Always positioned consistently */}
-            {!error && (
+            {/* Character and Speech Bubble - Show after scan completes for Step 1 */}
+            {!error && (currentStep === 0 ? canSkip : true) && (
               <div 
                 key={`character-${currentStep}`}
                 className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
