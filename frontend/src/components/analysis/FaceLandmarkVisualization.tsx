@@ -48,6 +48,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const frameCountRef = useRef<number>(0);
   const animationStartTimeRef = useRef<number>(0);
   const scanCompleteRef = useRef<boolean>(false);
+  const detectionStartedRef = useRef<boolean>(false);
 
   // Initialize TensorFlow and face detector
   useEffect(() => {
@@ -859,8 +860,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     canvas.width = image.width;
     canvas.height = image.height;
 
-    // Start detection if detector is ready
-    if (detector) {
+    // Start detection if detector is ready and not already started
+    if (detector && !detectionStartedRef.current) {
+      detectionStartedRef.current = true; // Mark as started
       animationStartTimeRef.current = Date.now(); // Record animation start time for Step 1
       scanCompleteRef.current = false; // Reset scan complete flag
       detectLandmarks();
@@ -869,9 +871,11 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
   // Start detection when detector is ready and image is loaded
   useEffect(() => {
-    if (detector && imageRef.current?.complete) {
-      animationStartTimeRef.current = Date.now(); // Record animation start time for Step 1
-      scanCompleteRef.current = false; // Reset scan complete flag
+    if (detector && imageRef.current?.complete && !detectionStartedRef.current) {
+      // Only start if not already started by handleImageLoad
+      detectionStartedRef.current = true;
+      animationStartTimeRef.current = Date.now();
+      scanCompleteRef.current = false;
       detectLandmarks();
     }
   }, [detector, detectLandmarks]);
@@ -933,6 +937,12 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       if (targetPhase !== animationPhase) {
         console.log(`🎯 [Sync] Character step ${currentAnalysisStep} → Animation phase: ${targetPhase}`);
         setAnimationPhase(targetPhase);
+        // Reset detection flag when phase changes to allow re-detection if needed
+        if (targetPhase === 'detecting') {
+          detectionStartedRef.current = false;
+          animationStartTimeRef.current = Date.now();
+          scanCompleteRef.current = false;
+        }
         drawLandmarks(landmarks, targetPhase);
       }
     }
