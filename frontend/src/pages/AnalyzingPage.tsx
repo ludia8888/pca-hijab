@@ -488,7 +488,7 @@ const AnalyzingPage = (): JSX.Element => {
                 margin: 0,
               }}
             >
-              I'm analyzing your beautiful features<br />
+              I'm analyzing your features<br />
               This won't take long!
             </h2>
             </div>

@@ -79,7 +79,7 @@ export const ANALYSIS_STEPS = [
     character: 'detective',
     characterImage: '/images/characters/detective-analyzing.png',
     speechBubble: '/images/speech-bubbles/bubble-1.png',
-    message: "Wow, your face is gorgeous! I'm mapping 478 unique points to understand your features perfectly 🕵️‍♀️",
+    message: "Aha! Found 478 clues on your face 🕵️‍♀️",
     progress: 20,
     duration: 4000,
     techExplanation: 'Creating your 3D facial structure map'

@@ -50,33 +50,33 @@ interface ImageAnalysisErrorInfo {
 export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysisErrorInfo> = {
   [ImageAnalysisErrorType.NO_FACE_DETECTED]: {
     title: 'Oh! Where did you go?',
-    message: 'I can\'t seem to find your beautiful face in this photo!',
+    message: 'Oops, can\'t find a face here!',
     solutions: [
-      'Let\'s try a clear selfie with your face visible',
-      'Come a bit closer to the camera',
-      'Find some nice natural light - you\'ll look amazing!'
+      'Need a clear selfie!',
+      'Come closer to the camera',
+      'Try better lighting'
     ],
     icon: '👤',
     severity: 'error'
   },
   
   [ImageAnalysisErrorType.MULTIPLE_FACES]: {
-    title: 'Too many beautiful faces!',
+    title: 'Multiple faces detected!',
     message: 'This analysis is just for you! Let\'s use a solo photo.',
     solutions: [
-      'Take a selfie with just you in the frame',
-      'We need to focus on your unique colors!'
+      'Need a solo photo!',
+      'Just you in the frame'
     ],
     icon: '👥',
     severity: 'warning'
   },
   
   [ImageAnalysisErrorType.FACE_TOO_SMALL]: {
-    title: 'Come closer, beautiful!',
-    message: 'I need to see your gorgeous face better!',
+    title: 'Come closer!',
+    message: 'Need a clearer view of your face!',
     solutions: [
-      'Move closer to the camera - don\'t be shy!',
-      'Let your face fill most of the frame'
+      'Move closer!',
+      'Fill the frame with your face'
     ],
     icon: '🔍',
     severity: 'warning'
@@ -109,9 +109,9 @@ export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysis
     title: 'Let\'s add some light!',
     message: 'It\'s a bit too dark for me to see your natural colors.',
     solutions: [
-      'Find a bright spot - you deserve to shine!',
-      'Natural window light is perfect',
-      'Turn on those lights and let\'s try again!'
+      'Need more light!',
+      'Try window light',
+      'Turn on the lights'
     ],
     icon: '🌙',
     severity: 'error'
@@ -119,11 +119,11 @@ export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysis
   
   [ImageAnalysisErrorType.TOO_BRIGHT]: {
     title: 'Whoa, too bright!',
-    message: 'The light is washing out your beautiful colors!',
+    message: 'Too bright to see your natural tones!',
     solutions: [
-      'Step away from direct bright light',
-      'Try soft, indirect lighting instead',
-      'No flash needed - you\'re glowing already!'
+      'Step away from direct light',
+      'Try softer lighting',
+      'No flash needed'
     ],
     icon: '☀️',
     severity: 'error'
@@ -155,11 +155,11 @@ export const IMAGE_ANALYSIS_ERRORS: Record<ImageAnalysisErrorType, ImageAnalysis
   
   [ImageAnalysisErrorType.IMAGE_BLURRY]: {
     title: 'A bit fuzzy there!',
-    message: 'Let\'s get a crystal clear shot of your beauty!',
+    message: 'Need a clearer shot!',
     solutions: [
-      'Hold still for just a moment',
-      'Tap to focus on your face first',
-      'Good lighting helps the camera focus better!'
+      'Hold still!',
+      'Tap to focus',
+      'Better lighting helps'
     ],
     icon: '📸',
     severity: 'warning'

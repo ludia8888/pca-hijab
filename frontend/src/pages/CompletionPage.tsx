@@ -94,7 +94,7 @@ const CompletionPage = (): JSX.Element => {
 
       trackEngagement('download', 'completion_result_image');
       
-      // Generate the beautiful enhanced result card
+      // Generate the enhanced result card
       const blob = await generateResultCard(analysisResult, '');
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `hijab_personal_color_${timestamp}.jpg`;

@@ -280,7 +280,7 @@ const HomePage = (): JSX.Element => {
               </div>
               <Text variant="h3" color="gray" mb="2">Products coming soon!</Text>
               <Text variant="body" color="gray" className="opacity-70">
-                Beautiful hijabs and beauty products are on the way!
+                Hijabs and beauty products are on the way!
               </Text>
               <button
                 onClick={() => navigate('/diagnosis')}
