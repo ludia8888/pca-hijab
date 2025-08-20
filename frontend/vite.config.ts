@@ -34,13 +34,14 @@ export default defineConfig(({ command, mode }) => ({
     outDir: 'dist',
     // Disable source maps in production for security
     sourcemap: mode !== 'production',
-    // Minify for production and remove console logs
+    // Minify for production but KEEP console logs for debugging camera issue
     minify: mode === 'production' ? 'terser' : false,
     terserOptions: mode === 'production' ? {
       compress: {
-        drop_console: true, // Remove all console.* statements in production
+        drop_console: false, // TEMPORARILY KEEP console statements for debugging
         drop_debugger: true, // Remove debugger statements
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+        // Don't remove any console functions for now
+        // pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
       },
       format: {
         comments: false // Remove comments
