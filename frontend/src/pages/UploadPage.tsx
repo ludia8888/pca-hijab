@@ -337,40 +337,10 @@ const UploadPage = (): JSX.Element => {
     
     console.log('✅ [Camera API] getUserMedia is available');
     
-    // Check camera permissions first if available
-    if (navigator.permissions && navigator.permissions.query) {
-      try {
-        console.log('🔍 [Camera API] Checking camera permissions...');
-        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
-        console.log('📷 [Camera API] Permission status:', {
-          state: permissionStatus.state,
-          name: 'camera',
-          timestamp: new Date().toISOString()
-        });
-        
-        // Add listener for permission changes
-        permissionStatus.addEventListener('change', () => {
-          console.log('📷 [Camera API] Permission changed to:', permissionStatus.state);
-        });
-        
-        if (permissionStatus.state === 'denied') {
-          console.error('❌ [Camera API] Permission denied by user');
-          setCameraError('Camera permission was denied. Please enable camera access in your browser settings.');
-          setIsCameraActive(false);
-          isCameraActiveRef.current = false;
-          return;
-        }
-      } catch (err) {
-        console.log('⚠️ [Camera API] Could not check permissions:', err);
-        console.log('⚠️ [Camera API] Error details:', {
-          name: (err as Error).name,
-          message: (err as Error).message,
-          stack: (err as Error).stack
-        });
-      }
-    } else {
-      console.log('⚠️ [Camera API] Permissions API not available');
-    }
+    // IMPORTANT: Skip permission pre-check - it may incorrectly report 'denied'
+    // Instead, try getUserMedia directly and handle errors
+    console.log('🎯 [Camera API] Attempting direct camera access without permission pre-check...');
+    console.log('📝 [Camera API] Note: Browser permission API may incorrectly report denied status');
     
     try {
       setCameraError(null);
@@ -534,6 +504,24 @@ const UploadPage = (): JSX.Element => {
             '4. Missing Permissions-Policy headers',
             '5. Browser settings block camera for this site'
           ]);
+          
+          // Now check permissions AFTER the error to get accurate status
+          if (navigator.permissions && navigator.permissions.query) {
+            try {
+              const permStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+              console.log('📷 [Camera API] Permission status after error:', permStatus.state);
+              
+              if (permStatus.state === 'prompt') {
+                console.log('💡 [Camera API] Permission is actually "prompt" - user may have dismissed dialog');
+                console.log('💡 [Camera API] User needs to click camera icon in address bar');
+              } else if (permStatus.state === 'denied') {
+                console.log('⛔ [Camera API] Permission is truly denied in browser settings');
+                console.log('💡 [Camera API] Go to chrome://settings/content/camera to check site settings');
+              }
+            } catch (e) {
+              console.log('⚠️ [Camera API] Could not check permission status after error');
+            }
+          }
         } else if (error.name === 'NotFoundError') {
           console.error('❌ [Camera API] NotFoundError - No camera device found');
         } else if (error.name === 'NotReadableError') {
