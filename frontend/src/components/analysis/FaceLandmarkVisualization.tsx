@@ -485,7 +485,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       // Enhanced scanning effect with 3D mesh for detecting phase (Step 1 only)
       if (phase === 'detecting') {
         const elapsed = Date.now() - animationStartTimeRef.current;
-        const scanDuration = 2000; // 2 seconds for one complete cycle
+        const scanDuration = 3000; // 3 seconds for one complete cycle (slower)
         const scanProgress = Math.min(elapsed / scanDuration, 1);
         
         // Mark scan as complete after one cycle
@@ -500,17 +500,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
         // Only show scan animation if not complete
         if (scanProgress < 1) {
-          // Single scan cycle: top to bottom to top ONCE
-          let scanY;
-          if (scanProgress < 0.5) {
-            // First half: top to bottom
-            const downProgress = scanProgress * 2; // 0 to 1
-            scanY = downProgress * canvas.height;
-          } else {
-            // Second half: bottom to top
-            const upProgress = (scanProgress - 0.5) * 2; // 0 to 1
-            scanY = (1 - upProgress) * canvas.height;
-          }
+          // Single scan: top to bottom ONCE (like a real scanner)
+          const scanY = scanProgress * canvas.height;
           
           const scanRange = 80; // Range of mesh visibility around scan line
           
@@ -645,21 +636,13 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         if (phase === 'detecting') {
           // Mesh vertices with scan-based visibility
           const elapsed = Date.now() - animationStartTimeRef.current;
-          const scanDuration = 2000;
+          const scanDuration = 3000;
           const scanProgress = Math.min(elapsed / scanDuration, 1);
           
           // Only show dots if scan is still running
           if (scanProgress < 1) {
-            let scanY;
-            if (scanProgress < 0.5) {
-              // First half: top to bottom
-              const downProgress = scanProgress * 2;
-              scanY = downProgress * canvas.height;
-            } else {
-              // Second half: bottom to top
-              const upProgress = (scanProgress - 0.5) * 2;
-              scanY = (1 - upProgress) * canvas.height;
-            }
+            // Single scan: top to bottom ONCE
+            const scanY = scanProgress * canvas.height;
             const distFromScan = Math.abs(y - scanY);
             const scanRange = 80;
             
@@ -900,7 +883,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const animate = () => {
       if (animationPhase === 'detecting' && landmarks.length > 0) {
         const elapsed = Date.now() - animationStartTimeRef.current;
-        const scanDuration = 2000;
+        const scanDuration = 3000;
         
         // Stop animation after scan completes
         if (elapsed >= scanDuration) {
