@@ -672,7 +672,12 @@ const AnalyzingPage = (): JSX.Element => {
                   <img 
                     src={analysisCharacter} 
                     alt="Analysis Character" 
-                    className="w-24 h-24 object-contain filter drop-shadow-xl"
+                    className="object-contain filter drop-shadow-xl"
+                    style={{
+                      width: '111px',
+                      height: '100px',
+                      aspectRatio: '111/100'
+                    }}
                   />
                 </div>
 
