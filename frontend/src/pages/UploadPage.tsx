@@ -9,6 +9,8 @@ import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff
 import { faceDetectionService } from '@/services/faceDetectionService';
 import arrowBack from '@/assets/arrow_back.png';
 import ellipse from '@/assets/Ellipse 7.svg';
+import xIcon from '@/assets/X.png';
+import checkIcon from '@/assets/check.png';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const UploadPage = (): JSX.Element => {
   const isCameraActiveRef = useRef(false); // Add ref to avoid closure issues
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraInitialized, setCameraInitialized] = useState(false);
   
   // Face detection states
   const [faceDetected, setFaceDetected] = useState(false);
@@ -35,6 +38,8 @@ const UploadPage = (): JSX.Element => {
   const faceDetectedRef = useRef(false); // Add ref to avoid closure issues in setTimeout/setInterval
   const isWellPositionedRef = useRef(false); // Track if face is well positioned in oval
   const [faceQuality, setFaceQuality] = useState(0);
+  const [faceDistance, setFaceDistance] = useState<'too_far' | 'too_close' | 'good' | null>(null);
+  const [facePosition, setFacePosition] = useState<'left' | 'right' | 'up' | 'down' | 'centered' | null>(null);
   const [captureCountdown, setCaptureCountdown] = useState<number | null>(null);
   const countdownValueRef = useRef<number | null>(null); // Track actual countdown value to prevent multiple timers
   const [isProcessingFace, setIsProcessingFace] = useState(false);
@@ -129,23 +134,26 @@ const UploadPage = (): JSX.Element => {
         });
     }
     
-    // Wait for refs to be available before starting camera
-    const startCameraWhenReady = () => {
-      console.log('🔍 [Camera API] Checking refs availability...', {
-        videoRef: !!videoRef.current,
-        canvasRef: !!canvasRef.current
-      });
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      // Wait for refs to be available before starting camera
+      const startCameraWhenReady = () => {
+        console.log('🔍 [Camera API] Checking refs availability...', {
+          videoRef: !!videoRef.current,
+          canvasRef: !!canvasRef.current
+        });
+        
+        if (videoRef.current && canvasRef.current) {
+          console.log('✅ [Camera API] Refs are ready, starting camera');
+          startCamera();
+        } else {
+          console.log('⏳ [Camera API] Refs not ready yet, waiting...');
+          setTimeout(startCameraWhenReady, 100);
+        }
+      };
       
-      if (videoRef.current && canvasRef.current) {
-        console.log('✅ [Camera API] Refs are ready, starting camera');
-        startCamera();
-      } else {
-        console.log('⏳ [Camera API] Refs not ready yet, waiting...');
-        setTimeout(startCameraWhenReady, 100);
-      }
-    };
-    
-    startCameraWhenReady();
+      startCameraWhenReady();
+    }, 100);
     
     // Cleanup camera on unmount
     return () => {
@@ -210,6 +218,23 @@ const UploadPage = (): JSX.Element => {
     }
     
     console.log('✅ [Camera API] getUserMedia is available');
+    
+    // Check camera permissions first if available
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        console.log('📷 [Camera API] Permission status:', permissionStatus.state);
+        
+        if (permissionStatus.state === 'denied') {
+          setCameraError('Camera permission was denied. Please enable camera access in your browser settings.');
+          setIsCameraActive(false);
+          isCameraActiveRef.current = false;
+          return;
+        }
+      } catch (err) {
+        console.log('⚠️ [Camera API] Could not check permissions:', err);
+      }
+    }
     
     try {
       setCameraError(null);
@@ -303,6 +328,18 @@ const UploadPage = (): JSX.Element => {
           console.log('✅ [Camera API] Video is fully ready for capture');
         } catch (playError) {
           console.error('🚨 [Camera API] Video play error:', playError);
+          // Don't throw error for AbortError - it happens when component re-mounts quickly
+          if (playError instanceof Error && playError.name === 'AbortError') {
+            console.log('⚠️ [Camera API] Play was interrupted (likely component re-mount), ignoring...');
+            // Still set camera as active since stream is valid
+            setStream(mediaStream);
+            streamRef.current = mediaStream;
+            setIsCameraActive(true);
+            isCameraActiveRef.current = true;
+            setCameraInitialized(true);
+            setCameraError(null);
+            return; // Exit without setting error
+          }
           throw playError;
         }
       } else {
@@ -314,12 +351,17 @@ const UploadPage = (): JSX.Element => {
       streamRef.current = mediaStream; // Update ref as well
       setIsCameraActive(true);
       isCameraActiveRef.current = true; // Update ref as well
+      setCameraInitialized(true); // Mark camera as initialized
+      setCameraError(null); // Clear any previous errors
       
       console.log('🎉 [Camera API] Camera initialization completed successfully');
       
-      // Start face detection immediately (no closure issue with ref)
-      startFaceDetection();
-      console.log('👤 [Camera API] Face detection started');
+      // Delay face detection by 2 seconds to show gray overlay initially
+      console.log('⏱️ [Camera API] Waiting 2 seconds before starting face detection...');
+      setTimeout(() => {
+        startFaceDetection();
+        console.log('👤 [Camera API] Face detection started after 2 second delay');
+      }, 2000);
       
       // Track camera access
       trackEvent('camera_access', {
@@ -341,29 +383,43 @@ const UploadPage = (): JSX.Element => {
           stack: error.stack
         });
         
+        let errorMessage = 'Camera access denied or not available';
+        
         // Specific error types
         switch (error.name) {
           case 'NotAllowedError':
+          case 'PermissionDeniedError':
             console.error('🚨 [Camera API] User denied camera permission');
+            errorMessage = 'Camera permission denied. Please allow camera access and refresh the page.';
             break;
           case 'NotFoundError':
+          case 'DevicesNotFoundError':
             console.error('🚨 [Camera API] No camera device found');
+            errorMessage = 'No camera found on this device.';
             break;
           case 'NotReadableError':
+          case 'TrackStartError':
             console.error('🚨 [Camera API] Camera is already in use by another application');
+            errorMessage = 'Camera is being used by another application.';
             break;
           case 'OverconstrainedError':
+          case 'ConstraintNotSatisfiedError':
             console.error('🚨 [Camera API] Camera constraints cannot be satisfied');
+            errorMessage = 'Camera requirements cannot be met.';
             break;
           case 'SecurityError':
             console.error('🚨 [Camera API] Security error - HTTPS required');
+            errorMessage = 'Camera requires a secure connection (HTTPS).';
             break;
           default:
             console.error('🚨 [Camera API] Unknown camera error type:', error.name);
         }
+        
+        setCameraError(errorMessage);
+      } else {
+        setCameraError('Camera access denied or not available');
       }
       
-      setCameraError('Camera access denied or not available');
       setIsCameraActive(false);
       isCameraActiveRef.current = false;
       
@@ -430,15 +486,48 @@ const UploadPage = (): JSX.Element => {
             videoRef.current.videoHeight
           );
           
+          // Calculate face area to determine distance
+          const faceAreaRatio = (face.width * face.height) / (videoRef.current.videoWidth * videoRef.current.videoHeight);
+          let distance: 'too_far' | 'too_close' | 'good' = 'good';
+          if (faceAreaRatio < 0.07) {
+            distance = 'too_far';
+          } else if (faceAreaRatio > 0.10) {
+            distance = 'too_close';
+          }
+          
+          // Calculate face position relative to center
+          const faceCenterX = face.x + face.width / 2;
+          const faceCenterY = face.y + face.height / 2;
+          const videoCenterX = videoRef.current.videoWidth / 2;
+          const videoCenterY = videoRef.current.videoHeight / 2;
+          
+          let position: 'left' | 'right' | 'up' | 'down' | 'centered' = 'centered';
+          const xOffset = faceCenterX - videoCenterX;
+          const yOffset = faceCenterY - videoCenterY;
+          const threshold = videoRef.current.videoWidth * 0.15; // 15% threshold
+          
+          if (Math.abs(xOffset) < threshold && Math.abs(yOffset) < threshold) {
+            position = 'centered';
+          } else if (Math.abs(xOffset) > Math.abs(yOffset)) {
+            position = xOffset < 0 ? 'left' : 'right';
+          } else {
+            position = yOffset < 0 ? 'up' : 'down';
+          }
+          
           console.log(`✨ [FACE DETECTION] Face found:`, {
             isWellPositioned,
             quality,
+            distance,
+            position,
+            faceAreaRatio,
             face
           });
           
           // Update face detection states
           setFaceDetected(true); // Face is detected
           setFaceWellPositioned(isWellPositioned); // Face position status
+          setFaceDistance(distance);
+          setFacePosition(position);
           faceDetectedRef.current = true; // Update ref as well
           isWellPositionedRef.current = isWellPositioned; // Track position status
           setFaceQuality(isWellPositioned ? quality : 0);
@@ -469,6 +558,8 @@ const UploadPage = (): JSX.Element => {
           console.log(`❌ [FACE DETECTION] No face detected`);
           setFaceDetected(false);
           setFaceWellPositioned(false);
+          setFaceDistance(null);
+          setFacePosition(null);
           faceDetectedRef.current = false; // Update ref as well
           isWellPositionedRef.current = false; // No face means not well positioned
           setFaceQuality(0);
@@ -505,6 +596,8 @@ const UploadPage = (): JSX.Element => {
     }
     setFaceDetected(false);
     setFaceWellPositioned(false);
+    setFaceDistance(null);
+    setFacePosition(null);
     faceDetectedRef.current = false; // Update ref as well
     isWellPositionedRef.current = false; // Reset position status
     setFaceQuality(0);
@@ -1246,10 +1339,11 @@ const UploadPage = (): JSX.Element => {
             <video
               ref={videoRef}
               className={`absolute inset-0 w-full h-full object-cover ${
-                !previewUrl && isCameraActive ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
+                !previewUrl && isCameraActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
               } ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
               style={{
                 borderRadius: `${10 * scaleFactor}px`,
+                zIndex: 1,
               }}
               autoPlay
               playsInline
@@ -1260,28 +1354,61 @@ const UploadPage = (): JSX.Element => {
             {/* Face detection guide overlay - Always show when no preview */}
             {!previewUrl && (
               <>
-                {/* Outer overlay layer with color based on face detection status */}
-                <div 
-                  className="absolute inset-0 pointer-events-none z-20"
+                {/* Masking overlay with elliptical cutout using SVG */}
+                <svg 
+                  className="absolute inset-0 pointer-events-none"
                   style={{
-                    background: `radial-gradient(ellipse ${299 * scaleFactor / 2}px ${490 * scaleFactor / 2}px at center, 
-                      transparent 0%, 
-                      transparent 49%, 
-                      ${!faceDetected 
-                        ? 'rgba(176, 176, 175, 0.6)' // No face detected
-                        : (captureCountdown !== null || faceWellPositioned)
-                          ? 'rgba(209, 227, 219, 0.6)' // Ready to capture or counting down
-                          : 'rgba(230, 176, 175, 0.6)'} 50%, // Face detected but not in position
-                      ${!faceDetected 
-                        ? 'rgba(176, 176, 175, 0.6)' // No face detected
-                        : (captureCountdown !== null || faceWellPositioned)
-                          ? 'rgba(209, 227, 219, 0.6)' // Ready to capture or counting down
-                          : 'rgba(230, 176, 175, 0.6)'} 100%)`, // Face detected but not in position
+                    width: `${348.345 * scaleFactor}px`,
+                    height: `${667 * scaleFactor}px`,
+                    zIndex: 10,
                   }}
-                />
+                  viewBox={`0 0 ${348.345} ${667}`}
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <mask id="ellipse-mask">
+                      {/* White background = visible */}
+                      <rect x="0" y="0" width="348.345" height="667" fill="white" />
+                      {/* Black ellipse = transparent (cutout) */}
+                      {/* Position: top padding 34px, bottom padding 143px, so center Y = 34 + 490/2 = 34 + 245 = 279 */}
+                      <ellipse 
+                        cx={348.345 / 2} 
+                        cy={34 + 490 / 2} 
+                        rx={299 / 2} 
+                        ry={490 / 2} 
+                        fill="black" 
+                      />
+                    </mask>
+                  </defs>
+                  
+                  {/* Apply mask to colored rectangle */}
+                  <rect 
+                    x="0" 
+                    y="0" 
+                    width="348.345" 
+                    height="667" 
+                    mask="url(#ellipse-mask)"
+                    fill={
+                      !faceDetected 
+                        ? 'rgba(176, 176, 175, 0.6)' // No face detected - gray
+                        : (captureCountdown !== null || faceWellPositioned)
+                          ? 'rgba(209, 227, 219, 0.6)' // Ready to capture - green
+                          : 'rgba(230, 176, 175, 0.6)' // Face not in position - red
+                    }
+                    rx={10}
+                  />
+                </svg>
                 
                 {/* Ellipse guide with dynamic color */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 21 }}>
+                <div 
+                  className="absolute pointer-events-none" 
+                  style={{ 
+                    zIndex: 11,
+                    top: `${34 * scaleFactor}px`,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                  }}
+                >
                   <div
                     style={{
                       width: `${299 * scaleFactor}px`,
@@ -1303,19 +1430,185 @@ const UploadPage = (): JSX.Element => {
               </>
             )}
             
-            {/* Face detection status */}
+            {/* Auto capture countdown - centered semi-transparent number */}
+            {!previewUrl && isCameraActive && captureCountdown !== null && (
+              <div 
+                className="absolute inset-0 flex items-center justify-center pointer-events-none" 
+                style={{ zIndex: 20 }}
+              >
+                <div 
+                  className="text-white animate-pulse"
+                  style={{
+                    fontFamily: '"Plus Jakarta Sans", sans-serif',
+                    fontSize: `${120 * scaleFactor}px`,
+                    fontWeight: 800,
+                    textShadow: '0 0 20px rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.3)',
+                    opacity: 0.9,
+                  }}
+                >
+                  {captureCountdown}
+                </div>
+              </div>
+            )}
+
+            {/* Bottom instruction container */}
             {!previewUrl && isCameraActive && (
-              <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 z-30">
-                {/* Auto capture countdown */}
-                {captureCountdown !== null && (
-                  <div className="bg-primary-600 text-white px-4 py-2 rounded-full text-lg font-bold animate-pulse">
-                    {captureCountdown}초 후 촬영...
-                  </div>
-                )}
+              <div 
+                className="absolute pointer-events-none"
+                style={{
+                  top: `${558 * scaleFactor}px`,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 15,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: `${266 * scaleFactor}px`,
+                    minHeight: `${44 * scaleFactor}px`,
+                    padding: `${15 * scaleFactor}px`,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: `${10 * scaleFactor}px`,
+                    borderRadius: `${10 * scaleFactor}px`,
+                    border: (faceDetected && !faceWellPositioned && captureCountdown === null) 
+                      ? `${2 * scaleFactor}px solid var(--Color-9, #F00)` 
+                      : 'none',
+                    background: faceWellPositioned ? '#97EFD0' : 'var(--Color-7, #FFF)',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* X icon - only show when red border is visible */}
+                  {faceDetected && !faceWellPositioned && captureCountdown === null && (
+                    <img 
+                      src={xIcon}
+                      alt=""
+                      style={{
+                        width: `${24 * scaleFactor}px`,
+                        height: `${24 * scaleFactor}px`,
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  {/* Check icon - only show when face is well positioned */}
+                  {faceWellPositioned && (
+                    <img 
+                      src={checkIcon}
+                      alt=""
+                      style={{
+                        width: `${24 * scaleFactor}px`,
+                        height: `${24 * scaleFactor}px`,
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  {faceWellPositioned ? (
+                    <span 
+                      style={{
+                        color: 'var(--Color-5, #000)',
+                        textAlign: 'center',
+                        fontFamily: 'Pretendard',
+                        fontSize: `${15 * scaleFactor}px`,
+                        fontStyle: 'normal',
+                        fontWeight: 700,
+                        lineHeight: '140%', /* 21px */
+                        margin: 0,
+                      }}
+                    >
+                      완벽해요!
+                      <br />
+                      3초 후 촬영이 진행됩니다
+                    </span>
+                  ) : (
+                    <span 
+                      style={{
+                        color: '#000',
+                        textAlign: 'center',
+                        fontFamily: 'Pretendard',
+                        fontSize: `${15 * scaleFactor}px`,
+                        fontWeight: 700,
+                        lineHeight: '140%', /* 21px */
+                        wordBreak: 'keep-all',
+                        whiteSpace: 'pre-line',
+                        maxWidth: '100%',
+                        margin: 0,
+                      }}
+                    >
+                      {!faceDetected 
+                        ? (
+                          <>
+                            얼굴을 프레임 안에
+                            <br />
+                            위치시켜주세요
+                          </>
+                        )
+                        : (
+                          faceDistance === 'too_far' 
+                            ? (
+                              <>
+                                얼굴이 너무 멀어요.
+                                <br />
+                                가까이 와주세요
+                              </>
+                            )
+                            : faceDistance === 'too_close'
+                              ? (
+                                <>
+                                  얼굴이 너무 가까워요.
+                                  <br />
+                                  조금 멀리 떨어져주세요
+                                </>
+                              )
+                              : facePosition === 'left'
+                                ? (
+                                  <>
+                                    얼굴을 왼쪽으로
+                                    <br />
+                                    이동해주세요
+                                  </>
+                                )
+                                : facePosition === 'right'
+                                  ? (
+                                    <>
+                                      얼굴을 오른쪽으로
+                                      <br />
+                                      이동해주세요
+                                    </>
+                                  )
+                                  : facePosition === 'up'
+                                    ? (
+                                      <>
+                                        얼굴을 아래로
+                                        <br />
+                                        이동해주세요
+                                      </>
+                                    )
+                                    : facePosition === 'down'
+                                      ? (
+                                        <>
+                                          얼굴을 위로
+                                          <br />
+                                          이동해주세요
+                                        </>
+                                      )
+                                      : (
+                                        <>
+                                          얼굴을 타원 안에
+                                          <br />
+                                          맞춰주세요
+                                        </>
+                                      )
+                        )}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
             {previewUrl ? (
-              // Show captured photo with face detection guide
+              // Show captured photo - NO guides or overlays after capture
               <div 
                 className="relative w-full h-full overflow-hidden bg-white"
                 style={{
@@ -1326,34 +1619,10 @@ const UploadPage = (): JSX.Element => {
                   src={previewUrl} 
                   alt="Captured photo" 
                   className="w-full h-full object-cover"
+                  style={{
+                    borderRadius: `${10 * scaleFactor}px`,
+                  }}
                 />
-                {/* Face detection guide overlay */}
-                <>
-                  {/* Outer overlay layer - for preview, show success color */}
-                  <div 
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: `radial-gradient(ellipse ${299 * scaleFactor / 2}px ${490 * scaleFactor / 2}px at center, 
-                        transparent 0%, 
-                        transparent 49%, 
-                        rgba(209, 227, 219, 0.6) 50%, 
-                        rgba(209, 227, 219, 0.6) 100%)`, // Success color for captured photo
-                    }}
-                  />
-                  
-                  {/* Ellipse guide */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div
-                      style={{
-                        width: `${299 * scaleFactor}px`,
-                        height: `${490 * scaleFactor}px`,
-                        borderRadius: '50%',
-                        border: `${5 * scaleFactor}px dashed #FFFFFF`,
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                </>
                 {/* Face validation loading overlay */}
                 {isValidatingFace && (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-3xl z-40">
@@ -1372,31 +1641,17 @@ const UploadPage = (): JSX.Element => {
             ) : (
               // Show live camera feed
               <div 
-                className="relative w-full h-full overflow-hidden bg-black"
+                className="relative w-full h-full overflow-hidden"
                 style={{
                   borderRadius: `${10 * scaleFactor}px`,
+                  backgroundColor: 'transparent',
                 }}
               >
-                {/* Camera status indicators - show when camera is active */}
-                {isCameraActive && !cameraError && (
-                  <>
-                    {/* Camera status indicator */}
-                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 z-30">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      Live
-                    </div>
-
-                    {/* Camera mode indicator */}
-                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm z-30">
-                      {facingMode === 'user' ? 'Front' : 'Back'}
-                    </div>
-                  </>
-                )}
                 
                 {/* Show error only if there's an actual camera error */}
                 {cameraError && (
                   // Camera error state
-                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center z-50">
+                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center" style={{ zIndex: 10 }}>
                     <div className="text-center text-white px-6">
                       <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1430,10 +1685,10 @@ const UploadPage = (): JSX.Element => {
                   </div>
                 )}
                 
-                {/* Show loading only when camera is not active and no error */}
-                {!isCameraActive && !cameraError && !previewUrl && (
+                {/* Show loading only when camera is not initialized and no error */}
+                {!cameraInitialized && !cameraError && !previewUrl && (
                   // Loading camera state
-                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center z-30">
+                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center" style={{ zIndex: 10 }}>
                     <div className="text-center text-white">
                       <svg className="animate-spin w-8 h-8 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
@@ -1491,47 +1746,166 @@ const UploadPage = (): JSX.Element => {
                 input.click();
               }}
               disabled={isCompressing}
-              className="w-14 h-14 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50"
+              style={{
+                width: `${48 * scaleFactor}px`,
+                height: `${48 * scaleFactor}px`,
+                flexShrink: 0,
+                borderRadius: '50%',
+                backgroundColor: '#606060',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                opacity: isCompressing ? 0.5 : 1,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!isCompressing) {
+                  e.currentTarget.style.backgroundColor = '#505050';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#606060';
+              }}
             >
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg style={{ width: `${24 * scaleFactor}px`, height: `${24 * scaleFactor}px` }} fill="none" stroke="white" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
 
-            {/* Analyze Button - Only show when photo is captured */}
-            {previewUrl && (
-              <button
-                onClick={handleAnalyze}
-                disabled={isCompressing}
-                className="bg-primary-600 text-white px-6 py-3 rounded-full font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isCompressing ? (
-                  <>
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                    </svg>
-                    <span>처리 중...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>분석 시작</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            )}
-
-            {/* Flip Camera Button */}
-            <button
-              onClick={switchCamera}
-              disabled={!isCameraActive || cameraError !== null || previewUrl !== null}
-              className="w-14 h-14 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            {/* Analyze Button - Always visible, disabled when no photo */}
+            <button 
+              onClick={previewUrl ? handleAnalyze : undefined}
+              disabled={!previewUrl || isCompressing}
+              style={{ 
+                display: 'flex',
+                width: `${198 * scaleFactor}px`,
+                height: `${57 * scaleFactor}px`,
+                padding: `${10 * scaleFactor}px ${16 * scaleFactor}px`,
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: `${10 * scaleFactor}px`,
+                flexShrink: 0,
+                borderRadius: `${10 * scaleFactor}px`,
+                background: !previewUrl ? '#E0E0E0' : (isCompressing ? '#E0E0E0' : '#FFF3A1'),
+                border: 'none',
+                transition: 'all 0.2s ease',
+                opacity: !previewUrl ? 0.5 : (isCompressing ? 0.7 : 1),
+                cursor: !previewUrl ? 'not-allowed' : 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                if (previewUrl && !isCompressing) {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 19, 137, 0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              onTouchStart={(e) => {
+                if (previewUrl && !isCompressing) {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              {isCompressing ? (
+                <div className="flex items-center gap-2">
+                  <svg className="animate-spin" style={{ width: `${20 * scaleFactor}px`, height: `${20 * scaleFactor}px` }} fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#3B1389" strokeWidth="4"/>
+                    <path className="opacity-75" fill="#3B1389" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  <span 
+                    style={{ 
+                      color: '#3B1389',
+                      textAlign: 'center',
+                      fontFamily: 'Pretendard',
+                      fontSize: `${20 * scaleFactor}px`,
+                      fontWeight: 700,
+                      lineHeight: '140%'
+                    }}
+                  >
+                    처리 중...
+                  </span>
+                </div>
+              ) : (
+                <span 
+                  style={{ 
+                    color: !previewUrl ? '#999' : '#3B1389',
+                    textAlign: 'center',
+                    fontFamily: 'Pretendard',
+                    fontSize: `${20 * scaleFactor}px`,
+                    fontWeight: 700,
+                    lineHeight: '140%'
+                  }}
+                >
+                  분석 시작
+                </span>
+              )}
+            </button>
+
+            {/* Retry Button - Active only after photo is taken */}
+            <button
+              onClick={() => {
+                if (previewUrl) {
+                  // Reset to live camera view
+                  setPreviewUrl(null);
+                  setSelectedFile(null);
+                  setError(null);
+                  // Restart camera
+                  if (!isCameraActive) {
+                    startCamera();
+                  }
+                  // Restart face detection
+                  startFaceDetection();
+                }
+              }}
+              disabled={!previewUrl}
+              style={{
+                width: `${48 * scaleFactor}px`,
+                height: `${48 * scaleFactor}px`,
+                flexShrink: 0,
+                borderRadius: '50%',
+                backgroundColor: !previewUrl ? '#D0D0D0' : '#3B1389',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: !previewUrl ? 'not-allowed' : 'pointer',
+                opacity: !previewUrl ? 0.5 : 1,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (previewUrl) {
+                  e.currentTarget.style.backgroundColor = '#2A0F68';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (previewUrl) {
+                  e.currentTarget.style.backgroundColor = '#3B1389';
+                }
+              }}
+            >
+              {/* Refresh Icon - Single Arrow (Flipped) */}
+              <svg 
+                style={{ 
+                  width: `${24 * scaleFactor}px`, 
+                  height: `${24 * scaleFactor}px`,
+                  transform: 'scaleX(-1)' 
+                }} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="white" 
+                strokeWidth={2} 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
               </svg>
             </button>
           </div>
