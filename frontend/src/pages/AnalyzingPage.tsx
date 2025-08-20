@@ -9,6 +9,7 @@ import { ImageAnalysisError } from '@/components/ui/ImageAnalysisError/ImageAnal
 import { parseImageAnalysisError, ImageAnalysisErrorType } from '@/utils/imageAnalysisErrors';
 import FaceLandmarkVisualization from '@/components/analysis/FaceLandmarkVisualization';
 import { updateSessionWithRecovery } from '@/utils/sessionHelper';
+import guideBackground from '@/assets/가이드배경.jpg';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -23,9 +24,37 @@ const AnalyzingPage = (): JSX.Element => {
   const [canSkip, setCanSkip] = useState(false);
   const [showNavButtons, setShowNavButtons] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false); // Track if API analysis is done
+  const [scaleFactor, setScaleFactor] = useState(1);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Calculate optimal scale to prevent overlapping
+  useEffect(() => {
+    const calculateScale = () => {
+      const BASE_W = 402;
+      const BASE_H = 874;
+      
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      
+      // Calculate scale based on both width and height to maintain aspect ratio
+      const scaleX = vw / BASE_W;
+      const scaleY = vh / BASE_H;
+      
+      // Use the smaller scale to ensure everything fits without overlapping
+      const scale = Math.min(scaleX, scaleY) * 0.95; // 0.95 for safety margin
+      
+      setScaleFactor(scale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    
+    return () => {
+      window.removeEventListener('resize', calculateScale);
+    };
+  }, []);
 
   // Redirect if no image and track page entry
   useEffect(() => {
@@ -335,73 +364,294 @@ const AnalyzingPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div 
-        className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100"
-        style={{ cursor: 'default' }}
-      >
-        {/* Face Landmark Visualization at the very top of the screen */}
-        {imageUrl && (
-          <div className="w-full flex justify-center px-4 pt-4">
-            <div className="w-full max-w-md">
-              <FaceLandmarkVisualization
-                imageUrl={imageUrl}
-                currentAnalysisStep={currentStep}
-                onLandmarksDetected={(landmarks) => {
-                console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
-                trackEvent('face_landmarks_detected', {
-                  faces_count: landmarks.length,
-                  total_landmarks: landmarks.reduce((sum, face) => sum + face.keypoints.length, 0),
-                  current_analysis_step: currentStep,
-                  step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
-                  user_flow_step: 'landmarks_visualization_synchronized'
-                });
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Full screen background */}
+        <div 
+          className="absolute"
+          style={{
+            width: '150vh',
+            height: '150vw',
+            top: '50%',
+            left: '50%',
+            background: `linear-gradient(0deg, rgba(99, 36, 222, 0.20) 0%, rgba(99, 36, 222, 0.20) 100%), url(${guideBackground}) lightgray 50% / cover no-repeat`,
+            transform: 'translate(-50%, -50%) rotate(90deg)',
+            zIndex: 0,
+          }}
+        />
+        
+        {/* Content container */}
+        <div className="min-h-screen flex items-center justify-center relative z-10">
+          <div 
+            className="relative"
+            style={{
+              width: `${402 * scaleFactor}px`,
+              height: `${874 * scaleFactor}px`,
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                position: 'absolute',
+                top: `${16 * scaleFactor}px`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                width: `${402 * scaleFactor}px`,
+                height: `${61 * scaleFactor}px`,
+                padding: `${28 * scaleFactor}px ${16 * scaleFactor}px`,
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: `${10 * scaleFactor}px`,
+                flexShrink: 0,
+                border: '1px solid #e0e0e0',
+                boxSizing: 'border-box',
               }}
-                className="w-full"
+            >
+            <span
+              style={{
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'var(--Label-Medium-Font, Roboto)',
+                fontSize: `${14 * scaleFactor}px`,
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: 'var(--Label-Medium-Line-Height, 16px)',
+                letterSpacing: 'var(--Label-Medium-Tracking, 0.5px)',
+                width: '100%',
+              }}
+            >
+              Step {currentStep + 1}/5
+            </span>
+            {/* Progress bar container */}
+            <div
+              style={{
+                width: `${370 * scaleFactor}px`,
+                height: `${5 * scaleFactor}px`,
+                flexShrink: 0,
+                borderRadius: `${40 * scaleFactor}px`,
+                background: 'rgba(255, 255, 255, 0.2)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Progress bar fill */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  height: '100%',
+                  width: `${((currentStep + 1) / 5) * 100}%`,
+                  borderRadius: `${40 * scaleFactor}px`,
+                  background: 'var(--main, #FFF49B)',
+                  transition: 'width 0.3s ease',
+                }}
               />
             </div>
-          </div>
-        )}
-
-        {/* Content below the image */}
-        <div className="flex-1 relative">
-
-          {/* Navigation buttons for draping phases only */}
-          {showNavButtons && (
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 animate-fade-in">
-              <div className="flex gap-4">
-                <button
-                  onClick={handleGoBack}
-                  className="bg-white/90 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={currentStep === 0}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  뒤로가기
-                </button>
-                <button
-                  onClick={currentStep === ANALYSIS_STEPS.length - 1 ? handleGoForward : (canSkip ? handleProceedToNext : handleGoForward)}
-                  className="bg-primary-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={currentStep === ANALYSIS_STEPS.length - 1 && !analysisResult}  // Disable on final step if no result yet
-                >
-                  {currentStep === ANALYSIS_STEPS.length - 1 ? 
-                    (analysisResult ? '결과 보기' : '분석 중...') : 
-                    '앞으로가기'}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
             </div>
-          )}
 
-          {/* Character and Speech Bubble - Always positioned consistently */}
-          {!error && (
-            <div 
-              key={`character-${currentStep}`}
-              className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
-              style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
+            {/* Content container below header */}
+            <div
+              style={{
+                position: 'absolute',
+                top: `${(16 + 61 + 10) * scaleFactor}px`, // header top + header height + gap
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                width: `${402 * scaleFactor}px`,
+                padding: `${16 * scaleFactor}px 0`,
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: `${10 * scaleFactor}px`,
+              }}
             >
+            <h2
+              style={{
+                color: 'var(--Color-7, #FFF)',
+                textAlign: 'center',
+                fontFamily: '"Plus Jakarta Sans"',
+                fontSize: `${24 * scaleFactor}px`,
+                fontStyle: 'normal',
+                fontWeight: 800,
+                lineHeight: '140%',
+                width: `${402 * scaleFactor}px`,
+                margin: 0,
+              }}
+            >
+              AI가 당신의 얼굴 구조를<br />
+              3D로 분석하고 있어요
+            </h2>
+            </div>
+
+            {/* Gray container for image/visualization */}
+            <div
+              className="absolute overflow-hidden"
+              style={{
+                top: `${(16 + 61 + 10 + 16 + 24*1.4 + 16 + 16) * scaleFactor}px`, // header top + header height + gap + text padding + text height + text padding + margin
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${348 * scaleFactor}px`,
+                height: `${475 * scaleFactor}px`,
+                flexShrink: 0,
+                borderRadius: `${10 * scaleFactor}px`,
+                background: '#D9D9D9',
+                boxShadow: `0 ${4 * scaleFactor}px ${8 * scaleFactor}px rgba(0, 0, 0, 0.15)`,
+              }}
+            >
+              {/* Face Landmark Visualization */}
+              {imageUrl && (
+                <div className="w-full h-full">
+                  <FaceLandmarkVisualization
+                    imageUrl={imageUrl}
+                    currentAnalysisStep={currentStep}
+                    onLandmarksDetected={(landmarks) => {
+                    console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
+                    trackEvent('face_landmarks_detected', {
+                      faces_count: landmarks.length,
+                      total_landmarks: landmarks.reduce((sum, face) => sum + face.keypoints.length, 0),
+                      current_analysis_step: currentStep,
+                      step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
+                      user_flow_step: 'landmarks_visualization_synchronized'
+                    });
+                  }}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* CTA Buttons - Same as PhotoGuide page, positioned at bottom */}
+            <div 
+              className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center"
+              style={{ 
+                width: `${402 * scaleFactor}px`,
+                padding: `0 ${16 * scaleFactor}px`,
+                gap: `${10 * scaleFactor}px`,
+                bottom: `${90 * scaleFactor}px`,
+              }}
+            >
+            {/* Left Button - White */}
+            <button 
+              onClick={() => {
+                if (currentStep > 0) {
+                  handleGoBack();
+                }
+              }}
+              className="items-center justify-center cursor-pointer transition-all"
+              style={{ 
+                display: 'flex',
+                width: `${164 * scaleFactor}px`,
+                height: `${57 * scaleFactor}px`,
+                padding: `${10 * scaleFactor}px ${16 * scaleFactor}px`,
+                borderRadius: `${10 * scaleFactor}px`,
+                background: '#FFFFFF',
+                border: '1px solid #E0E0E0',
+                transition: 'all 0.2s ease',
+                opacity: currentStep > 0 ? 1 : 0.5,
+                pointerEvents: currentStep > 0 ? 'auto' : 'none',
+                marginRight: `${18 * scaleFactor}px`,
+              }}
+              onMouseEnter={(e) => {
+                if (currentStep > 0) {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              onTouchStart={(e) => {
+                if (currentStep > 0) {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <span 
+                style={{ 
+                  color: '#3B1389',
+                  textAlign: 'center',
+                  fontFamily: 'Pretendard',
+                  fontSize: `${20 * scaleFactor}px`,
+                  fontWeight: 700,
+                  lineHeight: '140%'
+                }}
+              >
+                Back
+              </span>
+            </button>
+
+            {/* Right Button - Yellow */}
+            <button 
+              onClick={() => {
+                if (currentStep === ANALYSIS_STEPS.length - 1 && analysisResult) {
+                  navigate(ROUTES.RESULT);
+                } else if (canSkip) {
+                  handleProceedToNext();
+                }
+              }}
+              className="items-center justify-center cursor-pointer transition-all"
+              style={{ 
+                display: 'flex',
+                width: `${164 * scaleFactor}px`,
+                height: `${57 * scaleFactor}px`,
+                padding: `${10 * scaleFactor}px ${16 * scaleFactor}px`,
+                borderRadius: `${10 * scaleFactor}px`,
+                background: '#FFF3A1',
+                border: 'none',
+                transition: 'all 0.2s ease',
+                opacity: (canSkip || (currentStep === ANALYSIS_STEPS.length - 1 && analysisResult)) ? 1 : 0.5,
+                pointerEvents: (canSkip || (currentStep === ANALYSIS_STEPS.length - 1 && analysisResult)) ? 'auto' : 'none',
+              }}
+              onMouseEnter={(e) => {
+                if (canSkip || (currentStep === ANALYSIS_STEPS.length - 1 && analysisResult)) {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 19, 137, 0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              onTouchStart={(e) => {
+                if (canSkip || (currentStep === ANALYSIS_STEPS.length - 1 && analysisResult)) {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <span 
+                style={{ 
+                  color: '#3B1389',
+                  textAlign: 'center',
+                  fontFamily: 'Pretendard',
+                  fontSize: `${20 * scaleFactor}px`,
+                  fontWeight: 700,
+                  lineHeight: '140%'
+                }}
+              >
+                {currentStep === ANALYSIS_STEPS.length - 1 ? 
+                  (analysisResult ? '결과 보기' : '분석 중...') : 
+                  (canSkip ? 'Next' : '분석 중...')}
+              </span>
+            </button>
+            </div>
+
+            {/* Character and Speech Bubble - Always positioned consistently */}
+            {!error && (
+              <div 
+                key={`character-${currentStep}`}
+                className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+                style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
+              >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
                 {/* Character Container */}
                 <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
@@ -443,12 +693,12 @@ const AnalyzingPage = (): JSX.Element => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+              </div>
+            )}
 
-        {/* Error state - positioned at center */}
-        {error && errorType && (
-          <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/50 backdrop-blur-sm">
+            {/* Error state - positioned at center */}
+            {error && errorType && (
+              <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/50 backdrop-blur-sm">
             <div className="max-w-md w-full mx-4">
               <ImageAnalysisError
                 errorType={errorType}
@@ -487,8 +737,9 @@ const AnalyzingPage = (): JSX.Element => {
                 }}
               />
             </div>
+              </div>
+            )}
           </div>
-        )}
         </div>
       </div>
     </PageLayout>

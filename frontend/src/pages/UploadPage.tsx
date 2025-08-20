@@ -9,6 +9,8 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import { faceDetectionService } from '@/services/faceDetectionService';
+import arrowBack from '@/assets/arrow_back.png';
+import ellipse from '@/assets/Ellipse 7.svg';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ const UploadPage = (): JSX.Element => {
   const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
   const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [showPrivacyAssurance, setShowPrivacyAssurance] = useState(true);
+  const [scaleFactor, setScaleFactor] = useState(1);
   
   // Camera states
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -43,6 +46,31 @@ const UploadPage = (): JSX.Element => {
   const faceDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const captureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   let faceDetector: any = null; // Face detector for validating uploaded images
+
+  // Calculate responsive scale factor
+  useEffect(() => {
+    const calculateScale = () => {
+      const BASE_W = 402;
+      const BASE_H = 874;
+      
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      
+      const scaleX = vw / BASE_W;
+      const scaleY = vh / BASE_H;
+      
+      const scale = Math.min(scaleX, scaleY) * 0.95;
+      
+      setScaleFactor(scale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    
+    return () => {
+      window.removeEventListener('resize', calculateScale);
+    };
+  }, []);
 
   // Redirect if no session
   useEffect(() => {
@@ -1138,24 +1166,95 @@ const UploadPage = (): JSX.Element => {
 
   return (
     <PageLayout>
-      <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="text-center pt-4 pb-0">
-          <h1 className="text-xl font-bold text-gray-900">
-            Upload Your Photo
-          </h1>
+      <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#FFF' }}>
+        {/* Header - at the very top */}
+        <div
+          style={{
+            display: 'flex',
+            width: '402px',
+            height: '88px',
+            padding: '16px 4px',
+            justifyContent: 'center',
+            alignItems: 'flex-end',
+            gap: '4px',
+            background: 'var(--black_white-color-white, #FFF)',
+            margin: '0 auto 0 auto',
+            marginTop: 0,
+          }}
+        >
+          {/* Container with arrow positioned absolutely and title centered */}
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {/* Arrow back icon - positioned absolutely */}
+            <img 
+              src={arrowBack} 
+              alt="Back"
+              style={{
+                position: 'absolute',
+                left: '0',
+                width: '40px',
+                height: '40px',
+                cursor: 'pointer',
+              }}
+              onClick={() => navigate(-1)}
+            />
+            
+            {/* Upload Your Photo title - centered */}
+            <h1 
+              style={{
+                color: 'var(--black_white-color-black, #000)',
+                textAlign: 'center',
+                fontFamily: '"Plus Jakarta Sans"',
+                fontSize: '24px',
+                fontStyle: 'normal',
+                fontWeight: 800,
+                lineHeight: '140%', /* 33.6px */
+                margin: 0,
+              }}
+            >
+              Upload Your Photo
+            </h1>
+          </div>
         </div>
 
         {/* Main Photo Area */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0">
+        <div 
+          style={{
+            width: `${348.345 * scaleFactor}px`,
+            height: `${667 * scaleFactor}px`,
+            flexShrink: 0,
+            borderRadius: `${10 * scaleFactor}px`,
+            margin: '20px auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           {/* Photo Preview/Camera Area */}
-          <div className="relative w-full max-w-sm aspect-[3/4] mb-4">
+          <div 
+            className="relative"
+            style={{
+              width: `${348.345 * scaleFactor}px`,
+              height: `${667 * scaleFactor}px`,
+            }}
+          >
             {/* Always render video and canvas elements outside conditional rendering for refs */}
             <video
               ref={videoRef}
-              className={`absolute inset-0 w-full h-full object-cover rounded-3xl ${
+              className={`absolute inset-0 w-full h-full object-cover ${
                 !previewUrl && isCameraActive && !cameraError ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
               } ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+              style={{
+                borderRadius: `${10 * scaleFactor}px`,
+              }}
               autoPlay
               playsInline
               muted
@@ -1164,22 +1263,58 @@ const UploadPage = (): JSX.Element => {
             
             {/* Face detection guide overlay - Always show when no preview */}
             {!previewUrl && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+              <>
+                {/* SVG for mask definition */}
+                <svg className="absolute inset-0 pointer-events-none" style={{ width: 0, height: 0 }}>
+                  <defs>
+                    <mask id="ellipse-mask">
+                      <rect width="100%" height="100%" fill="white" />
+                      <ellipse 
+                        cx="50%" 
+                        cy="50%" 
+                        rx={`${(299 * scaleFactor) / 2}px`} 
+                        ry={`${(490 * scaleFactor) / 2}px`} 
+                        fill="black" 
+                      />
+                    </mask>
+                  </defs>
+                </svg>
+                
+                {/* Outer overlay layer with color based on face detection status */}
                 <div 
-                  className={`${
-                    !faceDetected ? 'animate-pulse' : ''
-                  }`}
+                  className="absolute inset-0 pointer-events-none z-20"
                   style={{
-                    width: '60%',
-                    height: '75%',
-                    borderStyle: 'dashed',
-                    borderWidth: '4px',
-                    borderRadius: '50%',
-                    borderColor: faceWellPositioned ? '#10b981' : faceDetected ? '#eab308' : '#9ca3af',
-                    opacity: faceWellPositioned ? 0.9 : 0.7
+                    backgroundColor: !faceDetected 
+                      ? '#B0B0AF' // No face detected
+                      : (captureCountdown !== null || faceWellPositioned)
+                        ? '#D1E3DB' // Ready to capture or counting down
+                        : '#E6B0AF', // Face detected but not in position
+                    opacity: 0.6,
+                    mask: 'url(#ellipse-mask)',
+                    WebkitMask: 'url(#ellipse-mask)',
                   }}
                 />
-              </div>
+                
+                {/* Ellipse guide with dynamic color */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 21 }}>
+                  <div
+                    style={{
+                      width: `${299 * scaleFactor}px`,
+                      height: `${490 * scaleFactor}px`,
+                      borderRadius: `${490 * scaleFactor}px`,
+                      border: `${5 * scaleFactor}px dashed`,
+                      borderColor: captureCountdown !== null 
+                        ? '#97EFD0' // Countdown
+                        : (faceDetected && !faceWellPositioned)
+                          ? '#FF0000' // Face detected but not in position
+                          : '#FFFFFF', // Default white
+                    }}
+                    className={`${
+                      !faceDetected ? 'animate-pulse' : ''
+                    }`}
+                  />
+                </div>
+              </>
             )}
             
             {/* Face detection status */}
@@ -1195,29 +1330,62 @@ const UploadPage = (): JSX.Element => {
             )}
             {previewUrl ? (
               // Show captured photo with face detection guide
-              <div className="relative w-full h-full rounded-3xl overflow-hidden bg-white shadow-lg">
+              <div 
+                className="relative w-full h-full overflow-hidden bg-white"
+                style={{
+                  borderRadius: `${10 * scaleFactor}px`,
+                }}
+              >
                 <img 
                   src={previewUrl} 
                   alt="Captured photo" 
                   className="w-full h-full object-cover"
                 />
                 {/* Face detection guide overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
+                <>
+                  {/* SVG for mask definition */}
+                  <svg className="absolute inset-0 pointer-events-none" style={{ width: 0, height: 0 }}>
+                    <defs>
+                      <mask id="ellipse-mask-preview">
+                        <rect width="100%" height="100%" fill="white" />
+                        <ellipse 
+                          cx="50%" 
+                          cy="50%" 
+                          rx={`${(299 * scaleFactor) / 2}px`} 
+                          ry={`${(490 * scaleFactor) / 2}px`} 
+                          fill="black" 
+                        />
+                      </mask>
+                    </defs>
+                  </svg>
+                  
+                  {/* Outer overlay layer - for preview, show success color */}
                   <div 
-                    className="border-4 border-white border-dashed opacity-80"
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                      width: '60%',
-                      height: '75%',
-                      borderStyle: 'dashed',
-                      borderWidth: '3px',
-                      borderRadius: '50%'
+                      backgroundColor: '#D1E3DB', // Success color for captured photo
+                      opacity: 0.6,
+                      mask: 'url(#ellipse-mask-preview)',
+                      WebkitMask: 'url(#ellipse-mask-preview)',
                     }}
                   />
-                </div>
+                  
+                  {/* Ellipse guide */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                      style={{
+                        width: `${299 * scaleFactor}px`,
+                        height: `${490 * scaleFactor}px`,
+                        borderRadius: `${490 * scaleFactor}px`,
+                        border: `${5 * scaleFactor}px dashed #FFFFFF`,
+                      }}
+                    />
+                  </div>
+                </>
                 {/* Face validation loading overlay */}
                 {isValidatingFace && (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-3xl z-40">
-                    <div className="bg-white rounded-xl p-4 shadow-xl">
+                    <div className="bg-white rounded-xl p-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
                         <div>
@@ -1231,7 +1399,12 @@ const UploadPage = (): JSX.Element => {
               </div>
             ) : (
               // Show live camera feed
-              <div className="relative w-full h-full rounded-3xl overflow-hidden bg-black shadow-lg">
+              <div 
+                className="relative w-full h-full overflow-hidden bg-black"
+                style={{
+                  borderRadius: `${10 * scaleFactor}px`,
+                }}
+              >
                 {isCameraActive && !cameraError ? (
                   <>
                     {/* Camera status indicator */}
@@ -1302,40 +1475,6 @@ const UploadPage = (): JSX.Element => {
             </div>
           )}
 
-          {/* Guidelines */}
-          <div className="bg-white rounded-2xl p-3 mx-4 mb-4 shadow-sm border border-gray-100 max-w-sm w-full">
-            <div className="grid grid-cols-3 gap-4">
-              {/* No filters */}
-              <div className="text-center">
-                <div className="w-10 h-10 mx-auto mb-2 bg-black rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </div>
-                <p className="text-xs font-medium text-gray-700">No filters</p>
-              </div>
-
-              {/* Natural lighting */}
-              <div className="text-center">
-                <div className="w-10 h-10 mx-auto mb-2 bg-black rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <p className="text-xs font-medium text-gray-700">Natural lighting</p>
-              </div>
-
-              {/* Front facing */}
-              <div className="text-center">
-                <div className="w-10 h-10 mx-auto mb-2 bg-black rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <p className="text-xs font-medium text-gray-700">Front facing</p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Debug Controls (Development only) */}
