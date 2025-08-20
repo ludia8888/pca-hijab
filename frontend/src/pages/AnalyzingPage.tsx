@@ -671,13 +671,9 @@ const AnalyzingPage = (): JSX.Element => {
                 <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
                   <img 
                     src={analysisCharacter} 
-                    alt="Noor" 
+                    alt="Analysis Character" 
                     className="w-24 h-24 object-contain filter drop-shadow-xl"
                   />
-                  {/* Character name badge */}
-                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">
-                    Noor
-                  </div>
                 </div>
 
                 {/* Speech Bubble */}
