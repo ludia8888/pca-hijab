@@ -698,11 +698,6 @@ const AnalyzingPage = (): JSX.Element => {
                     <p className="text-xs text-gray-500 mt-2 italic">
                       {currentStepData.techExplanation}
                     </p>
-                    
-                    {/* Step indicator */}
-                    <div className="text-xs text-primary-600 font-semibold mt-2">
-                      Step {currentStep + 1} / {ANALYSIS_STEPS.length}
-                    </div>
                   </div>
                 </div>
               </div>
