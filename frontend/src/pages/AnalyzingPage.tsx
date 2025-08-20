@@ -10,6 +10,7 @@ import { parseImageAnalysisError, ImageAnalysisErrorType } from '@/utils/imageAn
 import FaceLandmarkVisualization from '@/components/analysis/FaceLandmarkVisualization';
 import { updateSessionWithRecovery } from '@/utils/sessionHelper';
 import guideBackground from '@/assets/가이드배경.jpg';
+import analysisCharacter from '@/assets/분석캐릭터.png';
 
 const AnalyzingPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -668,15 +669,11 @@ const AnalyzingPage = (): JSX.Element => {
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
                 {/* Character Container */}
                 <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
-                  <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                    <div className="text-3xl">
-                      {currentStepData.character === 'detective' && '🕵️‍♀️'}
-                      {currentStepData.character === 'scientist' && '👩‍🔬'}
-                      {currentStepData.character === 'wizard' && '🧙‍♀️'}
-                      {currentStepData.character === 'analyst' && '👩‍💼'}
-                      {currentStepData.character === 'artist' && '👩‍🎨'}
-                    </div>
-                  </div>
+                  <img 
+                    src={analysisCharacter} 
+                    alt="Noor" 
+                    className="w-24 h-24 object-contain filter drop-shadow-xl"
+                  />
                   {/* Character name badge */}
                   <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">
                     Noor
