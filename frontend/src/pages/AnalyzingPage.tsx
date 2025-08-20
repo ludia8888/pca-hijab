@@ -130,7 +130,10 @@ const AnalyzingPage = (): JSX.Element => {
       const isDrapingPhase = step.id === 'warm-cool-comparison' || step.id === 'season-comparison' || step.id === 'final-result';
       
       // Allow skip if it's a draping phase OR if analysis is already complete
-      setCanSkip(isDrapingPhase || analysisComplete);
+      // Note: For Step 1, canSkip will be set to true when scan completes via onLandmarksDetected
+      if (currentStep !== 0) { // Don't override Step 1's manual control
+        setCanSkip(isDrapingPhase || analysisComplete);
+      }
       
       // Show navigation buttons for phases 3, 4, and 5 OR if analysis is complete
       setShowNavButtons(isDrapingPhase || analysisComplete);
@@ -155,14 +158,15 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Auto-advance for non-draping phases, manual control for draping phases
       // BUT if analysis is complete, allow manual control for all phases
-      if (!isDrapingPhase && !analysisComplete) {
+      // Step 1 (index 0) waits for scan completion, no auto-advance
+      if (!isDrapingPhase && !analysisComplete && currentStep !== 0) {
         stepTimerRef.current = setTimeout(() => {
           if (currentStep < ANALYSIS_STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
           }
         }, step.duration);
       }
-      // For draping phases or when analysis is complete, wait for user interaction (no timer)
+      // For Step 1, draping phases, or when analysis is complete, wait for user interaction (no timer)
 
       return () => {
         if (stepTimerRef.current) {
@@ -509,9 +513,16 @@ const AnalyzingPage = (): JSX.Element => {
                     currentAnalysisStep={currentStep}
                     onLandmarksDetected={(landmarks) => {
                     console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
+                    
+                    // Check if scan is complete (Step 1 only)
+                    if (currentStep === 0 && landmarks.some((l: any) => l.scanComplete)) {
+                      console.log('✅ [Step 1] Scan complete, enabling continue button');
+                      setCanSkip(true); // Enable continue button after scan completes
+                    }
+                    
                     trackEvent('face_landmarks_detected', {
                       faces_count: landmarks.length,
-                      total_landmarks: landmarks.reduce((sum, face) => sum + face.keypoints.length, 0),
+                      total_landmarks: landmarks.reduce((sum, face) => sum + (face.keypoints ? face.keypoints.length : 0), 0),
                       current_analysis_step: currentStep,
                       step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
                       user_flow_step: 'landmarks_visualization_synchronized'

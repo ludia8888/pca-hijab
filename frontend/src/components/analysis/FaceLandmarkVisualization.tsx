@@ -48,6 +48,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const animationFrameRef = useRef<number>(0);
   const animationTimeRef = useRef<number>(0);
   const frameCountRef = useRef<number>(0);
+  const animationStartTimeRef = useRef<number>(0);
+  const scanCompleteRef = useRef<boolean>(false);
 
   // Initialize TensorFlow and face detector
   useEffect(() => {
@@ -145,6 +147,140 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     
     // Use even-odd fill rule to create inverse mask
     ctx.clip('evenodd');
+  };
+
+  // Define face landmark groups for 3D mesh effect (Step 1 only)
+  const getFaceLandmarkGroups = (keypoints: FaceLandmark[]) => {
+    // Create mesh-like grid of points across face
+    return {
+      // Face outline - forms the outer mesh boundary
+      outline: keypoints.filter((_, i) => 
+        // Jaw line (bottom contour)
+        i === 172 || i === 136 || i === 150 || i === 149 || i === 176 || i === 148 ||
+        i === 152 || i === 377 || i === 400 || i === 378 || i === 379 || i === 365 ||
+        // Forehead line (top contour)  
+        i === 10 || i === 338 || i === 297 || i === 332 || i === 284 || i === 251 ||
+        i === 389 || i === 356 || i === 454 || i === 323 || i === 361 || i === 340 ||
+        i === 346 || i === 347 || i === 348 || i === 349 || i === 350 || i === 103
+      ),
+      // Eyes - mesh grid around eye area
+      eyes: keypoints.filter((_, i) => 
+        // Right eye mesh
+        i === 33 || i === 7 || i === 163 || i === 144 || i === 145 || i === 153 ||
+        i === 154 || i === 155 || i === 133 || i === 173 || i === 157 || i === 158 ||
+        // Left eye mesh
+        i === 362 || i === 398 || i === 384 || i === 385 || i === 386 || i === 387 ||
+        i === 388 || i === 466 || i === 263 || i === 249 || i === 390 || i === 373
+      ),
+      // Nose - vertical and horizontal mesh lines
+      nose: keypoints.filter((_, i) => 
+        // Central vertical line
+        i === 9 || i === 10 || i === 151 || i === 337 || i === 299 || i === 333 ||
+        i === 298 || i === 301 || i === 168 || i === 6 || i === 197 || i === 195 ||
+        // Nose wings and nostrils
+        i === 3 || i === 51 || i === 45 || i === 115 || i === 131 || i === 102 ||
+        i === 48 || i === 64 || i === 235 || i === 31 || i === 228 || i === 229
+      ),
+      // Mouth - mesh around lips
+      mouth: keypoints.filter((_, i) => 
+        // Upper lip contour
+        i === 61 || i === 84 || i === 17 || i === 314 || i === 405 || i === 320 ||
+        i === 307 || i === 375 || i === 321 || i === 308 || i === 324 || i === 318 ||
+        // Lower lip contour
+        i === 14 || i === 87 || i === 178 || i === 88 || i === 95 || i === 78 ||
+        i === 191 || i === 80 || i === 81 || i === 82 || i === 13 || i === 312 ||
+        i === 311 || i === 310 || i === 415 || i === 316 || i === 403 || i === 319 ||
+        i === 325 || i === 292 || i === 272 || i === 271 || i === 268 || i === 269
+      ),
+    };
+  };
+
+  // Draw 3D mesh connections between points (Step 1 only)
+  const drawMeshConnections = (ctx: CanvasRenderingContext2D, points: FaceLandmark[], canvas: HTMLCanvasElement, opacity: number = 0.3) => {
+    if (points.length < 3) return;
+    
+    ctx.save();
+    ctx.strokeStyle = '#FCA5A5'; // Coral pink
+    ctx.lineWidth = 0.8;
+    ctx.lineCap = 'round';
+    
+    // Create mesh by connecting nearby points
+    for (let i = 0; i < points.length; i++) {
+      const p1 = points[i];
+      const x1 = p1.x * canvas.width;
+      const y1 = p1.y * canvas.height;
+      
+      // Connect to nearby points to form triangular mesh
+      for (let j = i + 1; j < points.length; j++) {
+        const p2 = points[j];
+        const x2 = p2.x * canvas.width;
+        const y2 = p2.y * canvas.height;
+        
+        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        
+        // Only connect points within reasonable distance to form mesh
+        if (distance < 60 && distance > 10) {
+          // Fade lines based on distance
+          ctx.globalAlpha = opacity * (1 - distance / 60) * 0.7;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+      }
+    }
+    
+    ctx.restore();
+  };
+  
+  // Draw Delaunay-style triangulation for 3D mesh effect
+  const drawDelaunayMesh = (ctx: CanvasRenderingContext2D, points: FaceLandmark[], canvas: HTMLCanvasElement, opacity: number = 0.3) => {
+    if (points.length < 3) return;
+    
+    ctx.save();
+    ctx.strokeStyle = '#FCA5A5';
+    ctx.lineWidth = 0.6;
+    ctx.shadowColor = '#FCA5A5';
+    ctx.shadowBlur = 2;
+    
+    // Simple triangulation - connect each point to its 2-3 nearest neighbors
+    const drawn = new Set();
+    
+    points.forEach((p1, i) => {
+      const x1 = p1.x * canvas.width;
+      const y1 = p1.y * canvas.height;
+      
+      // Find nearest neighbors
+      const neighbors = points
+        .map((p2, j) => {
+          if (i === j) return null;
+          const x2 = p2.x * canvas.width;
+          const y2 = p2.y * canvas.height;
+          const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+          return { point: p2, distance: dist, index: j };
+        })
+        .filter(n => n !== null && n.distance < 80)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 3); // Connect to 3 nearest neighbors
+      
+      neighbors.forEach(neighbor => {
+        const edgeKey = `${Math.min(i, neighbor.index)}-${Math.max(i, neighbor.index)}`;
+        if (!drawn.has(edgeKey)) {
+          drawn.add(edgeKey);
+          
+          const x2 = neighbor.point.x * canvas.width;
+          const y2 = neighbor.point.y * canvas.height;
+          
+          ctx.globalAlpha = opacity * (1 - neighbor.distance / 80);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+      });
+    });
+    
+    ctx.restore();
   };
 
   // Draw color draping overlay as background
@@ -317,7 +453,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             if (i % 10 === 0) return true;
             return false;
           }).filter(Boolean),
-          color: '#00FF9F'
+          color: '#FCA5A5' // Coral pink for beauty/care tone
         },
         extracting: {
           points: face.keypoints.filter((_, i) => 
@@ -345,124 +481,115 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
       const currentPhase = simplePhases[phase as keyof typeof simplePhases] || simplePhases.detecting;
       
-      // Enhanced visualization for detecting phase
+      // Enhanced scanning effect with 3D mesh for detecting phase (Step 1 only)
       if (phase === 'detecting') {
-        const time = Date.now() * 0.001; // Time in seconds for animation
+        const elapsed = Date.now() - animationStartTimeRef.current;
+        const scanDuration = 3000; // 3 seconds for one complete up-down cycle
+        const scanProgress = Math.min(elapsed / scanDuration, 1);
         
-        // Draw scanning lines effect
+        // Single scan cycle: 0 to 1 to 0 (top to bottom to top)
+        let scanPosition;
+        if (scanProgress < 0.5) {
+          // Scanning down (0 to 1)
+          scanPosition = scanProgress * 2;
+        } else {
+          // Scanning up (1 to 0)
+          scanPosition = 2 - (scanProgress * 2);
+        }
+        
+        const scanY = scanPosition * canvas.height;
+        const scanRange = 80; // Range of mesh visibility around scan line
+        
+        // Mark scan as complete after one cycle
+        if (scanProgress >= 1 && !scanCompleteRef.current) {
+          scanCompleteRef.current = true;
+          // Trigger callback to enable continue button if provided
+          if (onLandmarksDetected && landmarks.length > 0) {
+            onLandmarksDetected([...landmarks, { scanComplete: true }]);
+          }
+        }
+        
+        // Get all landmark groups for mesh
+        const groups = getFaceLandmarkGroups(face.keypoints);
+        const allMeshPoints = [...groups.outline, ...groups.eyes, ...groups.nose, ...groups.mouth];
+        
+        // Filter points based on scan position - only show mesh near scan line
+        const activePoints = allMeshPoints.filter(point => {
+          const pointY = point.y * canvas.height;
+          const distFromScan = Math.abs(pointY - scanY);
+          return distFromScan < scanRange;
+        });
+        
+        // Draw scan line effect
         ctx.save();
-        ctx.strokeStyle = '#00FF9F';
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.3;
-        ctx.setLineDash([5, 10]);
         
-        // Horizontal scanning line
-        const scanY = (Math.sin(time * 1.5) * 0.5 + 0.5) * canvas.height;
+        // Main scan line
+        const scanGradient = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
+        scanGradient.addColorStop(0, 'rgba(252, 165, 165, 0)');
+        scanGradient.addColorStop(0.5, 'rgba(252, 165, 165, 0.4)');
+        scanGradient.addColorStop(1, 'rgba(252, 165, 165, 0)');
+        
+        ctx.fillStyle = scanGradient;
+        ctx.fillRect(0, scanY - 30, canvas.width, 60);
+        
+        // Bright scan line
+        ctx.strokeStyle = '#FCA5A5';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#FCA5A5';
+        ctx.shadowBlur = 10;
+        ctx.globalAlpha = 0.8;
         ctx.beginPath();
         ctx.moveTo(0, scanY);
         ctx.lineTo(canvas.width, scanY);
         ctx.stroke();
         
-        // Vertical scanning line
-        const scanX = (Math.cos(time * 1.5) * 0.5 + 0.5) * canvas.width;
+        // Secondary scan lines
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.3;
+        ctx.shadowBlur = 5;
         ctx.beginPath();
-        ctx.moveTo(scanX, 0);
-        ctx.lineTo(scanX, canvas.height);
+        ctx.moveTo(0, scanY - 15);
+        ctx.lineTo(canvas.width, scanY - 15);
+        ctx.moveTo(0, scanY + 15);
+        ctx.lineTo(canvas.width, scanY + 15);
         ctx.stroke();
         
-        ctx.setLineDash([]); // Reset line dash
         ctx.restore();
         
-        // Optimized Delaunay-style triangulation
-        ctx.strokeStyle = currentPhase.color;
-        ctx.lineWidth = 0.5;
-        
-        // Group points by regions for more efficient triangulation
-        const regions = {
-          leftEye: currentPhase.points.slice(0, Math.floor(currentPhase.points.length * 0.2)),
-          rightEye: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.2), Math.floor(currentPhase.points.length * 0.4)),
-          nose: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.4), Math.floor(currentPhase.points.length * 0.6)),
-          mouth: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.6), Math.floor(currentPhase.points.length * 0.8)),
-          outline: currentPhase.points.slice(Math.floor(currentPhase.points.length * 0.8))
-        };
-        
-        // Draw triangulation for each region
-        Object.values(regions).forEach((regionPoints) => {
-          for (let i = 0; i < regionPoints.length; i++) {
-            const point1 = regionPoints[i];
-            if (!point1) continue;
+        // Draw 3D mesh for points near scan line with fade effect
+        activePoints.forEach((point, i) => {
+          const pointY = point.y * canvas.height;
+          const distFromScan = Math.abs(pointY - scanY);
+          const fadeOpacity = 1 - (distFromScan / scanRange);
+          
+          // Draw connections to nearby points
+          activePoints.forEach((otherPoint, j) => {
+            if (i >= j) return; // Avoid duplicate lines
             
-            const x1 = point1.x * canvas.width;
-            const y1 = point1.y * canvas.height;
+            const x1 = point.x * canvas.width;
+            const y1 = point.y * canvas.height;
+            const x2 = otherPoint.x * canvas.width;
+            const y2 = otherPoint.y * canvas.height;
             
-            // Connect to 2-3 nearest points in the same region
-            for (let j = i + 1; j < Math.min(i + 3, regionPoints.length); j++) {
-              const point2 = regionPoints[j];
-              if (!point2) continue;
-              
-              const x2 = point2.x * canvas.width;
-              const y2 = point2.y * canvas.height;
-              
-              const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-              
-              if (distance < 60) {
-                // Pulsing effect based on time
-                const pulse = Math.sin(time * 2 + i * 0.1) * 0.2 + 0.3;
-                ctx.globalAlpha = pulse;
-                
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-              }
+            const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            
+            if (distance < 60 && distance > 10) {
+              ctx.save();
+              ctx.strokeStyle = '#FCA5A5';
+              ctx.lineWidth = 0.6;
+              ctx.globalAlpha = fadeOpacity * 0.3 * (1 - distance / 60);
+              ctx.beginPath();
+              ctx.moveTo(x1, y1);
+              ctx.lineTo(x2, y2);
+              ctx.stroke();
+              ctx.restore();
             }
-          }
+          });
         });
         
-        // Draw feature detection boxes
-        ctx.save();
-        ctx.strokeStyle = '#00FF9F';
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = 0.5;
-        ctx.setLineDash([3, 3]);
+        // Override current phase points to show active mesh points
+        currentPhase.points = activePoints;
         
-        // Eye detection boxes with corner brackets
-        const leftEyePoints = face.keypoints.slice(33, 46);
-        const rightEyePoints = face.keypoints.slice(263, 276);
-        
-        [leftEyePoints, rightEyePoints].forEach((eyePoints) => {
-          if (eyePoints.length > 0) {
-            const xs = eyePoints.map(p => p.x * canvas.width);
-            const ys = eyePoints.map(p => p.y * canvas.height);
-            const minX = Math.min(...xs) - 10;
-            const maxX = Math.max(...xs) + 10;
-            const minY = Math.min(...ys) - 10;
-            const maxY = Math.max(...ys) + 10;
-            
-            const cornerSize = 8;
-            ctx.beginPath();
-            // Top-left corner
-            ctx.moveTo(minX + cornerSize, minY);
-            ctx.lineTo(minX, minY);
-            ctx.lineTo(minX, minY + cornerSize);
-            // Top-right corner
-            ctx.moveTo(maxX - cornerSize, minY);
-            ctx.lineTo(maxX, minY);
-            ctx.lineTo(maxX, minY + cornerSize);
-            // Bottom-left corner
-            ctx.moveTo(minX + cornerSize, maxY);
-            ctx.lineTo(minX, maxY);
-            ctx.lineTo(minX, maxY - cornerSize);
-            // Bottom-right corner
-            ctx.moveTo(maxX - cornerSize, maxY);
-            ctx.lineTo(maxX, maxY);
-            ctx.lineTo(maxX, maxY - cornerSize);
-            ctx.stroke();
-          }
-        });
-        
-        ctx.setLineDash([]);
-        ctx.restore();
       } else {
         // Original mesh for other phases
         ctx.strokeStyle = currentPhase.color;
@@ -509,46 +636,54 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         if (phase === 'detecting') {
           const time = Date.now() * 0.001;
           
-          // Animated dot size for scanning effect
-          const baseSize = 2;
-          const pulse = Math.sin(time * 3 + index * 0.15) * 0.5 + 1;
-          const size = baseSize * pulse;
+          // Mesh vertices with scan-based visibility
+          const elapsed = Date.now() - animationStartTimeRef.current;
+          const scanDuration = 3000;
+          const scanProgress = Math.min(elapsed / scanDuration, 1);
           
-          // Glowing effect
-          ctx.fillStyle = currentPhase.color;
-          ctx.shadowColor = currentPhase.color;
-          ctx.shadowBlur = 8 * pulse;
-          
-          // Key features get stronger emphasis
-          const isKeyFeature = index % 5 === 0 || index < 10;
-          ctx.globalAlpha = isKeyFeature ? 0.8 : 0.5;
-          
-          // Draw outer ring for key features
-          if (isKeyFeature) {
-            ctx.save();
-            ctx.strokeStyle = currentPhase.color;
-            ctx.lineWidth = 1;
-            ctx.globalAlpha = 0.3;
-            ctx.beginPath();
-            ctx.arc(x, y, size + 3, 0, 2 * Math.PI);
-            ctx.stroke();
-            ctx.restore();
+          let scanPosition;
+          if (scanProgress < 0.5) {
+            scanPosition = scanProgress * 2;
+          } else {
+            scanPosition = 2 - (scanProgress * 2);
           }
           
-          // Draw main dot
-          ctx.globalAlpha = 0.7;
-          ctx.beginPath();
-          ctx.arc(x, y, size, 0, 2 * Math.PI);
-          ctx.fill();
+          const scanY = scanPosition * canvas.height;
+          const distFromScan = Math.abs(y - scanY);
+          const scanRange = 80;
           
-          // Add coordinate display for some points
-          if (index % 15 === 0) {
+          if (distFromScan < scanRange) {
+            const fadeOpacity = 1 - (distFromScan / scanRange);
+            const baseSize = 2.5;
+            const size = baseSize;
+            
+            // Outer glow
             ctx.save();
-            ctx.font = '8px monospace';
-            ctx.fillStyle = currentPhase.color;
-            ctx.globalAlpha = 0.4;
-            ctx.fillText(`[${Math.round(landmark.x * 100)},${Math.round(landmark.y * 100)}]`, x + 5, y - 5);
+            const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
+            glowGradient.addColorStop(0, `rgba(252, 165, 165, ${fadeOpacity * 0.8})`);
+            glowGradient.addColorStop(1, 'rgba(252, 165, 165, 0)');
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 2, 0, 2 * Math.PI);
+            ctx.fill();
             ctx.restore();
+            
+            // Main vertex dot
+            ctx.fillStyle = '#FCA5A5';
+            ctx.shadowColor = '#FCA5A5';
+            ctx.shadowBlur = 5;
+            ctx.globalAlpha = fadeOpacity * 0.9;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Bright center
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = fadeOpacity;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.3, 0, 2 * Math.PI);
+            ctx.fill();
           }
         } else {
           // Original dots for other phases
@@ -731,6 +866,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
     // Start detection if detector is ready
     if (detector) {
+      animationStartTimeRef.current = Date.now(); // Record animation start time for Step 1
+      scanCompleteRef.current = false; // Reset scan complete flag
       detectLandmarks();
     }
   }, [detector, detectLandmarks]);
@@ -738,6 +875,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   // Start detection when detector is ready and image is loaded
   useEffect(() => {
     if (detector && imageRef.current?.complete) {
+      animationStartTimeRef.current = Date.now(); // Record animation start time for Step 1
+      scanCompleteRef.current = false; // Reset scan complete flag
       detectLandmarks();
     }
   }, [detector, detectLandmarks]);
@@ -758,6 +897,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     };
     
     if (animationPhase === 'detecting' && landmarks.length > 0) {
+      if (animationStartTimeRef.current === 0) {
+        animationStartTimeRef.current = Date.now();
+        scanCompleteRef.current = false;
+      }
       frameCountRef.current = 0;
       animate();
     }

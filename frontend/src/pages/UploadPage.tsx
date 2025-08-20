@@ -135,19 +135,34 @@ const UploadPage = (): JSX.Element => {
         });
     }
     
+    // Guard against initialization if no session
+    if (!sessionId) {
+      console.log('⏸️ [Camera API] Skipping camera init - no session, will redirect');
+      return;
+    }
+    
+    let isMounted = true; // Track if component is still mounted
+    
     // Small delay to ensure DOM is ready
-    setTimeout(() => {
+    const initTimeout = setTimeout(() => {
       // Wait for refs to be available before starting camera
       const startCameraWhenReady = () => {
+        // Stop if component unmounted
+        if (!isMounted) {
+          console.log('🛑 [Camera API] Component unmounted, stopping initialization loop');
+          return;
+        }
+        
         console.log('🔍 [Camera API] Checking refs availability...', {
           videoRef: !!videoRef.current,
-          canvasRef: !!canvasRef.current
+          canvasRef: !!canvasRef.current,
+          isMounted
         });
         
         if (videoRef.current && canvasRef.current) {
           console.log('✅ [Camera API] Refs are ready, starting camera');
           startCamera();
-        } else {
+        } else if (isMounted) {
           console.log('⏳ [Camera API] Refs not ready yet, waiting...');
           setTimeout(startCameraWhenReady, 100);
         }
@@ -159,40 +174,62 @@ const UploadPage = (): JSX.Element => {
     // Cleanup camera on unmount
     return () => {
       console.log('🔚 [Camera API] Component unmounting, cleaning up...');
+      isMounted = false; // Mark as unmounted to stop initialization loop
+      clearTimeout(initTimeout); // Clear the initialization timeout
       stopCamera();
       stopFaceDetection();
     };
-  }, []);
+  }, [sessionId]); // Add sessionId dependency
 
   // Restart camera when facing mode changes
   useEffect(() => {
     console.log('🔄 [Camera API] Facing mode changed to:', facingMode);
     
+    // Don't restart if no session
+    if (!sessionId) {
+      console.log('⏸️ [Camera API] Skipping camera restart - no session');
+      return;
+    }
+    
     if (isCameraActive) {
       console.log('🔄 [Camera API] Restarting camera with new facing mode...');
       stopCamera();
       
+      let isMounted = true; // Track if this effect is still active
+      
       // Wait for refs to be available before restarting camera
       const restartCameraWhenReady = () => {
+        // Stop if effect was cleaned up
+        if (!isMounted) {
+          console.log('🛑 [Camera API] Effect cleaned up, stopping restart loop');
+          return;
+        }
+        
         console.log('🔍 [Camera API] Checking refs for restart...', {
           videoRef: !!videoRef.current,
-          canvasRef: !!canvasRef.current
+          canvasRef: !!canvasRef.current,
+          isMounted
         });
         
         if (videoRef.current && canvasRef.current) {
           console.log('✅ [Camera API] Refs ready for restart, starting camera');
           startCamera();
-        } else {
+        } else if (isMounted) {
           console.log('⏳ [Camera API] Refs not ready for restart, waiting...');
           setTimeout(restartCameraWhenReady, 100);
         }
       };
       
       restartCameraWhenReady();
+      
+      // Cleanup function to stop restart loop if component unmounts
+      return () => {
+        isMounted = false;
+      };
     } else {
       console.log('ℹ️ [Camera API] Camera not active, skipping restart');
     }
-  }, [facingMode]);
+  }, [facingMode, sessionId]); // Add sessionId dependency
 
   const startCamera = async (): Promise<void> => {
     console.log('🎥 [Camera API] Starting camera initialization...');
@@ -1787,7 +1824,9 @@ const UploadPage = (): JSX.Element => {
                           marginBottom: `${16 * scaleFactor}px`,
                         }}
                       >
-                        {cameraError}
+                        {cameraError.includes('denied') 
+                          ? "Camera access was blocked. Please allow camera in your browser settings (click the lock icon in the URL bar)."
+                          : cameraError}
                       </p>
                       <button
                         onClick={() => {

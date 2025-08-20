@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
+import { useAppStore } from '@/store';
+import { SessionAPI } from '@/services/api/session';
+import { trackSessionStart } from '@/utils/analytics';
 import backgroundImage_1x from '../assets/배경1.png';
 import mynoorLogo from '../assets/Mynoor.png';
 import star1 from '../assets/별1.png';
@@ -14,10 +17,30 @@ import openEye from '../assets/뜬눈.png';
 
 const HIGLandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setSessionData } = useAppStore();
   const [scaleFactor, setScaleFactor] = useState(1);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   
-  const handleStartAnalysis = () => {
-    navigate(ROUTES.PHOTOGUIDE);
+  const handleStartAnalysis = async () => {
+    if (isCreatingSession) return; // Prevent double clicks
+    
+    setIsCreatingSession(true);
+    try {
+      // Create a session before navigating
+      const response = await SessionAPI.createSession();
+      setSessionData(response.data.sessionId, response.data.instagramId);
+      trackSessionStart(response.data.instagramId || 'anonymous');
+      console.log('✅ Session created:', response.data.sessionId);
+      
+      // Navigate to photo guide
+      navigate(ROUTES.PHOTOGUIDE);
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      // Still navigate even if session creation fails (it will be handled downstream)
+      navigate(ROUTES.PHOTOGUIDE);
+    } finally {
+      setIsCreatingSession(false);
+    }
   };
 
   // Calculate optimal scale to prevent overlapping
@@ -349,6 +372,7 @@ const HIGLandingPage: React.FC = () => {
         >
           <button 
             onClick={handleStartAnalysis}
+            disabled={isCreatingSession}
             className="flex items-center justify-center cursor-pointer transition-all"
             style={{ 
               width: '100%',
@@ -358,9 +382,11 @@ const HIGLandingPage: React.FC = () => {
               background: '#FFF3A1',
               border: 'none',
               transition: 'all 0.2s ease',
+              opacity: isCreatingSession ? 0.7 : 1,
+              cursor: isCreatingSession ? 'wait' : 'pointer',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
+              if (!isCreatingSession) e.currentTarget.style.transform = 'scale(1.02)';
               e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 19, 137, 0.15)';
             }}
             onMouseLeave={(e) => {
@@ -368,7 +394,7 @@ const HIGLandingPage: React.FC = () => {
               e.currentTarget.style.boxShadow = 'none';
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.transform = 'scale(0.98)';
+              if (!isCreatingSession) e.currentTarget.style.transform = 'scale(0.98)';
             }}
             onTouchEnd={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
@@ -384,7 +410,7 @@ const HIGLandingPage: React.FC = () => {
                 lineHeight: '140%'
               }}
             >
-              Let's Find Your Colors!
+              {isCreatingSession ? 'Starting...' : "Let's Find Your Colors!"}
             </span>
           </button>
         </div>
