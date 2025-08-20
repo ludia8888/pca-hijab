@@ -498,7 +498,7 @@ const AnalyzingPage = (): JSX.Element => {
             <div
               className="absolute overflow-hidden"
               style={{
-                top: `${(16 + 61) * scaleFactor + 16 + (16 + 24*1.4 + 16) * scaleFactor + 16}px`, // header + 16px + text container + 16px gap
+                top: `${(16 + 61) * scaleFactor + 16 + (16 * 2 + 24*1.4) * scaleFactor + 16}px`, // header + 16px + text container height (with padding) + 16px gap
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: '348px',
