@@ -44,9 +44,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState<DetectedFace[]>([]);
-  const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'warm-cool' | 'season' | 'complete'>('detecting');
-  const animationFrameRef = useRef<number>(0);
-  const animationTimeRef = useRef<number>(0);
+  const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'analyzing' | 'warm-cool' | 'season' | 'complete'>('detecting');
   const frameCountRef = useRef<number>(0);
   const animationStartTimeRef = useRef<number>(0);
   const scanCompleteRef = useRef<boolean>(false);
@@ -195,7 +193,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     };
   };
 
-  // Draw 3D mesh connections between points (Step 1 only)
+  // Draw 3D mesh connections between points (Step 1 only) - unused but kept for reference
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const drawMeshConnections = (ctx: CanvasRenderingContext2D, points: FaceLandmark[], canvas: HTMLCanvasElement, opacity: number = 0.3) => {
     if (points.length < 3) return;
     
@@ -233,7 +232,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     ctx.restore();
   };
   
-  // Draw Delaunay-style triangulation for 3D mesh effect
+  // Draw Delaunay-style triangulation for 3D mesh effect - unused but kept for reference
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const drawDelaunayMesh = (ctx: CanvasRenderingContext2D, points: FaceLandmark[], canvas: HTMLCanvasElement, opacity: number = 0.3) => {
     if (points.length < 3) return;
     
@@ -260,10 +260,11 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           return { point: p2, distance: dist, index: j };
         })
         .filter(n => n !== null && n.distance < 80)
-        .sort((a, b) => a.distance - b.distance)
+        .sort((a, b) => (a?.distance ?? 0) - (b?.distance ?? 0))
         .slice(0, 3); // Connect to 3 nearest neighbors
       
       neighbors.forEach(neighbor => {
+        if (!neighbor) return;
         const edgeKey = `${Math.min(i, neighbor.index)}-${Math.max(i, neighbor.index)}`;
         if (!drawn.has(edgeKey)) {
           drawn.add(edgeKey);
@@ -435,7 +436,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     }
     
     // Original landmark visualization for other phases
-    faces.forEach((face, faceIndex) => {
+    faces.forEach((face) => {
       const simplePhases = {
         detecting: {
           // More comprehensive points for better triangulation
@@ -642,8 +643,6 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         const y = landmark.y * canvas.height;
         
         if (phase === 'detecting') {
-          const time = Date.now() * 0.001;
-          
           // Mesh vertices with scan-based visibility
           const elapsed = Date.now() - animationStartTimeRef.current;
           const scanDuration = 2000;
@@ -723,7 +722,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   }, []);
 
   // Map analysis steps to animation phases
-  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'warm-cool' | 'season' | 'complete' => {
+  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'analyzing' | 'warm-cool' | 'season' | 'complete' => {
     const phaseMap = {
       0: 'detecting' as const,    // face-detection
       1: 'extracting' as const,   // color-extraction
@@ -847,7 +846,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
         // Force hard reload after a short delay
         setTimeout(() => {
-          window.location.reload(true);
+          window.location.reload();
         }, 1500);
       } else {
         // For other errors, show generic message

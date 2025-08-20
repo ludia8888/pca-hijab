@@ -110,14 +110,63 @@ const UploadPage = (): JSX.Element => {
   // Start camera on component mount
   useEffect(() => {
     console.log('🚀 [Camera API] Component mounted, starting camera...');
+    console.log('🚀 [Camera API] Current URL:', window.location.href);
+    console.log('🚀 [Camera API] Session ID:', sessionId);
     console.log('🚀 [Camera API] Browser info:', {
       userAgent: navigator.userAgent,
       cookieEnabled: navigator.cookieEnabled,
-      onLine: navigator.onLine
+      onLine: navigator.onLine,
+      language: navigator.language,
+      platform: navigator.platform,
+      vendor: navigator.vendor
     });
+    
+    // Check document state
+    console.log('📄 [Camera API] Document state:', {
+      readyState: document.readyState,
+      visibilityState: document.visibilityState,
+      hasFocus: document.hasFocus()
+    });
+    
+    // Check security context
+    console.log('🔒 [Camera API] Security context:', {
+      isSecureContext: window.isSecureContext,
+      protocol: window.location.protocol,
+      hostname: window.location.hostname,
+      origin: window.location.origin
+    });
+    
+    // Add global debug command for production
+    if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pca-hijab')) {
+      console.log('💡 [DEBUG] To show camera debug panel, run this in console:');
+      console.log('     document.getElementById("camera-debug-panel").style.display = "block"');
+      
+      // Make debug functions globally available
+      (window as any).debugCamera = {
+        showPanel: () => {
+          const panel = document.getElementById('camera-debug-panel');
+          if (panel) panel.style.display = 'block';
+        },
+        hidePanel: () => {
+          const panel = document.getElementById('camera-debug-panel');
+          if (panel) panel.style.display = 'none';
+        },
+        getState: () => ({
+          sessionId,
+          isCameraActive,
+          cameraInitialized,
+          cameraError,
+          stream: !!stream,
+          videoRef: !!videoRef.current,
+          canvasRef: !!canvasRef.current
+        })
+      };
+      console.log('💡 [DEBUG] Also available: window.debugCamera.showPanel(), window.debugCamera.getState()');
+    }
     
     // Check device capabilities
     if (navigator.mediaDevices) {
+      console.log('✅ [Camera API] MediaDevices API exists');
       navigator.mediaDevices.enumerateDevices()
         .then(devices => {
           const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -126,13 +175,25 @@ const UploadPage = (): JSX.Element => {
             console.log(`📹 [Camera API] Video device ${index + 1}:`, {
               deviceId: device.deviceId,
               label: device.label || 'Unknown Camera',
-              kind: device.kind
+              kind: device.kind,
+              groupId: device.groupId
             });
           });
+          
+          if (videoDevices.length === 0) {
+            console.error('❌ [Camera API] No video input devices found!');
+          }
         })
         .catch(err => {
           console.error('🚨 [Camera API] Error enumerating devices:', err);
+          console.error('🚨 [Camera API] Enumerate error details:', {
+            name: (err as Error).name,
+            message: (err as Error).message,
+            stack: (err as Error).stack
+          });
         });
+    } else {
+      console.error('❌ [Camera API] MediaDevices API not available!');
     }
     
     // Guard against initialization if no session
@@ -234,6 +295,14 @@ const UploadPage = (): JSX.Element => {
   const startCamera = async (): Promise<void> => {
     console.log('🎥 [Camera API] Starting camera initialization...');
     console.log('🎥 [Camera API] Requested facing mode:', facingMode);
+    console.log('🌐 [Camera API] Environment details:', {
+      url: window.location.href,
+      hostname: window.location.hostname,
+      protocol: window.location.protocol,
+      isSecureContext: window.isSecureContext,
+      isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+      isProduction: window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pca-hijab')
+    });
     
     // Double-check refs are available
     if (!videoRef.current || !canvasRef.current) {
@@ -247,8 +316,19 @@ const UploadPage = (): JSX.Element => {
     }
     
     // Check if getUserMedia is available
+    console.log('🔍 [Camera API] Checking MediaDevices API:', {
+      'navigator.mediaDevices': !!navigator.mediaDevices,
+      'navigator.mediaDevices.getUserMedia': !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+      'window.MediaStream': !!window.MediaStream,
+      'window.RTCPeerConnection': !!window.RTCPeerConnection
+    });
+    
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       console.error('🚨 [Camera API] getUserMedia not supported in this browser');
+      console.error('🚨 [Camera API] MediaDevices details:', {
+        mediaDevices: navigator.mediaDevices,
+        getUserMedia: navigator.mediaDevices?.getUserMedia
+      });
       setCameraError('Camera not supported in this browser');
       setIsCameraActive(false);
       isCameraActiveRef.current = false;
@@ -260,10 +340,21 @@ const UploadPage = (): JSX.Element => {
     // Check camera permissions first if available
     if (navigator.permissions && navigator.permissions.query) {
       try {
+        console.log('🔍 [Camera API] Checking camera permissions...');
         const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
-        console.log('📷 [Camera API] Permission status:', permissionStatus.state);
+        console.log('📷 [Camera API] Permission status:', {
+          state: permissionStatus.state,
+          name: 'camera',
+          timestamp: new Date().toISOString()
+        });
+        
+        // Add listener for permission changes
+        permissionStatus.addEventListener('change', () => {
+          console.log('📷 [Camera API] Permission changed to:', permissionStatus.state);
+        });
         
         if (permissionStatus.state === 'denied') {
+          console.error('❌ [Camera API] Permission denied by user');
           setCameraError('Camera permission was denied. Please enable camera access in your browser settings.');
           setIsCameraActive(false);
           isCameraActiveRef.current = false;
@@ -271,7 +362,14 @@ const UploadPage = (): JSX.Element => {
         }
       } catch (err) {
         console.log('⚠️ [Camera API] Could not check permissions:', err);
+        console.log('⚠️ [Camera API] Error details:', {
+          name: (err as Error).name,
+          message: (err as Error).message,
+          stack: (err as Error).stack
+        });
       }
+    } else {
+      console.log('⚠️ [Camera API] Permissions API not available');
     }
     
     try {
@@ -285,6 +383,8 @@ const UploadPage = (): JSX.Element => {
       });
       
       const startTime = performance.now();
+      console.log('🎬 [Camera API] Calling getUserMedia at:', new Date().toISOString());
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: facingMode,
@@ -412,14 +512,39 @@ const UploadPage = (): JSX.Element => {
       });
     } catch (error) {
       console.error('🚨 [Camera API] Camera access error:', error);
+      console.error('🚨 [Camera API] Error occurred at:', new Date().toISOString());
+      console.error('🚨 [Camera API] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       
       // Log detailed error information
       if (error instanceof Error) {
         console.error('🚨 [Camera API] Error details:', {
           name: error.name,
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
+          toString: error.toString()
         });
+        
+        // Log specific error types
+        if (error.name === 'NotAllowedError') {
+          console.error('❌ [Camera API] NotAllowedError - Permission denied by user or system');
+          console.error('❌ [Camera API] Possible causes:', [
+            '1. User explicitly denied permission',
+            '2. Browser security policy blocks camera',
+            '3. Missing HTTPS in production',
+            '4. Missing Permissions-Policy headers',
+            '5. Browser settings block camera for this site'
+          ]);
+        } else if (error.name === 'NotFoundError') {
+          console.error('❌ [Camera API] NotFoundError - No camera device found');
+        } else if (error.name === 'NotReadableError') {
+          console.error('❌ [Camera API] NotReadableError - Camera is being used by another application');
+        } else if (error.name === 'OverconstrainedError') {
+          console.error('❌ [Camera API] OverconstrainedError - Constraints cannot be satisfied');
+        } else if (error.name === 'SecurityError') {
+          console.error('❌ [Camera API] SecurityError - Page not served over HTTPS or other security issue');
+        } else if (error.name === 'TypeError') {
+          console.error('❌ [Camera API] TypeError - Invalid constraints or API usage');
+        }
         
         let errorMessage = 'Camera access denied or not available';
         
@@ -427,6 +552,14 @@ const UploadPage = (): JSX.Element => {
         const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
         const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor) && !/Chrome/.test(navigator.userAgent);
         const isFirefox = /Firefox/.test(navigator.userAgent);
+        
+        console.log('🌐 [Camera API] Browser detection:', {
+          isChrome,
+          isSafari,
+          isFirefox,
+          userAgent: navigator.userAgent,
+          vendor: navigator.vendor
+        });
         
         // Specific error types with improved messages
         switch (error.name) {
@@ -2194,6 +2327,103 @@ const UploadPage = (): JSX.Element => {
 
         </div>
       </div>
+      
+      {/* Debug Panel - Show in production for diagnosing camera issues */}
+      {(window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pca-hijab')) && (
+        <div style={{
+          position: 'fixed',
+          bottom: 10,
+          right: 10,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '8px',
+          fontSize: '10px',
+          fontFamily: 'monospace',
+          maxWidth: '300px',
+          maxHeight: '400px',
+          overflow: 'auto',
+          zIndex: 9999,
+          display: 'none' // Initially hidden, will be shown via console command
+        }}
+        id="camera-debug-panel"
+        >
+          <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
+            🔍 Camera Debug Info
+          </div>
+          <div>
+            <strong>URL:</strong> {window.location.href}
+          </div>
+          <div>
+            <strong>Protocol:</strong> {window.location.protocol}
+          </div>
+          <div>
+            <strong>Secure Context:</strong> {String(window.isSecureContext)}
+          </div>
+          <div>
+            <strong>Session ID:</strong> {sessionId || 'None'}
+          </div>
+          <div>
+            <strong>Camera Active:</strong> {String(isCameraActive)}
+          </div>
+          <div>
+            <strong>Camera Initialized:</strong> {String(cameraInitialized)}
+          </div>
+          <div>
+            <strong>Camera Error:</strong> {cameraError || 'None'}
+          </div>
+          <div>
+            <strong>Stream:</strong> {stream ? 'Active' : 'None'}
+          </div>
+          <div>
+            <strong>MediaDevices:</strong> {navigator.mediaDevices ? 'Available' : 'Not Available'}
+          </div>
+          <div>
+            <strong>getUserMedia:</strong> {navigator.mediaDevices?.getUserMedia ? 'Available' : 'Not Available'}
+          </div>
+          <div>
+            <strong>Browser:</strong> {navigator.userAgent.slice(0, 50)}...
+          </div>
+          <div style={{ marginTop: '10px' }}>
+            <button 
+              onClick={() => {
+                console.log('🔄 Attempting to restart camera...');
+                stopCamera();
+                setTimeout(() => startCamera(), 100);
+              }}
+              style={{
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Retry Camera
+            </button>
+            <button 
+              onClick={() => {
+                const panel = document.getElementById('camera-debug-panel');
+                if (panel) panel.style.display = 'none';
+              }}
+              style={{
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                marginLeft: '5px'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 };
