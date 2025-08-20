@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
 import { useAppStore } from '@/store';
-import { Button, Card, PrivacyPopup, PrivacyAssurance } from '@/components/ui';
-import { ImageUpload } from '@/components/forms';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
@@ -18,9 +16,7 @@ const UploadPage = (): JSX.Element => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
-  const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
   const [isValidatingFace, setIsValidatingFace] = useState(false);
-  const [showPrivacyAssurance, setShowPrivacyAssurance] = useState(true);
   const [scaleFactor, setScaleFactor] = useState(1);
   
   // Camera states
@@ -1203,7 +1199,7 @@ const UploadPage = (): JSX.Element => {
                 height: '40px',
                 cursor: 'pointer',
               }}
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(ROUTES.DONTWORRY)}
             />
             
             {/* Upload Your Photo title - centered */}
@@ -1250,7 +1246,7 @@ const UploadPage = (): JSX.Element => {
             <video
               ref={videoRef}
               className={`absolute inset-0 w-full h-full object-cover ${
-                !previewUrl && isCameraActive && !cameraError ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
+                !previewUrl && isCameraActive ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
               } ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
               style={{
                 borderRadius: `${10 * scaleFactor}px`,
@@ -1264,34 +1260,23 @@ const UploadPage = (): JSX.Element => {
             {/* Face detection guide overlay - Always show when no preview */}
             {!previewUrl && (
               <>
-                {/* SVG for mask definition */}
-                <svg className="absolute inset-0 pointer-events-none" style={{ width: 0, height: 0 }}>
-                  <defs>
-                    <mask id="ellipse-mask">
-                      <rect width="100%" height="100%" fill="white" />
-                      <ellipse 
-                        cx="50%" 
-                        cy="50%" 
-                        rx={`${(299 * scaleFactor) / 2}px`} 
-                        ry={`${(490 * scaleFactor) / 2}px`} 
-                        fill="black" 
-                      />
-                    </mask>
-                  </defs>
-                </svg>
-                
                 {/* Outer overlay layer with color based on face detection status */}
                 <div 
                   className="absolute inset-0 pointer-events-none z-20"
                   style={{
-                    backgroundColor: !faceDetected 
-                      ? '#B0B0AF' // No face detected
-                      : (captureCountdown !== null || faceWellPositioned)
-                        ? '#D1E3DB' // Ready to capture or counting down
-                        : '#E6B0AF', // Face detected but not in position
-                    opacity: 0.6,
-                    mask: 'url(#ellipse-mask)',
-                    WebkitMask: 'url(#ellipse-mask)',
+                    background: `radial-gradient(ellipse ${299 * scaleFactor / 2}px ${490 * scaleFactor / 2}px at center, 
+                      transparent 0%, 
+                      transparent 49%, 
+                      ${!faceDetected 
+                        ? 'rgba(176, 176, 175, 0.6)' // No face detected
+                        : (captureCountdown !== null || faceWellPositioned)
+                          ? 'rgba(209, 227, 219, 0.6)' // Ready to capture or counting down
+                          : 'rgba(230, 176, 175, 0.6)'} 50%, // Face detected but not in position
+                      ${!faceDetected 
+                        ? 'rgba(176, 176, 175, 0.6)' // No face detected
+                        : (captureCountdown !== null || faceWellPositioned)
+                          ? 'rgba(209, 227, 219, 0.6)' // Ready to capture or counting down
+                          : 'rgba(230, 176, 175, 0.6)'} 100%)`, // Face detected but not in position
                   }}
                 />
                 
@@ -1301,13 +1286,14 @@ const UploadPage = (): JSX.Element => {
                     style={{
                       width: `${299 * scaleFactor}px`,
                       height: `${490 * scaleFactor}px`,
-                      borderRadius: `${490 * scaleFactor}px`,
+                      borderRadius: '50%',
                       border: `${5 * scaleFactor}px dashed`,
                       borderColor: captureCountdown !== null 
                         ? '#97EFD0' // Countdown
                         : (faceDetected && !faceWellPositioned)
                           ? '#FF0000' // Face detected but not in position
                           : '#FFFFFF', // Default white
+                      boxSizing: 'border-box',
                     }}
                     className={`${
                       !faceDetected ? 'animate-pulse' : ''
@@ -1343,30 +1329,15 @@ const UploadPage = (): JSX.Element => {
                 />
                 {/* Face detection guide overlay */}
                 <>
-                  {/* SVG for mask definition */}
-                  <svg className="absolute inset-0 pointer-events-none" style={{ width: 0, height: 0 }}>
-                    <defs>
-                      <mask id="ellipse-mask-preview">
-                        <rect width="100%" height="100%" fill="white" />
-                        <ellipse 
-                          cx="50%" 
-                          cy="50%" 
-                          rx={`${(299 * scaleFactor) / 2}px`} 
-                          ry={`${(490 * scaleFactor) / 2}px`} 
-                          fill="black" 
-                        />
-                      </mask>
-                    </defs>
-                  </svg>
-                  
                   {/* Outer overlay layer - for preview, show success color */}
                   <div 
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundColor: '#D1E3DB', // Success color for captured photo
-                      opacity: 0.6,
-                      mask: 'url(#ellipse-mask-preview)',
-                      WebkitMask: 'url(#ellipse-mask-preview)',
+                      background: `radial-gradient(ellipse ${299 * scaleFactor / 2}px ${490 * scaleFactor / 2}px at center, 
+                        transparent 0%, 
+                        transparent 49%, 
+                        rgba(209, 227, 219, 0.6) 50%, 
+                        rgba(209, 227, 219, 0.6) 100%)`, // Success color for captured photo
                     }}
                   />
                   
@@ -1376,8 +1347,9 @@ const UploadPage = (): JSX.Element => {
                       style={{
                         width: `${299 * scaleFactor}px`,
                         height: `${490 * scaleFactor}px`,
-                        borderRadius: `${490 * scaleFactor}px`,
+                        borderRadius: '50%',
                         border: `${5 * scaleFactor}px dashed #FFFFFF`,
+                        boxSizing: 'border-box',
                       }}
                     />
                   </div>
@@ -1405,7 +1377,8 @@ const UploadPage = (): JSX.Element => {
                   borderRadius: `${10 * scaleFactor}px`,
                 }}
               >
-                {isCameraActive && !cameraError ? (
+                {/* Camera status indicators - show when camera is active */}
+                {isCameraActive && !cameraError && (
                   <>
                     {/* Camera status indicator */}
                     <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 z-30">
@@ -1418,9 +1391,12 @@ const UploadPage = (): JSX.Element => {
                       {facingMode === 'user' ? 'Front' : 'Back'}
                     </div>
                   </>
-                ) : cameraError ? (
+                )}
+                
+                {/* Show error only if there's an actual camera error */}
+                {cameraError && (
                   // Camera error state
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center z-50">
                     <div className="text-center text-white px-6">
                       <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1452,9 +1428,12 @@ const UploadPage = (): JSX.Element => {
                       </button>
                     </div>
                   </div>
-                ) : (
+                )}
+                
+                {/* Show loading only when camera is not active and no error */}
+                {!isCameraActive && !cameraError && !previewUrl && (
                   // Loading camera state
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gray-800 flex items-center justify-center z-30">
                     <div className="text-center text-white">
                       <svg className="animate-spin w-8 h-8 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
@@ -1558,21 +1537,6 @@ const UploadPage = (): JSX.Element => {
           </div>
 
         </div>
-        
-        {/* Privacy Popup */}
-        <PrivacyPopup 
-          isOpen={showPrivacyPopup} 
-          onClose={() => setShowPrivacyPopup(false)} 
-        />
-        
-        {/* Privacy Assurance - Auto popup */}
-        {showPrivacyAssurance && (
-          <PrivacyAssurance 
-            onClose={() => setShowPrivacyAssurance(false)}
-            autoClose={true}
-            autoCloseDelay={7000}
-          />
-        )}
       </div>
     </PageLayout>
   );
