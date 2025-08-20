@@ -423,31 +423,48 @@ const UploadPage = (): JSX.Element => {
         
         let errorMessage = 'Camera access denied or not available';
         
-        // Specific error types
+        // Detect browser for specific instructions
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor) && !/Chrome/.test(navigator.userAgent);
+        const isFirefox = /Firefox/.test(navigator.userAgent);
+        
+        // Specific error types with improved messages
         switch (error.name) {
           case 'NotAllowedError':
           case 'PermissionDeniedError':
             console.error('🚨 [Camera API] User denied camera permission');
-            errorMessage = 'Camera permission denied. Please allow camera access and refresh the page.';
+            if (isChrome) {
+              errorMessage = 'Camera access was blocked. To fix: Click the camera icon 📷 in the address bar and select "Allow".';
+            } else if (isSafari) {
+              errorMessage = 'Camera access was blocked. To fix: Go to Safari > Settings > Websites > Camera and allow access for this site.';
+            } else if (isFirefox) {
+              errorMessage = 'Camera access was blocked. To fix: Click the lock icon 🔒 in the address bar, then "Clear permissions and reload".';
+            } else {
+              errorMessage = 'Camera access was blocked. Please allow camera in your browser settings (click the lock icon in the URL bar).';
+            }
             break;
           case 'NotFoundError':
           case 'DevicesNotFoundError':
             console.error('🚨 [Camera API] No camera device found');
-            errorMessage = 'No camera found on this device.';
+            errorMessage = 'No camera found. Please check if your camera is connected and enabled.';
             break;
           case 'NotReadableError':
           case 'TrackStartError':
             console.error('🚨 [Camera API] Camera is already in use by another application');
-            errorMessage = 'Camera is being used by another application.';
+            errorMessage = 'Camera is being used by another app (Zoom, Teams, etc.). Please close other apps and try again.';
             break;
           case 'OverconstrainedError':
           case 'ConstraintNotSatisfiedError':
             console.error('🚨 [Camera API] Camera constraints cannot be satisfied');
-            errorMessage = 'Camera requirements cannot be met.';
+            errorMessage = 'Camera settings not supported. Please try again.';
             break;
           case 'SecurityError':
-            console.error('🚨 [Camera API] Security error - HTTPS required');
-            errorMessage = 'Camera requires a secure connection (HTTPS).';
+            console.error('🚨 [Camera API] Security error - HTTPS or permissions issue');
+            errorMessage = 'Camera blocked for security reasons. Please check browser permissions or use HTTPS.';
+            break;
+          case 'AbortError':
+            console.error('🚨 [Camera API] Camera initialization was aborted');
+            errorMessage = 'Camera startup was interrupted. Please try again.';
             break;
           default:
             console.error('🚨 [Camera API] Unknown camera error type:', error.name);
