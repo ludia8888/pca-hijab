@@ -164,21 +164,21 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'left' as const,
-      message: '왼쪽에서 피부색이 맑아보여요!',
+      message: 'On the left, your complexion appears beautifully pure.',
       techExplanation: 'Comparing warm vs cool undertones'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'left' as const,
-      message: '오른쪽에서 피부색이 노래보여요',
+      message: 'On the left, your radiant natural flush is beautifully revealed.',
       techExplanation: 'Testing deep color harmony'
     },
     d3: {
       leftColor: '#44CBD1',
       rightColor: '#8C7C52',
       activeBox: 'left' as const,
-      message: '왼쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      message: 'On the left, your facial features look more defined and radiant.',
       techExplanation: 'Confirming your spring warm type'
     }
   },
@@ -187,21 +187,21 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'left' as const,
-      message: '왼쪽에서 피부색이 맑아보여요!',
+      message: 'On the left, your complexion appears beautifully pure.',
       techExplanation: 'Comparing warm vs cool undertones'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'left' as const,
-      message: '오른쪽에서 피부색이 노래보여요',
+      message: 'On the left, your radiant natural flush is beautifully revealed.',
       techExplanation: 'Testing deep color harmony'
     },
     d3: {
       leftColor: '#44CBD1',
       rightColor: '#8C7C52',
       activeBox: 'right' as const,
-      message: '오른쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      message: 'On the right, your facial features look more defined and radiant.',
       techExplanation: 'Confirming your autumn warm type'
     }
   },
@@ -210,21 +210,21 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'right' as const,
-      message: '오른쪽에서 피부색이 맑아보여요!',
+      message: 'On the right, your complexion appears beautifully pure.',
       techExplanation: 'Comparing warm vs cool undertones'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'right' as const,
-      message: '왼쪽에서 피부색이 노래보여요',
+      message: 'On the right, your radiant natural flush is beautifully revealed.',
       techExplanation: 'Testing deep color harmony'
     },
     d3: {
       leftColor: '#C7EEF5',
       rightColor: '#3C15B0',
       activeBox: 'left' as const,
-      message: '왼쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      message: 'On the left, your facial features look more defined and radiant.',
       techExplanation: 'Confirming your summer cool type'
     }
   },
@@ -233,21 +233,21 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'right' as const,
-      message: '오른쪽에서 피부색이 맑아보여요!',
+      message: 'On the right, your complexion appears beautifully pure.',
       techExplanation: 'Comparing warm vs cool undertones'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'right' as const,
-      message: '왼쪽에서 피부색이 노래보여요',
+      message: 'On the right, your radiant natural flush is beautifully revealed.',
       techExplanation: 'Testing deep color harmony'
     },
     d3: {
       leftColor: '#C7EEF5',
       rightColor: '#3C15B0',
       activeBox: 'right' as const,
-      message: '오른쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      message: 'On the right, your facial features look more defined and radiant.',
       techExplanation: 'Confirming your winter cool type'
     }
   }

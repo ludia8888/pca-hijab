@@ -186,39 +186,25 @@ class FaceDetectionService {
   }
 
   isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number): boolean {
-    // IMPORTANT: The video stream (frameWidth x frameHeight) is different from display size
-    // We need to calculate the visible area that matches what user sees
+    // IMPORTANT: We assume the video fills the container with object-fit: cover
+    // This means the video is scaled to cover the entire container, cropping if necessary
     
-    // Fixed display container dimensions (matching SVG viewBox)
-    const DISPLAY_WIDTH = 348.345;
-    const DISPLAY_HEIGHT = 667;
-    const displayAspectRatio = DISPLAY_WIDTH / DISPLAY_HEIGHT;
-    const videoAspectRatio = frameWidth / frameHeight;
+    // The ellipse in SVG is defined as:
+    // cx="174.1725" cy="333.5" rx="149.5" ry="199.5" in viewBox "0 0 348.345 667"
+    // This means:
+    // - Ellipse center: (50%, 50%) of container
+    // - Ellipse width: 299/348.345 = 85.8% of container width
+    // - Ellipse height: 399/667 = 59.8% of container height
     
-    let visibleWidth = frameWidth;
-    let visibleHeight = frameHeight;
-    let offsetX = 0;
-    let offsetY = 0;
+    // For simplicity, we'll check if features are within a percentage of the frame
+    // Since we don't know the exact crop/scale, we'll use the frame center
+    const frameCenterX = frameWidth / 2;
+    const frameCenterY = frameHeight / 2;
     
-    // Calculate the actual visible area (object-fit: cover behavior)
-    if (videoAspectRatio > displayAspectRatio) {
-      // Video is wider - crop sides
-      visibleWidth = frameHeight * displayAspectRatio;
-      offsetX = (frameWidth - visibleWidth) / 2;
-    } else {
-      // Video is taller - crop top/bottom
-      visibleHeight = frameWidth / displayAspectRatio;
-      offsetY = (frameHeight - visibleHeight) / 2;
-    }
-    
-    // Calculate oval center and radius in the visible area
-    // Ellipse dimensions match SVG: cx=174.1725, cy=333.5, rx=149.5, ry=199.5
-    // These are relative to viewBox "0 0 348.345 667"
-    const ovalCenterX = offsetX + visibleWidth / 2;
-    const ovalCenterY = offsetY + visibleHeight / 2;
-    // Ellipse dimensions: 299px width (149.5*2), 399px height (199.5*2) in 348.345x667 viewBox
-    const ovalRadiusX = (149.5 / (DISPLAY_WIDTH/2)) * (visibleWidth / 2); 
-    const ovalRadiusY = (199.5 / (DISPLAY_HEIGHT/2)) * (visibleHeight / 2);
+    // Ellipse dimensions as percentage of frame
+    // We use conservative estimates since we don't know exact display mapping
+    const ovalRadiusX = frameWidth * 0.43;  // ~86% of half width
+    const ovalRadiusY = frameHeight * 0.30; // ~60% of half height
     
     // Check face size (should fill 4-25% of frame - allows wider range of distances)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
@@ -261,38 +247,25 @@ class FaceDetectionService {
       ];
       
       // Debug logging
-      console.log(`📐 [FaceDetectionService] Config:`, {
+      console.log(`📐 [FaceDetectionService] Ellipse:`, {
         frameSize: `${frameWidth}x${frameHeight}`,
-        visibleArea: `${visibleWidth.toFixed(0)}x${visibleHeight.toFixed(0)}`,
-        offset: `(${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`,
-        ovalSize: `${(ovalRadiusX*2).toFixed(0)}x${(ovalRadiusY*2).toFixed(0)}`,
-        ovalCenter: `(${ovalCenterX.toFixed(0)}, ${ovalCenterY.toFixed(0)})`
+        ellipseRadii: `${ovalRadiusX.toFixed(0)}x${ovalRadiusY.toFixed(0)}`,
+        center: `(${frameCenterX.toFixed(0)}, ${frameCenterY.toFixed(0)})`
       });
       
-      // Check each feature individually - must be STRICTLY WITHIN the oval (using 0.80 for even stricter boundary)
+      // Check each feature individually
       criticalKeypoints.forEach(({ name, kp }) => {
         if (kp) {
-          // Keypoints are in video frame coordinates, not visible area coords
-          // We need to check if they're within the visible area first
-          const adjustedX = kp.x - offsetX;
-          const adjustedY = kp.y - offsetY;
+          // Keypoints are in video frame coordinates
+          // Update feature span tracking
+          featureSpanData.minX = Math.min(featureSpanData.minX, kp.x);
+          featureSpanData.maxX = Math.max(featureSpanData.maxX, kp.x);
+          featureSpanData.minY = Math.min(featureSpanData.minY, kp.y);
+          featureSpanData.maxY = Math.max(featureSpanData.maxY, kp.y);
           
-          // Check if the keypoint is even within the visible area
-          if (adjustedX < 0 || adjustedX > visibleWidth || adjustedY < 0 || adjustedY > visibleHeight) {
-            featureStatus[name] = false;
-            console.log(`    🔴 ${name}: OUTSIDE visible camera frame`);
-            return;
-          }
-          
-          // Update feature span tracking (min/max positions)
-          featureSpanData.minX = Math.min(featureSpanData.minX, adjustedX);
-          featureSpanData.maxX = Math.max(featureSpanData.maxX, adjustedX);
-          featureSpanData.minY = Math.min(featureSpanData.minY, adjustedY);
-          featureSpanData.maxY = Math.max(featureSpanData.maxY, adjustedY);
-          
-          // Normalize relative to oval center (which is at center of visible area)
-          const distFromCenterX = adjustedX - (visibleWidth / 2);
-          const distFromCenterY = adjustedY - (visibleHeight / 2);
+          // Check if within ellipse
+          const distFromCenterX = kp.x - frameCenterX;
+          const distFromCenterY = kp.y - frameCenterY;
           const normalizedX = distFromCenterX / ovalRadiusX;
           const normalizedY = distFromCenterY / ovalRadiusY;
           const distance = normalizedX * normalizedX + normalizedY * normalizedY;
@@ -321,18 +294,18 @@ class FaceDetectionService {
         featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
-        // Check if features optimally fill 35-60% of the ellipse (adjusted for better UX)
+        // Check if features optimally fill 30-70% of the ellipse (wider range for device variations)
         featureSpanData.isOptimalFill = 
-          featureSpanData.widthFillRatio >= 0.35 && featureSpanData.widthFillRatio <= 0.60 &&
-          featureSpanData.heightFillRatio >= 0.35 && featureSpanData.heightFillRatio <= 0.60;
+          featureSpanData.widthFillRatio >= 0.30 && featureSpanData.widthFillRatio <= 0.70 &&
+          featureSpanData.heightFillRatio >= 0.30 && featureSpanData.heightFillRatio <= 0.70;
         
         console.log(`📏 [FaceDetectionService] Feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
         
         if (!featureSpanData.isOptimalFill) {
-          if (featureSpanData.widthFillRatio < 0.35 || featureSpanData.heightFillRatio < 0.35) {
+          if (featureSpanData.widthFillRatio < 0.30 || featureSpanData.heightFillRatio < 0.30) {
             console.log('📐 [FaceDetectionService] Move CLOSER - face features only fill', 
-              Math.min(featureSpanData.widthFillRatio, featureSpanData.heightFillRatio) * 100, '% of frame');
-          } else if (featureSpanData.widthFillRatio > 0.60 || featureSpanData.heightFillRatio > 0.60) {
+              Math.min(featureSpanData.widthFillRatio, featureSpanData.heightFillRatio) * 100, '% of ellipse');
+          } else if (featureSpanData.widthFillRatio > 0.70 || featureSpanData.heightFillRatio > 0.70) {
             console.log('📐 [FaceDetectionService] Move BACK - face features exceed optimal size');
           }
         } else {
@@ -354,7 +327,6 @@ class FaceDetectionService {
       }
     } else {
       // Fallback: if no keypoints, estimate facial feature positions based on face box
-      // ALL estimated features must be within the oval
       const estimatedFeatures = [
         { name: 'leftEye', x: face.x + face.width * 0.3, y: face.y + face.height * 0.35 },
         { name: 'rightEye', x: face.x + face.width * 0.7, y: face.y + face.height * 0.35 },
@@ -362,36 +334,25 @@ class FaceDetectionService {
         { name: 'mouth', x: face.x + face.width * 0.5, y: face.y + face.height * 0.7 }
       ];
       
-      // Check each estimated feature - must be STRICTLY WITHIN the oval
+      // Check each estimated feature
       estimatedFeatures.forEach(feature => {
-        // Update feature span tracking for estimated positions
+        // Update feature span tracking
         featureSpanData.minX = Math.min(featureSpanData.minX, feature.x);
         featureSpanData.maxX = Math.max(featureSpanData.maxX, feature.x);
         featureSpanData.minY = Math.min(featureSpanData.minY, feature.y);
         featureSpanData.maxY = Math.max(featureSpanData.maxY, feature.y);
         
-        // For estimated features, they're in frame coordinates
-        // Check if within visible area first
-        if (feature.x < offsetX || feature.x > offsetX + visibleWidth ||
-            feature.y < offsetY || feature.y > offsetY + visibleHeight) {
-          featureStatus[feature.name] = false;
-        } else {
-          // Convert to visible area coordinates
-          const visX = feature.x - offsetX;
-          const visY = feature.y - offsetY;
-          // Normalize relative to oval center
-          const distFromCenterX = visX - (visibleWidth / 2);
-          const distFromCenterY = visY - (visibleHeight / 2);
-          const normalizedX = distFromCenterX / ovalRadiusX;
-          const normalizedY = distFromCenterY / ovalRadiusY;
-          const distance = normalizedX * normalizedX + normalizedY * normalizedY;
-          // Use 1.0 for boundary checking
-          featureStatus[feature.name] = distance <= 1.0;
-          
-          // Log exact distances for debugging
-          if (distance > 1.0) {
-            console.log(`    🔴 ${feature.name} (estimated): distance=${distance.toFixed(3)} (>1.0) - OUTSIDE`);
-          }
+        // Check if within ellipse (using frame coordinates)
+        const distFromCenterX = feature.x - frameCenterX;
+        const distFromCenterY = feature.y - frameCenterY;
+        const normalizedX = distFromCenterX / ovalRadiusX;
+        const normalizedY = distFromCenterY / ovalRadiusY;
+        const distance = normalizedX * normalizedX + normalizedY * normalizedY;
+        featureStatus[feature.name] = distance <= 1.0;
+        
+        // Log exact distances for debugging
+        if (distance > 1.0) {
+          console.log(`    🔴 ${feature.name} (estimated): distance=${distance.toFixed(3)} (>1.0) - OUTSIDE`);
         }
       });
       
@@ -408,8 +369,8 @@ class FaceDetectionService {
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
         featureSpanData.isOptimalFill = 
-          featureSpanData.widthFillRatio >= 0.35 && featureSpanData.widthFillRatio <= 0.60 &&
-          featureSpanData.heightFillRatio >= 0.35 && featureSpanData.heightFillRatio <= 0.60;
+          featureSpanData.widthFillRatio >= 0.30 && featureSpanData.widthFillRatio <= 0.70 &&
+          featureSpanData.heightFillRatio >= 0.30 && featureSpanData.heightFillRatio <= 0.70;
         
         console.log(`📏 [FaceDetectionService] Estimated feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
       }
@@ -440,11 +401,11 @@ class FaceDetectionService {
       }
       if (!featureSpanData.isOptimalFill) {
         console.log('  ❌ Face features do not optimally fill ellipse');
-        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need 35-60%)`);
-        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need 35-60%)`);
-        if (featureSpanData.widthFillRatio < 0.35 || featureSpanData.heightFillRatio < 0.35) {
+        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need 30-70%)`);
+        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need 30-70%)`);
+        if (featureSpanData.widthFillRatio < 0.30 || featureSpanData.heightFillRatio < 0.30) {
           console.log('  💡 Suggestion: Move CLOSER to camera');
-        } else if (featureSpanData.widthFillRatio > 0.60 || featureSpanData.heightFillRatio > 0.60) {
+        } else if (featureSpanData.widthFillRatio > 0.70 || featureSpanData.heightFillRatio > 0.70) {
           console.log('  💡 Suggestion: Move AWAY from camera');
         }
       }
