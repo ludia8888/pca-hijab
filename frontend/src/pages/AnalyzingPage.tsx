@@ -233,14 +233,6 @@ const AnalyzingPage = (): JSX.Element => {
       // Mark analysis as complete - this will allow skipping through UI steps
       setAnalysisComplete(true);
       
-      // If still in early steps, auto-advance to step 3 (draping phase)
-      // This provides immediate feedback that analysis is ready
-      if (currentStep < 2) {
-        setCurrentStep(2); // Jump to warm-cool comparison
-        setCanSkip(true);
-        setShowNavButtons(true);
-      }
-      
       // Save analysis result to backend with automatic session recovery
       try {
         if (sessionId) {
@@ -513,7 +505,7 @@ const AnalyzingPage = (): JSX.Element => {
             <div
               className="absolute overflow-hidden"
               style={{
-                top: `${(16 + 61) * scaleFactor + 16 + 65.6 + 16}px`, // header + 16px + text container height (16+33.6+16) + 16px gap
+                top: `${(16 + 61) * scaleFactor + 16 + 65.6 + 35}px`, // header + 16px + text container height (16+33.6+16) + 16px gap
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: '348px',
@@ -712,7 +704,7 @@ const AnalyzingPage = (): JSX.Element => {
             {!error && (currentStep === 0 ? canSkip : true) && (
               <div 
                 key={`character-${currentStep}`}
-                className={`absolute bottom-32 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+                className={`absolute bottom-28 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
                 style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
               >
               <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>

@@ -218,9 +218,9 @@ class FaceDetectionService {
     const ovalRadiusX = (299 / 348.345) * visibleWidth / 2; 
     const ovalRadiusY = (490 / 667) * visibleHeight / 2;
     
-    // Check face size (should fill 7-10% of frame - allows both close and medium distance)
+    // Check face size (should fill 4-25% of frame - allows wider range of distances)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.07 && faceAreaRatio < 0.10;
+    const isSizeGood = faceAreaRatio > 0.04 && faceAreaRatio < 0.25;
     
     // MediaPipe confidence check
     const isConfident = face.confidence >= 0.5;
