@@ -203,43 +203,64 @@ class FaceDetectionService {
     
     if (ellipseBounds) {
       // We have the actual ellipse position on screen!
-      // Now we need to map video coordinates to screen coordinates
+      // Now we need to map screen coordinates to video frame coordinates
       const videoBounds = ellipseBounds.videoBounds;
       
+      // Add mobile device debugging
+      const deviceInfo = {
+        pixelRatio: window.devicePixelRatio || 1,
+        isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        screen: { width: screen.width, height: screen.height }
+      };
+      
       // Calculate how the video is displayed (object-fit: cover)
+      // This determines which part of the video is visible
       const videoAspectRatio = frameWidth / frameHeight;
       const displayAspectRatio = videoBounds.width / videoBounds.height;
       
-      let scaleX = 1;
-      let scaleY = 1;
-      let offsetX = 0;
-      let offsetY = 0;
+      let scale = 1;
+      let cropX = 0; // How much is cropped from left in video coordinates
+      let cropY = 0; // How much is cropped from top in video coordinates
       
       if (videoAspectRatio > displayAspectRatio) {
-        // Video is wider - crop sides
-        scaleY = videoBounds.height / frameHeight;
-        scaleX = scaleY;
-        const scaledWidth = frameWidth * scaleX;
-        offsetX = (scaledWidth - videoBounds.width) / 2;
+        // Video is wider than display - height fits, width is cropped
+        scale = videoBounds.height / frameHeight;
+        const displayedVideoWidth = videoBounds.width / scale;
+        cropX = (frameWidth - displayedVideoWidth) / 2;
       } else {
-        // Video is taller - crop top/bottom  
-        scaleX = videoBounds.width / frameWidth;
-        scaleY = scaleX;
-        const scaledHeight = frameHeight * scaleY;
-        offsetY = (scaledHeight - videoBounds.height) / 2;
+        // Video is taller than display - width fits, height is cropped
+        scale = videoBounds.width / frameWidth;
+        const displayedVideoHeight = videoBounds.height / scale;
+        cropY = (frameHeight - displayedVideoHeight) / 2;
       }
       
       // Convert ellipse screen coordinates to video frame coordinates
-      ovalCenterX = (ellipseBounds.centerX - videoBounds.left + offsetX) / scaleX;
-      ovalCenterY = (ellipseBounds.centerY - videoBounds.top + offsetY) / scaleY;
-      ovalRadiusX = ellipseBounds.radiusX / scaleX;
-      ovalRadiusY = ellipseBounds.radiusY / scaleY;
+      // Screen position relative to video element, then unscale and add crop offset
+      ovalCenterX = (ellipseBounds.centerX - videoBounds.left) / scale + cropX;
+      ovalCenterY = (ellipseBounds.centerY - videoBounds.top) / scale + cropY;
+      ovalRadiusX = ellipseBounds.radiusX / scale;
+      ovalRadiusY = ellipseBounds.radiusY / scale;
       
-      console.log('🎯 [FaceDetection] Using actual ellipse bounds:', {
-        screenEllipse: { cx: ellipseBounds.centerX, cy: ellipseBounds.centerY, rx: ellipseBounds.radiusX, ry: ellipseBounds.radiusY },
-        videoEllipse: { cx: ovalCenterX, cy: ovalCenterY, rx: ovalRadiusX, ry: ovalRadiusY },
+      console.log('🎯 [FaceDetection] Ellipse mapping (mobile-aware):', {
+        device: deviceInfo,
+        screenEllipse: { 
+          cx: ellipseBounds.centerX.toFixed(1), 
+          cy: ellipseBounds.centerY.toFixed(1), 
+          rx: ellipseBounds.radiusX.toFixed(1), 
+          ry: ellipseBounds.radiusY.toFixed(1) 
+        },
+        videoEllipse: { 
+          cx: ovalCenterX.toFixed(1), 
+          cy: ovalCenterY.toFixed(1), 
+          rx: ovalRadiusX.toFixed(1), 
+          ry: ovalRadiusY.toFixed(1) 
+        },
         videoFrame: { width: frameWidth, height: frameHeight },
-        videoBounds: { width: videoBounds.width, height: videoBounds.height }
+        displayBounds: { width: videoBounds.width.toFixed(1), height: videoBounds.height.toFixed(1) },
+        scale: scale.toFixed(3),
+        crop: { x: cropX.toFixed(1), y: cropY.toFixed(1) },
+        aspectRatios: { video: videoAspectRatio.toFixed(3), display: displayAspectRatio.toFixed(3) }
       });
     } else {
       // Fallback to conservative estimates
@@ -315,9 +336,16 @@ class FaceDetectionService {
           // Use 1.0 for boundary checking - features must be inside the ellipse
           featureStatus[name] = distance <= 1.0;
           
-          // Log exact distances for debugging
+          // Enhanced debugging for mobile
           if (distance > 1.0) {
-            console.log(`    🔴 ${name}: distance=${distance.toFixed(3)} (>1.0) - OUTSIDE ellipse boundary`);
+            console.log(`    🔴 ${name}: OUTSIDE ellipse`, {
+              keypoint: { x: kp.x.toFixed(1), y: kp.y.toFixed(1) },
+              ellipseCenter: { x: ovalCenterX.toFixed(1), y: ovalCenterY.toFixed(1) },
+              offset: { x: distFromCenterX.toFixed(1), y: distFromCenterY.toFixed(1) },
+              normalized: { x: normalizedX.toFixed(3), y: normalizedY.toFixed(3) },
+              distance: distance.toFixed(3),
+              ellipseRadii: { x: ovalRadiusX.toFixed(1), y: ovalRadiusY.toFixed(1) }
+            });
           }
         } else {
           console.log(`    ⚠️ ${name}: keypoint missing`);
@@ -337,22 +365,29 @@ class FaceDetectionService {
         featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
-        // Check if features optimally fill 30-70% of the ellipse (wider range for device variations)
+        // Check if features optimally fill the ellipse - more lenient for mobile
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const minFill = isMobile ? 0.25 : 0.30;
+        const maxFill = isMobile ? 0.75 : 0.70;
+        
         featureSpanData.isOptimalFill = 
-          featureSpanData.widthFillRatio >= 0.30 && featureSpanData.widthFillRatio <= 0.70 &&
-          featureSpanData.heightFillRatio >= 0.30 && featureSpanData.heightFillRatio <= 0.70;
+          featureSpanData.widthFillRatio >= minFill && featureSpanData.widthFillRatio <= maxFill &&
+          featureSpanData.heightFillRatio >= minFill && featureSpanData.heightFillRatio <= maxFill;
         
         console.log(`📏 [FaceDetectionService] Feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
         
         if (!featureSpanData.isOptimalFill) {
-          if (featureSpanData.widthFillRatio < 0.30 || featureSpanData.heightFillRatio < 0.30) {
-            console.log('📐 [FaceDetectionService] Move CLOSER - face features only fill', 
-              Math.min(featureSpanData.widthFillRatio, featureSpanData.heightFillRatio) * 100, '% of ellipse');
-          } else if (featureSpanData.widthFillRatio > 0.70 || featureSpanData.heightFillRatio > 0.70) {
-            console.log('📐 [FaceDetectionService] Move BACK - face features exceed optimal size');
+          if (featureSpanData.widthFillRatio < minFill || featureSpanData.heightFillRatio < minFill) {
+            console.log(`📐 [FaceDetectionService] Move CLOSER - face features only fill ${
+              (Math.min(featureSpanData.widthFillRatio, featureSpanData.heightFillRatio) * 100).toFixed(1)
+            }% of ellipse (need ${(minFill * 100).toFixed(0)}-${(maxFill * 100).toFixed(0)}%)`);
+          } else if (featureSpanData.widthFillRatio > maxFill || featureSpanData.heightFillRatio > maxFill) {
+            console.log(`📐 [FaceDetectionService] Move BACK - face features exceed ${(maxFill * 100).toFixed(0)}%`);
           }
         } else {
-          console.log('✨ [FaceDetectionService] PERFECT! Face features optimally fill the ellipse - ready for capture!');
+          console.log(`✨ [FaceDetectionService] PERFECT! Face features optimally fill the ellipse (${
+            isMobile ? 'Mobile' : 'Desktop'
+          }: ${(minFill * 100).toFixed(0)}-${(maxFill * 100).toFixed(0)}%) - ready for capture!`);
         }
       }
       
@@ -411,9 +446,14 @@ class FaceDetectionService {
         featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
+        // More lenient thresholds for mobile devices
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const minFill = isMobile ? 0.25 : 0.30;
+        const maxFill = isMobile ? 0.75 : 0.70;
+        
         featureSpanData.isOptimalFill = 
-          featureSpanData.widthFillRatio >= 0.30 && featureSpanData.widthFillRatio <= 0.70 &&
-          featureSpanData.heightFillRatio >= 0.30 && featureSpanData.heightFillRatio <= 0.70;
+          featureSpanData.widthFillRatio >= minFill && featureSpanData.widthFillRatio <= maxFill &&
+          featureSpanData.heightFillRatio >= minFill && featureSpanData.heightFillRatio <= maxFill;
         
         console.log(`📏 [FaceDetectionService] Estimated feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
       }
@@ -443,12 +483,18 @@ class FaceDetectionService {
         });
       }
       if (!featureSpanData.isOptimalFill) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const minFill = isMobile ? 0.25 : 0.30;
+        const maxFill = isMobile ? 0.75 : 0.70;
+        
         console.log('  ❌ Face features do not optimally fill ellipse');
-        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need 30-70%)`);
-        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need 30-70%)`);
-        if (featureSpanData.widthFillRatio < 0.30 || featureSpanData.heightFillRatio < 0.30) {
+        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need ${(minFill * 100).toFixed(0)}-${(maxFill * 100).toFixed(0)}%)`);
+        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need ${(minFill * 100).toFixed(0)}-${(maxFill * 100).toFixed(0)}%)`);
+        console.log(`     Device: ${isMobile ? 'Mobile' : 'Desktop'}`);
+        
+        if (featureSpanData.widthFillRatio < minFill || featureSpanData.heightFillRatio < minFill) {
           console.log('  💡 Suggestion: Move CLOSER to camera');
-        } else if (featureSpanData.widthFillRatio > 0.70 || featureSpanData.heightFillRatio > 0.70) {
+        } else if (featureSpanData.widthFillRatio > maxFill || featureSpanData.heightFillRatio > maxFill) {
           console.log('  💡 Suggestion: Move AWAY from camera');
         }
       }
