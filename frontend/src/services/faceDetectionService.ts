@@ -185,12 +185,14 @@ class FaceDetectionService {
     }
   }
 
-  isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number, displayWidth: number = 348.345, displayHeight: number = 667): boolean {
+  isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number): boolean {
     // IMPORTANT: The video stream (frameWidth x frameHeight) is different from display size
     // We need to calculate the visible area that matches what user sees
     
-    // The display container dimensions (passed as parameters for flexibility)
-    const displayAspectRatio = displayWidth / displayHeight;
+    // Fixed display container dimensions (matching SVG viewBox)
+    const DISPLAY_WIDTH = 348.345;
+    const DISPLAY_HEIGHT = 667;
+    const displayAspectRatio = DISPLAY_WIDTH / DISPLAY_HEIGHT;
     const videoAspectRatio = frameWidth / frameHeight;
     
     let visibleWidth = frameWidth;
@@ -210,13 +212,13 @@ class FaceDetectionService {
     }
     
     // Calculate oval center and radius in the visible area
-    // Ellipse position: exact center, with 3:4 aspect ratio (width:height)
-    // Center Y = displayHeight/2 (exact center of container)
+    // Ellipse dimensions match SVG: cx=174.1725, cy=333.5, rx=149.5, ry=199.5
+    // These are relative to viewBox "0 0 348.345 667"
     const ovalCenterX = offsetX + visibleWidth / 2;
-    const ovalCenterY = offsetY + visibleHeight / 2; // Simplified: center of visible area
-    // Ellipse dimensions: 299px width, 399px height (3:4 ratio) relative to display container
-    const ovalRadiusX = (299 / displayWidth) * visibleWidth / 2; 
-    const ovalRadiusY = (399 / displayHeight) * visibleHeight / 2;
+    const ovalCenterY = offsetY + visibleHeight / 2;
+    // Ellipse dimensions: 299px width (149.5*2), 399px height (199.5*2) in 348.345x667 viewBox
+    const ovalRadiusX = (149.5 / (DISPLAY_WIDTH/2)) * (visibleWidth / 2); 
+    const ovalRadiusY = (199.5 / (DISPLAY_HEIGHT/2)) * (visibleHeight / 2);
     
     // Check face size (should fill 4-25% of frame - allows wider range of distances)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
@@ -258,10 +260,20 @@ class FaceDetectionService {
         { name: 'mouth', kp: face.keypoints[3] }
       ];
       
+      // Debug logging
+      console.log(`📐 [FaceDetectionService] Config:`, {
+        frameSize: `${frameWidth}x${frameHeight}`,
+        visibleArea: `${visibleWidth.toFixed(0)}x${visibleHeight.toFixed(0)}`,
+        offset: `(${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`,
+        ovalSize: `${(ovalRadiusX*2).toFixed(0)}x${(ovalRadiusY*2).toFixed(0)}`,
+        ovalCenter: `(${ovalCenterX.toFixed(0)}, ${ovalCenterY.toFixed(0)})`
+      });
+      
       // Check each feature individually - must be STRICTLY WITHIN the oval (using 0.80 for even stricter boundary)
       criticalKeypoints.forEach(({ name, kp }) => {
         if (kp) {
-          // Adjust keypoint coordinates to match visible area
+          // Keypoints are in video frame coordinates, not visible area coords
+          // We need to check if they're within the visible area first
           const adjustedX = kp.x - offsetX;
           const adjustedY = kp.y - offsetY;
           
@@ -278,15 +290,18 @@ class FaceDetectionService {
           featureSpanData.minY = Math.min(featureSpanData.minY, adjustedY);
           featureSpanData.maxY = Math.max(featureSpanData.maxY, adjustedY);
           
-          const normalizedX = (adjustedX - (visibleWidth / 2)) / ovalRadiusX;
-          const normalizedY = (adjustedY - (visibleHeight / 2)) / ovalRadiusY;
+          // Normalize relative to oval center (which is at center of visible area)
+          const distFromCenterX = adjustedX - (visibleWidth / 2);
+          const distFromCenterY = adjustedY - (visibleHeight / 2);
+          const normalizedX = distFromCenterX / ovalRadiusX;
+          const normalizedY = distFromCenterY / ovalRadiusY;
           const distance = normalizedX * normalizedX + normalizedY * normalizedY;
-          // Use 0.80 for VERY STRICT boundary checking - features must be well inside
-          featureStatus[name] = distance <= 0.80;
+          // Use 1.0 for boundary checking - features must be inside the ellipse
+          featureStatus[name] = distance <= 1.0;
           
           // Log exact distances for debugging
-          if (distance > 0.80) {
-            console.log(`    🔴 ${name}: distance=${distance.toFixed(3)} (>${0.80}) - OUTSIDE ellipse boundary`);
+          if (distance > 1.0) {
+            console.log(`    🔴 ${name}: distance=${distance.toFixed(3)} (>1.0) - OUTSIDE ellipse boundary`);
           }
         } else {
           console.log(`    ⚠️ ${name}: keypoint missing`);
@@ -355,15 +370,28 @@ class FaceDetectionService {
         featureSpanData.minY = Math.min(featureSpanData.minY, feature.y);
         featureSpanData.maxY = Math.max(featureSpanData.maxY, feature.y);
         
-        const normalizedX = (feature.x - ovalCenterX) / ovalRadiusX;
-        const normalizedY = (feature.y - ovalCenterY) / ovalRadiusY;
-        const distance = normalizedX * normalizedX + normalizedY * normalizedY;
-        // Use 0.85 for VERY STRICT boundary checking
-        featureStatus[feature.name] = distance <= 0.85;
-        
-        // Log exact distances for debugging
-        if (distance > 0.85) {
-          console.log(`    🔴 ${feature.name} (estimated): distance=${distance.toFixed(3)} (>${0.85}) - OUTSIDE`);
+        // For estimated features, they're in frame coordinates
+        // Check if within visible area first
+        if (feature.x < offsetX || feature.x > offsetX + visibleWidth ||
+            feature.y < offsetY || feature.y > offsetY + visibleHeight) {
+          featureStatus[feature.name] = false;
+        } else {
+          // Convert to visible area coordinates
+          const visX = feature.x - offsetX;
+          const visY = feature.y - offsetY;
+          // Normalize relative to oval center
+          const distFromCenterX = visX - (visibleWidth / 2);
+          const distFromCenterY = visY - (visibleHeight / 2);
+          const normalizedX = distFromCenterX / ovalRadiusX;
+          const normalizedY = distFromCenterY / ovalRadiusY;
+          const distance = normalizedX * normalizedX + normalizedY * normalizedY;
+          // Use 1.0 for boundary checking
+          featureStatus[feature.name] = distance <= 1.0;
+          
+          // Log exact distances for debugging
+          if (distance > 1.0) {
+            console.log(`    🔴 ${feature.name} (estimated): distance=${distance.toFixed(3)} (>1.0) - OUTSIDE`);
+          }
         }
       });
       
