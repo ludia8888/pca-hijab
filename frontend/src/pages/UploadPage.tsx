@@ -763,6 +763,10 @@ const UploadPage = (): JSX.Element => {
   
   const stopFaceDetection = (): void => {
     console.log('🛑 [FACE DETECTION] Stopping face detection...');
+    
+    // First, set camera inactive to prevent new detection cycles
+    isCameraActiveRef.current = false;
+    
     if (faceDetectionIntervalRef.current) {
       clearInterval(faceDetectionIntervalRef.current);
       faceDetectionIntervalRef.current = null;
@@ -770,6 +774,10 @@ const UploadPage = (): JSX.Element => {
     } else {
       console.log('ℹ️ [FACE DETECTION] No active interval to stop');
     }
+    
+    // Cancel any ongoing countdown
+    cancelCaptureCountdown();
+    
     setFaceDetected(false);
     setFaceWellPositioned(false);
     setFaceDistance(null);
@@ -910,8 +918,12 @@ const UploadPage = (): JSX.Element => {
   const stopCamera = (): void => {
     console.log('🛑 [Camera API] Stopping camera...');
     
+    // First set camera inactive to prevent any new operations
+    setIsCameraActive(false);
+    isCameraActiveRef.current = false;
+    
+    // Then stop face detection (this also sets isCameraActiveRef to false)
     stopFaceDetection();
-    cancelCaptureCountdown();
     
     if (stream) {
       const tracks = stream.getTracks();
@@ -933,8 +945,6 @@ const UploadPage = (): JSX.Element => {
       console.log('ℹ️ [Camera API] No active stream to stop');
     }
     
-    setIsCameraActive(false);
-    isCameraActiveRef.current = false;
     console.log('✅ [Camera API] Camera stopped successfully');
   };
 
