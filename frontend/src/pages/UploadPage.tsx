@@ -650,10 +650,16 @@ const UploadPage = (): JSX.Element => {
         
         if (face) {
           // Simplified logic for fallback mode - always trigger after 2 seconds
+          // Pass actual display container dimensions with scaleFactor applied
+          const displayWidth = 348.345 * scaleFactor;
+          const displayHeight = 667 * scaleFactor;
+          
           const isWellPositioned = faceDetectionService.isFaceWellPositioned(
             face,
             videoRef.current.videoWidth,
-            videoRef.current.videoHeight
+            videoRef.current.videoHeight,
+            displayWidth,
+            displayHeight
           );
           
           const quality = faceDetectionService.getFaceQualityScore(

@@ -185,12 +185,12 @@ class FaceDetectionService {
     }
   }
 
-  isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number): boolean {
+  isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number, displayWidth: number = 348.345, displayHeight: number = 667): boolean {
     // IMPORTANT: The video stream (frameWidth x frameHeight) is different from display size
     // We need to calculate the visible area that matches what user sees
     
-    // The display container is 348.345 x 667 (aspect ratio)
-    const displayAspectRatio = 348.345 / 667; // ~0.522
+    // The display container dimensions (passed as parameters for flexibility)
+    const displayAspectRatio = displayWidth / displayHeight;
     const videoAspectRatio = frameWidth / frameHeight;
     
     let visibleWidth = frameWidth;
@@ -211,12 +211,12 @@ class FaceDetectionService {
     
     // Calculate oval center and radius in the visible area
     // Ellipse position: exact center, with 3:4 aspect ratio (width:height)
-    // Center Y = 667/2 = 333.5 (exact center of 667px height container)
+    // Center Y = displayHeight/2 (exact center of container)
     const ovalCenterX = offsetX + visibleWidth / 2;
-    const ovalCenterY = offsetY + (333.5 / 667) * visibleHeight;
-    // Ellipse dimensions: 299px width, 399px height (3:4 ratio) in 348.345px x 667px container
-    const ovalRadiusX = (299 / 348.345) * visibleWidth / 2; 
-    const ovalRadiusY = (399 / 667) * visibleHeight / 2;
+    const ovalCenterY = offsetY + visibleHeight / 2; // Simplified: center of visible area
+    // Ellipse dimensions: 299px width, 399px height (3:4 ratio) relative to display container
+    const ovalRadiusX = (299 / displayWidth) * visibleWidth / 2; 
+    const ovalRadiusY = (399 / displayHeight) * visibleHeight / 2;
     
     // Check face size (should fill 4-25% of frame - allows wider range of distances)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
