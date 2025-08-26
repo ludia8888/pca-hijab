@@ -855,10 +855,39 @@ const UploadPage = (): JSX.Element => {
         try {
           const freshFace = await faceDetectionService.detectFaceInVideo(videoRef.current);
           if (freshFace) {
+            // Calculate ellipse bounds for fresh detection
+            let ellipseBounds = null;
+            if (ellipseRef.current && videoRef.current) {
+              const videoBounds = videoRef.current.getBoundingClientRect();
+              const svgElement = ellipseRef.current.ownerSVGElement;
+              if (svgElement) {
+                const svgBounds = svgElement.getBoundingClientRect();
+                const cx = 174.1725;
+                const cy = 333.5;
+                const rx = 149.5;
+                const ry = 199.5;
+                const viewBoxWidth = 348.345;
+                const viewBoxHeight = 667;
+                const scaleX = svgBounds.width / viewBoxWidth;
+                const scaleY = svgBounds.height / viewBoxHeight;
+                
+                ellipseBounds = {
+                  centerX: svgBounds.left + cx * scaleX,
+                  centerY: svgBounds.top + cy * scaleY,
+                  radiusX: rx * scaleX,
+                  radiusY: ry * scaleY,
+                  videoBounds: videoBounds,
+                  videoWidth: videoRef.current.videoWidth,
+                  videoHeight: videoRef.current.videoHeight
+                };
+              }
+            }
+            
             faceStillInPosition = faceDetectionService.isFaceWellPositioned(
               freshFace,
               videoRef.current.videoWidth,
-              videoRef.current.videoHeight
+              videoRef.current.videoHeight,
+              ellipseBounds
             );
           }
           console.log(`🔍 [COUNTDOWN] Fresh face check: ${faceStillInPosition ? 'IN' : 'OUT'} of position`);
