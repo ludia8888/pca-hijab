@@ -317,7 +317,7 @@ const CompletionPage = (): JSX.Element => {
           </div>
         </div>
       </div>
-    </PageLayout>
+    </div>
   );
 };
 

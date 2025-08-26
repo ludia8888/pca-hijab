@@ -298,7 +298,7 @@ const ResultPage = (): JSX.Element => {
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 opacity-50" />
       </div>
 
-      <div className="max-w-2xl mx-auto w-full h-full overflow-y-auto pb-20">
+      <div className="max-w-2xl mx-auto w-full h-full overflow-hidden pb-20">
         {/* Hero Section with Photo - Compact */}
         <div className="relative mb-4">
           {uploadedImage ? (

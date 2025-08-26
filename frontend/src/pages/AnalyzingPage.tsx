@@ -474,20 +474,17 @@ const AnalyzingPage = (): JSX.Element => {
          }}>
         {/* Full screen background */}
         <div 
-          className="absolute"
+          className="absolute inset-0"
           style={{
-            width: '150vh',
-            height: '150vw',
-            top: '50%',
-            left: '50%',
             background: `linear-gradient(0deg, rgba(99, 36, 222, 0.20) 0%, rgba(99, 36, 222, 0.20) 100%), url(${guideBackground}) lightgray 50% / cover no-repeat`,
-            transform: 'translate(-50%, -50%) rotate(90deg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             zIndex: 0,
           }}
         />
         
         {/* Content container */}
-        <div className="min-h-screen flex items-center justify-center relative z-10">
+        <div className="w-full h-full flex items-center justify-center relative z-10">
           <div 
             className="relative"
             style={{
@@ -863,7 +860,7 @@ const AnalyzingPage = (): JSX.Element => {
             {/* Error state - positioned at center */}
             {error && errorType && (
               <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/50 backdrop-blur-sm">
-            <div className="max-w-md w-full mx-4">
+                <div className="max-w-md w-full mx-4">
               <ImageAnalysisError
                 errorType={errorType}
                 onRetry={() => {
@@ -900,12 +897,12 @@ const AnalyzingPage = (): JSX.Element => {
                   navigate(ROUTES.DIAGNOSIS);
                 }}
               />
-            </div>
+                </div>
               </div>
             )}
           </div>
         </div>
-    </div>
+      </div>
   );
 };
 
