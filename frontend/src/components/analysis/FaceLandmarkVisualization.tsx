@@ -327,8 +327,31 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw the image
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    // Calculate dimensions to maintain aspect ratio (contain mode)
+    const imgAspect = image.width / image.height;
+    const canvasAspect = canvas.width / canvas.height;
+    
+    let drawWidth = canvas.width;
+    let drawHeight = canvas.height;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    if (imgAspect > canvasAspect) {
+      // Image is wider - fit to width
+      drawHeight = canvas.width / imgAspect;
+      offsetY = (canvas.height - drawHeight) / 2;
+    } else {
+      // Image is taller - fit to height
+      drawWidth = canvas.height * imgAspect;
+      offsetX = (canvas.width - drawWidth) / 2;
+    }
+    
+    // Draw the image centered with aspect ratio maintained
+    ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+
+    // Calculate scale and offset for landmark coordinates
+    const scaleX = drawWidth / image.width;
+    const scaleY = drawHeight / image.height;
 
     // Handle different visualization phases
     if (phase === 'warm-cool') {
@@ -504,7 +527,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           // Single scan: top to bottom ONCE (like a real scanner)
           const scanY = scanProgress * canvas.height;
           
-          const scanRange = 80; // Range of mesh visibility around scan line
+          const scanRange = 120; // Expanded range of mesh visibility around scan line
           
           // Get all landmark groups for mesh
           const groups = getFaceLandmarkGroups(face.keypoints);
@@ -645,7 +668,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             // Single scan: top to bottom ONCE
             const scanY = scanProgress * canvas.height;
             const distFromScan = Math.abs(y - scanY);
-            const scanRange = 80;
+            const scanRange = 120;
             
             if (distFromScan < scanRange) {
             const fadeOpacity = 1 - (distFromScan / scanRange);
@@ -856,9 +879,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const image = imageRef.current;
     if (!canvas || !image) return;
 
-    // Set canvas dimensions to match image
-    canvas.width = image.width;
-    canvas.height = image.height;
+    // Set canvas dimensions to match container (348x475)
+    canvas.width = 348;
+    canvas.height = 475;
 
     // Start detection if detector is ready and not already started
     if (detector && !detectionStartedRef.current) {
@@ -976,10 +999,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         <img
           src={imageUrl}
           alt="Face analysis"
-          className="w-full rounded-2xl shadow-2xl"
+          className="w-full h-full"
           style={{ 
-            aspectRatio: '3/4',
-            objectFit: 'cover',
+            objectFit: 'contain',
             display: 'block'
           }}
         />
@@ -998,18 +1020,17 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       {/* Canvas for landmark visualization - shows after detection */}
       <canvas
         ref={canvasRef}
-        className={`w-full rounded-2xl shadow-2xl ${!landmarks.length ? 'hidden' : ''}`}
+        className={`w-full h-full ${!landmarks.length ? 'hidden' : ''}`}
         style={{ 
           backgroundColor: 'transparent',
-          aspectRatio: '3/4',
-          objectFit: 'cover',
+          objectFit: 'contain',
           display: landmarks.length ? 'block' : 'none'
         }}
       />
       
       {/* Loading overlay - shows while TensorFlow is initializing */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-2xl">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <div className="bg-white/95 rounded-xl p-4 shadow-xl">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
