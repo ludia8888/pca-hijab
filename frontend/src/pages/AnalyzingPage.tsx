@@ -748,33 +748,47 @@ const AnalyzingPage = (): JSX.Element => {
             </button>
             </div>
 
-            {/* Character and Speech Bubble - Always show for each step */}
+            {/* Character and Speech Bubble - Position based on warm/cool tone */}
             {!error && (
-              <div 
-                key={`character-${currentStep}`}
-                className={`absolute bottom-28 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
-                style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
-              >
-              <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`} style={{ pointerEvents: 'none' }}>
-                {/* Character Container */}
-                <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
-                  <img 
-                    src={analysisCharacter} 
-                    alt="Analysis Character" 
-                    className="object-contain filter drop-shadow-xl"
-                    style={{
-                      width: '111px',
-                      height: '100px',
-                      aspectRatio: '111/100'
-                    }}
-                  />
-                </div>
+              (() => {
+                // Determine character position based on personal color result
+                // Warm tones (Spring/Autumn) = left, Cool tones (Summer/Winter) = right
+                // Before analysis complete or for initial steps, alternate positions
+                let isCharacterOnLeft = currentStep % 2 === 0; // Default: alternate by step
+                
+                if (analysisResult?.personal_color_en) {
+                  const season = analysisResult.personal_color_en.toLowerCase();
+                  // Warm tones: Spring, Autumn = character on LEFT
+                  // Cool tones: Summer, Winter = character on RIGHT
+                  isCharacterOnLeft = season === 'spring' || season === 'autumn' || season === 'fall';
+                }
+                
+                return (
+                  <div 
+                    key={`character-${currentStep}`}
+                    className={`absolute bottom-28 ${isCharacterOnLeft ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
+                    style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
+                  >
+                  <div className={`flex ${isCharacterOnLeft ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`} style={{ pointerEvents: 'none' }}>
+                    {/* Character Container */}
+                    <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
+                      <img 
+                        src={analysisCharacter} 
+                        alt="Analysis Character" 
+                        className="object-contain filter drop-shadow-xl"
+                        style={{
+                          width: '111px',
+                          height: '100px',
+                          aspectRatio: '111/100'
+                        }}
+                      />
+                    </div>
 
-                {/* Speech Bubble */}
-                <div className={`relative max-w-xs ${currentStep % 2 === 0 ? 'ml-2' : 'mr-2'} animate-fade-in`} style={{ animationDelay: '0.4s' }}>
-                  <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border-2 border-primary-200 p-4 transform transition-all hover:scale-105">
-                    {/* Bubble tail pointing to character */}
-                    <div className={`absolute bottom-4 ${currentStep % 2 === 0 ? '-left-2' : '-right-2'} w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent ${currentStep % 2 === 0 ? 'border-r-8 border-r-white' : 'border-l-8 border-l-white'}`}></div>
+                    {/* Speech Bubble */}
+                    <div className={`relative max-w-xs ${isCharacterOnLeft ? 'ml-2' : 'mr-2'} animate-fade-in`} style={{ animationDelay: '0.4s' }}>
+                      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border-2 border-primary-200 p-4 transform transition-all hover:scale-105">
+                        {/* Bubble tail pointing to character */}
+                        <div className={`absolute bottom-4 ${isCharacterOnLeft ? '-left-2' : '-right-2'} w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent ${isCharacterOnLeft ? 'border-r-8 border-r-white' : 'border-l-8 border-l-white'}`}></div>
                     
                     {/* Message content */}
                     <p className="text-sm font-medium text-gray-800 leading-relaxed">
@@ -785,10 +799,12 @@ const AnalyzingPage = (): JSX.Element => {
                     <p className="text-xs text-gray-500 mt-2 italic">
                       {currentStepData.techExplanation}
                     </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              </div>
+                  </div>
+                );
+              })()
             )}
 
             {/* Error state - positioned at center */}
