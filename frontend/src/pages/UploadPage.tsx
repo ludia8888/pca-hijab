@@ -929,10 +929,39 @@ const UploadPage = (): JSX.Element => {
           try {
             const finalFace = await faceDetectionService.detectFaceInVideo(videoRef.current);
             if (finalFace) {
+              // Calculate ellipse bounds for final check
+              let ellipseBounds = null;
+              if (ellipseRef.current && videoRef.current) {
+                const videoBounds = videoRef.current.getBoundingClientRect();
+                const svgElement = ellipseRef.current.ownerSVGElement;
+                if (svgElement) {
+                  const svgBounds = svgElement.getBoundingClientRect();
+                  const cx = 174.1725;
+                  const cy = 333.5;
+                  const rx = 149.5;
+                  const ry = 199.5;
+                  const viewBoxWidth = 348.345;
+                  const viewBoxHeight = 667;
+                  const scaleX = svgBounds.width / viewBoxWidth;
+                  const scaleY = svgBounds.height / viewBoxHeight;
+                  
+                  ellipseBounds = {
+                    centerX: svgBounds.left + cx * scaleX,
+                    centerY: svgBounds.top + cy * scaleY,
+                    radiusX: rx * scaleX,
+                    radiusY: ry * scaleY,
+                    videoBounds: videoBounds,
+                    videoWidth: videoRef.current.videoWidth,
+                    videoHeight: videoRef.current.videoHeight
+                  };
+                }
+              }
+              
               canCapture = faceDetectionService.isFaceWellPositioned(
                 finalFace,
                 videoRef.current.videoWidth,
-                videoRef.current.videoHeight
+                videoRef.current.videoHeight,
+                ellipseBounds
               );
             }
             console.log(`🎯 [COUNTDOWN] Final face check: ${canCapture ? 'READY' : 'NOT READY'}`);
@@ -1437,6 +1466,14 @@ const UploadPage = (): JSX.Element => {
       
       // Track image upload success
       trackImageUpload(true, file.size, file.type);
+      
+      // If this is from camera capture (auto-capture), automatically proceed to analysis
+      if (preview.includes('blob:') && file.name === 'camera-photo.jpg') {
+        console.log('📸 [Auto Navigation] Photo from auto-capture detected, proceeding to analysis...');
+        setTimeout(() => {
+          handleAnalyze();
+        }, 500); // Small delay to show the captured photo briefly
+      }
     } catch (error) {
       console.error('❌ [Face Validation] Error validating face:', error);
       // On error, accept the image but log the issue
