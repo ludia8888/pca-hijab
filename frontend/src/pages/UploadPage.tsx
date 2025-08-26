@@ -844,60 +844,18 @@ const UploadPage = (): JSX.Element => {
     countdownValueRef.current = countdown; // Update ref immediately
     
     // Store interval ID immediately to prevent race conditions
-    const countdownInterval = setInterval(async () => {
+    const countdownInterval = setInterval(() => {
       // Decrement first (so 3→2→1→capture, not 3→2→1→0→capture)
       countdown--;
       countdownValueRef.current = countdown;
       
-      // Double-check face position with fresh detection
-      let faceStillInPosition = false;
-      if (videoRef.current && !isProcessingFaceRef.current) {
-        try {
-          const freshFace = await faceDetectionService.detectFaceInVideo(videoRef.current);
-          if (freshFace) {
-            // Calculate ellipse bounds for fresh detection
-            let ellipseBounds = null;
-            if (ellipseRef.current && videoRef.current) {
-              const videoBounds = videoRef.current.getBoundingClientRect();
-              const svgElement = ellipseRef.current.ownerSVGElement;
-              if (svgElement) {
-                const svgBounds = svgElement.getBoundingClientRect();
-                const cx = 174.1725;
-                const cy = 333.5;
-                const rx = 149.5;
-                const ry = 199.5;
-                const viewBoxWidth = 348.345;
-                const viewBoxHeight = 667;
-                const scaleX = svgBounds.width / viewBoxWidth;
-                const scaleY = svgBounds.height / viewBoxHeight;
-                
-                ellipseBounds = {
-                  centerX: svgBounds.left + cx * scaleX,
-                  centerY: svgBounds.top + cy * scaleY,
-                  radiusX: rx * scaleX,
-                  radiusY: ry * scaleY,
-                  videoBounds: videoBounds,
-                  videoWidth: videoRef.current.videoWidth,
-                  videoHeight: videoRef.current.videoHeight
-                };
-              }
-            }
-            
-            faceStillInPosition = faceDetectionService.isFaceWellPositioned(
-              freshFace,
-              videoRef.current.videoWidth,
-              videoRef.current.videoHeight,
-              ellipseBounds
-            );
-          }
-          console.log(`🔍 [COUNTDOWN] Fresh face check: ${faceStillInPosition ? 'IN' : 'OUT'} of position`);
-        } catch (err) {
-          console.log('⚠️ [COUNTDOWN] Fresh detection failed, using ref value');
-          faceStillInPosition = isWellPositionedRef.current;
-        }
-      } else {
-        faceStillInPosition = isWellPositionedRef.current;
-      }
+      // For quick check, use the current ref value (updated by face detection interval)
+      // This avoids blocking the countdown with async detection
+      let faceStillInPosition = isWellPositionedRef.current;
+      console.log(`🔍 [COUNTDOWN] Face position check: ${faceStillInPosition ? 'IN' : 'OUT'} (from ref)`);
+      
+      // Note: The face detection interval runs every 200ms and updates isWellPositionedRef
+      // So we can rely on it being reasonably up-to-date
       
       // Check if face is still in position
       if (!faceStillInPosition) {
@@ -923,53 +881,10 @@ const UploadPage = (): JSX.Element => {
         countdownValueRef.current = null;
         captureTimeoutRef.current = null;
         
-        // Final check before capture with fresh detection
-        let canCapture = false;
-        if (videoRef.current && !isProcessingFaceRef.current) {
-          try {
-            const finalFace = await faceDetectionService.detectFaceInVideo(videoRef.current);
-            if (finalFace) {
-              // Calculate ellipse bounds for final check
-              let ellipseBounds = null;
-              if (ellipseRef.current && videoRef.current) {
-                const videoBounds = videoRef.current.getBoundingClientRect();
-                const svgElement = ellipseRef.current.ownerSVGElement;
-                if (svgElement) {
-                  const svgBounds = svgElement.getBoundingClientRect();
-                  const cx = 174.1725;
-                  const cy = 333.5;
-                  const rx = 149.5;
-                  const ry = 199.5;
-                  const viewBoxWidth = 348.345;
-                  const viewBoxHeight = 667;
-                  const scaleX = svgBounds.width / viewBoxWidth;
-                  const scaleY = svgBounds.height / viewBoxHeight;
-                  
-                  ellipseBounds = {
-                    centerX: svgBounds.left + cx * scaleX,
-                    centerY: svgBounds.top + cy * scaleY,
-                    radiusX: rx * scaleX,
-                    radiusY: ry * scaleY,
-                    videoBounds: videoBounds,
-                    videoWidth: videoRef.current.videoWidth,
-                    videoHeight: videoRef.current.videoHeight
-                  };
-                }
-              }
-              
-              canCapture = faceDetectionService.isFaceWellPositioned(
-                finalFace,
-                videoRef.current.videoWidth,
-                videoRef.current.videoHeight,
-                ellipseBounds
-              );
-            }
-            console.log(`🎯 [COUNTDOWN] Final face check: ${canCapture ? 'READY' : 'NOT READY'}`);
-          } catch (err) {
-            console.log('⚠️ [COUNTDOWN] Final detection failed');
-            canCapture = false;
-          }
-        }
+        // Use the current ref value for immediate capture decision
+        // The face detection interval updates this every 200ms, so it's current enough
+        const canCapture = isWellPositionedRef.current;
+        console.log(`🎯 [COUNTDOWN] Final face check: ${canCapture ? 'READY' : 'NOT READY'} (from ref)`);
         
         if (canCapture) {
           console.log('📸 Capturing photo NOW - face confirmed in position');
@@ -981,7 +896,7 @@ const UploadPage = (): JSX.Element => {
             page: 'upload'
           });
         } else {
-          console.log('⚠️ [COUNTDOWN] Capture aborted - face lost at last moment');
+          console.log('⚠️ [COUNTDOWN] Capture aborted - face not in position');
         }
       }
     }, 1000);
