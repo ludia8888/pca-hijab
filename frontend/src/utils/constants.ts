@@ -73,6 +73,7 @@ export const ACCEPTED_IMAGE_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', '
 export const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic'];
 
 // Analysis Steps with Character & Speech Bubbles
+// Optimized durations for faster user experience
 export const ANALYSIS_STEPS = [
   {
     id: 'face-detection',
@@ -81,7 +82,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-1.png',
     message: "Aha! Found 478 clues on your face 🕵️‍♀️",
     progress: 20,
-    duration: 4000,
+    duration: 3000, // Reduced from 4000ms - scan happens in 3 seconds
     techExplanation: 'Creating your 3D facial structure map'
   },
   {
@@ -91,7 +92,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-2.png',
     message: "Looking at your natural skin tone now! I'm checking your forehead, cheeks, and jawline for the perfect color match 🔬",
     progress: 40,
-    duration: 4000,
+    duration: 2500, // Reduced from 4000ms - faster transition
     techExplanation: 'Extracting color data from key facial zones'
   },
   {
@@ -101,7 +102,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-3.png',
     message: "Time for some color magic! Let me see if golden or rosy undertones suit you better 🎨",
     progress: 60,
-    duration: 5000,
+    duration: 5000, // Keep as manual control phase - user interaction needed
     techExplanation: 'Analyzing warm vs cool undertones'
   },
   {
@@ -111,7 +112,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-4.png',
     message: "Almost there! I'm finding which season's colors will make you absolutely glow 📊",
     progress: 80,
-    duration: 5000,
+    duration: 5000, // Keep as manual control phase - user interaction needed
     techExplanation: 'Determining your seasonal color type'
   },
   {
@@ -121,7 +122,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-5.png',
     message: "Yes! I've found your perfect colors! Let me create your personalized hijab palette ✨",
     progress: 100,
-    duration: 3000,
+    duration: 2000, // Reduced from 3000ms - quicker to results
     techExplanation: 'Finalizing your custom color recommendations'
   },
 ];

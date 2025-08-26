@@ -105,10 +105,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   }, []);
 
   // Create inverted face mask (everything except face)
-  const createInverseFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement) => {
-    // Calculate face bounds with expansion for safety
-    const xs = face.keypoints.map(kp => kp.x * canvas.width);
-    const ys = face.keypoints.map(kp => kp.y * canvas.height);
+  const createInverseFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement, image: HTMLImageElement, offsetX: number, offsetY: number, scaleX: number, scaleY: number) => {
+    // Calculate face bounds with expansion for safety (apply offset and scale)
+    const xs = face.keypoints.map(kp => kp.x * image.width * scaleX + offsetX);
+    const ys = face.keypoints.map(kp => kp.y * image.height * scaleY + offsetY);
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
     const minY = Math.min(...ys);
@@ -291,11 +291,16 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     canvas: HTMLCanvasElement, 
     colors: string[], 
     side: 'left' | 'right' | 'full',
-    face: DetectedFace
+    face: DetectedFace,
+    image: HTMLImageElement,
+    offsetX: number,
+    offsetY: number,
+    scaleX: number,
+    scaleY: number
   ) => {
-    // Calculate face center for split
+    // Calculate face center for split (apply offset and scale)
     const faceKeypoints = face.keypoints;
-    const xs = faceKeypoints.map(kp => kp.x * canvas.width);
+    const xs = faceKeypoints.map(kp => kp.x * image.width * scaleX + offsetX);
     const faceCenterX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
     
     // Determine which side to apply color
@@ -327,31 +332,33 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Calculate dimensions to maintain aspect ratio (contain mode)
+    // Calculate dimensions for cover mode (same as camera preview)
     const imgAspect = image.width / image.height;
     const canvasAspect = canvas.width / canvas.height;
     
-    let drawWidth = canvas.width;
-    let drawHeight = canvas.height;
-    let offsetX = 0;
-    let offsetY = 0;
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = image.width;
+    let sourceHeight = image.height;
     
     if (imgAspect > canvasAspect) {
-      // Image is wider - fit to width
-      drawHeight = canvas.width / imgAspect;
-      offsetY = (canvas.height - drawHeight) / 2;
+      // Image is wider - crop sides
+      sourceWidth = image.height * canvasAspect;
+      sourceX = (image.width - sourceWidth) / 2;
     } else {
-      // Image is taller - fit to height
-      drawWidth = canvas.height * imgAspect;
-      offsetX = (canvas.width - drawWidth) / 2;
+      // Image is taller - crop top and bottom
+      sourceHeight = image.width / canvasAspect;
+      sourceY = (image.height - sourceHeight) / 2;
     }
     
-    // Draw the image centered with aspect ratio maintained
-    ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+    // Draw the image with cover mode (crops to fill container)
+    ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
 
-    // Calculate scale and offset for landmark coordinates
-    const scaleX = drawWidth / image.width;
-    const scaleY = drawHeight / image.height;
+    // Calculate scale for landmark coordinates
+    const scaleX = canvas.width / sourceWidth;
+    const scaleY = canvas.height / sourceHeight;
+    const offsetX = -sourceX * scaleX;
+    const offsetY = -sourceY * scaleY;
 
     // Handle different visualization phases
     if (phase === 'warm-cool') {
@@ -361,19 +368,19 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         ctx.save();
         
         // Create inverse face mask (everything except face)
-        createInverseFaceMask(ctx, face, canvas);
+        createInverseFaceMask(ctx, face, canvas, image, offsetX, offsetY, scaleX, scaleY);
         
         // Draw colors only outside face area
         // Left side - Warm tones
-        drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left', face);
+        drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left', face, image, offsetX, offsetY, scaleX, scaleY);
         
         // Right side - Cool tones  
-        drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right', face);
+        drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right', face, image, offsetX, offsetY, scaleX, scaleY);
         
         ctx.restore();
         
         // Add dividing line at face center
-        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
+        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + (kp.x * image.width * scaleX + offsetX), 0) / face.keypoints.length;
         
         ctx.save();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
@@ -405,18 +412,18 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         // TODO: Determine if warm or cool based on analysis
         const isWarm = true; // This should come from actual analysis
         
-        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + kp.x * canvas.width, 0) / face.keypoints.length;
+        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + (kp.x * image.width * scaleX + offsetX), 0) / face.keypoints.length;
         
         // Save state and create face mask
         ctx.save();
         
         // Create inverse face mask (everything except face)
-        createInverseFaceMask(ctx, face, canvas);
+        createInverseFaceMask(ctx, face, canvas, image, offsetX, offsetY, scaleX, scaleY);
         
         if (isWarm) {
           // Spring vs Autumn
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left', face);
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.autumn.colors, 'right', face);
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left', face, image, offsetX, offsetY, scaleX, scaleY);
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.autumn.colors, 'right', face, image, offsetX, offsetY, scaleX, scaleY);
           
           ctx.save();
           ctx.fillStyle = 'white';
@@ -429,8 +436,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           ctx.restore();
         } else {
           // Summer vs Winter
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.summer.colors, 'left', face);
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.winter.colors, 'right', face);
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.summer.colors, 'left', face, image, offsetX, offsetY, scaleX, scaleY);
+          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.winter.colors, 'right', face, image, offsetX, offsetY, scaleX, scaleY);
           
           ctx.save();
           ctx.fillStyle = 'white';
@@ -535,7 +542,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           
           // Filter points based on scan position - only show mesh near scan line
           const activePoints = allMeshPoints.filter(point => {
-            const pointY = point.y * canvas.height;
+            const pointY = point.y * image.height * scaleY + offsetY;
             const distFromScan = Math.abs(pointY - scanY);
             return distFromScan < scanRange;
           });
@@ -578,7 +585,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
           // Draw 3D mesh for points near scan line with fade effect
           activePoints.forEach((point, i) => {
-            const pointY = point.y * canvas.height;
+            const pointY = point.y * image.height * scaleY + offsetY;
             const distFromScan = Math.abs(pointY - scanY);
             const fadeOpacity = 1 - (distFromScan / scanRange);
             
@@ -586,10 +593,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             activePoints.forEach((otherPoint, j) => {
               if (i >= j) return; // Avoid duplicate lines
               
-              const x1 = point.x * canvas.width;
-              const y1 = point.y * canvas.height;
-              const x2 = otherPoint.x * canvas.width;
-              const y2 = otherPoint.y * canvas.height;
+              const x1 = point.x * image.width * scaleX + offsetX;
+              const y1 = point.y * image.height * scaleY + offsetY;
+              const x2 = otherPoint.x * image.width * scaleX + offsetX;
+              const y2 = otherPoint.y * image.height * scaleY + offsetY;
               
               const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
               
@@ -623,8 +630,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         currentPhase.points.forEach((point1, i) => {
           if (!point1) return;
           
-          const x1 = point1.x * canvas.width;
-          const y1 = point1.y * canvas.height;
+          const x1 = point1.x * image.width * scaleX + offsetX;
+          const y1 = point1.y * image.height * scaleY + offsetY;
           
           for (let j = i + 1; j < Math.min(i + 4, currentPhase.points.length); j++) {
             const point2 = currentPhase.points[j];
@@ -1001,7 +1008,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           alt="Face analysis"
           className="w-full h-full"
           style={{ 
-            objectFit: 'contain',
+            objectFit: 'cover',
             display: 'block'
           }}
         />
@@ -1023,7 +1030,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         className={`w-full h-full ${!landmarks.length ? 'hidden' : ''}`}
         style={{ 
           backgroundColor: 'transparent',
-          objectFit: 'contain',
+          objectFit: 'cover',
           display: landmarks.length ? 'block' : 'none'
         }}
       />

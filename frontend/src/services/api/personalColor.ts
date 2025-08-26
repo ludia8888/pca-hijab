@@ -4,6 +4,62 @@ import { getAIApiUrl, shouldUseMockAI, getApiTimeout, debugApiConfig } from '@/u
 
 export class PersonalColorAPI {
   /**
+   * Compress image before upload for faster processing
+   */
+  private static async compressImage(file: File, maxSizeMB = 2): Promise<File> {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    
+    // If file is already small enough, return as-is
+    if (file.size <= maxSizeBytes) {
+      return file;
+    }
+    
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      img.onload = () => {
+        // Calculate new dimensions maintaining aspect ratio
+        let { width, height } = img;
+        const maxDimension = 1920; // Max width/height for processing
+        
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width *= ratio;
+          height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              console.log(`Image compressed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+              resolve(compressedFile);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          },
+          'image/jpeg',
+          0.85 // 85% quality
+        );
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  
+  /**
    * Analyzes an image to determine personal color
    * @param file - Image file to analyze
    * @param debug - Include debug information
@@ -41,8 +97,11 @@ export class PersonalColorAPI {
       }
     }
     
+    // Compress image if needed for faster upload and processing
+    const processedFile = await this.compressImage(file, 2); // Max 2MB
+    
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processedFile);
 
     // Check if we should use mock AI (using dynamic config)
     if (useMockAI) {

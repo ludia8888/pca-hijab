@@ -100,10 +100,14 @@ export async function getTensorFlow() {
   return tf;
 }
 
-// Pre-initialize on module load in production
-if (import.meta.env.PROD) {
-  console.log('🚀 [TensorFlow] Pre-initializing for production...');
-  initializeTensorFlow().catch(error => {
-    console.error('❌ [TensorFlow] Pre-initialization failed:', error);
-  });
+// Pre-initialize on module load - always do this for better performance
+// This starts loading TensorFlow.js immediately when the app starts
+if (typeof window !== 'undefined') {
+  console.log('🚀 [TensorFlow] Pre-initializing on app start...');
+  // Start initialization immediately but don't block
+  setTimeout(() => {
+    initializeTensorFlow().catch(error => {
+      console.error('❌ [TensorFlow] Pre-initialization failed:', error);
+    });
+  }, 100); // Small delay to not block initial render
 }

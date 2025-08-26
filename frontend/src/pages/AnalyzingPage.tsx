@@ -26,6 +26,7 @@ const AnalyzingPage = (): JSX.Element => {
   const [showNavButtons, setShowNavButtons] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false); // Track if API analysis is done
   const [scaleFactor, setScaleFactor] = useState(1);
+  const [analysisStartTime, setAnalysisStartTime] = useState<number | null>(null);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -85,7 +86,7 @@ const AnalyzingPage = (): JSX.Element => {
     }
   }, [uploadedFile, uploadedImage, navigate]);
 
-  // Start analysis on mount
+  // Start analysis on mount - immediately start both UI and API in parallel
   useEffect(() => {
     if (uploadedFile && !isAnalyzing) {
       setIsAnalyzing(true);
@@ -100,7 +101,12 @@ const AnalyzingPage = (): JSX.Element => {
 
       trackEngagement('ai_analysis', 'analysis_start');
       
+      // Start API call immediately in background
       performAnalysis();
+      
+      // Start UI animation flow immediately (don't wait for API)
+      // This allows UI to progress while API processes
+      setCurrentStep(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedFile]);
@@ -160,15 +166,16 @@ const AnalyzingPage = (): JSX.Element => {
         user_flow_step: 'analysis_progress_update'
       });
       
-      // Auto-advance for non-draping phases, manual control for draping phases
-      // BUT if analysis is complete, allow manual control for all phases
-      // Step 1 (index 0) waits for scan completion, no auto-advance
+      // Auto-advance with shorter durations for better UX
+      // Reduce wait times while maintaining smooth transitions
       if (!isDrapingPhase && !analysisComplete && currentStep !== 0) {
+        // Reduce durations by 40% for faster progression
+        const reducedDuration = Math.max(step.duration * 0.6, 1000); // Min 1 second
         stepTimerRef.current = setTimeout(() => {
           if (currentStep < ANALYSIS_STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
           }
-        }, step.duration);
+        }, reducedDuration);
       }
       // For Step 1, draping phases, or when analysis is complete, wait for user interaction (no timer)
 
@@ -189,6 +196,7 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Track analysis start
       const startTime = Date.now();
+      setAnalysisStartTime(startTime);
       
       // Call AI API
       const result = await analyzeImage(uploadedFile);
@@ -224,6 +232,14 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Mark analysis as complete - this will allow skipping through UI steps
       setAnalysisComplete(true);
+      
+      // If still in early steps, auto-advance to step 3 (draping phase)
+      // This provides immediate feedback that analysis is ready
+      if (currentStep < 2) {
+        setCurrentStep(2); // Jump to warm-cool comparison
+        setCanSkip(true);
+        setShowNavButtons(true);
+      }
       
       // Save analysis result to backend with automatic session recovery
       try {
@@ -414,7 +430,6 @@ const AnalyzingPage = (): JSX.Element => {
                 alignItems: 'center',
                 gap: `${10 * scaleFactor}px`,
                 flexShrink: 0,
-                border: '1px solid #e0e0e0',
                 boxSizing: 'border-box',
               }}
             >
@@ -504,36 +519,71 @@ const AnalyzingPage = (): JSX.Element => {
                 width: '348px',
                 height: '475px',
                 flexShrink: 0,
-                borderRadius: `${10 * scaleFactor}px`,
+                borderRadius: '10px',
                 background: '#D9D9D9',
-                boxShadow: `0 ${4 * scaleFactor}px ${8 * scaleFactor}px rgba(0, 0, 0, 0.15)`,
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
+                position: 'relative',
               }}
             >
               {/* Face Landmark Visualization */}
               {imageUrl && (
-                <div className="w-full h-full">
-                  <FaceLandmarkVisualization
-                    imageUrl={imageUrl}
-                    currentAnalysisStep={currentStep}
-                    onLandmarksDetected={(landmarks) => {
-                    console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
-                    
-                    // Check if scan is complete (Step 1 only)
-                    if (currentStep === 0 && landmarks.some((l: any) => l.scanComplete)) {
-                      console.log('✅ [Step 1] Scan complete, enabling continue button');
-                      setCanSkip(true); // Enable continue button after scan completes
-                    }
-                    
-                    trackEvent('face_landmarks_detected', {
-                      faces_count: landmarks.length,
-                      total_landmarks: landmarks.reduce((sum, face) => sum + (face.keypoints ? face.keypoints.length : 0), 0),
-                      current_analysis_step: currentStep,
-                      step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
-                      user_flow_step: 'landmarks_visualization_synchronized'
-                    });
-                  }}
-                    className="w-full h-full object-cover"
-                  />
+                <FaceLandmarkVisualization
+                  imageUrl={imageUrl}
+                  currentAnalysisStep={currentStep}
+                  onLandmarksDetected={(landmarks) => {
+                  console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
+                  
+                  // Check if scan is complete (Step 1 only)
+                  if (currentStep === 0 && landmarks.some((l: any) => l.scanComplete)) {
+                    console.log('✅ [Step 1] Scan complete, enabling continue button');
+                    setCanSkip(true); // Enable continue button after scan completes
+                  }
+                  
+                  trackEvent('face_landmarks_detected', {
+                    faces_count: landmarks.length,
+                    total_landmarks: landmarks.reduce((sum, face) => sum + (face.keypoints ? face.keypoints.length : 0), 0),
+                    current_analysis_step: currentStep,
+                    step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
+                    user_flow_step: 'landmarks_visualization_synchronized'
+                  });
+                }}
+                  className="w-full h-full"
+                />
+              )}
+              
+              {/* Analysis in Progress Overlay - shows while API is processing */}
+              {isAnalyzing && !analysisComplete && !error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px] rounded-lg z-10">
+                  <div className="bg-white/95 rounded-2xl p-6 shadow-2xl max-w-[280px] mx-4">
+                    <div className="flex flex-col items-center space-y-4">
+                      {/* Animated spinner */}
+                      <div className="relative w-16 h-16">
+                        <div className="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-transparent border-t-purple-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-2 border-4 border-transparent border-b-purple-400 rounded-full animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }}></div>
+                      </div>
+                      
+                      {/* Status text */}
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-gray-800 mb-1">
+                          AI Analysis in Progress
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Processing your personal colors...
+                        </p>
+                        <p className="text-xs text-purple-600 mt-2 font-semibold">
+                          This may take up to 30 seconds
+                        </p>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <div className="w-full h-1 bg-purple-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full animate-pulse" 
+                             style={{ width: `${Math.min(((Date.now() - (analysisStartTime || Date.now())) / 30000) * 100, 90)}%` }}>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -566,7 +616,6 @@ const AnalyzingPage = (): JSX.Element => {
                 padding: `${10 * scaleFactor}px ${16 * scaleFactor}px`,
                 borderRadius: `${10 * scaleFactor}px`,
                 background: '#FFFFFF',
-                border: '1px solid #E0E0E0',
                 transition: 'all 0.2s ease',
                 opacity: 1, // Always enabled
                 pointerEvents: 'auto', // Always clickable
