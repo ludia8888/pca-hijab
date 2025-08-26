@@ -185,26 +185,69 @@ class FaceDetectionService {
     }
   }
 
-  isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number): boolean {
-    // IMPORTANT: We assume the video fills the container with object-fit: cover
-    // This means the video is scaled to cover the entire container, cropping if necessary
+  isFaceWellPositioned(face: FaceRect, frameWidth: number, frameHeight: number, ellipseBounds?: {
+    centerX: number;
+    centerY: number;
+    radiusX: number;
+    radiusY: number;
+    videoBounds: DOMRect;
+    videoWidth: number;
+    videoHeight: number;
+  }): boolean {
+    // If we have actual ellipse bounds from the screen, use them
+    // Otherwise fall back to conservative estimates
+    let ovalCenterX: number;
+    let ovalCenterY: number;
+    let ovalRadiusX: number;
+    let ovalRadiusY: number;
     
-    // The ellipse in SVG is defined as:
-    // cx="174.1725" cy="333.5" rx="149.5" ry="199.5" in viewBox "0 0 348.345 667"
-    // This means:
-    // - Ellipse center: (50%, 50%) of container
-    // - Ellipse width: 299/348.345 = 85.8% of container width
-    // - Ellipse height: 399/667 = 59.8% of container height
-    
-    // For simplicity, we'll check if features are within a percentage of the frame
-    // Since we don't know the exact crop/scale, we'll use the frame center
-    const frameCenterX = frameWidth / 2;
-    const frameCenterY = frameHeight / 2;
-    
-    // Ellipse dimensions as percentage of frame
-    // We use conservative estimates since we don't know exact display mapping
-    const ovalRadiusX = frameWidth * 0.43;  // ~86% of half width
-    const ovalRadiusY = frameHeight * 0.30; // ~60% of half height
+    if (ellipseBounds) {
+      // We have the actual ellipse position on screen!
+      // Now we need to map video coordinates to screen coordinates
+      const videoBounds = ellipseBounds.videoBounds;
+      
+      // Calculate how the video is displayed (object-fit: cover)
+      const videoAspectRatio = frameWidth / frameHeight;
+      const displayAspectRatio = videoBounds.width / videoBounds.height;
+      
+      let scaleX = 1;
+      let scaleY = 1;
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      if (videoAspectRatio > displayAspectRatio) {
+        // Video is wider - crop sides
+        scaleY = videoBounds.height / frameHeight;
+        scaleX = scaleY;
+        const scaledWidth = frameWidth * scaleX;
+        offsetX = (scaledWidth - videoBounds.width) / 2;
+      } else {
+        // Video is taller - crop top/bottom  
+        scaleX = videoBounds.width / frameWidth;
+        scaleY = scaleX;
+        const scaledHeight = frameHeight * scaleY;
+        offsetY = (scaledHeight - videoBounds.height) / 2;
+      }
+      
+      // Convert ellipse screen coordinates to video frame coordinates
+      ovalCenterX = (ellipseBounds.centerX - videoBounds.left + offsetX) / scaleX;
+      ovalCenterY = (ellipseBounds.centerY - videoBounds.top + offsetY) / scaleY;
+      ovalRadiusX = ellipseBounds.radiusX / scaleX;
+      ovalRadiusY = ellipseBounds.radiusY / scaleY;
+      
+      console.log('🎯 [FaceDetection] Using actual ellipse bounds:', {
+        screenEllipse: { cx: ellipseBounds.centerX, cy: ellipseBounds.centerY, rx: ellipseBounds.radiusX, ry: ellipseBounds.radiusY },
+        videoEllipse: { cx: ovalCenterX, cy: ovalCenterY, rx: ovalRadiusX, ry: ovalRadiusY },
+        videoFrame: { width: frameWidth, height: frameHeight },
+        videoBounds: { width: videoBounds.width, height: videoBounds.height }
+      });
+    } else {
+      // Fallback to conservative estimates
+      ovalCenterX = frameWidth / 2;
+      ovalCenterY = frameHeight / 2;
+      ovalRadiusX = frameWidth * 0.43;
+      ovalRadiusY = frameHeight * 0.30;  
+    }
     
     // Check face size (should fill 4-25% of frame - allows wider range of distances)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
@@ -250,7 +293,7 @@ class FaceDetectionService {
       console.log(`📐 [FaceDetectionService] Ellipse:`, {
         frameSize: `${frameWidth}x${frameHeight}`,
         ellipseRadii: `${ovalRadiusX.toFixed(0)}x${ovalRadiusY.toFixed(0)}`,
-        center: `(${frameCenterX.toFixed(0)}, ${frameCenterY.toFixed(0)})`
+        center: `(${ovalCenterX.toFixed(0)}, ${ovalCenterY.toFixed(0)})`
       });
       
       // Check each feature individually
@@ -264,8 +307,8 @@ class FaceDetectionService {
           featureSpanData.maxY = Math.max(featureSpanData.maxY, kp.y);
           
           // Check if within ellipse
-          const distFromCenterX = kp.x - frameCenterX;
-          const distFromCenterY = kp.y - frameCenterY;
+          const distFromCenterX = kp.x - ovalCenterX;
+          const distFromCenterY = kp.y - ovalCenterY;
           const normalizedX = distFromCenterX / ovalRadiusX;
           const normalizedY = distFromCenterY / ovalRadiusY;
           const distance = normalizedX * normalizedX + normalizedY * normalizedY;
@@ -343,8 +386,8 @@ class FaceDetectionService {
         featureSpanData.maxY = Math.max(featureSpanData.maxY, feature.y);
         
         // Check if within ellipse (using frame coordinates)
-        const distFromCenterX = feature.x - frameCenterX;
-        const distFromCenterY = feature.y - frameCenterY;
+        const distFromCenterX = feature.x - ovalCenterX;
+        const distFromCenterY = feature.y - ovalCenterY;
         const normalizedX = distFromCenterX / ovalRadiusX;
         const normalizedY = distFromCenterY / ovalRadiusY;
         const distance = normalizedX * normalizedX + normalizedY * normalizedY;

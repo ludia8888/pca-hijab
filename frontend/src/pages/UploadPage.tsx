@@ -24,6 +24,7 @@ const UploadPage = (): JSX.Element => {
   // Camera states
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ellipseRef = useRef<SVGEllipseElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const streamRef = useRef<MediaStream | null>(null); // Add ref to avoid closure issues
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -649,11 +650,43 @@ const UploadPage = (): JSX.Element => {
         console.log(`📊 [FACE DETECTION] Detection result:`, face);
         
         if (face) {
-          // Simplified logic for fallback mode - always trigger after 2 seconds
+          // Calculate actual ellipse position on screen
+          let ellipseBounds = null;
+          if (ellipseRef.current && videoRef.current) {
+            const videoBounds = videoRef.current.getBoundingClientRect();
+            const svgElement = ellipseRef.current.ownerSVGElement;
+            if (svgElement) {
+              const svgBounds = svgElement.getBoundingClientRect();
+              // Get ellipse attributes from SVG viewBox coordinates
+              const cx = 174.1725;
+              const cy = 333.5;
+              const rx = 149.5;
+              const ry = 199.5;
+              const viewBoxWidth = 348.345;
+              const viewBoxHeight = 667;
+              
+              // Convert viewBox coordinates to screen coordinates
+              const scaleX = svgBounds.width / viewBoxWidth;
+              const scaleY = svgBounds.height / viewBoxHeight;
+              
+              ellipseBounds = {
+                centerX: svgBounds.left + cx * scaleX,
+                centerY: svgBounds.top + cy * scaleY,
+                radiusX: rx * scaleX,
+                radiusY: ry * scaleY,
+                // Store video bounds for coordinate mapping
+                videoBounds: videoBounds,
+                videoWidth: videoRef.current.videoWidth,
+                videoHeight: videoRef.current.videoHeight
+              };
+            }
+          }
+          
           const isWellPositioned = faceDetectionService.isFaceWellPositioned(
             face,
             videoRef.current.videoWidth,
-            videoRef.current.videoHeight
+            videoRef.current.videoHeight,
+            ellipseBounds
           );
           
           const quality = faceDetectionService.getFaceQualityScore(
@@ -1605,6 +1638,7 @@ const UploadPage = (): JSX.Element => {
                       {/* Black ellipse = transparent (cutout) */}
                       {/* Position: exact center - container height 667, center Y = 667/2 = 333.5 */}
                       <ellipse 
+                        ref={ellipseRef}
                         cx="174.1725" 
                         cy="333.5" 
                         rx="149.5" 
