@@ -96,34 +96,34 @@ export const ANALYSIS_STEPS = [
     techExplanation: 'Extracting color data from key facial zones'
   },
   {
-    id: 'warm-cool-comparison',
+    id: 'color-depth-1',
     character: 'wizard',
     characterImage: '/images/characters/wizard-converting.png',
     speechBubble: '/images/speech-bubbles/bubble-3.png',
-    message: "Comparing warm vs cool tones 🎨",
+    message: "Comparing colors...", // Will be dynamically updated based on personal color
     progress: 60,
     duration: 5000, // Keep as manual control phase - user interaction needed
-    techExplanation: 'Analyzing warm vs cool undertones'
+    techExplanation: 'Depth 1 color analysis'
   },
   {
-    id: 'season-comparison',
+    id: 'color-depth-2',
     character: 'analyst',
     characterImage: '/images/characters/analyst-thinking.png',
     speechBubble: '/images/speech-bubbles/bubble-4.png',
-    message: "Finding your season type 📊",
+    message: "Analyzing deeper tones...", // Will be dynamically updated based on personal color
     progress: 80,
     duration: 5000, // Keep as manual control phase - user interaction needed
-    techExplanation: 'Determining your seasonal color type'
+    techExplanation: 'Depth 2 color analysis'
   },
   {
-    id: 'final-result',
+    id: 'color-depth-3',
     character: 'artist',
     characterImage: '/images/characters/artist-creating.png',
     speechBubble: '/images/speech-bubbles/bubble-5.png',
-    message: "Creating your color palette ✨",
+    message: "Finalizing your colors...", // Will be dynamically updated based on personal color
     progress: 100,
-    duration: 2000, // Reduced from 3000ms - quicker to results
-    techExplanation: 'Finalizing your custom color recommendations'
+    duration: 5000, // Keep as manual control phase - user interaction needed
+    techExplanation: 'Depth 3 color analysis'
   },
 ];
 
@@ -153,6 +153,102 @@ export const COLOR_PALETTES = {
       name: '겨울 쿨톤',
       colors: ['#FF0066', '#CC0066', '#9900CC', '#0066CC'],
       description: '선명하고 차가운 비비드 톤'
+    }
+  }
+};
+
+// Color Comparison Flows for 3-depth analysis
+export const COLOR_COMPARISON_FLOWS = {
+  'Spring Warm': {
+    d1: {
+      leftColor: '#FEDFBB',
+      rightColor: '#FFDDF4',
+      activeBox: 'left' as const,
+      message: '왼쪽에서 피부색이 맑아보여요!',
+      techExplanation: 'Comparing warm vs cool undertones'
+    },
+    d2: {
+      leftColor: '#52090E',
+      rightColor: '#BF0166',
+      activeBox: 'left' as const,
+      message: '오른쪽에서 피부색이 노래보여요',
+      techExplanation: 'Testing deep color harmony'
+    },
+    d3: {
+      leftColor: '#44CBD1',
+      rightColor: '#8C7C52',
+      activeBox: 'left' as const,
+      message: '왼쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      techExplanation: 'Confirming your spring warm type'
+    }
+  },
+  'Autumn Warm': {
+    d1: {
+      leftColor: '#FEDFBB',
+      rightColor: '#FFDDF4',
+      activeBox: 'left' as const,
+      message: '왼쪽에서 피부색이 맑아보여요!',
+      techExplanation: 'Comparing warm vs cool undertones'
+    },
+    d2: {
+      leftColor: '#52090E',
+      rightColor: '#BF0166',
+      activeBox: 'left' as const,
+      message: '오른쪽에서 피부색이 노래보여요',
+      techExplanation: 'Testing deep color harmony'
+    },
+    d3: {
+      leftColor: '#44CBD1',
+      rightColor: '#8C7C52',
+      activeBox: 'right' as const,
+      message: '오른쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      techExplanation: 'Confirming your autumn warm type'
+    }
+  },
+  'Summer Cool': {
+    d1: {
+      leftColor: '#FEDFBB',
+      rightColor: '#FFDDF4',
+      activeBox: 'right' as const,
+      message: '오른쪽에서 피부색이 맑아보여요!',
+      techExplanation: 'Comparing warm vs cool undertones'
+    },
+    d2: {
+      leftColor: '#52090E',
+      rightColor: '#BF0166',
+      activeBox: 'right' as const,
+      message: '왼쪽에서 피부색이 노래보여요',
+      techExplanation: 'Testing deep color harmony'
+    },
+    d3: {
+      leftColor: '#C7EEF5',
+      rightColor: '#3C15B0',
+      activeBox: 'left' as const,
+      message: '왼쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      techExplanation: 'Confirming your summer cool type'
+    }
+  },
+  'Winter Cool': {
+    d1: {
+      leftColor: '#FEDFBB',
+      rightColor: '#FFDDF4',
+      activeBox: 'right' as const,
+      message: '오른쪽에서 피부색이 맑아보여요!',
+      techExplanation: 'Comparing warm vs cool undertones'
+    },
+    d2: {
+      leftColor: '#52090E',
+      rightColor: '#BF0166',
+      activeBox: 'right' as const,
+      message: '왼쪽에서 피부색이 노래보여요',
+      techExplanation: 'Testing deep color harmony'
+    },
+    d3: {
+      leftColor: '#C7EEF5',
+      rightColor: '#3C15B0',
+      activeBox: 'right' as const,
+      message: '오른쪽에서 얼굴 윤곽이 적당히 또렷해보여요!',
+      techExplanation: 'Confirming your winter cool type'
     }
   }
 };

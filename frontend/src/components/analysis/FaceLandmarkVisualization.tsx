@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import { COLOR_PALETTES } from '@/utils/constants';
+import { COLOR_COMPARISON_FLOWS } from '@/utils/constants';
 import { initializeTensorFlow, getTensorFlow } from '@/utils/tensorflowInit';
 
 interface FaceLandmarkVisualizationProps {
@@ -10,6 +10,7 @@ interface FaceLandmarkVisualizationProps {
   // External control for synchronization
   currentAnalysisStep?: number;
   forceAnimationPhase?: 'detecting' | 'extracting' | 'analyzing' | 'complete' | null;
+  personalColorResult?: string; // e.g., 'Spring Warm', 'Summer Cool', etc.
 }
 
 interface FaceLandmark {
@@ -36,7 +37,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   onLandmarksDetected,
   className = '',
   currentAnalysisStep = 0,
-  forceAnimationPhase = null
+  forceAnimationPhase = null,
+  personalColorResult = null
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -44,7 +46,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState<DetectedFace[]>([]);
-  const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'analyzing' | 'warm-cool' | 'season' | 'complete'>('detecting');
+  const [animationPhase, setAnimationPhase] = useState<'detecting' | 'extracting' | 'depth-1' | 'depth-2' | 'depth-3' | 'complete'>('detecting');
   const frameCountRef = useRef<number>(0);
   const animationStartTimeRef = useRef<number>(0);
   const scanCompleteRef = useRef<boolean>(false);
@@ -104,7 +106,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     initializeDetector();
   }, []);
 
-  // Create inverted face mask (everything except face)
+  // Create inverted face mask (everything except face) - for non-depth phases
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createInverseFaceMask = (ctx: CanvasRenderingContext2D, face: DetectedFace, canvas: HTMLCanvasElement, image: HTMLImageElement, offsetX: number, offsetY: number, scaleX: number, scaleY: number) => {
     // Calculate face bounds with expansion for safety (apply offset and scale)
     const xs = face.keypoints.map(kp => kp.x * image.width * scaleX + offsetX);
@@ -146,6 +149,53 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     
     // Use even-odd fill rule to create inverse mask
     ctx.clip('evenodd');
+  };
+
+  // Calculate face center based on eyes, nose, mouth landmarks only
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const calculateCentralFaceFeatures = (face: DetectedFace, image: HTMLImageElement) => {
+    const groups = getFaceLandmarkGroups(face.keypoints);
+    
+    // Combine eyes, nose, and mouth points
+    const centralFeatures = [...groups.eyes, ...groups.nose, ...groups.mouth];
+    
+    if (centralFeatures.length === 0) {
+      // Fallback to all keypoints if feature detection fails
+      return {
+        centerX: 0.5,
+        centerY: 0.5,
+        featureWidth: 0.5,
+        featureHeight: 0.5
+      };
+    }
+    
+    // Calculate bounds of central features
+    const xs = centralFeatures.map(p => p.x);
+    const ys = centralFeatures.map(p => p.y);
+    
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    
+    // Calculate center of features (eyes, nose, mouth)
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    
+    // Calculate dimensions
+    const featureWidth = maxX - minX;
+    const featureHeight = maxY - minY;
+    
+    return {
+      centerX,
+      centerY,
+      featureWidth,
+      featureHeight,
+      minX,
+      maxX,
+      minY,
+      maxY
+    };
   };
 
   // Define face landmark groups for 3D mesh effect (Step 1 only)
@@ -285,17 +335,20 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     ctx.restore();
   };
 
-  // Draw color draping overlay as background
+  // Draw color draping overlay with activation indicator (kept for potential future use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const drawColorDraping = (
     ctx: CanvasRenderingContext2D, 
     canvas: HTMLCanvasElement, 
-    colors: string[], 
-    side: 'left' | 'right' | 'full',
+    leftColor: string,
+    rightColor: string,
+    activeBox: 'left' | 'right' | null,
     face: DetectedFace,
     image: HTMLImageElement,
     offsetX: number,
     offsetY: number,
     scaleX: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     scaleY: number
   ) => {
     // Calculate face center for split (apply offset and scale)
@@ -303,21 +356,84 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const xs = faceKeypoints.map(kp => kp.x * image.width * scaleX + offsetX);
     const faceCenterX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
     
-    // Determine which side to apply color
-    let rectX = 0;
-    let rectWidth = canvas.width;
+    // Draw left side color
+    ctx.fillStyle = leftColor;
+    ctx.fillRect(0, 0, faceCenterX, canvas.height);
     
-    if (side === 'left') {
-      rectWidth = faceCenterX;
-    } else if (side === 'right') {
-      rectX = faceCenterX;
-      rectWidth = canvas.width - faceCenterX;
+    // Draw right side color
+    ctx.fillStyle = rightColor;
+    ctx.fillRect(faceCenterX, 0, canvas.width - faceCenterX, canvas.height);
+    
+    // Draw activation indicator (glow effect on active side)
+    if (activeBox) {
+      ctx.save();
+      
+      // Create glow effect on the active side
+      const glowX = activeBox === 'left' ? 0 : faceCenterX;
+      const glowWidth = activeBox === 'left' ? faceCenterX : canvas.width - faceCenterX;
+      
+      // Inner glow
+      const gradient = ctx.createLinearGradient(
+        activeBox === 'left' ? glowX : glowX + glowWidth,
+        0,
+        activeBox === 'left' ? glowX + 60 : glowX + glowWidth - 60,
+        0
+      );
+      
+      if (activeBox === 'left') {
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      } else {
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.4)');
+      }
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(glowX, 0, glowWidth, canvas.height);
+      
+      // Border highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+      ctx.shadowBlur = 10;
+      
+      // Draw border on the active side edge
+      if (activeBox === 'left') {
+        // Draw left and top/bottom borders
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, canvas.height);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(faceCenterX, 0);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        ctx.lineTo(faceCenterX, canvas.height);
+        ctx.stroke();
+      } else {
+        // Draw right and top/bottom borders
+        ctx.beginPath();
+        ctx.moveTo(canvas.width, 0);
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(faceCenterX, 0);
+        ctx.lineTo(canvas.width, 0);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(faceCenterX, canvas.height);
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.stroke();
+      }
+      
+      ctx.restore();
     }
-    
-    // Draw solid color background for the entire side
-    const mainColor = colors[Math.floor(colors.length / 2)];
-    ctx.fillStyle = mainColor;
-    ctx.fillRect(rectX, 0, rectWidth, canvas.height);
   };
 
   // Draw face landmarks on canvas with new effects
@@ -361,105 +477,135 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const offsetY = -sourceY * scaleY;
 
     // Handle different visualization phases
-    if (phase === 'warm-cool') {
-      // Draw warm-cool comparison with face masking
+    if (phase === 'depth-1' || phase === 'depth-2' || phase === 'depth-3') {
+      // Draw color depth comparison with circular face focus
       faces.forEach((face) => {
-        // Save state
-        ctx.save();
+        // Get the personal color type from parent component
+        const personalColor = personalColorResult || 'Spring Warm'; // Default to Spring Warm
+        const colorFlow = COLOR_COMPARISON_FLOWS[personalColor as keyof typeof COLOR_COMPARISON_FLOWS];
         
-        // Create inverse face mask (everything except face)
-        createInverseFaceMask(ctx, face, canvas, image, offsetX, offsetY, scaleX, scaleY);
+        if (!colorFlow) {
+          console.warn('Unknown personal color type:', personalColor);
+          return;
+        }
         
-        // Draw colors only outside face area
-        // Left side - Warm tones
-        drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.base, 'left', face, image, offsetX, offsetY, scaleX, scaleY);
-        
-        // Right side - Cool tones  
-        drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.base, 'right', face, image, offsetX, offsetY, scaleX, scaleY);
-        
-        ctx.restore();
-        
-        // Add dividing line at face center
-        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + (kp.x * image.width * scaleX + offsetX), 0) / face.keypoints.length;
-        
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([10, 10]);
-        ctx.beginPath();
-        ctx.moveTo(faceCenterX, 0);
-        ctx.lineTo(faceCenterX, canvas.height);
-        ctx.stroke();
-        ctx.restore();
-        
-        // Add labels
-        ctx.save();
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-        ctx.shadowBlur = 4;
-        ctx.textAlign = 'center';
-        ctx.fillText('Warm', faceCenterX - 80, 40);
-        ctx.fillText('Cool', faceCenterX + 80, 40);
-        ctx.restore();
-      });
-      return;
-    }
-    
-    if (phase === 'season') {
-      // Draw seasonal comparison
-      faces.forEach((face) => {
-        // TODO: Determine if warm or cool based on analysis
-        const isWarm = true; // This should come from actual analysis
-        
-        const faceCenterX = face.keypoints.reduce((sum, kp) => sum + (kp.x * image.width * scaleX + offsetX), 0) / face.keypoints.length;
-        
-        // Save state and create face mask
-        ctx.save();
-        
-        // Create inverse face mask (everything except face)
-        createInverseFaceMask(ctx, face, canvas, image, offsetX, offsetY, scaleX, scaleY);
-        
-        if (isWarm) {
-          // Spring vs Autumn
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.spring.colors, 'left', face, image, offsetX, offsetY, scaleX, scaleY);
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.warm.autumn.colors, 'right', face, image, offsetX, offsetY, scaleX, scaleY);
-          
-          ctx.save();
-          ctx.fillStyle = 'white';
-          ctx.font = 'bold 18px sans-serif';
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-          ctx.shadowBlur = 4;
-          ctx.textAlign = 'center';
-          ctx.fillText('봄 웜톤', faceCenterX - 80, 40);
-          ctx.fillText('가을 웜톤', faceCenterX + 80, 40);
-          ctx.restore();
+        // Determine which depth config to use
+        let depthConfig;
+        if (phase === 'depth-1') {
+          depthConfig = colorFlow.d1;
+        } else if (phase === 'depth-2') {
+          depthConfig = colorFlow.d2;
         } else {
-          // Summer vs Winter
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.summer.colors, 'left', face, image, offsetX, offsetY, scaleX, scaleY);
-          drawColorDraping(ctx, canvas, COLOR_PALETTES.cool.winter.colors, 'right', face, image, offsetX, offsetY, scaleX, scaleY);
-          
+          depthConfig = colorFlow.d3;
+        }
+        
+        // Calculate central face features (eyes, nose, mouth)
+        const features = calculateCentralFaceFeatures(face, image);
+        
+        // Fixed circle dimensions - perfectly centered
+        const circleRadius = Math.min(canvas.width, canvas.height) * 0.35;
+        const circleCenterX = canvas.width / 2;
+        const circleCenterY = canvas.height / 2;
+        
+        // Calculate zoom factor to fit central features in circle
+        // We want to zoom in to show only eyes, nose, mouth
+        const desiredFeatureSize = circleRadius * 1.6; // Features should fill about 80% of circle diameter
+        const currentFeatureSize = Math.max(features.featureWidth, features.featureHeight);
+        const zoomFactor = desiredFeatureSize / (currentFeatureSize * Math.max(image.width, image.height));
+        
+        // Calculate source rectangle for cropping (in image coordinates)
+        // Center on the facial features, not the whole face
+        const cropSize = circleRadius / zoomFactor;
+        const sourceCenterX = features.centerX * image.width;
+        const sourceCenterY = features.centerY * image.height;
+        
+        // Source rectangle (what part of image to draw)
+        const srcX = Math.max(0, sourceCenterX - cropSize);
+        const srcY = Math.max(0, sourceCenterY - cropSize);
+        const srcWidth = Math.min(cropSize * 2, image.width - srcX);
+        const srcHeight = Math.min(cropSize * 2, image.height - srcY);
+        
+        // First, draw the background colors (full canvas)
+        // Calculate face center for color split
+        const faceCenterForSplit = circleCenterX; // Use circle center for split
+        
+        // Draw left color
+        ctx.fillStyle = depthConfig.leftColor;
+        ctx.fillRect(0, 0, faceCenterForSplit, canvas.height);
+        
+        // Draw right color
+        ctx.fillStyle = depthConfig.rightColor;
+        ctx.fillRect(faceCenterForSplit, 0, canvas.width - faceCenterForSplit, canvas.height);
+        
+        // Add activation glow on active side
+        if (depthConfig.activeBox) {
           ctx.save();
-          ctx.fillStyle = 'white';
-          ctx.font = 'bold 18px sans-serif';
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-          ctx.shadowBlur = 4;
-          ctx.textAlign = 'center';
-          ctx.fillText('여름 쿨톤', faceCenterX - 80, 40);
-          ctx.fillText('겨울 쿨톤', faceCenterX + 80, 40);
+          
+          const glowX = depthConfig.activeBox === 'left' ? 0 : faceCenterForSplit;
+          const glowWidth = depthConfig.activeBox === 'left' ? faceCenterForSplit : canvas.width - faceCenterForSplit;
+          
+          // Glow gradient
+          const gradient = ctx.createLinearGradient(
+            depthConfig.activeBox === 'left' ? glowX : glowX + glowWidth,
+            0,
+            depthConfig.activeBox === 'left' ? glowX + 60 : glowX + glowWidth - 60,
+            0
+          );
+          
+          if (depthConfig.activeBox === 'left') {
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          } else {
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
+          }
+          
+          ctx.fillStyle = gradient;
+          ctx.fillRect(glowX, 0, glowWidth, canvas.height);
+          
           ctx.restore();
         }
         
-        ctx.restore(); // Restore from face masking
-        
-        // Add dividing line at face center
+        // Create circular clip for face
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([10, 10]);
         ctx.beginPath();
-        ctx.moveTo(faceCenterX, 0);
-        ctx.lineTo(faceCenterX, canvas.height);
+        ctx.arc(circleCenterX, circleCenterY, circleRadius, 0, Math.PI * 2);
+        ctx.clip();
+        
+        // Draw the zoomed face image inside the circle
+        ctx.drawImage(
+          image,
+          srcX, srcY, srcWidth, srcHeight, // Source rectangle
+          circleCenterX - circleRadius, // Destination x
+          circleCenterY - circleRadius, // Destination y
+          circleRadius * 2, // Destination width
+          circleRadius * 2  // Destination height
+        );
+        
+        ctx.restore();
+        
+        // Draw white border around circle
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.arc(circleCenterX, circleCenterY, circleRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Add subtle vertical dividing line
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        // Only draw line outside the circle
+        ctx.moveTo(faceCenterForSplit, 0);
+        ctx.lineTo(faceCenterForSplit, circleCenterY - circleRadius - 5);
+        ctx.moveTo(faceCenterForSplit, circleCenterY + circleRadius + 5);
+        ctx.lineTo(faceCenterForSplit, canvas.height);
         ctx.stroke();
         ctx.restore();
       });
@@ -515,9 +661,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       
       // Enhanced scanning effect with 3D mesh for detecting phase (Step 1 only)
       if (phase === 'detecting') {
-        const elapsed = Date.now() - animationStartTimeRef.current;
+        const elapsed = Math.max(0, Date.now() - animationStartTimeRef.current); // Ensure non-negative
         const scanDuration = 3000; // 3 seconds for one complete cycle (slower)
-        const scanProgress = Math.min(elapsed / scanDuration, 1);
+        const scanProgress = Math.min(Math.max(0, elapsed / scanDuration), 1); // Clamp between 0 and 1
         
         // Mark scan as complete after one cycle
         if (scanProgress >= 1 && !scanCompleteRef.current) {
@@ -666,9 +812,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         
         if (phase === 'detecting') {
           // Mesh vertices with scan-based visibility
-          const elapsed = Date.now() - animationStartTimeRef.current;
+          const elapsed = Math.max(0, Date.now() - animationStartTimeRef.current); // Ensure non-negative
           const scanDuration = 3000;
-          const scanProgress = Math.min(elapsed / scanDuration, 1);
+          const scanProgress = Math.min(Math.max(0, elapsed / scanDuration), 1); // Clamp between 0 and 1
           
           // Only show dots if scan is still running
           if (scanProgress < 1) {
@@ -733,16 +879,16 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       // Reset shadow
       ctx.shadowBlur = 0;
     });
-  }, []);
+  }, [personalColorResult, calculateCentralFaceFeatures, onLandmarksDetected]);
 
   // Map analysis steps to animation phases
-  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'analyzing' | 'warm-cool' | 'season' | 'complete' => {
+  const getAnimationPhaseForStep = (step: number): 'detecting' | 'extracting' | 'depth-1' | 'depth-2' | 'depth-3' | 'complete' => {
     const phaseMap = {
       0: 'detecting' as const,    // face-detection
       1: 'extracting' as const,   // color-extraction
-      2: 'warm-cool' as const,    // warm-cool-comparison
-      3: 'season' as const,       // season-comparison
-      4: 'complete' as const,     // final-result
+      2: 'depth-1' as const,      // color-depth-1
+      3: 'depth-2' as const,      // color-depth-2
+      4: 'depth-3' as const,      // color-depth-3
     };
     return phaseMap[step as keyof typeof phaseMap] || 'detecting';
   };
@@ -893,7 +1039,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     // Start detection if detector is ready and not already started
     if (detector && !detectionStartedRef.current) {
       detectionStartedRef.current = true; // Mark as started
-      animationStartTimeRef.current = Date.now(); // Record animation start time for Step 1
+      // Delay animation start by 500ms to let character appear first
+      animationStartTimeRef.current = Date.now() + 500; // Add delay for character to appear
       scanCompleteRef.current = false; // Reset scan complete flag
       detectLandmarks();
     }
@@ -904,7 +1051,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     if (detector && imageRef.current?.complete && !detectionStartedRef.current) {
       // Only start if not already started by handleImageLoad
       detectionStartedRef.current = true;
-      animationStartTimeRef.current = Date.now();
+      // Delay animation start by 500ms to let character appear first
+      animationStartTimeRef.current = Date.now() + 500; // Add delay for character to appear
       scanCompleteRef.current = false;
       detectLandmarks();
     }
@@ -916,11 +1064,11 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     
     const animate = () => {
       if (animationPhase === 'detecting' && landmarks.length > 0) {
-        const elapsed = Date.now() - animationStartTimeRef.current;
+        const elapsed = Math.max(0, Date.now() - animationStartTimeRef.current); // Ensure non-negative
         const scanDuration = 3000;
         
-        // Stop animation after scan completes
-        if (elapsed >= scanDuration) {
+        // Stop animation after scan completes (only if elapsed is positive)
+        if (elapsed > 0 && elapsed >= scanDuration) {
           if (!scanCompleteRef.current) {
             scanCompleteRef.current = true;
             console.log('🎯 [Animation Loop] Scan complete after', elapsed, 'ms');
@@ -970,8 +1118,12 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         // Reset detection flag when phase changes to allow re-detection if needed
         if (targetPhase === 'detecting') {
           detectionStartedRef.current = false;
-          animationStartTimeRef.current = Date.now();
+          // Delay animation start by 500ms to let character appear first
+          animationStartTimeRef.current = Date.now() + 500;
           scanCompleteRef.current = false;
+        } else if (targetPhase === 'extracting') {
+          // Also delay extracting phase animation
+          animationStartTimeRef.current = Date.now() + 500;
         }
         drawLandmarks(landmarks, targetPhase);
       }

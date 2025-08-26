@@ -1603,12 +1603,12 @@ const UploadPage = (): JSX.Element => {
                       {/* White background = visible */}
                       <rect x="0" y="0" width="348.345" height="667" fill="white" />
                       {/* Black ellipse = transparent (cutout) */}
-                      {/* Position: top padding 34px, bottom padding 143px, so center Y = 34 + 490/2 = 34 + 245 = 279 */}
+                      {/* Position: exact center - container height 667, center Y = 667/2 = 333.5 */}
                       <ellipse 
                         cx="174.1725" 
-                        cy="279" 
+                        cy="333.5" 
                         rx="149.5" 
-                        ry="245" 
+                        ry="199.5" 
                         fill="black" 
                       />
                     </mask>
@@ -1637,7 +1637,7 @@ const UploadPage = (): JSX.Element => {
                   className="absolute pointer-events-none" 
                   style={{ 
                     zIndex: 11,
-                    top: `${34 * scaleFactor}px`,
+                    top: `${134 * scaleFactor}px`,
                     left: '50%',
                     transform: 'translateX(-50%)',
                   }}
@@ -1645,7 +1645,7 @@ const UploadPage = (): JSX.Element => {
                   <div
                     style={{
                       width: `${299 * scaleFactor}px`,
-                      height: `${490 * scaleFactor}px`,
+                      height: `${399 * scaleFactor}px`,
                       borderRadius: '50%',
                       border: `${5 * scaleFactor}px dashed`,
                       borderColor: captureCountdown !== null 

@@ -210,13 +210,13 @@ class FaceDetectionService {
     }
     
     // Calculate oval center and radius in the visible area
-    // Ellipse position: 34px from top, 143px from bottom
-    // Center Y = 34 + 490/2 = 34 + 245 = 279 (in 667px height)
+    // Ellipse position: exact center, with 3:4 aspect ratio (width:height)
+    // Center Y = 667/2 = 333.5 (exact center of 667px height container)
     const ovalCenterX = offsetX + visibleWidth / 2;
-    const ovalCenterY = offsetY + (34 / 667) * visibleHeight + (490 / 667) * visibleHeight / 2;
-    // Ellipse dimensions: 299px width, 490px height in 348.345px x 667px container
+    const ovalCenterY = offsetY + (333.5 / 667) * visibleHeight;
+    // Ellipse dimensions: 299px width, 399px height (3:4 ratio) in 348.345px x 667px container
     const ovalRadiusX = (299 / 348.345) * visibleWidth / 2; 
-    const ovalRadiusY = (490 / 667) * visibleHeight / 2;
+    const ovalRadiusY = (399 / 667) * visibleHeight / 2;
     
     // Check face size (should fill 4-25% of frame - allows wider range of distances)
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
@@ -229,6 +229,17 @@ class FaceDetectionService {
     // ALL FOUR features must be inside - if even one is outside, don't capture
     let areFeaturesInOval = false;
     let featureStatus = { rightEye: false, leftEye: false, nose: false, mouth: false };
+    
+    // Track feature span to ensure eyes, nose, mouth optimally FILL the ellipse
+    let featureSpanData = {
+      minX: Infinity,
+      maxX: -Infinity,
+      minY: Infinity,
+      maxY: -Infinity,
+      widthFillRatio: 0,
+      heightFillRatio: 0,
+      isOptimalFill: false
+    };
     
     if (face.keypoints && face.keypoints.length >= 4) {
       // MediaPipe provides 6 keypoints:
@@ -261,6 +272,12 @@ class FaceDetectionService {
             return;
           }
           
+          // Update feature span tracking (min/max positions)
+          featureSpanData.minX = Math.min(featureSpanData.minX, adjustedX);
+          featureSpanData.maxX = Math.max(featureSpanData.maxX, adjustedX);
+          featureSpanData.minY = Math.min(featureSpanData.minY, adjustedY);
+          featureSpanData.maxY = Math.max(featureSpanData.maxY, adjustedY);
+          
           const normalizedX = (adjustedX - (visibleWidth / 2)) / ovalRadiusX;
           const normalizedY = (adjustedY - (visibleHeight / 2)) / ovalRadiusY;
           const distance = normalizedX * normalizedX + normalizedY * normalizedY;
@@ -280,6 +297,34 @@ class FaceDetectionService {
       areFeaturesInOval = featureStatus.rightEye && featureStatus.leftEye && 
                           featureStatus.nose && featureStatus.mouth;
       
+      // Calculate feature span fill ratio if all features are inside
+      if (areFeaturesInOval && featureSpanData.minX !== Infinity) {
+        const featureWidth = featureSpanData.maxX - featureSpanData.minX;
+        const featureHeight = featureSpanData.maxY - featureSpanData.minY;
+        
+        // Calculate fill ratios relative to the ellipse dimensions
+        featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
+        featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
+        
+        // Check if features optimally fill 70-90% of the ellipse
+        featureSpanData.isOptimalFill = 
+          featureSpanData.widthFillRatio >= 0.70 && featureSpanData.widthFillRatio <= 0.90 &&
+          featureSpanData.heightFillRatio >= 0.70 && featureSpanData.heightFillRatio <= 0.90;
+        
+        console.log(`📏 [FaceDetectionService] Feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
+        
+        if (!featureSpanData.isOptimalFill) {
+          if (featureSpanData.widthFillRatio < 0.70 || featureSpanData.heightFillRatio < 0.70) {
+            console.log('📐 [FaceDetectionService] Move CLOSER - face features only fill', 
+              Math.min(featureSpanData.widthFillRatio, featureSpanData.heightFillRatio) * 100, '% of frame');
+          } else if (featureSpanData.widthFillRatio > 0.90 || featureSpanData.heightFillRatio > 0.90) {
+            console.log('📐 [FaceDetectionService] Move BACK - face features exceed optimal size');
+          }
+        } else {
+          console.log('✨ [FaceDetectionService] PERFECT! Face features optimally fill the ellipse - ready for capture!');
+        }
+      }
+      
       if (!areFeaturesInOval) {
         const outsideFeatures = [];
         if (!featureStatus.rightEye) outsideFeatures.push('right eye');
@@ -287,8 +332,10 @@ class FaceDetectionService {
         if (!featureStatus.nose) outsideFeatures.push('nose');
         if (!featureStatus.mouth) outsideFeatures.push('mouth');
         console.log('🚫 [FaceDetectionService] CAPTURE BLOCKED - Features outside oval:', outsideFeatures.join(', '));
+      } else if (!featureSpanData.isOptimalFill) {
+        console.log('🚫 [FaceDetectionService] CAPTURE BLOCKED - Features do not optimally fill ellipse');
       } else {
-        console.log('✅ [FaceDetectionService] ALL 4 features verified inside ellipse boundary');
+        console.log('✅ [FaceDetectionService] ALL conditions met - features inside AND optimally fill ellipse');
       }
     } else {
       // Fallback: if no keypoints, estimate facial feature positions based on face box
@@ -302,6 +349,12 @@ class FaceDetectionService {
       
       // Check each estimated feature - must be STRICTLY WITHIN the oval
       estimatedFeatures.forEach(feature => {
+        // Update feature span tracking for estimated positions
+        featureSpanData.minX = Math.min(featureSpanData.minX, feature.x);
+        featureSpanData.maxX = Math.max(featureSpanData.maxX, feature.x);
+        featureSpanData.minY = Math.min(featureSpanData.minY, feature.y);
+        featureSpanData.maxY = Math.max(featureSpanData.maxY, feature.y);
+        
         const normalizedX = (feature.x - ovalCenterX) / ovalRadiusX;
         const normalizedY = (feature.y - ovalCenterY) / ovalRadiusY;
         const distance = normalizedX * normalizedX + normalizedY * normalizedY;
@@ -318,6 +371,21 @@ class FaceDetectionService {
       areFeaturesInOval = featureStatus.rightEye && featureStatus.leftEye && 
                           featureStatus.nose && featureStatus.mouth;
       
+      // Calculate fill ratio for estimated features
+      if (areFeaturesInOval && featureSpanData.minX !== Infinity) {
+        const featureWidth = featureSpanData.maxX - featureSpanData.minX;
+        const featureHeight = featureSpanData.maxY - featureSpanData.minY;
+        
+        featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
+        featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
+        
+        featureSpanData.isOptimalFill = 
+          featureSpanData.widthFillRatio >= 0.70 && featureSpanData.widthFillRatio <= 0.90 &&
+          featureSpanData.heightFillRatio >= 0.70 && featureSpanData.heightFillRatio <= 0.90;
+        
+        console.log(`📏 [FaceDetectionService] Estimated feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
+      }
+      
       if (!areFeaturesInOval) {
         const outsideFeatures = [];
         if (!featureStatus.rightEye) outsideFeatures.push('right eye');
@@ -328,7 +396,8 @@ class FaceDetectionService {
       }
     }
     
-    const result = areFeaturesInOval && isSizeGood && isConfident;
+    // UPDATED: Result now requires features to be inside AND optimally fill the ellipse
+    const result = areFeaturesInOval && featureSpanData.isOptimalFill && isSizeGood && isConfident;
     
     if (!result) {
       console.log('🚫 [FaceDetectionService] CAPTURE BLOCKED - Face position check failed:');
@@ -341,10 +410,20 @@ class FaceDetectionService {
           mouth: featureStatus.mouth ? '✓' : '✗'
         });
       }
+      if (!featureSpanData.isOptimalFill) {
+        console.log('  ❌ Face features do not optimally fill ellipse');
+        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need 70-90%)`);
+        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need 70-90%)`);
+        if (featureSpanData.widthFillRatio < 0.70 || featureSpanData.heightFillRatio < 0.70) {
+          console.log('  💡 Suggestion: Move CLOSER to camera');
+        } else if (featureSpanData.widthFillRatio > 0.90 || featureSpanData.heightFillRatio > 0.90) {
+          console.log('  💡 Suggestion: Move AWAY from camera');
+        }
+      }
       if (!isSizeGood) console.log('  ⚠️ Size issue:', (faceAreaRatio * 100).toFixed(1) + '% (need: 7-10%)');
       if (!isConfident) console.log('  ⚠️ Low confidence:', face.confidence.toFixed(2));
     } else {
-      console.log('✅ [FaceDetectionService] Face properly positioned - ALL features within ellipse');
+      console.log('✅ [FaceDetectionService] Face properly positioned - ALL features within ellipse AND optimally fill it');
     }
     
     return result;

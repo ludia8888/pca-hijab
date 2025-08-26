@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout';
-import { ANALYSIS_STEPS, ROUTES } from '@/utils/constants';
+import { ANALYSIS_STEPS, ROUTES, COLOR_COMPARISON_FLOWS } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { analyzeImage } from '@/services/api';
 import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement } from '@/utils/analytics';
@@ -295,7 +295,45 @@ const AnalyzingPage = (): JSX.Element => {
     }
   };
 
-  const currentStepData = ANALYSIS_STEPS[currentStep] || ANALYSIS_STEPS[0];
+  // Get current step data with dynamic message for depth phases
+  const getCurrentStepData = () => {
+    const baseStep = ANALYSIS_STEPS[currentStep] || ANALYSIS_STEPS[0];
+    
+    // For depth phases (steps 2-4), update the message based on personal color
+    if (currentStep >= 2 && currentStep <= 4 && analysisResult?.personal_color_en) {
+      const season = analysisResult.personal_color_en.toLowerCase();
+      let personalColorKey = 'Spring Warm'; // Default
+      
+      // Map season to full personal color name
+      if (season === 'spring') personalColorKey = 'Spring Warm';
+      else if (season === 'summer') personalColorKey = 'Summer Cool';
+      else if (season === 'autumn' || season === 'fall') personalColorKey = 'Autumn Warm';
+      else if (season === 'winter') personalColorKey = 'Winter Cool';
+      
+      const colorFlow = COLOR_COMPARISON_FLOWS[personalColorKey as keyof typeof COLOR_COMPARISON_FLOWS];
+      
+      if (colorFlow) {
+        let depthConfig;
+        if (currentStep === 2) {
+          depthConfig = colorFlow.d1;
+        } else if (currentStep === 3) {
+          depthConfig = colorFlow.d2;
+        } else {
+          depthConfig = colorFlow.d3;
+        }
+        
+        return {
+          ...baseStep,
+          message: depthConfig.message,
+          techExplanation: depthConfig.techExplanation
+        };
+      }
+    }
+    
+    return baseStep;
+  };
+  
+  const currentStepData = getCurrentStepData();
 
   // Handle proceeding to next step (for draping phases)
   const handleProceedToNext = () => {
@@ -522,6 +560,16 @@ const AnalyzingPage = (): JSX.Element => {
                 <FaceLandmarkVisualization
                   imageUrl={imageUrl}
                   currentAnalysisStep={currentStep}
+                  personalColorResult={(() => {
+                    if (!analysisResult?.personal_color_en) return null;
+                    const season = analysisResult.personal_color_en.toLowerCase();
+                    // Map season to full personal color name
+                    if (season === 'spring') return 'Spring Warm';
+                    if (season === 'summer') return 'Summer Cool';
+                    if (season === 'autumn' || season === 'fall') return 'Autumn Warm';
+                    if (season === 'winter') return 'Winter Cool';
+                    return 'Spring Warm'; // Default
+                  })()}
                   onLandmarksDetected={(landmarks) => {
                   console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
                   
@@ -700,14 +748,14 @@ const AnalyzingPage = (): JSX.Element => {
             </button>
             </div>
 
-            {/* Character and Speech Bubble - Show after scan completes for Step 1 */}
-            {!error && (currentStep === 0 ? canSkip : true) && (
+            {/* Character and Speech Bubble - Always show for each step */}
+            {!error && (
               <div 
                 key={`character-${currentStep}`}
                 className={`absolute bottom-28 ${currentStep % 2 === 0 ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
                 style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
               >
-              <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`}>
+              <div className={`flex ${currentStep % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`} style={{ pointerEvents: 'none' }}>
                 {/* Character Container */}
                 <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
                   <img 
