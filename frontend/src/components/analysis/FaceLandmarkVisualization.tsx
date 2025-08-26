@@ -502,32 +502,36 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         // Calculate central face features (eyes, nose, mouth)
         const features = calculateCentralFaceFeatures(face, image);
         
-        // Fixed circle dimensions - perfectly centered
-        const circleRadius = Math.min(canvas.width, canvas.height) * 0.35;
-        const circleCenterX = canvas.width / 2;
-        const circleCenterY = canvas.height / 2;
+        // Fixed ellipse dimensions - matching capture guide (3:4 aspect ratio)
+        const ellipseRadiusX = canvas.width * 0.4;  // ~139px (40% of 348px)
+        const ellipseRadiusY = ellipseRadiusX * (4/3);  // ~186px (maintaining 3:4 ratio)
+        const ellipseCenterX = canvas.width / 2;
+        const ellipseCenterY = canvas.height / 2;
         
-        // Calculate zoom factor to fit central features in circle
+        // Calculate zoom factor to fit central features in ellipse
         // We want to zoom in to show only eyes, nose, mouth
-        const desiredFeatureSize = circleRadius * 1.6; // Features should fill about 80% of circle diameter
+        const desiredFeatureWidth = ellipseRadiusX * 1.6; // Features should fill about 80% of ellipse width
+        const desiredFeatureHeight = ellipseRadiusY * 1.6; // Features should fill about 80% of ellipse height
         const currentFeatureSize = Math.max(features.featureWidth, features.featureHeight);
-        const zoomFactor = desiredFeatureSize / (currentFeatureSize * Math.max(image.width, image.height));
+        const zoomFactor = Math.max(desiredFeatureWidth / (features.featureWidth * image.width), 
+                                    desiredFeatureHeight / (features.featureHeight * image.height));
         
         // Calculate source rectangle for cropping (in image coordinates)
         // Center on the facial features, not the whole face
-        const cropSize = circleRadius / zoomFactor;
+        const cropSizeX = ellipseRadiusX / zoomFactor;
+        const cropSizeY = ellipseRadiusY / zoomFactor;
         const sourceCenterX = features.centerX * image.width;
         const sourceCenterY = features.centerY * image.height;
         
         // Source rectangle (what part of image to draw)
-        const srcX = Math.max(0, sourceCenterX - cropSize);
-        const srcY = Math.max(0, sourceCenterY - cropSize);
-        const srcWidth = Math.min(cropSize * 2, image.width - srcX);
-        const srcHeight = Math.min(cropSize * 2, image.height - srcY);
+        const srcX = Math.max(0, sourceCenterX - cropSizeX);
+        const srcY = Math.max(0, sourceCenterY - cropSizeY);
+        const srcWidth = Math.min(cropSizeX * 2, image.width - srcX);
+        const srcHeight = Math.min(cropSizeY * 2, image.height - srcY);
         
         // First, draw the background colors (full canvas)
         // Calculate face center for color split
-        const faceCenterForSplit = circleCenterX; // Use circle center for split
+        const faceCenterForSplit = ellipseCenterX; // Use ellipse center for split
         
         // Draw left color
         ctx.fillStyle = depthConfig.leftColor;
@@ -566,32 +570,32 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           ctx.restore();
         }
         
-        // Create circular clip for face
+        // Create elliptical clip for face
         ctx.save();
         ctx.beginPath();
-        ctx.arc(circleCenterX, circleCenterY, circleRadius, 0, Math.PI * 2);
+        ctx.ellipse(ellipseCenterX, ellipseCenterY, ellipseRadiusX, ellipseRadiusY, 0, 0, Math.PI * 2);
         ctx.clip();
         
-        // Draw the zoomed face image inside the circle
+        // Draw the zoomed face image inside the ellipse
         ctx.drawImage(
           image,
           srcX, srcY, srcWidth, srcHeight, // Source rectangle
-          circleCenterX - circleRadius, // Destination x
-          circleCenterY - circleRadius, // Destination y
-          circleRadius * 2, // Destination width
-          circleRadius * 2  // Destination height
+          ellipseCenterX - ellipseRadiusX, // Destination x
+          ellipseCenterY - ellipseRadiusY, // Destination y
+          ellipseRadiusX * 2, // Destination width
+          ellipseRadiusY * 2  // Destination height
         );
         
         ctx.restore();
         
-        // Draw white border around circle
+        // Draw white border around ellipse
         ctx.save();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.lineWidth = 3;
         ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
         ctx.shadowBlur = 4;
         ctx.beginPath();
-        ctx.arc(circleCenterX, circleCenterY, circleRadius, 0, Math.PI * 2);
+        ctx.ellipse(ellipseCenterX, ellipseCenterY, ellipseRadiusX, ellipseRadiusY, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
         
@@ -601,10 +605,10 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         ctx.lineWidth = 1;
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
-        // Only draw line outside the circle
+        // Only draw line outside the ellipse
         ctx.moveTo(faceCenterForSplit, 0);
-        ctx.lineTo(faceCenterForSplit, circleCenterY - circleRadius - 5);
-        ctx.moveTo(faceCenterForSplit, circleCenterY + circleRadius + 5);
+        ctx.lineTo(faceCenterForSplit, ellipseCenterY - ellipseRadiusY - 5);
+        ctx.moveTo(faceCenterForSplit, ellipseCenterY + ellipseRadiusY + 5);
         ctx.lineTo(faceCenterForSplit, canvas.height);
         ctx.stroke();
         ctx.restore();

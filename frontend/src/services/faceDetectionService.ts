@@ -306,18 +306,18 @@ class FaceDetectionService {
         featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
-        // Check if features optimally fill 70-90% of the ellipse
+        // Check if features optimally fill 35-60% of the ellipse (adjusted for better UX)
         featureSpanData.isOptimalFill = 
-          featureSpanData.widthFillRatio >= 0.70 && featureSpanData.widthFillRatio <= 0.90 &&
-          featureSpanData.heightFillRatio >= 0.70 && featureSpanData.heightFillRatio <= 0.90;
+          featureSpanData.widthFillRatio >= 0.35 && featureSpanData.widthFillRatio <= 0.60 &&
+          featureSpanData.heightFillRatio >= 0.35 && featureSpanData.heightFillRatio <= 0.60;
         
         console.log(`📏 [FaceDetectionService] Feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
         
         if (!featureSpanData.isOptimalFill) {
-          if (featureSpanData.widthFillRatio < 0.70 || featureSpanData.heightFillRatio < 0.70) {
+          if (featureSpanData.widthFillRatio < 0.35 || featureSpanData.heightFillRatio < 0.35) {
             console.log('📐 [FaceDetectionService] Move CLOSER - face features only fill', 
               Math.min(featureSpanData.widthFillRatio, featureSpanData.heightFillRatio) * 100, '% of frame');
-          } else if (featureSpanData.widthFillRatio > 0.90 || featureSpanData.heightFillRatio > 0.90) {
+          } else if (featureSpanData.widthFillRatio > 0.60 || featureSpanData.heightFillRatio > 0.60) {
             console.log('📐 [FaceDetectionService] Move BACK - face features exceed optimal size');
           }
         } else {
@@ -380,8 +380,8 @@ class FaceDetectionService {
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
         featureSpanData.isOptimalFill = 
-          featureSpanData.widthFillRatio >= 0.70 && featureSpanData.widthFillRatio <= 0.90 &&
-          featureSpanData.heightFillRatio >= 0.70 && featureSpanData.heightFillRatio <= 0.90;
+          featureSpanData.widthFillRatio >= 0.35 && featureSpanData.widthFillRatio <= 0.60 &&
+          featureSpanData.heightFillRatio >= 0.35 && featureSpanData.heightFillRatio <= 0.60;
         
         console.log(`📏 [FaceDetectionService] Estimated feature span: width=${(featureSpanData.widthFillRatio * 100).toFixed(1)}%, height=${(featureSpanData.heightFillRatio * 100).toFixed(1)}%`);
       }
@@ -412,11 +412,11 @@ class FaceDetectionService {
       }
       if (!featureSpanData.isOptimalFill) {
         console.log('  ❌ Face features do not optimally fill ellipse');
-        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need 70-90%)`);
-        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need 70-90%)`);
-        if (featureSpanData.widthFillRatio < 0.70 || featureSpanData.heightFillRatio < 0.70) {
+        console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need 35-60%)`);
+        console.log(`     Height fill: ${(featureSpanData.heightFillRatio * 100).toFixed(1)}% (need 35-60%)`);
+        if (featureSpanData.widthFillRatio < 0.35 || featureSpanData.heightFillRatio < 0.35) {
           console.log('  💡 Suggestion: Move CLOSER to camera');
-        } else if (featureSpanData.widthFillRatio > 0.90 || featureSpanData.heightFillRatio > 0.90) {
+        } else if (featureSpanData.widthFillRatio > 0.60 || featureSpanData.heightFillRatio > 0.60) {
           console.log('  💡 Suggestion: Move AWAY from camera');
         }
       }
