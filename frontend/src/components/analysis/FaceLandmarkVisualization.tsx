@@ -637,8 +637,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
             const point2 = currentPhase.points[j];
             if (!point2) continue;
             
-            const x2 = point2.x * canvas.width;
-            const y2 = point2.y * canvas.height;
+            const x2 = point2.x * image.width * scaleX + offsetX;
+            const y2 = point2.y * image.height * scaleY + offsetY;
             
             const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             
@@ -661,8 +661,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       currentPhase.points.forEach((landmark, index) => {
         if (!landmark) return;
         
-        const x = landmark.x * canvas.width;
-        const y = landmark.y * canvas.height;
+        const x = landmark.x * image.width * scaleX + offsetX;
+        const y = landmark.y * image.height * scaleY + offsetY;
         
         if (phase === 'detecting') {
           // Mesh vertices with scan-based visibility
