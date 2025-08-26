@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { compressImage } from '@/utils/helpers';
 import { useAppStore } from '@/store';
-import { PageLayout } from '@/components/layout/PageLayout';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import { faceDetectionService } from '@/services/faceDetectionService';
@@ -1486,7 +1485,20 @@ const UploadPage = (): JSX.Element => {
   }, []);
 
   return (
-    <PageLayout>
+    <>
+      <style>{`
+        @keyframes pulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+      `}</style>
       <div 
         className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col"
         style={{ 
@@ -1699,8 +1711,67 @@ const UploadPage = (): JSX.Element => {
               </div>
             )}
 
-            {/* Bottom instruction container */}
-            {!previewUrl && isCameraActive && (
+            {/* Countdown overlay - show during countdown */}
+            {!previewUrl && isCameraActive && captureCountdown !== null && (
+              <div 
+                className="absolute pointer-events-none"
+                style={{
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 20,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: `${10 * scaleFactor}px`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${120 * scaleFactor}px`,
+                      height: `${120 * scaleFactor}px`,
+                      borderRadius: '50%',
+                      background: 'rgba(151, 239, 208, 0.95)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                      animation: 'pulse 0.5s ease-in-out',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: '#000',
+                        fontSize: `${60 * scaleFactor}px`,
+                        fontWeight: 800,
+                        fontFamily: 'Pretendard',
+                      }}
+                    >
+                      {captureCountdown}
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontSize: `${20 * scaleFactor}px`,
+                      fontWeight: 700,
+                      fontFamily: 'Pretendard',
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    Say cheese!
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {/* Bottom instruction container - hide during capture countdown to prevent Safari delay issues */}
+            {!previewUrl && isCameraActive && captureCountdown === null && (
               <div 
                 className="absolute pointer-events-none"
                 style={{
@@ -2437,7 +2508,7 @@ const UploadPage = (): JSX.Element => {
           </div>
         </div>
       )}
-    </PageLayout>
+      </>
   );
 };
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@/components/layout';
 import { ANALYSIS_STEPS, ROUTES, COLOR_COMPARISON_FLOWS } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { analyzeImage } from '@/services/api';
@@ -416,9 +415,63 @@ const AnalyzingPage = (): JSX.Element => {
     }
   };
 
+  // Prevent scrolling on this page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    
+    // Prevent pull-to-refresh on mobile
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
+    
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.touchAction = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+    };
+  }, []);
+
+  // Prevent touch move events for scroll
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventScroll);
+    };
+  }, []);
+
   return (
-    <PageLayout>
-      <div className="min-h-screen relative overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden" 
+         style={{ 
+           width: '100vw',
+           height: '100vh',
+           height: '100dvh',
+           touchAction: 'none',
+           overscrollBehavior: 'none',
+           WebkitOverflowScrolling: 'touch',
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0
+         }}>
         {/* Full screen background */}
         <div 
           className="absolute"
@@ -852,8 +905,7 @@ const AnalyzingPage = (): JSX.Element => {
             )}
           </div>
         </div>
-      </div>
-    </PageLayout>
+    </div>
   );
 };
 

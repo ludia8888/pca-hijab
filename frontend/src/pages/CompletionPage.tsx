@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@/components/layout';
 import { Button, Card } from '@/components/ui';
 import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
@@ -134,9 +133,64 @@ const CompletionPage = (): JSX.Element => {
     navigate(ROUTES.HOME);
   };
 
+  // Prevent scrolling on this page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    
+    // Prevent pull-to-refresh on mobile
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
+    
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.touchAction = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+    };
+  }, []);
+
+  // Prevent touch move events for scroll
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventScroll);
+    };
+  }, []);
+
   return (
-    <PageLayout>
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 pb-24">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden"
+         style={{ 
+           width: '100vw',
+           height: '100vh',
+           height: '100dvh',
+           touchAction: 'none',
+           overscrollBehavior: 'none',
+           WebkitOverflowScrolling: 'touch',
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0
+         }}>
+      <div className="w-full h-full overflow-y-auto flex flex-col items-center justify-center px-4 py-12 pb-24">
         <div className="max-w-md w-full space-y-8">
           {/* Success Animation */}
           <div className="text-center">

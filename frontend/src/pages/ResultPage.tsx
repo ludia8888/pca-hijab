@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@/components/layout';
 import { ROUTES, SEASON_DESCRIPTIONS } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -237,14 +236,69 @@ const ResultPage = (): JSX.Element => {
     }
   };
 
+  // Prevent scrolling on this page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    
+    // Prevent pull-to-refresh on mobile
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
+    
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.touchAction = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+    };
+  }, []);
+
+  // Prevent touch move events for scroll
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventScroll);
+    };
+  }, []);
+
   return (
-    <PageLayout>
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden"
+         style={{ 
+           width: '100vw',
+           height: '100vh',
+           height: '100dvh',
+           touchAction: 'none',
+           overscrollBehavior: 'none',
+           WebkitOverflowScrolling: 'touch',
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0
+         }}>
       {/* Custom gradient background */}
-      <div className="fixed inset-0 -z-10">
+      <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 opacity-50" />
       </div>
 
-      <div className="max-w-2xl mx-auto w-full pb-20">
+      <div className="max-w-2xl mx-auto w-full h-full overflow-y-auto pb-20">
         {/* Hero Section with Photo - Compact */}
         <div className="relative mb-4">
           {uploadedImage ? (
@@ -495,7 +549,7 @@ const ResultPage = (): JSX.Element => {
           </div>
         </div>
       )}
-    </PageLayout>
+    </div>
   );
 };
 
