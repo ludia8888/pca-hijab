@@ -12,7 +12,7 @@ const PhotoGuide = lazy(() => retryChunkLoad(() => import('@/pages/PhotoGuide'))
 const DontWorry = lazy(() => retryChunkLoad(() => import('@/pages/DontWorry')));
 const UploadPage = lazy(() => retryChunkLoad(() => import('@/pages/UploadPage')));
 const AnalyzingPage = lazy(() => retryChunkLoad(() => import('@/pages/AnalyzingPage')));
-const ResultPage = lazy(() => retryChunkLoad(() => import('@/pages/ResultPage')));
+const ResultPage = lazy(() => retryChunkLoad(() => import('@/pages/ResultPageV2')));
 const CompletionPage = lazy(() => retryChunkLoad(() => import('@/pages/CompletionPage')));
 
 // Auth pages - also use retry for better reliability

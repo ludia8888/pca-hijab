@@ -13,16 +13,17 @@ const MyPage = (): JSX.Element => {
   const { instagramId, sessionId } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
   
+  // DEMO MODE: Authentication check disabled
   // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      trackEvent('mypage_auth_redirect', {
-        from: 'mypage',
-        reason: 'not_authenticated'
-      });
-      navigate('/login', { state: { from: { pathname: '/mypage' } } });
-    }
-  }, [isAuthenticated, navigate]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     trackEvent('mypage_auth_redirect', {
+  //       from: 'mypage',
+  //       reason: 'not_authenticated'
+  //     });
+  //     navigate('/login', { state: { from: { pathname: '/mypage' } } });
+  //   }
+  // }, [isAuthenticated, navigate]);
   
   return (
     <PageLayout>

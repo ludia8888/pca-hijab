@@ -1172,9 +1172,17 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     const image = imageRef.current;
     if (!canvas || !image) return;
 
-    // Set canvas dimensions to match container (348x475)
-    canvas.width = 348;
-    canvas.height = 475;
+    // Get parent container dimensions
+    const container = canvas.parentElement;
+    if (container) {
+      // Set canvas dimensions to match container
+      canvas.width = container.clientWidth || 348;
+      canvas.height = container.clientHeight || 475;
+    } else {
+      // Fallback to default dimensions
+      canvas.width = 348;
+      canvas.height = 475;
+    }
 
     // Start detection if detector is ready and not already started
     if (detector && !detectionStartedRef.current) {

@@ -593,13 +593,13 @@ const AnalyzingPage = (): JSX.Element => {
             <div
               className="absolute overflow-hidden"
               style={{
-                top: `${(16 + 61) * scaleFactor + 16 + 65.6 + 35}px`, // header + 16px + text container height (16+33.6+16) + 16px gap
+                top: `${(16 + 61) * scaleFactor + 16 * scaleFactor + 65.6 * scaleFactor + 16 * scaleFactor}px`, // header + gap + text container + gap
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: '348px',
-                height: '475px',
+                width: `${348 * scaleFactor}px`,
+                height: `${475 * scaleFactor}px`,
                 flexShrink: 0,
-                borderRadius: '10px',
+                borderRadius: `${10 * scaleFactor}px`,
                 background: '#D9D9D9',
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
                 position: 'relative',

@@ -23,30 +23,38 @@ export const useRequireAuth = (): UseRequireAuthReturn => {
   const [personalColorModalFeature, setPersonalColorModalFeature] = useState('이 기능');
 
   const checkAuth = useCallback((feature: string = '이 기능'): boolean => {
-    if (!isAuthenticated) {
-      setAuthModalFeature(feature);
-      setShowAuthModal(true);
-      return false;
-    }
+    // DEMO MODE: Always return true (no authentication required)
     return true;
+    
+    // Original code (disabled for demo)
+    // if (!isAuthenticated) {
+    //   setAuthModalFeature(feature);
+    //   setShowAuthModal(true);
+    //   return false;
+    // }
+    // return true;
   }, [isAuthenticated]);
 
   const checkPersonalColor = useCallback((feature: string = '이 기능'): boolean => {
-    // First check if user is authenticated
-    if (!isAuthenticated) {
-      setAuthModalFeature(feature);
-      setShowAuthModal(true);
-      return false;
-    }
-    
-    // Then check if they have personal color diagnosis
-    if (!analysisResult) {
-      setPersonalColorModalFeature(feature);
-      setShowPersonalColorModal(true);
-      return false;
-    }
-    
+    // DEMO MODE: Always return true (no personal color check required)
     return true;
+    
+    // Original code (disabled for demo)
+    // // First check if user is authenticated
+    // if (!isAuthenticated) {
+    //   setAuthModalFeature(feature);
+    //   setShowAuthModal(true);
+    //   return false;
+    // }
+    // 
+    // // Then check if they have personal color diagnosis
+    // if (!analysisResult) {
+    //   setPersonalColorModalFeature(feature);
+    //   setShowPersonalColorModal(true);
+    //   return false;
+    // }
+    // 
+    // return true;
   }, [isAuthenticated, analysisResult]);
 
   const closeAuthModal = useCallback(() => {

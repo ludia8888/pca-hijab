@@ -14,7 +14,14 @@ const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { sessionId, addViewedProduct, toggleSavedProduct, savedProducts } = useAppStore();
+  const store = useAppStore();
+  
+  // Debug logging
+  console.log('[ProductDetailPage] Store methods:', Object.keys(store));
+  console.log('[ProductDetailPage] addViewedProduct type:', typeof store.addViewedProduct);
+  
+  const { sessionId, toggleSavedProduct, savedProducts } = store;
+  const addViewedProduct = store.addViewedProduct || (() => console.warn('addViewedProduct not available'));
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Fetch product details
