@@ -1,10 +1,11 @@
 /**
  * Browser Detection Utilities
  * Detect Safari, iOS, and specific browser versions for compatibility handling
- * Enhanced with device-specific profiling
+ * Enhanced with device-specific profiling and in-app browser detection
  */
 
 import { getDeviceProfile, canRunMediaPipe, getOptimalCameraConstraints } from './deviceProfile';
+import { detectInAppBrowser, getInAppBrowserSettings, getInAppCameraConstraints } from './inAppBrowserDetection';
 
 /**
  * Detect if running on iOS
@@ -102,7 +103,31 @@ export interface BrowserOptimizationSettings {
 }
 
 export function getBrowserOptimizationSettings(): BrowserOptimizationSettings {
-  // Get device-specific profile
+  // First check if we're in an in-app browser
+  const inAppInfo = detectInAppBrowser();
+  
+  if (inAppInfo.isInAppBrowser) {
+    const inAppSettings = getInAppBrowserSettings(inAppInfo);
+    
+    console.log('📱 In-app browser detected, applying special optimizations:', {
+      browser: inAppInfo.browserName,
+      platform: inAppInfo.platform,
+      version: inAppInfo.version,
+      limitations: inAppInfo.limitations
+    });
+    
+    // Convert in-app browser settings to our format
+    return {
+      useWebGL: inAppSettings.faceMeshBackend === 'webgl',
+      maxFaces: inAppSettings.faceMeshMaxFaces,
+      refineLandmarks: inAppSettings.faceMeshRefineLandmarks,
+      enableMemoryOptimization: true, // Always optimize memory in in-app browsers
+      requireHTTPS: true, // In-app browsers often require HTTPS
+      showCompatibilityWarning: inAppSettings.showCompatibilityWarning,
+    };
+  }
+  
+  // Get device-specific profile for regular browsers
   const deviceProfile = getDeviceProfile();
   const deviceSettings = deviceProfile.recommendedSettings;
   

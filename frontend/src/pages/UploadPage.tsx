@@ -8,6 +8,7 @@ import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff
 import { faceDetectionService } from '@/services/faceDetectionService';
 import { isIOS, isSafari, getBrowserOptimizationSettings } from '@/utils/browserDetection';
 import { getDeviceProfile, getOptimalCameraConstraints, PerformanceMonitor } from '@/utils/deviceProfile';
+import { detectInAppBrowser, getInAppBrowserWarning, getInAppCameraConstraints, needsCameraPermissionWorkaround } from '@/utils/inAppBrowserDetection';
 import arrowBack from '@/assets/arrow_back.png';
 import ellipse from '@/assets/Ellipse 7.svg';
 import xIcon from '@/assets/X.png';
@@ -115,12 +116,29 @@ const UploadPage = (): JSX.Element => {
   useEffect(() => {
     const browserSettings = getBrowserOptimizationSettings();
     const deviceProfile = getDeviceProfile();
+    const inAppInfo = detectInAppBrowser();
     
-    // Device-specific warnings
-    if (deviceProfile.category === 'low') {
+    // First priority: In-app browser warnings
+    const inAppWarning = getInAppBrowserWarning();
+    if (inAppWarning) {
+      setBrowserWarning(inAppWarning);
+      console.warn('📱 [In-App Browser] Warning shown:', inAppWarning);
+      
+      // Track in-app browser usage
+      trackEvent('in_app_browser_detected', {
+        browser: inAppInfo.browserName,
+        platform: inAppInfo.platform,
+        version: inAppInfo.version,
+        limitations: JSON.stringify(inAppInfo.limitations)
+      });
+    }
+    // Second priority: Device-specific warnings
+    else if (deviceProfile.category === 'low') {
       setBrowserWarning(`Your device (${deviceProfile.model}) may experience performance issues. For best experience, try using a newer device.`);
       console.warn('⚠️ [Device Compatibility] Low-end device detected:', deviceProfile);
-    } else if (browserSettings.showCompatibilityWarning) {
+    }
+    // Third priority: OS version warnings
+    else if (browserSettings.showCompatibilityWarning) {
       const iosVersion = isIOS() ? (navigator.userAgent.match(/OS (\d+)_/) || [])[1] : null;
       if (iosVersion && parseInt(iosVersion) < 14) {
         setBrowserWarning('Your iOS version may have limited support. For best experience, please update to iOS 14 or later.');
@@ -128,13 +146,22 @@ const UploadPage = (): JSX.Element => {
       }
     }
     
+    // HTTPS requirement check (always check)
     if (browserSettings.requireHTTPS && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
       setBrowserWarning('Camera requires HTTPS connection. Please use a secure connection.');
-      console.error('🚨 [Browser Compatibility] HTTPS required for camera on iOS Safari');
+      console.error('🚨 [Browser Compatibility] HTTPS required for camera');
     }
     
-    // Log complete device and browser profile
+    // Log complete environment analysis
     console.log('📊 [System Profile] Complete environment analysis:', {
+      inAppBrowser: {
+        detected: inAppInfo.isInAppBrowser,
+        name: inAppInfo.browserName,
+        platform: inAppInfo.platform,
+        version: inAppInfo.version,
+        deviceInfo: inAppInfo.deviceInfo,
+        limitations: inAppInfo.limitations
+      },
       device: {
         model: deviceProfile.model,
         category: deviceProfile.category,
@@ -159,8 +186,10 @@ const UploadPage = (): JSX.Element => {
       const perfData = performanceMonitor.current.checkPerformance();
       if (perfData.suggestion) {
         console.warn('⚠️ [Performance]', perfData.suggestion);
-        // Optionally show to user
-        // setBrowserWarning(perfData.suggestion);
+        // Don't override in-app browser warning
+        if (!inAppWarning) {
+          // setBrowserWarning(perfData.suggestion);
+        }
       }
     }, 5000); // Check every 5 seconds
     
@@ -415,19 +444,44 @@ const UploadPage = (): JSX.Element => {
       const startTime = performance.now();
       console.log('🎬 [Camera API] Calling getUserMedia at:', new Date().toISOString());
       
-      // Get device-specific optimal camera constraints
-      const videoConstraints = getOptimalCameraConstraints(facingMode);
-      console.log('📹 [Camera API] Device-optimized video constraints:', videoConstraints);
+      // Check if we're in an in-app browser and need special camera handling
+      const inAppInfo = detectInAppBrowser();
+      let videoConstraints: MediaTrackConstraints;
       
-      // Log device profile for debugging
+      if (inAppInfo.isInAppBrowser) {
+        // Use in-app browser specific constraints
+        videoConstraints = getInAppCameraConstraints(facingMode);
+        console.log('📱 [Camera API] Using in-app browser constraints:', {
+          browser: inAppInfo.browserName,
+          constraints: videoConstraints
+        });
+        
+        // Special permission handling for Instagram/Facebook
+        if (needsCameraPermissionWorkaround()) {
+          console.log('📸 [Camera API] Applying camera permission workaround for', inAppInfo.browserName);
+          // Add a small delay to let the browser settle
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } else {
+        // Use device-specific optimal camera constraints
+        videoConstraints = getOptimalCameraConstraints(facingMode);
+        console.log('📹 [Camera API] Device-optimized video constraints:', videoConstraints);
+      }
+      
+      // Log complete profile for debugging
       const deviceProfile = getDeviceProfile();
-      console.log('📱 [Camera API] Device profile:', {
-        model: deviceProfile.model,
-        category: deviceProfile.category,
-        ram: `${deviceProfile.ram}GB`,
-        chipset: deviceProfile.chipset,
-        recommendedResolution: `${deviceProfile.recommendedSettings.cameraResolution.width}x${deviceProfile.recommendedSettings.cameraResolution.height}`,
-        canRunMediaPipe: deviceProfile.recommendedSettings.enableHeavyProcessing
+      console.log('📊 [Camera API] Complete profile:', {
+        inAppBrowser: inAppInfo.isInAppBrowser ? inAppInfo.browserName : 'none',
+        device: {
+          model: deviceProfile.model,
+          category: deviceProfile.category,
+          ram: `${deviceProfile.ram}GB`,
+          chipset: deviceProfile.chipset,
+        },
+        recommendedResolution: videoConstraints.width && videoConstraints.height ? 
+          `${(videoConstraints.width as any).ideal || (videoConstraints.width as any).exact}x${(videoConstraints.height as any).ideal || (videoConstraints.height as any).exact}` : 
+          'default',
+        canRunMediaPipe: !inAppInfo.limitations?.webGL
       });
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -1575,6 +1629,45 @@ const UploadPage = (): JSX.Element => {
           right: 0,
           bottom: 0,
         }}>
+        {/* Browser Warning Banner */}
+        {browserWarning && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: '#FFF3CD',
+              borderBottom: '1px solid #FFE69C',
+              padding: `${12 * scaleFactor}px ${16 * scaleFactor}px`,
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: `${8 * scaleFactor}px`,
+              fontSize: `${14 * scaleFactor}px`,
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              color: '#664D03',
+            }}
+          >
+            <span style={{ fontSize: `${16 * scaleFactor}px` }}>⚠️</span>
+            <span style={{ flex: 1, textAlign: 'center' }}>{browserWarning}</span>
+            <button
+              onClick={() => setBrowserWarning(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: `${18 * scaleFactor}px`,
+                cursor: 'pointer',
+                padding: `${4 * scaleFactor}px`,
+                color: '#664D03',
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        
         {/* Header - at the very top */}
         <div
           style={{
@@ -1587,7 +1680,7 @@ const UploadPage = (): JSX.Element => {
             gap: `${4 * scaleFactor}px`,
             background: 'var(--black_white-color-white, #FFF)',
             margin: '0 auto 0 auto',
-            marginTop: 0,
+            marginTop: browserWarning ? `${48 * scaleFactor}px` : 0,
           }}
         >
           {/* Container with arrow positioned absolutely and title centered */}
