@@ -23,10 +23,10 @@ export const ColorPaletteSection: React.FC<ColorPaletteSectionProps> = ({ season
   const worstColors = seasonColors.worstColors;
 
   const seasonNames = {
-    spring: '봄웜',
-    summer: '여름쿨',
-    autumn: '가을웜',
-    winter: '겨울쿨'
+    spring: 'Spring Warm',
+    summer: 'Summer Cool',
+    autumn: 'Autumn Warm',
+    winter: 'Winter Cool'
   };
 
   return (
@@ -157,7 +157,7 @@ export const ColorPaletteSection: React.FC<ColorPaletteSectionProps> = ({ season
           fontWeight: 700,
           lineHeight: '140%'
         }}>
-          을 위한 추천 히잡을 클릭해 보세요
+          Recommended Hijab - Click to view
         </span>
       </div>
     </div>

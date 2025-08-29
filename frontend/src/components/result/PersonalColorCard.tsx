@@ -8,7 +8,7 @@ import winterCharacter from '@/assets/겨울_캐릭터.png';
 // Season type mapping for character and colors
 export const SEASON_DATA = {
   spring: {
-    title: '봄 웜',
+    title: 'Spring Warm',
     titleEn: 'Spring Warm',
     headerColor: '#FFDED0',
     backgroundColor: '#FFF5E6',
@@ -17,7 +17,7 @@ export const SEASON_DATA = {
     description: '화사하고 따뜻한 이미지의 봄 웜톤',
   },
   summer: {
-    title: '여름 쿨',
+    title: 'Summer Cool',
     titleEn: 'Summer Cool',
     headerColor: '#B9DDFF',
     backgroundColor: '#E6F2FF',
@@ -26,7 +26,7 @@ export const SEASON_DATA = {
     description: '시원하고 부드러운 이미지의 여름 쿨톤',
   },
   autumn: {
-    title: '가을 웜',
+    title: 'Autumn Warm',
     titleEn: 'Autumn Warm',
     headerColor: '#6B4418',
     backgroundColor: '#FFF0E6',
@@ -35,7 +35,7 @@ export const SEASON_DATA = {
     description: '깊고 따뜻한 이미지의 가을 웜톤',
   },
   winter: {
-    title: '겨울 쿨',
+    title: 'Winter Cool',
     titleEn: 'Winter Cool',
     headerColor: '#BF0166',
     backgroundColor: '#F0E6FF',
@@ -87,7 +87,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
             className="text-[15px] font-bold leading-[140%]"
             style={{ color: seasonKey === 'autumn' || seasonKey === 'winter' ? '#FFFFFF' : '#000000' }}
           >
-            {userName ? `${userName}님의` : '00님의'} 매칭 결과
+            {userName ? `${userName}'s` : 'Your'} Matching Result
           </span>
         </div>
 
@@ -120,7 +120,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
             lineHeight: '140%'
           }}
         >
-          당신은{' '}
+          You are{' '}
           <span 
             style={{
               color: '#000',
@@ -133,7 +133,6 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
           >
             {seasonData.title}
           </span>
-          {' '}입니다
         </h1>
       </div>
       
@@ -154,7 +153,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
           fontWeight: 700,
           lineHeight: '140%'
         }}>
-          {userName ? `${userName}님의` : '00님의'} 컬러팔레트
+          {userName ? `${userName}'s` : 'Your'} Color Palette
         </span>
       </div>
     </div>

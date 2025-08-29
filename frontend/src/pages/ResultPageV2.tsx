@@ -97,7 +97,7 @@ const ResultPageV2 = (): JSX.Element => {
 
   // For development, use mock data if no result
   const result = analysisResult || {
-    personal_color: '봄 웜톤',
+    personal_color: 'Spring Warm',
     personal_color_en: 'Spring Warm',
     confidence: 0.92,
     uploaded_image_url: null,
@@ -166,7 +166,7 @@ const ResultPageV2 = (): JSX.Element => {
             }}
             className="px-6 md:px-8 py-2.5 md:py-3 bg-gray-700 text-white text-sm md:text-base font-semibold rounded-full shadow-md"
           >
-            🔄 다시 진단하기
+            🔄 Try Again
           </button>
         </div>
       </div>

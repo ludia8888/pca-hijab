@@ -106,10 +106,10 @@ export const ProductCarousel: React.FC<ProductCarouselProps> = ({ personalColor 
     return (
       <div className="bg-white rounded-2xl p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          👍 추천 제품
+          👍 Recommended Products
         </h3>
         <p className="text-gray-500 text-center py-8">
-          추천 제품을 준비 중입니다
+          Preparing recommended products
         </p>
       </div>
     );
@@ -142,12 +142,40 @@ export const ProductCarousel: React.FC<ProductCarouselProps> = ({ personalColor 
       </div>
 
       {/* View All Button */}
-      <div className="mt-4 text-center">
+      <div style={{ 
+        marginTop: '20px', 
+        display: 'flex',
+        justifyContent: 'center'
+      }}>
         <button
           onClick={() => navigate('/products')}
-          className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#3B1389';
+            e.currentTarget.style.color = '#FFF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#3B1389';
+          }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '10px 20px',
+            color: '#3B1389',
+            background: 'transparent',
+            border: '1.5px solid #3B1389',
+            borderRadius: '20px',
+            fontFamily: 'Pretendard',
+            fontSize: '14px',
+            fontWeight: 600,
+            lineHeight: '140%',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
         >
-          모든 추천 제품 보기 →
+          View All Recommendations
+          <span style={{ fontSize: '16px' }}>→</span>
         </button>
       </div>
     </div>
