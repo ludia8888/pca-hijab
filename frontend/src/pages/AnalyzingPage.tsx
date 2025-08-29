@@ -555,11 +555,44 @@ const AnalyzingPage = (): JSX.Element => {
             </div>
             </div>
 
-            {/* Gray container for image/visualization - moved up since text is removed */}
+            {/* Content container below header */}
+            <div
+              style={{
+                position: 'absolute',
+                top: `${(16 + 61) * scaleFactor + 16}px`, // header top + header height + 16px gap
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                width: `${402 * scaleFactor}px`,
+                padding: '16px 0',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                alignSelf: 'stretch',
+              }}
+            >
+            <h2
+              style={{
+                color: 'var(--Color-7, #FFF)',
+                textAlign: 'center',
+                fontFamily: '"Plus Jakarta Sans"',
+                fontSize: '24px',
+                fontStyle: 'normal',
+                fontWeight: 800,
+                lineHeight: '140%',
+                margin: 0,
+              }}
+            >
+              I'm analyzing your features<br />
+              This won't take long!
+            </h2>
+            </div>
+
+            {/* Gray container for image/visualization */}
             <div
               className="absolute overflow-hidden"
               style={{
-                top: `${(16 + 61) * scaleFactor + 20 * scaleFactor}px`, // header + gap only (removed text container)
+                top: `${(16 + 61) * scaleFactor + 16 * scaleFactor + 99.2 * scaleFactor + 20 * scaleFactor}px`, // header + gap + text container (with padding) + larger gap
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${348 * scaleFactor}px`,
