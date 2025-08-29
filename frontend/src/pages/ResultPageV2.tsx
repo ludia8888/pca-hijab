@@ -123,25 +123,26 @@ const ResultPageV2 = (): JSX.Element => {
         }}
       >
         
-        {/* Character Image - Original mobile, optimized iPad */}
+        {/* Character Image - Mobile fixed position, iPad centered */}
         <div 
-          className="character-image-container absolute left-1/2 -translate-x-1/2 z-[9999]"
+          className="character-image-container absolute z-[9999] right-[68px] md:right-auto md:left-1/2 md:-translate-x-1/2"
           style={{ 
             top: '96px'
           }}
         >
-          {/* Mobile: Keep original 70% width with 278px max */}
-          {/* iPad/Desktop: Use responsive width classes */}
+          {/* Mobile: 265x265 square, iPad/Desktop: responsive */}
           <div 
-            className="w-[70%] max-w-[278px] md:w-[200px] md:max-w-none lg:w-[180px]"
+            className="w-[265px] h-[265px] md:w-[200px] md:h-auto lg:w-[180px]"
           >
             <img 
               src={SEASON_DATA[seasonKey].character}
               alt={`${SEASON_DATA[seasonKey].title} character`}
+              className="w-full h-full object-cover md:object-contain"
               style={{
-                width: '100%',
-                height: 'auto',
-                aspectRatio: '139/132'
+                aspectRatio: '1/1',
+                '@media (min-width: 768px)': {
+                  aspectRatio: '139/132'
+                }
               }}
             />
           </div>

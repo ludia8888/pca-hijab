@@ -1,13 +1,22 @@
 /* iPad-specific optimizations for Result Page */
 /* IMPORTANT: Mobile styles (under 768px) maintain original layout */
 
-/* Mobile - Preserve original layout */
+/* Mobile - Custom layout for phones */
 @media screen and (max-width: 767px) {
-  /* Ensure original mobile character sizing is maintained */
+  /* Mobile character positioning and sizing */
   .character-image-container {
-    /* Use default mobile styles, don't override */
-    width: auto !important;
+    position: absolute !important;
+    right: 68px !important;
+    left: auto !important;
     top: 96px !important;
+    transform: none !important;
+    width: 265px !important;
+    height: 265px !important;
+  }
+  
+  .character-image-container img {
+    aspect-ratio: 1/1 !important;
+    object-fit: cover !important;
   }
   
   /* Keep original mobile container */
@@ -19,10 +28,19 @@
 
 /* iPad Portrait (768px - 834px) */
 @media screen and (min-width: 768px) and (max-width: 834px) {
-  /* Character image sizing */
+  /* Character image sizing - centered for iPad */
   .character-image-container {
     width: 200px !important;
+    height: auto !important;
     top: 80px !important;
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .character-image-container img {
+    aspect-ratio: 139/132 !important;
+    object-fit: contain !important;
   }
   
   /* Container width optimization */
