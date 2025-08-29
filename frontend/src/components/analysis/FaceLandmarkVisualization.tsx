@@ -51,8 +51,6 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const animationStartTimeRef = useRef<number>(0);
   const scanCompleteRef = useRef<boolean>(false);
   const detectionStartedRef = useRef<boolean>(false);
-  const depthAnimationStartRef = useRef<number>(0);
-  const depthAnimationFrameRef = useRef<number | null>(null);
 
   // Initialize FaceMesh detector using singleton service
   useEffect(() => {
@@ -495,24 +493,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           depthConfig = colorFlow.d3;
         }
         
-        // Calculate animation progress (0 to 1)
-        const animationDuration = 2000; // 2 seconds
-        const elapsed = Date.now() - depthAnimationStartRef.current;
-        const rawProgress = Math.min(elapsed / animationDuration, 1);
-        // Use ease-out-cubic for smooth deceleration
-        const progress = 1 - Math.pow(1 - rawProgress, 3);
-        
-        // Add pulse effect after animation completes
-        let pulseEffect = 0;
-        if (rawProgress >= 1) {
-          const pulseElapsed = elapsed - animationDuration;
-          const pulseDuration = 1000; // 1 second pulse
-          if (pulseElapsed < pulseDuration) {
-            const pulseProgress = pulseElapsed / pulseDuration;
-            // Sine wave for smooth pulse
-            pulseEffect = Math.sin(pulseProgress * Math.PI) * 0.1;
-          }
-        }
+        // No animation needed
         
         // Calculate central face features (eyes, nose, mouth)
         const features = calculateCentralFaceFeatures(face, image);
@@ -548,13 +529,6 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         // Calculate face center for color split
         const faceCenterForSplit = ellipseCenterX; // Use ellipse center for split
         
-        // Animation values with pulse effect
-        const elevationHeight = (progress * 15) + (pulseEffect * 3); // 0 → 15px elevation + pulse
-        const darknessFactor = (progress * 0.35) - (pulseEffect * 0.05); // 0 → 35% darker for inactive
-        const brightnessFactor = (progress * 0.15) + (pulseEffect * 0.05); // 0 → 15% brighter for active + pulse
-        const scaleActive = 1 + (progress * 0.02) + (pulseEffect * 0.01); // 1.0 → 1.02 + pulse
-        const scaleInactive = 1 - (progress * 0.02) - (pulseEffect * 0.005); // 1.0 → 0.98
-        
         // Draw base colors
         ctx.fillStyle = depthConfig.leftColor;
         ctx.fillRect(0, 0, faceCenterForSplit, canvas.height);
@@ -562,143 +536,20 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         ctx.fillStyle = depthConfig.rightColor;
         ctx.fillRect(faceCenterForSplit, 0, canvas.width - faceCenterForSplit, canvas.height);
         
-        // 3D DEPTH EFFECTS WITH ANIMATION
-        if (depthConfig.activeBox) {
-          const isLeftActive = depthConfig.activeBox === 'left';
-          
-          // 1. INACTIVE SIDE - Recessed/darkened effect
-          ctx.save();
-          const inactiveX = isLeftActive ? faceCenterForSplit : 0;
-          const inactiveWidth = isLeftActive ? canvas.width - faceCenterForSplit : faceCenterForSplit;
-          
-          // Dark overlay gradient (makes it look recessed)
-          const darkGradient = ctx.createLinearGradient(
-            isLeftActive ? faceCenterForSplit : faceCenterForSplit,
-            0,
-            isLeftActive ? canvas.width : 0,
-            0
-          );
-          
-          if (isLeftActive) {
-            // Right side is inactive
-            darkGradient.addColorStop(0, `rgba(0, 0, 0, ${0.2 * progress})`);
-            darkGradient.addColorStop(0.5, `rgba(0, 0, 0, ${0.35 * progress})`);
-            darkGradient.addColorStop(1, `rgba(0, 0, 0, ${0.25 * progress})`);
-          } else {
-            // Left side is inactive
-            darkGradient.addColorStop(0, `rgba(0, 0, 0, ${0.25 * progress})`);
-            darkGradient.addColorStop(0.5, `rgba(0, 0, 0, ${0.35 * progress})`);
-            darkGradient.addColorStop(1, `rgba(0, 0, 0, ${0.2 * progress})`);
-          }
-          
-          ctx.fillStyle = darkGradient;
-          ctx.fillRect(inactiveX, 0, inactiveWidth, canvas.height);
-          
-          // Inner shadow for depth
-          const innerShadow = ctx.createLinearGradient(
-            isLeftActive ? faceCenterForSplit : faceCenterForSplit - 20,
-            0,
-            isLeftActive ? faceCenterForSplit + 30 : faceCenterForSplit,
-            0
-          );
-          innerShadow.addColorStop(0, `rgba(0, 0, 0, ${0.4 * progress})`);
-          innerShadow.addColorStop(1, 'transparent');
-          ctx.fillStyle = innerShadow;
-          ctx.fillRect(inactiveX, 0, inactiveWidth, canvas.height);
-          
-          ctx.restore();
-          
-          // 2. ACTIVE SIDE - Elevated/brightened effect
-          ctx.save();
-          const activeX = isLeftActive ? 0 : faceCenterForSplit;
-          const activeWidth = isLeftActive ? faceCenterForSplit : canvas.width - faceCenterForSplit;
-          
-          // Multiple shadow layers for depth (drawn behind)
-          for (let i = 3; i > 0; i--) {
-            ctx.save();
-            ctx.globalAlpha = (0.1 * progress) / i;
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-            ctx.shadowBlur = elevationHeight * i * 0.5;
-            ctx.shadowOffsetX = isLeftActive ? -elevationHeight * 0.3 * i : elevationHeight * 0.3 * i;
-            ctx.shadowOffsetY = elevationHeight * 0.2 * i;
-            
-            // Draw a rectangle to cast shadow
-            ctx.fillStyle = isLeftActive ? depthConfig.leftColor : depthConfig.rightColor;
-            ctx.fillRect(activeX, 0, activeWidth, canvas.height);
-            ctx.restore();
-          }
-          
-          // Bright overlay gradient (makes it pop out)
-          const brightGradient = ctx.createLinearGradient(
-            isLeftActive ? 0 : canvas.width,
-            0,
-            isLeftActive ? faceCenterForSplit : faceCenterForSplit,
-            0
-          );
-          
-          if (isLeftActive) {
-            // Left side is active
-            brightGradient.addColorStop(0, `rgba(255, 255, 255, ${0.25 * progress})`);
-            brightGradient.addColorStop(0.7, `rgba(255, 255, 255, ${0.1 * progress})`);
-            brightGradient.addColorStop(1, 'transparent');
-          } else {
-            // Right side is active
-            brightGradient.addColorStop(0, `rgba(255, 255, 255, ${0.25 * progress})`);
-            brightGradient.addColorStop(0.3, `rgba(255, 255, 255, ${0.1 * progress})`);
-            brightGradient.addColorStop(1, 'transparent');
-          }
-          
-          ctx.fillStyle = brightGradient;
-          ctx.fillRect(activeX, 0, activeWidth, canvas.height);
-          
-          // Edge highlight for 3D effect
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 * progress})`;
-          ctx.lineWidth = 2;
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-          ctx.shadowBlur = 5 * progress;
-          ctx.beginPath();
-          if (isLeftActive) {
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, canvas.height);
-          } else {
-            ctx.moveTo(canvas.width, 0);
-            ctx.lineTo(canvas.width, canvas.height);
-          }
-          ctx.stroke();
-          
-          ctx.restore();
-          
-          // 3. CENTER DIVIDER - 3D separation effect with animation and pulse
-          ctx.save();
-          
-          // Multiple layers for 3D divider with animation
-          for (let i = 0; i < 5; i++) {
-            const offset = (isLeftActive ? -i : i) * progress;
-            const opacity = ((0.2 - i * 0.03) * progress) + (pulseEffect * 0.05);
-            
-            ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
-            ctx.lineWidth = (1 + i * 0.5) * (1 + pulseEffect * 0.1);
-            ctx.beginPath();
-            ctx.moveTo(faceCenterForSplit + offset, 0);
-            ctx.lineTo(faceCenterForSplit + offset, ellipseCenterY - ellipseRadiusY - 10);
-            ctx.moveTo(faceCenterForSplit + offset, ellipseCenterY + ellipseRadiusY + 10);
-            ctx.lineTo(faceCenterForSplit + offset, canvas.height);
-            ctx.stroke();
-          }
-          
-          // White highlight on active side of divider with pulse
-          ctx.strokeStyle = `rgba(255, 255, 255, ${(0.3 * progress) + (pulseEffect * 0.2)})`;
-          ctx.lineWidth = 1 + (pulseEffect * 0.5);
-          ctx.beginPath();
-          const highlightOffset = (isLeftActive ? -2 : 2) * progress;
-          ctx.moveTo(faceCenterForSplit + highlightOffset, 0);
-          ctx.lineTo(faceCenterForSplit + highlightOffset, ellipseCenterY - ellipseRadiusY - 10);
-          ctx.moveTo(faceCenterForSplit + highlightOffset, ellipseCenterY + ellipseRadiusY + 10);
-          ctx.lineTo(faceCenterForSplit + highlightOffset, canvas.height);
-          ctx.stroke();
-          
-          ctx.restore();
-        }
+        // Simple center divider without animation
+        ctx.save();
+        
+        // Draw a simple vertical line to separate colors
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(faceCenterForSplit, 0);
+        ctx.lineTo(faceCenterForSplit, ellipseCenterY - ellipseRadiusY - 10);
+        ctx.moveTo(faceCenterForSplit, ellipseCenterY + ellipseRadiusY + 10);
+        ctx.lineTo(faceCenterForSplit, canvas.height);
+        ctx.stroke();
+        
+        ctx.restore();
         
         // Create elliptical clip for face
         ctx.save();
@@ -1228,19 +1079,11 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         frameCountRef.current++;
         animationId = requestAnimationFrame(animate);
       }
-      // Handle depth phase animations (3D effects)
+      // Handle depth phase - static display, no animation
       else if ((animationPhase === 'depth-1' || animationPhase === 'depth-2' || animationPhase === 'depth-3') && landmarks.length > 0) {
-        const elapsed = Date.now() - depthAnimationStartRef.current;
-        const animationDuration = 2000; // 2 second animation
-        
-        // Continue animating until animation completes, then add pulse effect
-        if (elapsed <= animationDuration + 1000) { // Extra 1s for pulse
-          drawLandmarks(landmarks, animationPhase);
-          animationId = requestAnimationFrame(animate);
-        } else {
-          // Animation complete, draw final frame
-          drawLandmarks(landmarks, animationPhase);
-        }
+        // Draw static frame immediately
+        drawLandmarks(landmarks, animationPhase);
+        // No animation loop needed
       }
     };
     
@@ -1253,14 +1096,13 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       frameCountRef.current = 0;
       animate();
     } else if ((animationPhase === 'depth-1' || animationPhase === 'depth-2' || animationPhase === 'depth-3') && landmarks.length > 0) {
-      // Start depth animation immediately
-      animate();
+      // Draw static depth visualization immediately
+      drawLandmarks(landmarks, animationPhase);
     }
     
     return () => {
       if (animationId) {
         cancelAnimationFrame(animationId);
-        depthAnimationFrameRef.current = null;
       }
     };
   }, [animationPhase, landmarks, drawLandmarks, onLandmarksDetected]);
@@ -1283,9 +1125,8 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
           // Also delay extracting phase animation
           animationStartTimeRef.current = Date.now() + 500;
         } else if (targetPhase === 'depth-1' || targetPhase === 'depth-2' || targetPhase === 'depth-3') {
-          // Start depth animation
-          depthAnimationStartRef.current = Date.now();
-          console.log(`🎨 [3D Animation] Starting depth animation for ${targetPhase}`);
+          // No animation for depth phases - just static display
+          console.log(`🎨 [Static Display] Showing static colors for ${targetPhase}`);
         }
         drawLandmarks(landmarks, targetPhase);
       }

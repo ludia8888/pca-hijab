@@ -869,8 +869,13 @@ const AnalyzingPage = (): JSX.Element => {
                         }}></div>
                     
                     {/* Message content */}
-                    <p className="font-medium text-gray-800 leading-relaxed" style={{
-                      fontSize: `${14 * scaleFactor}px`
+                    <p style={{
+                      color: 'var(--Color-5, #000)',
+                      fontFamily: 'Pretendard',
+                      fontSize: `${18 * scaleFactor}px`,
+                      fontStyle: 'normal',
+                      fontWeight: 700,
+                      lineHeight: '140%'
                     }}>
                       {currentStepData.message}
                     </p>

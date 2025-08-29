@@ -8,6 +8,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import { performanceMonitor } from './utils/performanceMonitor';
+import './styles/ipad-optimization.css';
 
 function App(): JSX.Element {
   console.log('[APP] App component rendering...');

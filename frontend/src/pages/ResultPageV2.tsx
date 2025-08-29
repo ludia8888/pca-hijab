@@ -107,57 +107,65 @@ const ResultPageV2 = (): JSX.Element => {
   const seasonKey = getSeasonKey(result.personal_color_en);
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: '#F8F8F8' }}>
-      {/* Container responsive - mobile to desktop */}
-      <div className="w-full max-w-[402px] mx-auto min-h-screen flex flex-col items-center relative px-4" style={{ background: '#F8F8F8' }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ 
+      background: '#F8F8F8',
+      width: '100vw',
+      minHeight: '100vh',
+      minHeight: '100dvh' // Dynamic viewport height for mobile
+    }}>
+      {/* Container responsive - mobile to desktop, full width on iPad */}
+      <div className="w-full md:max-w-none lg:max-w-[768px] xl:max-w-[1024px] mx-auto min-h-screen flex flex-col items-center relative px-4 md:px-0" style={{ 
+        background: '#F8F8F8',
+        minHeight: '100vh',
+        minHeight: '100dvh'
+      }}>
         
-        {/* Character Image - positioned absolutely from page top */}
-        <div style={{ 
-          position: 'absolute', 
-          top: '96px', 
-          left: '50%', 
-          transform: 'translateX(-50%)', 
-          zIndex: 9999,
-          width: '70%',
-          maxWidth: '278px'
+        {/* Character Image - positioned absolutely from page top, larger on iPad */}
+        <div className="absolute left-1/2 -translate-x-1/2 z-[9999]" style={{ 
+          top: '96px',
+          width: 'min(70%, 278px)'
         }}>
-          <img 
-            src={SEASON_DATA[seasonKey].character}
-            alt={`${SEASON_DATA[seasonKey].title} character`}
-            style={{
-              width: '100%',
-              height: 'auto',
-              aspectRatio: '139/132'
-            }}
-          />
+          <div className="md:scale-125 lg:scale-150 origin-top">
+            <img 
+              src={SEASON_DATA[seasonKey].character}
+              alt={`${SEASON_DATA[seasonKey].title} character`}
+              style={{
+                width: '100%',
+                height: 'auto',
+                aspectRatio: '139/132'
+              }}
+            />
+          </div>
         </div>
         
-        {/* Section 1: Personal Color Card */}
-        <PersonalColorCard 
-          result={result} 
-          userName={user?.fullName || instagramId || undefined} 
-        />
+        {/* Section 1: Personal Color Card - full width on iPad */}
+        <div className="w-full md:px-8 lg:px-12">
+          <PersonalColorCard 
+            result={result} 
+            userName={user?.fullName || instagramId || undefined} 
+          />
+        </div>
 
-        {/* Section 2: Color Palette */}
-        <div className="w-full py-4 md:py-6 lg:py-8">
+        {/* Section 2: Color Palette - full width on iPad */}
+        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <ColorPaletteSection seasonKey={seasonKey} />
         </div>
 
-        {/* Section 3: Product Carousel */}
-        <div className="w-full py-4 md:py-6 lg:py-8">
+        {/* Section 3: Product Carousel - full width on iPad */}
+        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <ProductCarousel personalColor={result.personal_color_en} />
         </div>
 
-        {/* Section 4: QR Code & Actions */}
-        <div className="w-full py-4 md:py-6 lg:py-8">
+        {/* Section 4: QR Code & Actions - full width on iPad */}
+        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <QRSection 
             result={result} 
             instagramId={instagramId || undefined} 
           />
         </div>
 
-        {/* Bottom Actions */}
-        <div className="text-center px-4 pb-6 md:pb-8 lg:pb-12">
+        {/* Bottom Actions - centered on iPad */}
+        <div className="text-center px-4 pb-6 md:pb-8 lg:pb-12 md:px-8 lg:px-12">
           <button
             onClick={() => {
               trackEvent('button_click', {
@@ -166,7 +174,7 @@ const ResultPageV2 = (): JSX.Element => {
               });
               navigate(ROUTES.HOME);
             }}
-            className="px-6 md:px-8 py-2.5 md:py-3 bg-gray-700 text-white text-sm md:text-base font-semibold rounded-full shadow-md"
+            className="px-6 md:px-10 lg:px-12 py-2.5 md:py-3 lg:py-4 bg-gray-700 text-white text-sm md:text-base lg:text-lg font-semibold rounded-full shadow-md hover:bg-gray-800 transition-colors"
           >
             🔄 Try Again
           </button>

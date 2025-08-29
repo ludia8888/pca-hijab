@@ -67,11 +67,20 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Card Component */}
-      <div className="relative overflow-hidden flex flex-col w-full" style={{ backgroundColor: seasonData.headerColor, minHeight: '331px' }}>
-        {/* Top colored section with back arrow and title */}
+      {/* Card Component - responsive min-height */}
+      <div className="relative overflow-hidden flex flex-col w-full" style={{ 
+        backgroundColor: seasonData.headerColor, 
+        minHeight: '331px',
+        '@media (min-width: 768px)': {
+          minHeight: '400px'
+        },
+        '@media (min-width: 1024px)': {
+          minHeight: '450px'
+        }
+      }}>
+        {/* Top colored section with back arrow and title - responsive padding */}
         <div 
-          className="flex items-center gap-2.5 p-4 w-full flex-shrink-0"
+          className="flex items-center gap-2.5 p-4 md:p-6 lg:p-8 w-full flex-shrink-0"
           style={{ backgroundColor: seasonData.headerColor }}
         >
           <button 
@@ -84,21 +93,21 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
             </svg>
           </button>
           <span 
-            className="text-[15px] font-bold leading-[140%]"
+            className="text-[15px] md:text-[18px] lg:text-[20px] font-bold leading-[140%]"
             style={{ color: seasonKey === 'autumn' || seasonKey === 'winter' ? '#FFFFFF' : '#000000' }}
           >
             {userName ? `${userName}'s` : 'Your'} Matching Result
           </span>
         </div>
 
-        {/* White content section */}
-        <div className="flex-1 flex flex-col justify-center p-6">
+        {/* White content section - responsive padding */}
+        <div className="flex-1 flex flex-col justify-center p-6 md:p-8 lg:p-10">
         </div>
       </div>
       
-      {/* Result Text Below Card */}
+      {/* Result Text Below Card - responsive spacing */}
       <div 
-        className="w-full"
+        className="w-full md:px-8 lg:px-12"
         style={{
           display: 'flex',
           padding: '16px',
@@ -110,6 +119,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
         }}
       >
         <h1 
+          className="md:text-[22px] lg:text-[26px]"
           style={{
             color: '#000',
             textAlign: 'center',
@@ -122,6 +132,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
         >
           You are{' '}
           <span 
+            className="md:text-[30px] lg:text-[36px]"
             style={{
               color: '#000',
               fontFamily: '"Plus Jakarta Sans"',
@@ -136,16 +147,16 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
         </h1>
       </div>
       
-      {/* Color Palette Text */}
+      {/* Color Palette Text - responsive padding */}
       <div 
-        className="w-full"
+        className="w-full md:px-8 lg:px-12"
         style={{
           padding: '8px 18px',
           borderRadius: '10px',
           background: 'transparent'
         }}
       >
-        <span style={{
+        <span className="md:text-[22px] lg:text-[26px]" style={{
           color: '#000',
           fontFamily: 'Pretendard',
           fontSize: '18px',
