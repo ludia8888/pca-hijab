@@ -111,7 +111,11 @@ class FaceDetectionService {
       const face = predictions[0];
       
       // Filter out low confidence detections to avoid false positives
-      if (face.score && face.score < 0.7) {
+      // More lenient for mobile devices
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const minConfidence = isMobile ? 0.5 : 0.7;
+      
+      if (face.score && face.score < minConfidence) {
         console.log('⚠️ [FaceDetection] Low confidence detection ignored:', (face.score * 100).toFixed(1) + '%');
         return null;
       }
@@ -119,8 +123,12 @@ class FaceDetectionService {
       const box = face.box;
       
       // Additional sanity check - face should be reasonable size
+      // More generous range for mobile cameras
       const faceArea = (box.width * box.height) / (video.videoWidth * video.videoHeight);
-      if (faceArea < 0.02 || faceArea > 0.8) {
+      const minArea = isMobile ? 0.015 : 0.02;
+      const maxArea = isMobile ? 0.85 : 0.8;
+      
+      if (faceArea < minArea || faceArea > maxArea) {
         console.log('⚠️ [FaceDetection] Unrealistic face size ignored:', (faceArea * 100).toFixed(1) + '%');
         return null;
       }
@@ -270,12 +278,16 @@ class FaceDetectionService {
       ovalRadiusY = frameHeight * 0.30;  
     }
     
-    // Check face size (should fill 4-25% of frame - allows wider range of distances)
+    // Check face size - more generous for mobile devices
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const faceAreaRatio = (face.width * face.height) / (frameWidth * frameHeight);
-    const isSizeGood = faceAreaRatio > 0.04 && faceAreaRatio < 0.25;
+    const minSize = isMobile ? 0.03 : 0.04;  // More lenient minimum for mobile
+    const maxSize = isMobile ? 0.35 : 0.25;  // More lenient maximum for mobile
+    const isSizeGood = faceAreaRatio > minSize && faceAreaRatio < maxSize;
     
-    // MediaPipe confidence check
-    const isConfident = face.confidence >= 0.5;
+    // MediaPipe confidence check - more lenient for mobile
+    const minConfidence = isMobile ? 0.4 : 0.5;
+    const isConfident = face.confidence >= minConfidence;
     
     // Check if ALL key facial features (both eyes, nose, mouth) are within the oval
     // ALL FOUR features must be inside - if even one is outside, don't capture
@@ -333,8 +345,9 @@ class FaceDetectionService {
           const normalizedX = distFromCenterX / ovalRadiusX;
           const normalizedY = distFromCenterY / ovalRadiusY;
           const distance = normalizedX * normalizedX + normalizedY * normalizedY;
-          // Use 1.0 for boundary checking - features must be inside the ellipse
-          featureStatus[name] = distance <= 1.0;
+          // More lenient boundary for mobile devices (1.15 vs 1.0)
+          const maxDistance = isMobile ? 1.15 : 1.0;
+          featureStatus[name] = distance <= maxDistance;
           
           // Enhanced debugging for mobile
           if (distance > 1.0) {
@@ -365,10 +378,9 @@ class FaceDetectionService {
         featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
-        // Check if features optimally fill the ellipse - more lenient for mobile
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const minFill = isMobile ? 0.25 : 0.30;
-        const maxFill = isMobile ? 0.75 : 0.70;
+        // Check if features optimally fill the ellipse - much more lenient for mobile
+        const minFill = isMobile ? 0.20 : 0.30;  // Reduced from 0.25 to 0.20 for mobile
+        const maxFill = isMobile ? 0.80 : 0.70;  // Increased from 0.75 to 0.80 for mobile
         
         featureSpanData.isOptimalFill = 
           featureSpanData.widthFillRatio >= minFill && featureSpanData.widthFillRatio <= maxFill &&
@@ -426,7 +438,9 @@ class FaceDetectionService {
         const normalizedX = distFromCenterX / ovalRadiusX;
         const normalizedY = distFromCenterY / ovalRadiusY;
         const distance = normalizedX * normalizedX + normalizedY * normalizedY;
-        featureStatus[feature.name] = distance <= 1.0;
+        // More lenient boundary for mobile devices (1.15 vs 1.0)
+        const maxDistance = isMobile ? 1.15 : 1.0;
+        featureStatus[feature.name] = distance <= maxDistance;
         
         // Log exact distances for debugging
         if (distance > 1.0) {
@@ -446,10 +460,9 @@ class FaceDetectionService {
         featureSpanData.widthFillRatio = featureWidth / (ovalRadiusX * 2);
         featureSpanData.heightFillRatio = featureHeight / (ovalRadiusY * 2);
         
-        // More lenient thresholds for mobile devices
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const minFill = isMobile ? 0.25 : 0.30;
-        const maxFill = isMobile ? 0.75 : 0.70;
+        // Much more lenient thresholds for mobile devices
+        const minFill = isMobile ? 0.20 : 0.30;  // Reduced from 0.25 to 0.20 for mobile
+        const maxFill = isMobile ? 0.80 : 0.70;  // Increased from 0.75 to 0.80 for mobile
         
         featureSpanData.isOptimalFill = 
           featureSpanData.widthFillRatio >= minFill && featureSpanData.widthFillRatio <= maxFill &&
@@ -483,9 +496,8 @@ class FaceDetectionService {
         });
       }
       if (!featureSpanData.isOptimalFill) {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const minFill = isMobile ? 0.25 : 0.30;
-        const maxFill = isMobile ? 0.75 : 0.70;
+        const minFill = isMobile ? 0.20 : 0.30;
+        const maxFill = isMobile ? 0.80 : 0.70;
         
         console.log('  ❌ Face features do not optimally fill ellipse');
         console.log(`     Width fill: ${(featureSpanData.widthFillRatio * 100).toFixed(1)}% (need ${(minFill * 100).toFixed(0)}-${(maxFill * 100).toFixed(0)}%)`);
@@ -498,7 +510,7 @@ class FaceDetectionService {
           console.log('  💡 Suggestion: Move AWAY from camera');
         }
       }
-      if (!isSizeGood) console.log('  ⚠️ Size issue:', (faceAreaRatio * 100).toFixed(1) + '% (need: 7-10%)');
+      if (!isSizeGood) console.log('  ⚠️ Size issue:', (faceAreaRatio * 100).toFixed(1) + `% (need: ${(minSize * 100).toFixed(0)}-${(maxSize * 100).toFixed(0)}%)`);
       if (!isConfident) console.log('  ⚠️ Low confidence:', face.confidence.toFixed(2));
     } else {
       console.log('✅ [FaceDetectionService] Face properly positioned - ALL features within ellipse AND optimally fill it');
