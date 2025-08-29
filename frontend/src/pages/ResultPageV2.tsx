@@ -120,35 +120,31 @@ const ResultPageV2 = (): JSX.Element => {
         minHeight: '100dvh'
       }}>
         
-        {/* Character Image - optimized sizing and positioning */}
-        <div 
-          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{ 
-            top: '120px',
-            zIndex: 10, // Just above background but below interactive elements
-            width: 'min(45%, 160px)' // Smaller base size: 45% of container or max 160px
-          }}
-        >
-          <div className="md:scale-105 lg:scale-110 xl:scale-115 origin-top transition-transform duration-300">
+        {/* Character Image - positioned absolutely from page top, larger on iPad */}
+        <div className="absolute left-1/2 -translate-x-1/2 z-[9999]" style={{ 
+          top: '96px',
+          width: 'min(70%, 278px)'
+        }}>
+          <div className="md:scale-125 lg:scale-150 origin-top">
             <img 
               src={SEASON_DATA[seasonKey].character}
               alt={`${SEASON_DATA[seasonKey].title} character`}
-              className="w-full h-auto"
               style={{
-                aspectRatio: '139/132',
-                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' // Add subtle shadow for depth
+                width: '100%',
+                height: 'auto',
+                aspectRatio: '139/132'
               }}
             />
           </div>
         </div>
         
         {/* Section 1: Personal Color Card - full width on iPad */}
-        {/* <div className="w-full md:px-8 lg:px-12">
+        <div className="w-full md:px-8 lg:px-12">
           <PersonalColorCard 
             result={result} 
             userName={user?.fullName || instagramId || undefined} 
           />
-        </div> */}
+        </div>
 
         {/* Section 2: Color Palette - full width on iPad */}
         <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
@@ -156,20 +152,20 @@ const ResultPageV2 = (): JSX.Element => {
         </div>
 
         {/* Section 3: Product Carousel - full width on iPad */}
-        {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
+        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <ProductCarousel personalColor={result.personal_color_en} />
-        </div> */}
+        </div>
 
         {/* Section 4: QR Code & Actions - full width on iPad */}
-        {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
+        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <QRSection 
             result={result} 
             instagramId={instagramId || undefined} 
           />
-        </div> */}
+        </div>
 
         {/* Bottom Actions - centered on iPad */}
-        {/* <div className="text-center px-4 pb-6 md:pb-8 lg:pb-12 md:px-8 lg:px-12">
+        <div className="text-center px-4 pb-6 md:pb-8 lg:pb-12 md:px-8 lg:px-12">
           <button
             onClick={() => {
               trackEvent('button_click', {
@@ -182,7 +178,7 @@ const ResultPageV2 = (): JSX.Element => {
           >
             🔄 Try Again
           </button>
-        </div> */}
+        </div>
       </div>
     </div>
   );
