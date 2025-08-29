@@ -2,10 +2,12 @@
  * FaceMesh Singleton Service
  * Shares a single MediaPipe FaceMesh instance across components
  * This optimizes memory usage while maintaining all functionality
+ * Enhanced with Safari/iOS compatibility
  */
 
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import { initializeTensorFlow, getTensorFlow } from '@/utils/tensorflowInit';
+import { getBrowserOptimizationSettings, isIOS, isSafari } from '@/utils/browserDetection';
 
 class FaceMeshService {
   private static instance: FaceMeshService | null = null;
@@ -59,6 +61,14 @@ class FaceMeshService {
     const startTime = performance.now();
 
     try {
+      // Get browser-specific optimization settings
+      const browserSettings = getBrowserOptimizationSettings();
+      console.log('🌐 [FaceMesh Service] Browser optimization settings:', {
+        isSafari: isSafari(),
+        isIOS: isIOS(),
+        settings: browserSettings
+      });
+
       // Ensure TensorFlow is initialized first
       console.log('🔧 [FaceMesh Service] Ensuring TensorFlow is ready...');
       await initializeTensorFlow();
@@ -66,16 +76,46 @@ class FaceMeshService {
       const tf = await getTensorFlow();
       console.log('✅ [FaceMesh Service] TensorFlow ready, backend:', tf.getBackend());
 
-      // Create MediaPipe FaceMesh detector
+      // Safari/iOS memory optimization
+      if (browserSettings.enableMemoryOptimization) {
+        console.log('🧹 [FaceMesh Service] Applying Safari/iOS memory optimizations...');
+        
+        // Force garbage collection before loading model
+        if (typeof (globalThis as any).gc === 'function') {
+          (globalThis as any).gc();
+        }
+        
+        // Clear any existing tensors
+        const memBefore = tf.memory();
+        if (memBefore.numTensors > 0) {
+          console.log(`🧹 [FaceMesh Service] Cleaning ${memBefore.numTensors} tensors before model load`);
+          tf.disposeVariables();
+        }
+      }
+
+      // Create MediaPipe FaceMesh detector with browser-specific config
       console.log('🔧 [FaceMesh Service] Loading MediaPipe FaceMesh model...');
       const modelStart = performance.now();
       
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
-      const detectorConfig = {
+      
+      // Adjust config based on browser capabilities
+      const detectorConfig: any = {
         runtime: 'tfjs' as const,
-        refineLandmarks: true, // Keep refineLandmarks for better accuracy
-        maxFaces: 1, // Only detect one face for better performance
+        refineLandmarks: browserSettings.refineLandmarks,
+        maxFaces: browserSettings.maxFaces,
       };
+      
+      // Safari-specific adjustments
+      if (isSafari() || isIOS()) {
+        console.log('📱 [FaceMesh Service] Applying Safari/iOS specific configurations');
+        
+        // For iOS, use lower resolution for better performance
+        if (isIOS()) {
+          detectorConfig.solutionPath = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh';
+          console.log('📱 [FaceMesh Service] Using CDN path for iOS');
+        }
+      }
       
       this.detector = await faceLandmarksDetection.createDetector(model, detectorConfig);
       
@@ -84,15 +124,49 @@ class FaceMeshService {
       
       this.initialized = true;
       
+      // Log memory usage with Safari warning
+      const memInfo = tf.memory();
       console.log(`✅ [FaceMesh Service] Model loaded in ${Math.round(modelTime)}ms`);
       console.log(`🎯 [FaceMesh Service] Total initialization in ${Math.round(totalTime)}ms`);
-      console.log(`📊 [FaceMesh Service] Memory optimization: Single instance shared across components`);
+      console.log(`📊 [FaceMesh Service] Memory usage:`, {
+        tensors: memInfo.numTensors,
+        memory: `${(memInfo.numBytes / 1024 / 1024).toFixed(2)} MB`,
+        ...(isSafari() && { warning: 'Safari has strict memory limits (~200-300MB)' })
+      });
+      
+      // Setup memory monitoring for Safari
+      if (isSafari() || isIOS()) {
+        this.setupMemoryMonitoring();
+      }
       
     } catch (error) {
       console.error('❌ [FaceMesh Service] Failed to initialize:', error);
       this.initialized = false;
       throw error;
     }
+  }
+
+  /**
+   * Monitor memory usage on Safari/iOS and dispose if needed
+   */
+  private setupMemoryMonitoring(): void {
+    console.log('📊 [FaceMesh Service] Setting up memory monitoring for Safari/iOS');
+    
+    // Check memory every 30 seconds
+    setInterval(async () => {
+      if (this.detector && this.referenceCount === 0) {
+        const tf = await getTensorFlow();
+        const memInfo = tf.memory();
+        const memoryMB = memInfo.numBytes / 1024 / 1024;
+        
+        // If memory usage is high and no components are using the service
+        if (memoryMB > 150) {
+          console.warn(`⚠️ [FaceMesh Service] High memory usage (${memoryMB.toFixed(2)}MB) with no active references`);
+          console.log('🧹 [FaceMesh Service] Auto-disposing to free memory');
+          this.dispose();
+        }
+      }
+    }, 30000);
   }
 
   async getDetector(): Promise<faceLandmarksDetection.FaceLandmarksDetector | null> {

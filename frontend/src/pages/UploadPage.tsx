@@ -6,6 +6,7 @@ import { useAppStore } from '@/store';
 import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import { faceDetectionService } from '@/services/faceDetectionService';
+import { isIOS, isSafari, getBrowserOptimizationSettings } from '@/utils/browserDetection';
 import arrowBack from '@/assets/arrow_back.png';
 import ellipse from '@/assets/Ellipse 7.svg';
 import xIcon from '@/assets/X.png';
@@ -19,6 +20,7 @@ const UploadPage = (): JSX.Element => {
   const [isCompressing, setIsCompressing] = useState(false);
   const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [scaleFactor, setScaleFactor] = useState(1);
+  const [browserWarning, setBrowserWarning] = useState<string | null>(null);
   
   // Camera states
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -105,6 +107,33 @@ const UploadPage = (): JSX.Element => {
       .catch(err => {
         console.error('❌ [FACE DETECTION] Failed to initialize face detector:', err);
       });
+  }, []);
+
+  // Check browser compatibility and show warnings
+  useEffect(() => {
+    const browserSettings = getBrowserOptimizationSettings();
+    
+    if (browserSettings.showCompatibilityWarning) {
+      const iosVersion = isIOS() ? (navigator.userAgent.match(/OS (\d+)_/) || [])[1] : null;
+      if (iosVersion && parseInt(iosVersion) < 14) {
+        setBrowserWarning('Your iOS version may have limited support. For best experience, please update to iOS 14 or later.');
+        console.warn('⚠️ [Browser Compatibility] Old iOS version detected:', iosVersion);
+      }
+    }
+    
+    if (browserSettings.requireHTTPS && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      setBrowserWarning('Camera requires HTTPS connection. Please use a secure connection.');
+      console.error('🚨 [Browser Compatibility] HTTPS required for camera on iOS Safari');
+    }
+    
+    // Log browser capabilities
+    console.log('🌐 [Browser Compatibility] Current environment:', {
+      browser: isSafari() ? 'Safari' : 'Other',
+      isIOS: isIOS(),
+      settings: browserSettings,
+      protocol: window.location.protocol,
+      hostname: window.location.hostname
+    });
   }, []);
 
   // Start camera on component mount
@@ -355,12 +384,35 @@ const UploadPage = (): JSX.Element => {
       const startTime = performance.now();
       console.log('🎬 [Camera API] Calling getUserMedia at:', new Date().toISOString());
       
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+      // iOS/Safari specific camera constraints
+      const browserSettings = getBrowserOptimizationSettings();
+      let videoConstraints: MediaTrackConstraints = {
+        facingMode: facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      };
+      
+      if (isIOS()) {
+        console.log('📱 [Camera API] Applying iOS-specific camera constraints');
+        videoConstraints = {
           facingMode: facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+          width: { ideal: 640 }, // Lower resolution for better iOS performance
+          height: { ideal: 480 },
+          frameRate: { max: 30 } // Limit frame rate on iOS
+        };
+      } else if (isSafari()) {
+        console.log('🌐 [Camera API] Applying Safari-specific camera constraints');
+        videoConstraints = {
+          facingMode: facingMode,
+          width: { ideal: 960 },
+          height: { ideal: 540 }
+        };
+      }
+      
+      console.log('📹 [Camera API] Final video constraints:', videoConstraints);
+      
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraints
       });
       const initTime = performance.now() - startTime;
       
