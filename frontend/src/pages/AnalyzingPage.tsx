@@ -583,8 +583,8 @@ const AnalyzingPage = (): JSX.Element => {
                 margin: 0,
               }}
             >
-              I'm analyzing your features<br />
-              This won't take long!
+              Finding Your Perfect Colors<br />
+              Just a moment...
             </h2>
             </div>
 
