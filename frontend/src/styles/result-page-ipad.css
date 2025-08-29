@@ -1,4 +1,21 @@
 /* iPad-specific optimizations for Result Page */
+/* IMPORTANT: Mobile styles (under 768px) maintain original layout */
+
+/* Mobile - Preserve original layout */
+@media screen and (max-width: 767px) {
+  /* Ensure original mobile character sizing is maintained */
+  .character-image-container {
+    /* Use default mobile styles, don't override */
+    width: auto !important;
+    top: 96px !important;
+  }
+  
+  /* Keep original mobile container */
+  .result-container {
+    max-width: 402px !important;
+    padding: 0 16px !important;
+  }
+}
 
 /* iPad Portrait (768px - 834px) */
 @media screen and (min-width: 768px) and (max-width: 834px) {

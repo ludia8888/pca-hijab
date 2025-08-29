@@ -113,7 +113,7 @@ const ResultPageV2 = (): JSX.Element => {
       width: '100vw',
       minHeight: '100dvh' // Dynamic viewport height
     }}>
-      {/* Container - Optimized for iPad (768px - 1024px) */}
+      {/* Container - Original mobile, optimized iPad */}
       <div 
         className="result-container w-full mx-auto min-h-screen flex flex-col items-center relative px-4 md:px-6 lg:px-8"
         style={{ 
@@ -123,28 +123,31 @@ const ResultPageV2 = (): JSX.Element => {
         }}
       >
         
-        {/* Character Image - Responsive with iPad optimization */}
+        {/* Character Image - Original mobile, optimized iPad */}
         <div 
-          className="character-image-container absolute left-1/2 -translate-x-1/2"
+          className="character-image-container absolute left-1/2 -translate-x-1/2 z-[9999]"
           style={{ 
-            top: '96px',
-            zIndex: 9999
+            top: '96px'
           }}
         >
-          {/* Mobile: 60% or 240px max, iPad: 200px fixed, Desktop: 180px */}
-          <div className="w-[60%] max-w-[240px] md:w-[200px] lg:w-[180px]">
+          {/* Mobile: Keep original 70% width with 278px max */}
+          {/* iPad/Desktop: Use responsive width classes */}
+          <div 
+            className="w-[70%] max-w-[278px] md:w-[200px] md:max-w-none lg:w-[180px]"
+          >
             <img 
               src={SEASON_DATA[seasonKey].character}
               alt={`${SEASON_DATA[seasonKey].title} character`}
-              className="w-full h-auto drop-shadow-lg"
               style={{
+                width: '100%',
+                height: 'auto',
                 aspectRatio: '139/132'
               }}
             />
           </div>
         </div>
         
-        {/* Section 1: Personal Color Card - iPad optimized */}
+        {/* Section 1: Personal Color Card - Original mobile, iPad optimized */}
         <div className="personal-color-card w-full max-w-[402px] md:max-w-[600px] lg:max-w-[768px] mx-auto">
           <PersonalColorCard 
             result={result} 
@@ -152,7 +155,7 @@ const ResultPageV2 = (): JSX.Element => {
           />
         </div>
 
-        {/* Section 2: Color Palette - iPad optimized */}
+        {/* Section 2: Color Palette - Original mobile, iPad optimized */}
         <div className="w-full max-w-[402px] md:max-w-[600px] lg:max-w-[768px] mx-auto py-4 md:py-6 lg:py-8">
           <ColorPaletteSection seasonKey={seasonKey} />
         </div>
