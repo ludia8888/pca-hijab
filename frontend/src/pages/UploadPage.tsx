@@ -7,6 +7,7 @@ import { PersonalColorAPI } from '@/services/api/personalColor';
 import { trackImageUpload, trackEvent, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import { faceDetectionService } from '@/services/faceDetectionService';
 import { isIOS, isSafari, getBrowserOptimizationSettings } from '@/utils/browserDetection';
+import { getDeviceProfile, getOptimalCameraConstraints, PerformanceMonitor } from '@/utils/deviceProfile';
 import arrowBack from '@/assets/arrow_back.png';
 import ellipse from '@/assets/Ellipse 7.svg';
 import xIcon from '@/assets/X.png';
@@ -21,6 +22,7 @@ const UploadPage = (): JSX.Element => {
   const [isValidatingFace, setIsValidatingFace] = useState(false);
   const [scaleFactor, setScaleFactor] = useState(1);
   const [browserWarning, setBrowserWarning] = useState<string | null>(null);
+  const performanceMonitor = useRef<PerformanceMonitor>(new PerformanceMonitor());
   
   // Camera states
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -112,8 +114,13 @@ const UploadPage = (): JSX.Element => {
   // Check browser compatibility and show warnings
   useEffect(() => {
     const browserSettings = getBrowserOptimizationSettings();
+    const deviceProfile = getDeviceProfile();
     
-    if (browserSettings.showCompatibilityWarning) {
+    // Device-specific warnings
+    if (deviceProfile.category === 'low') {
+      setBrowserWarning(`Your device (${deviceProfile.model}) may experience performance issues. For best experience, try using a newer device.`);
+      console.warn('⚠️ [Device Compatibility] Low-end device detected:', deviceProfile);
+    } else if (browserSettings.showCompatibilityWarning) {
       const iosVersion = isIOS() ? (navigator.userAgent.match(/OS (\d+)_/) || [])[1] : null;
       if (iosVersion && parseInt(iosVersion) < 14) {
         setBrowserWarning('Your iOS version may have limited support. For best experience, please update to iOS 14 or later.');
@@ -126,14 +133,38 @@ const UploadPage = (): JSX.Element => {
       console.error('🚨 [Browser Compatibility] HTTPS required for camera on iOS Safari');
     }
     
-    // Log browser capabilities
-    console.log('🌐 [Browser Compatibility] Current environment:', {
-      browser: isSafari() ? 'Safari' : 'Other',
-      isIOS: isIOS(),
-      settings: browserSettings,
-      protocol: window.location.protocol,
-      hostname: window.location.hostname
+    // Log complete device and browser profile
+    console.log('📊 [System Profile] Complete environment analysis:', {
+      device: {
+        model: deviceProfile.model,
+        category: deviceProfile.category,
+        ram: `${deviceProfile.ram}GB`,
+        chipset: deviceProfile.chipset,
+        year: deviceProfile.year
+      },
+      browser: {
+        isSafari: isSafari(),
+        isIOS: isIOS(),
+        settings: browserSettings
+      },
+      recommendations: deviceProfile.recommendedSettings,
+      network: {
+        protocol: window.location.protocol,
+        hostname: window.location.hostname
+      }
     });
+    
+    // Start performance monitoring
+    const perfCheckInterval = setInterval(() => {
+      const perfData = performanceMonitor.current.checkPerformance();
+      if (perfData.suggestion) {
+        console.warn('⚠️ [Performance]', perfData.suggestion);
+        // Optionally show to user
+        // setBrowserWarning(perfData.suggestion);
+      }
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(perfCheckInterval);
   }, []);
 
   // Start camera on component mount
@@ -384,32 +415,20 @@ const UploadPage = (): JSX.Element => {
       const startTime = performance.now();
       console.log('🎬 [Camera API] Calling getUserMedia at:', new Date().toISOString());
       
-      // iOS/Safari specific camera constraints
-      const browserSettings = getBrowserOptimizationSettings();
-      let videoConstraints: MediaTrackConstraints = {
-        facingMode: facingMode,
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      };
+      // Get device-specific optimal camera constraints
+      const videoConstraints = getOptimalCameraConstraints(facingMode);
+      console.log('📹 [Camera API] Device-optimized video constraints:', videoConstraints);
       
-      if (isIOS()) {
-        console.log('📱 [Camera API] Applying iOS-specific camera constraints');
-        videoConstraints = {
-          facingMode: facingMode,
-          width: { ideal: 640 }, // Lower resolution for better iOS performance
-          height: { ideal: 480 },
-          frameRate: { max: 30 } // Limit frame rate on iOS
-        };
-      } else if (isSafari()) {
-        console.log('🌐 [Camera API] Applying Safari-specific camera constraints');
-        videoConstraints = {
-          facingMode: facingMode,
-          width: { ideal: 960 },
-          height: { ideal: 540 }
-        };
-      }
-      
-      console.log('📹 [Camera API] Final video constraints:', videoConstraints);
+      // Log device profile for debugging
+      const deviceProfile = getDeviceProfile();
+      console.log('📱 [Camera API] Device profile:', {
+        model: deviceProfile.model,
+        category: deviceProfile.category,
+        ram: `${deviceProfile.ram}GB`,
+        chipset: deviceProfile.chipset,
+        recommendedResolution: `${deviceProfile.recommendedSettings.cameraResolution.width}x${deviceProfile.recommendedSettings.cameraResolution.height}`,
+        canRunMediaPipe: deviceProfile.recommendedSettings.enableHeavyProcessing
+      });
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: videoConstraints
@@ -674,6 +693,9 @@ const UploadPage = (): JSX.Element => {
     console.log('👤 [FACE DETECTION] Starting face detection interval...');
     
     faceDetectionIntervalRef.current = setInterval(async () => {
+      
+      // Record frame for performance monitoring
+      performanceMonitor.current.recordFrame();
       
       if (!videoRef.current || !isCameraActiveRef.current) {
         console.log(`⏭️ [FACE DETECTION] Skipping detection - no video:`, {

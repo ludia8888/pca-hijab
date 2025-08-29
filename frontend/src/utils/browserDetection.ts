@@ -1,7 +1,10 @@
 /**
  * Browser Detection Utilities
  * Detect Safari, iOS, and specific browser versions for compatibility handling
+ * Enhanced with device-specific profiling
  */
+
+import { getDeviceProfile, canRunMediaPipe, getOptimalCameraConstraints } from './deviceProfile';
 
 /**
  * Detect if running on iOS
@@ -99,28 +102,38 @@ export interface BrowserOptimizationSettings {
 }
 
 export function getBrowserOptimizationSettings(): BrowserOptimizationSettings {
+  // Get device-specific profile
+  const deviceProfile = getDeviceProfile();
+  const deviceSettings = deviceProfile.recommendedSettings;
+  
+  console.log('🎯 Device-specific optimization:', {
+    device: deviceProfile.model,
+    category: deviceProfile.category,
+    ram: `${deviceProfile.ram}GB`,
+    settings: deviceSettings
+  });
+  
   const settings: BrowserOptimizationSettings = {
-    useWebGL: true,
-    maxFaces: 1,
-    refineLandmarks: true,
-    enableMemoryOptimization: false,
+    useWebGL: deviceSettings.useWebGL,
+    maxFaces: deviceSettings.faceMeshMaxFaces,
+    refineLandmarks: deviceSettings.faceMeshRefineLandmarks,
+    enableMemoryOptimization: deviceProfile.category === 'low' || deviceProfile.category === 'mid',
     requireHTTPS: false,
     showCompatibilityWarning: false,
   };
 
-  // iOS Safari optimizations
+  // iOS Safari specific requirements
   if (isIOS() && isSafari()) {
     settings.requireHTTPS = true;
-    settings.enableMemoryOptimization = true;
     
     const iosVersion = getIOSVersion();
     if (iosVersion && iosVersion < 14) {
       settings.showCompatibilityWarning = true;
-      settings.refineLandmarks = false; // Reduce accuracy for performance
     }
     
-    if (isLowMemoryDevice()) {
-      settings.maxFaces = 1;
+    // Extra memory optimization for older iPhones
+    if (deviceProfile.ram <= 2) {
+      settings.enableMemoryOptimization = true;
       settings.refineLandmarks = false;
     }
   }
@@ -133,9 +146,16 @@ export function getBrowserOptimizationSettings(): BrowserOptimizationSettings {
     }
   }
 
-  // Check WebGL stability
+  // Override WebGL if not stable
   if (!isWebGLStable()) {
     settings.useWebGL = false;
+    console.warn('⚠️ WebGL not stable, falling back to CPU');
+  }
+  
+  // Check if device can run MediaPipe at all
+  if (!canRunMediaPipe(deviceProfile)) {
+    console.warn('⚠️ Device may struggle with MediaPipe:', deviceProfile.model);
+    settings.showCompatibilityWarning = true;
   }
 
   return settings;
