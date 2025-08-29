@@ -1,7 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import '@tensorflow/tfjs-backend-webgl';
-import * as tf from '@tensorflow/tfjs';
+import { faceMeshService } from '@/services/faceMeshService';
 
 interface LiveFaceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -36,36 +34,27 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
+  const [detectorReady, setDetectorReady] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(0);
 
-  // Initialize TensorFlow detector (reuse existing model if possible)
+  // Initialize FaceMesh detector using singleton service
   useEffect(() => {
-    let localDetector: faceLandmarksDetection.FaceLandmarksDetector | null = null;
-    
     const initializeDetector = async () => {
       try {
         console.log('🔧 [Live Detection] Initializing face detector for AR effects...');
         console.log('🔧 [Live Detection] isActive:', isActive);
         
-        // Initialize TensorFlow.js
-        await tf.ready();
+        // Use singleton FaceMesh service for better performance
+        const initialized = await faceMeshService.initialize();
         
-        const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
-        const detectorConfig = {
-          runtime: 'tfjs' as const,
-          refineLandmarks: false, // Disable for better performance
-          maxFaces: 1, // Only detect one face for performance
-          // Additional performance optimizations
-          modelUrl: undefined, // Use default optimized model
-        };
-        
-        const faceDetector = await faceLandmarksDetection.createDetector(model, detectorConfig);
-        localDetector = faceDetector;
-        setDetector(faceDetector);
-        console.log('✅ [Live Detection] Real-time face detector ready, setting detector state');
+        if (initialized) {
+          setDetectorReady(true);
+          console.log('✅ [Live Detection] Real-time face detector ready (using shared instance)');
+        } else {
+          console.warn('⚠️ [Live Detection] Failed to initialize face detector');
+        }
         
       } catch (err) {
         console.warn('⚠️ [Live Detection] Failed to initialize:', err);
@@ -85,15 +74,9 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
         animationFrameRef.current = null;
       }
       
-      // Dispose local detector if it exists
-      if (localDetector) {
-        try {
-          localDetector.dispose();
-          console.log('✅ [Cleanup] Face detector disposed');
-        } catch (error) {
-          console.warn('⚠️ [Cleanup] Failed to dispose detector:', error);
-        }
-      }
+      // Release reference to the singleton service
+      faceMeshService.release();
+      console.log('✅ [Cleanup] Released FaceMesh service reference');
     };
   }, [isActive]);
 
@@ -202,9 +185,9 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
 
   // Real-time detection loop with memory management
   const detectFaces = useCallback(async () => {
-    if (!detector || !videoRef.current || !isActive) {
+    if (!detectorReady || !videoRef.current || !isActive) {
       console.log('⏭️ [Detection Loop] Skipping - conditions not met:', {
-        hasDetector: !!detector,
+        hasDetector: detectorReady,
         hasVideo: !!videoRef.current,
         isActive
       });
@@ -227,8 +210,8 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
         console.log('🔍 [Detection Loop] Running face detection...');
       }
       
-      // Detect faces directly from video element (MediaPipe optimized for this)
-      const faces = await detector.estimateFaces(video);
+      // Detect faces using singleton service (MediaPipe optimized for this)
+      const faces = await faceMeshService.estimateFaces(video);
       
       // Convert to our format for AR visualization
       detectedFaces = faces.map(face => ({
@@ -260,22 +243,22 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
 
     // Continue detection loop (throttled to ~8 FPS for better memory management)
     setTimeout(() => {
-      if (isActive && detector) {
+      if (isActive && detectorReady) {
         animationFrameRef.current = requestAnimationFrame(detectFaces);
       }
     }, 125); // ~8 FPS - better balance for memory management
 
-  }, [detector, isActive, drawLiveLandmarks, videoRef, animationPhase]);
+  }, [detectorReady, isActive, drawLiveLandmarks, videoRef, animationPhase]);
 
   // Start/stop detection when detector becomes available
   useEffect(() => {
     console.log('🔄 [LiveFaceDetection] Detection state changed:', {
       isActive,
-      hasDetector: !!detector,
+      hasDetector: detectorReady,
       hasVideoRef: !!videoRef.current
     });
     
-    if (isActive && detector && videoRef.current) {
+    if (isActive && detectorReady && videoRef.current) {
       console.log('▶️ [LiveFaceDetection] Starting face detection loop');
       setIsDetecting(true);
       
@@ -321,7 +304,7 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
       }
       
     };
-  }, [isActive, detector, videoRef]); // Removed detectFaces from dependencies to avoid infinite loop
+  }, [isActive, detectorReady, videoRef]); // Removed detectFaces from dependencies to avoid infinite loop
 
   return (
     <>

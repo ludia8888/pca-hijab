@@ -131,12 +131,12 @@ apiClient.interceptors.response.use(
       // Initialize retry count
       config._retryCount = config._retryCount || 0;
       
-      // Retry up to 3 times for network errors
-      if (config._retryCount < 3) {
+      // Retry up to 1 time for network errors (reduced from 3)
+      if (config._retryCount < 1) {
         config._retryCount++;
         
-        // Exponential backoff: 1s, 2s, 4s
-        const delay = Math.pow(2, config._retryCount - 1) * 1000;
+        // Fixed delay: 500ms for single retry
+        const delay = 500;
         
         secureLog(`[API Retry] Attempt ${config._retryCount} after ${delay}ms`);
         

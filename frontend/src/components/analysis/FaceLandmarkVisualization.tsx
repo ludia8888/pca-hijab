@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import { COLOR_COMPARISON_FLOWS } from '@/utils/constants';
-import { initializeTensorFlow, getTensorFlow } from '@/utils/tensorflowInit';
+import { faceMeshService } from '@/services/faceMeshService';
+import { getTensorFlow } from '@/utils/tensorflowInit';
 
 interface FaceLandmarkVisualizationProps {
   imageUrl: string;
@@ -42,7 +42,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
+  const [detectorReady, setDetectorReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState<DetectedFace[]>([]);
@@ -54,7 +54,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const depthAnimationStartRef = useRef<number>(0);
   const depthAnimationFrameRef = useRef<number | null>(null);
 
-  // Initialize TensorFlow and face detector
+  // Initialize FaceMesh detector using singleton service
   useEffect(() => {
     const initializeDetector = async () => {
       const startTime = performance.now();
@@ -62,39 +62,26 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       try {
         console.log('🔧 [FaceLandmark] Starting detector initialization at', new Date().toISOString());
         
-        // Initialize TensorFlow using centralized module
-        console.log('🔧 [FaceLandmark] Ensuring TensorFlow is initialized...');
-        await initializeTensorFlow();
+        // Use singleton FaceMesh service for better performance
+        console.log('🔧 [FaceLandmark] Initializing FaceMesh using shared service...');
+        const initialized = await faceMeshService.initialize();
         
-        // Get TensorFlow instance
-        const tf = await getTensorFlow();
-        console.log('✅ [FaceLandmark] TensorFlow ready, backend:', tf.getBackend());
-        
-        console.log('🔧 [MediaPipe] Loading Face Mesh model weights...');
-        const modelStart = performance.now();
-        const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
-        const detectorConfig = {
-          runtime: 'tfjs' as const,
-          refineLandmarks: true,
-          maxFaces: 1,  // Only detect one face for better performance
-        };
-        
-        const faceDetector = await faceLandmarksDetection.createDetector(model, detectorConfig);
-        const modelTime = performance.now() - modelStart;
-        console.log(`✅ [MediaPipe] Face Mesh model loaded in ${Math.round(modelTime)}ms`);
-        
-        setDetector(faceDetector);
-        
-        const totalTime = performance.now() - startTime;
-        console.log(`🎯 [FaceLandmark] Complete initialization in ${Math.round(totalTime)}ms`);
-        console.log(`📊 [Performance] Model: ${Math.round(modelTime)}ms, Total: ${Math.round(totalTime)}ms`);
-        
-        // Track performance for analytics
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'tensorflow_initialization', {
-            'custom_parameter_3': totalTime, // load_time custom parameter
-            'model_time': modelTime
-          });
+        if (initialized) {
+          setDetectorReady(true);
+          
+          const totalTime = performance.now() - startTime;
+          console.log(`✅ [FaceLandmark] FaceMesh ready (using shared instance) in ${Math.round(totalTime)}ms`);
+          console.log(`📊 [Performance] Memory optimized - reusing existing FaceMesh model`);
+          
+          // Track performance for analytics
+          if (typeof window !== 'undefined' && (window as any).gtag) {
+            (window as any).gtag('event', 'facemesh_initialization', {
+              'custom_parameter_3': totalTime, // load_time custom parameter
+              'using_shared': true
+            });
+          }
+        } else {
+          throw new Error('Failed to initialize FaceMesh service');
         }
         
       } catch (err) {
@@ -106,6 +93,13 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     };
 
     initializeDetector();
+
+    // Cleanup on unmount
+    return () => {
+      // Release reference to the singleton service
+      faceMeshService.release();
+      console.log('✅ [FaceLandmark] Released FaceMesh service reference');
+    };
   }, []);
 
   // Create inverted face mask (everything except face) - for non-depth phases
@@ -1035,7 +1029,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
   // Detect face landmarks with memory management
   const detectLandmarks = useCallback(async () => {
-    if (!detector || !imageRef.current) return;
+    if (!detectorReady || !imageRef.current) return;
     
     // Ensure image is fully loaded
     if (!imageRef.current.complete || imageRef.current.naturalWidth === 0) {
@@ -1048,29 +1042,25 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       console.log('🔍 [Synchronized] Starting face landmark detection...');
       console.log(`📐 Image dimensions: ${imageRef.current.width}x${imageRef.current.height}`);
       
-      // Ensure TensorFlow is ready
-      const tf = await getTensorFlow();
-      if (!tf || !tf.engine()) {
-        console.error('❌ TensorFlow engine not initialized');
-        setError('AI engine not ready. Please refresh the page.');
-        return;
-      }
-      
-      // Async operations cannot be wrapped with tf.tidy - use manual cleanup
-      const faces = await detector.estimateFaces(imageRef.current);
+      // Use singleton service for face detection
+      const faces = await faceMeshService.estimateFaces(imageRef.current);
       console.log(`✅ [Synchronized] Detected ${faces.length} face(s)`);
 
       // Manually clean up any tensors that might have been created
-      // tf is already declared above
-      if (tf && tf.engine) {
-        const numTensorsBeforeCleanup = tf.memory().numTensors;
-        tf.engine().startScope();
-        tf.engine().endScope();
-        const numTensorsAfterCleanup = tf.memory().numTensors;
-        
-        if (numTensorsBeforeCleanup > numTensorsAfterCleanup) {
-          console.log(`🧹 [Memory] Cleaned ${numTensorsBeforeCleanup - numTensorsAfterCleanup} leaked tensors in static detection`);
+      try {
+        const tf = await getTensorFlow();
+        if (tf && tf.engine) {
+          const numTensorsBeforeCleanup = tf.memory().numTensors;
+          tf.engine().startScope();
+          tf.engine().endScope();
+          const numTensorsAfterCleanup = tf.memory().numTensors;
+          
+          if (numTensorsBeforeCleanup > numTensorsAfterCleanup) {
+            console.log(`🧹 [Memory] Cleaned ${numTensorsBeforeCleanup - numTensorsAfterCleanup} leaked tensors in static detection`);
+          }
         }
+      } catch (tfError) {
+        console.warn('TensorFlow cleanup skipped:', tfError);
       }
 
       if (faces.length === 0) {
@@ -1164,7 +1154,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
         console.warn('Cleanup error:', cleanupError);
       }
     }
-  }, [detector, onLandmarksDetected]);
+  }, [detectorReady, onLandmarksDetected]);
 
   // Handle image load
   const handleImageLoad = useCallback(() => {
@@ -1185,18 +1175,18 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
     }
 
     // Start detection if detector is ready and not already started
-    if (detector && !detectionStartedRef.current) {
+    if (detectorReady && !detectionStartedRef.current) {
       detectionStartedRef.current = true; // Mark as started
       // Delay animation start by 500ms to let character appear first
       animationStartTimeRef.current = Date.now() + 500; // Add delay for character to appear
       scanCompleteRef.current = false; // Reset scan complete flag
       detectLandmarks();
     }
-  }, [detector, detectLandmarks]);
+  }, [detectorReady, detectLandmarks]);
 
   // Start detection when detector is ready and image is loaded
   useEffect(() => {
-    if (detector && imageRef.current?.complete && !detectionStartedRef.current) {
+    if (detectorReady && imageRef.current?.complete && !detectionStartedRef.current) {
       // Only start if not already started by handleImageLoad
       detectionStartedRef.current = true;
       // Delay animation start by 500ms to let character appear first
@@ -1204,7 +1194,7 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
       scanCompleteRef.current = false;
       detectLandmarks();
     }
-  }, [detector, detectLandmarks]);
+  }, [detectorReady, detectLandmarks]);
 
   // Animation loop for detecting phase and depth phases with performance optimization
   useEffect(() => {

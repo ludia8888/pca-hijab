@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
+import { faceMeshService } from '@/services/faceMeshService';
 import backgroundImage_1x from '../assets/배경1.png';
 import dontLogo from '../assets/Dont.png';
 import worryLogo from '../assets/worry.png';
@@ -47,6 +48,36 @@ const DontWorry: React.FC = () => {
     
     return () => {
       window.removeEventListener('resize', calculateScale);
+    };
+  }, []);
+
+  // Preload FaceMesh model while user is on this page
+  useEffect(() => {
+    // Start preloading after 500ms to not block initial render
+    const preloadTimer = setTimeout(() => {
+      console.log('🔧 [DontWorry] Starting FaceMesh preload in background...');
+      const startTime = performance.now();
+      
+      faceMeshService.initialize()
+        .then((success) => {
+          if (success) {
+            const loadTime = performance.now() - startTime;
+            console.log(`✅ [DontWorry] FaceMesh preloaded successfully in ${Math.round(loadTime)}ms`);
+            console.log('📊 [DontWorry] Model will be ready when user reaches camera');
+          } else {
+            console.warn('⚠️ [DontWorry] FaceMesh preload failed, will retry on camera page');
+          }
+        })
+        .catch(error => {
+          console.warn('⚠️ [DontWorry] FaceMesh preload error:', error);
+          // Don't show error to user - will retry when actually needed
+        });
+    }, 500);
+
+    return () => {
+      clearTimeout(preloadTimer);
+      // Note: We don't release the service here because we want it ready for the next page
+      // The service will be released when components that use it unmount
     };
   }, []);
 

@@ -105,7 +105,8 @@ export const QRSection: React.FC<QRSectionProps> = ({ result, instagramId }) => 
         onClick={handleSaveImage}
         style={{
           display: 'flex',
-          width: '370px',
+          width: '100%',
+          maxWidth: '370px',
           height: '57px',
           padding: '10px 16px',
           justifyContent: 'center',

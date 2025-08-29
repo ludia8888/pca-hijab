@@ -134,9 +134,10 @@ export const ColorPaletteSection: React.FC<ColorPaletteSectionProps> = ({ season
       <div 
         style={{
           display: 'flex',
-          width: '402px',
+          width: '100%',
           padding: '8px 16px',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexWrap: 'wrap'
         }}
       >
         <span style={{

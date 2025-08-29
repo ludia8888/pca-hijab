@@ -68,7 +68,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
   return (
     <div className="flex flex-col items-center w-full">
       {/* Card Component */}
-      <div className="relative overflow-hidden flex flex-col w-full md:max-w-[402px]" style={{ backgroundColor: seasonData.headerColor, height: '331px' }}>
+      <div className="relative overflow-hidden flex flex-col w-full" style={{ backgroundColor: seasonData.headerColor, minHeight: '331px' }}>
         {/* Top colored section with back arrow and title */}
         <div 
           className="flex items-center gap-2.5 p-4 w-full flex-shrink-0"
@@ -98,7 +98,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
       
       {/* Result Text Below Card */}
       <div 
-        className="w-full md:max-w-[402px]"
+        className="w-full"
         style={{
           display: 'flex',
           padding: '16px',
@@ -138,7 +138,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
       
       {/* Color Palette Text */}
       <div 
-        className="w-full md:max-w-[402px]"
+        className="w-full"
         style={{
           padding: '8px 18px',
           borderRadius: '10px',

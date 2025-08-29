@@ -107,9 +107,9 @@ const ResultPageV2 = (): JSX.Element => {
   const seasonKey = getSeasonKey(result.personal_color_en);
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8F8F8' }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: '#F8F8F8' }}>
       {/* Container responsive - mobile to desktop */}
-      <div className="w-full mx-auto min-h-screen flex flex-col items-center relative" style={{ background: '#F8F8F8' }}>
+      <div className="w-full max-w-[402px] mx-auto min-h-screen flex flex-col items-center relative px-4" style={{ background: '#F8F8F8' }}>
         
         {/* Character Image - positioned absolutely from page top */}
         <div style={{ 
@@ -117,14 +117,16 @@ const ResultPageV2 = (): JSX.Element => {
           top: '96px', 
           left: '50%', 
           transform: 'translateX(-50%)', 
-          zIndex: 9999 
+          zIndex: 9999,
+          width: '70%',
+          maxWidth: '278px'
         }}>
           <img 
             src={SEASON_DATA[seasonKey].character}
-            alt={`${SEASON_DATA[seasonKey].title} 캐릭터`}
+            alt={`${SEASON_DATA[seasonKey].title} character`}
             style={{
-              width: '278px',
-              height: '264px',
+              width: '100%',
+              height: 'auto',
               aspectRatio: '139/132'
             }}
           />
@@ -137,17 +139,17 @@ const ResultPageV2 = (): JSX.Element => {
         />
 
         {/* Section 2: Color Palette */}
-        <div className="w-full md:max-w-[402px] px-4 py-4 md:py-6 lg:py-8">
+        <div className="w-full py-4 md:py-6 lg:py-8">
           <ColorPaletteSection seasonKey={seasonKey} />
         </div>
 
         {/* Section 3: Product Carousel */}
-        <div className="w-full md:max-w-[402px] px-4 py-4 md:py-6 lg:py-8">
+        <div className="w-full py-4 md:py-6 lg:py-8">
           <ProductCarousel personalColor={result.personal_color_en} />
         </div>
 
         {/* Section 4: QR Code & Actions */}
-        <div className="w-full md:max-w-[402px] px-4 py-4 md:py-6 lg:py-8">
+        <div className="w-full py-4 md:py-6 lg:py-8">
           <QRSection 
             result={result} 
             instagramId={instagramId || undefined} 

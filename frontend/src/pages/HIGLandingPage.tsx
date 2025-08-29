@@ -4,6 +4,9 @@ import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
 import { trackSessionStart } from '@/utils/analytics';
+import { CSRFAPI } from '@/services/api/csrf';
+import { keepAliveService } from '@/services/keepAlive';
+import { initializeTensorFlow } from '@/utils/tensorflowInit';
 import backgroundImage_1x from '../assets/배경1.png';
 import mynoorLogo from '../assets/Mynoor.png';
 import star1 from '../assets/별1.png';
@@ -20,19 +23,23 @@ const HIGLandingPage: React.FC = () => {
   const { setSessionData } = useAppStore();
   const [scaleFactor, setScaleFactor] = useState(1);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<string>('');
   
   const handleStartAnalysis = async () => {
     if (isCreatingSession) return; // Prevent double clicks
     
     setIsCreatingSession(true);
+    setSessionStatus('Initializing...');
     try {
       // Create a session before navigating
+      setSessionStatus('Creating session...');
       const response = await SessionAPI.createSession();
       setSessionData(response.data.sessionId, response.data.instagramId);
       trackSessionStart(response.data.instagramId || 'anonymous');
       console.log('✅ Session created:', response.data.sessionId);
       
       // Navigate to photo guide
+      setSessionStatus('Redirecting...');
       navigate(ROUTES.PHOTOGUIDE);
     } catch (error) {
       console.error('Failed to create session:', error);
@@ -40,8 +47,52 @@ const HIGLandingPage: React.FC = () => {
       navigate(ROUTES.PHOTOGUIDE);
     } finally {
       setIsCreatingSession(false);
+      setSessionStatus('');
     }
   };
+
+  // Pre-fetch CSRF token and warm up backend on mount
+  useEffect(() => {
+    const initializePage = async () => {
+      try {
+        // Start keep-alive service to prevent backend cold starts
+        keepAliveService.start();
+        
+        // Pre-fetch CSRF token silently
+        await CSRFAPI.getToken();
+        console.log('✅ CSRF token pre-fetched');
+        
+        // Warm up backend with a lightweight request
+        await SessionAPI.getSession('warmup').catch(() => {
+          // Ignore errors, this is just to warm up the backend
+          console.log('Backend warmup request sent');
+        });
+        
+        // Preload TensorFlow.js in background while user reads content
+        console.log('🔧 [HIGLandingPage] Starting TensorFlow preload in background...');
+        const tfStartTime = performance.now();
+        initializeTensorFlow()
+          .then(() => {
+            const tfLoadTime = performance.now() - tfStartTime;
+            console.log(`✅ [HIGLandingPage] TensorFlow preloaded in ${Math.round(tfLoadTime)}ms`);
+            console.log('📊 [HIGLandingPage] TensorFlow ready for face detection models');
+          })
+          .catch(error => {
+            console.warn('⚠️ [HIGLandingPage] TensorFlow preload failed:', error);
+            // Don't worry, it will be initialized when needed
+          });
+      } catch (error) {
+        console.log('Failed to pre-initialize:', error);
+      }
+    };
+    
+    initializePage();
+    
+    // Cleanup on unmount
+    return () => {
+      keepAliveService.stop();
+    };
+  }, []);
 
   // Calculate optimal scale to prevent overlapping
   useEffect(() => {
@@ -410,7 +461,7 @@ const HIGLandingPage: React.FC = () => {
                 lineHeight: '140%'
               }}
             >
-              {isCreatingSession ? 'Starting...' : "Let's Find Your Colors!"}
+              {sessionStatus || (isCreatingSession ? 'Starting...' : "Let's Find Your Colors!")}
             </span>
           </button>
         </div>

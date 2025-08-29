@@ -82,8 +82,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-1.png',
     message: "Scanning your face... 🕵️‍♀️",
     progress: 20,
-    duration: 3000, // Reduced from 4000ms - scan happens in 3 seconds
-    techExplanation: 'Creating your 3D facial structure map'
+    duration: 3000 // Reduced from 4000ms - scan happens in 3 seconds
   },
   {
     id: 'color-extraction',
@@ -92,8 +91,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-2.png',
     message: "Extracting your skin tone 🔬",
     progress: 40,
-    duration: 2500, // Reduced from 4000ms - faster transition
-    techExplanation: 'Extracting color data from key facial zones'
+    duration: 2500 // Reduced from 4000ms - faster transition
   },
   {
     id: 'color-depth-1',
@@ -102,8 +100,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-3.png',
     message: "Comparing colors...", // Will be dynamically updated based on personal color
     progress: 60,
-    duration: 5000, // Keep as manual control phase - user interaction needed
-    techExplanation: 'Depth 1 color analysis'
+    duration: 5000 // Keep as manual control phase - user interaction needed
   },
   {
     id: 'color-depth-2',
@@ -112,8 +109,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-4.png',
     message: "Analyzing deeper tones...", // Will be dynamically updated based on personal color
     progress: 80,
-    duration: 5000, // Keep as manual control phase - user interaction needed
-    techExplanation: 'Depth 2 color analysis'
+    duration: 5000 // Keep as manual control phase - user interaction needed
   },
   {
     id: 'color-depth-3',
@@ -122,8 +118,7 @@ export const ANALYSIS_STEPS = [
     speechBubble: '/images/speech-bubbles/bubble-5.png',
     message: "Finalizing your colors...", // Will be dynamically updated based on personal color
     progress: 100,
-    duration: 5000, // Keep as manual control phase - user interaction needed
-    techExplanation: 'Depth 3 color analysis'
+    duration: 5000 // Keep as manual control phase - user interaction needed
   },
 ];
 
@@ -164,22 +159,19 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'left' as const,
-      message: 'On the left, your complexion appears beautifully pure.',
-      techExplanation: 'Comparing warm vs cool undertones'
+      message: 'On the left, your complexion appears beautifully pure.'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'left' as const,
-      message: 'On the left, your radiant natural flush is beautifully revealed.',
-      techExplanation: 'Testing deep color harmony'
+      message: 'On the left, your radiant natural flush is beautifully revealed.'
     },
     d3: {
       leftColor: '#44CBD1',
       rightColor: '#8C7C52',
       activeBox: 'left' as const,
-      message: 'On the left, your facial features look more defined and radiant.',
-      techExplanation: 'Confirming your spring warm type'
+      message: 'On the left, your facial features look more defined and radiant.'
     }
   },
   'Autumn Warm': {
@@ -187,22 +179,19 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'left' as const,
-      message: 'On the left, your complexion appears beautifully pure.',
-      techExplanation: 'Comparing warm vs cool undertones'
+      message: 'On the left, your complexion appears beautifully pure.'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'left' as const,
-      message: 'On the left, your radiant natural flush is beautifully revealed.',
-      techExplanation: 'Testing deep color harmony'
+      message: 'On the left, your radiant natural flush is beautifully revealed.'
     },
     d3: {
       leftColor: '#44CBD1',
       rightColor: '#8C7C52',
       activeBox: 'right' as const,
-      message: 'On the right, your facial features look more defined and radiant.',
-      techExplanation: 'Confirming your autumn warm type'
+      message: 'On the right, your facial features look more defined and radiant.'
     }
   },
   'Summer Cool': {
@@ -210,22 +199,19 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'right' as const,
-      message: 'On the right, your complexion appears beautifully pure.',
-      techExplanation: 'Comparing warm vs cool undertones'
+      message: 'On the right, your complexion appears beautifully pure.'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'right' as const,
-      message: 'On the right, your radiant natural flush is beautifully revealed.',
-      techExplanation: 'Testing deep color harmony'
+      message: 'On the right, your radiant natural flush is beautifully revealed.'
     },
     d3: {
       leftColor: '#C7EEF5',
       rightColor: '#3C15B0',
       activeBox: 'left' as const,
-      message: 'On the left, your facial features look more defined and radiant.',
-      techExplanation: 'Confirming your summer cool type'
+      message: 'On the left, your facial features look more defined and radiant.'
     }
   },
   'Winter Cool': {
@@ -233,22 +219,19 @@ export const COLOR_COMPARISON_FLOWS = {
       leftColor: '#FEDFBB',
       rightColor: '#FFDDF4',
       activeBox: 'right' as const,
-      message: 'On the right, your complexion appears beautifully pure.',
-      techExplanation: 'Comparing warm vs cool undertones'
+      message: 'On the right, your complexion appears beautifully pure.'
     },
     d2: {
       leftColor: '#52090E',
       rightColor: '#BF0166',
       activeBox: 'right' as const,
-      message: 'On the right, your radiant natural flush is beautifully revealed.',
-      techExplanation: 'Testing deep color harmony'
+      message: 'On the right, your radiant natural flush is beautifully revealed.'
     },
     d3: {
       leftColor: '#C7EEF5',
       rightColor: '#3C15B0',
       activeBox: 'right' as const,
-      message: 'On the right, your facial features look more defined and radiant.',
-      techExplanation: 'Confirming your winter cool type'
+      message: 'On the right, your facial features look more defined and radiant.'
     }
   }
 };

@@ -323,8 +323,7 @@ const AnalyzingPage = (): JSX.Element => {
         
         return {
           ...baseStep,
-          message: depthConfig.message,
-          techExplanation: depthConfig.techExplanation
+          message: depthConfig.message
         };
       }
     }
@@ -593,7 +592,7 @@ const AnalyzingPage = (): JSX.Element => {
             <div
               className="absolute overflow-hidden"
               style={{
-                top: `${(16 + 61) * scaleFactor + 16 * scaleFactor + 65.6 * scaleFactor + 16 * scaleFactor}px`, // header + gap + text container + gap
+                top: `${(16 + 61) * scaleFactor + 16 * scaleFactor + 99.2 * scaleFactor + 20 * scaleFactor}px`, // header + gap + text container (with padding) + larger gap
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: `${348 * scaleFactor}px`,
@@ -816,10 +815,21 @@ const AnalyzingPage = (): JSX.Element => {
                 return (
                   <div 
                     key={`character-${currentStep}`}
-                    className={`absolute bottom-28 ${isCharacterOnLeft ? 'left-0' : 'right-0'} z-20 animate-slideUp`}
-                    style={{ animationDelay: '0.2s', animationFillMode: 'both', pointerEvents: 'none' }}
+                    className={`absolute z-20 animate-slideUp`}
+                    style={{ 
+                      bottom: `${112 * scaleFactor}px`,
+                      left: isCharacterOnLeft ? 0 : 'auto',
+                      right: isCharacterOnLeft ? 'auto' : 0,
+                      animationDelay: '0.2s', 
+                      animationFillMode: 'both', 
+                      pointerEvents: 'none' 
+                    }}
                   >
-                  <div className={`flex ${isCharacterOnLeft ? 'flex-row' : 'flex-row-reverse'} items-end gap-3 p-4`} style={{ pointerEvents: 'none' }}>
+                  <div className={`flex ${isCharacterOnLeft ? 'flex-row' : 'flex-row-reverse'} items-center`} style={{ 
+                    gap: `${12 * scaleFactor}px`,
+                    padding: `${16 * scaleFactor}px`,
+                    pointerEvents: 'none' 
+                  }}>
                     {/* Character Container */}
                     <div className="relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
                       <img 
@@ -827,27 +837,42 @@ const AnalyzingPage = (): JSX.Element => {
                         alt="Analysis Character" 
                         className="object-contain filter drop-shadow-xl"
                         style={{
-                          width: '111px',
-                          height: '100px',
+                          width: `${111 * scaleFactor}px`,
+                          height: `${100 * scaleFactor}px`,
                           aspectRatio: '111/100'
                         }}
                       />
                     </div>
 
                     {/* Speech Bubble */}
-                    <div className={`relative max-w-xs ${isCharacterOnLeft ? 'ml-2' : 'mr-2'} animate-fade-in`} style={{ animationDelay: '0.4s' }}>
-                      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border-2 border-primary-200 p-4 transform transition-all hover:scale-105">
+                    <div className={`relative` } style={{ 
+                      animationDelay: '0.4s',
+                      maxWidth: `${300 * scaleFactor}px`,
+                      marginLeft: isCharacterOnLeft ? `${8 * scaleFactor}px` : 0,
+                      marginRight: !isCharacterOnLeft ? `${8 * scaleFactor}px` : 0
+                    }}>
+                      <div className="bg-white/95 backdrop-blur-md shadow-xl transform transition-all hover:scale-105" style={{
+                        padding: `${16 * scaleFactor}px`,
+                        borderRadius: `${16 * scaleFactor}px`,
+                        border: `${2 * scaleFactor}px solid rgb(233, 213, 255)`
+                      }}>
                         {/* Bubble tail pointing to character */}
-                        <div className={`absolute bottom-4 ${isCharacterOnLeft ? '-left-2' : '-right-2'} w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent ${isCharacterOnLeft ? 'border-r-8 border-r-white' : 'border-l-8 border-l-white'}`}></div>
+                        <div className={`absolute w-0 h-0`} style={{
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          left: isCharacterOnLeft ? `-${8 * scaleFactor}px` : 'auto',
+                          right: !isCharacterOnLeft ? `-${8 * scaleFactor}px` : 'auto',
+                          borderTop: `${8 * scaleFactor}px solid transparent`,
+                          borderBottom: `${8 * scaleFactor}px solid transparent`,
+                          borderRight: isCharacterOnLeft ? `${8 * scaleFactor}px solid white` : 'none',
+                          borderLeft: !isCharacterOnLeft ? `${8 * scaleFactor}px solid white` : 'none'
+                        }}></div>
                     
                     {/* Message content */}
-                    <p className="text-sm font-medium text-gray-800 leading-relaxed">
+                    <p className="font-medium text-gray-800 leading-relaxed" style={{
+                      fontSize: `${14 * scaleFactor}px`
+                    }}>
                       {currentStepData.message}
-                    </p>
-                    
-                    {/* Tech explanation (smaller text) */}
-                    <p className="text-xs text-gray-500 mt-2 italic">
-                      {currentStepData.techExplanation}
                     </p>
                       </div>
                     </div>
