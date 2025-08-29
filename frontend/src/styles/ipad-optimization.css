@@ -30,9 +30,9 @@
     padding-right: 0 !important;
   }
   
-  /* Scale up character for iPad */
-  .md\:scale-125 {
-    transform: scale(1.3) !important;
+  /* Optimized character scale for iPad Portrait */
+  .md\:scale-110 {
+    transform: scale(1.05) !important; /* Slightly smaller for portrait */
   }
 }
 
@@ -49,9 +49,9 @@
     padding-right: 2rem !important;
   }
   
-  /* Scale character appropriately */
-  .lg\:scale-150 {
-    transform: scale(1.4) !important;
+  /* Optimized character scale for landscape */
+  .lg\:scale-125 {
+    transform: scale(1.15) !important; /* Reduced scale for landscape */
   }
 }
 
@@ -120,6 +120,17 @@
   div[style*="background: #F8F8F8"] {
     min-height: 100vh !important;
     min-height: -webkit-fill-available !important;
+  }
+  
+  /* Ensure character doesn't block interactions */
+  .pointer-events-none {
+    pointer-events: none !important;
+  }
+  
+  /* Proper layering for interactive elements */
+  button, a, [role="button"] {
+    position: relative;
+    z-index: 30 !important;
   }
 }
 

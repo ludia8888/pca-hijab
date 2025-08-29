@@ -67,10 +67,11 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Card Component - responsive min-height */}
+      {/* Card Component - responsive min-height with proper z-index */}
       <div className="relative overflow-hidden flex flex-col w-full" style={{ 
         backgroundColor: seasonData.headerColor, 
         minHeight: '331px',
+        zIndex: 1, // Ensure card background is above page background but below character
         '@media (min-width: 768px)': {
           minHeight: '400px'
         },
@@ -78,10 +79,13 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
           minHeight: '450px'
         }
       }}>
-        {/* Top colored section with back arrow and title - responsive padding */}
+        {/* Top colored section with back arrow and title - with proper z-index */}
         <div 
-          className="flex items-center gap-2.5 p-4 md:p-6 lg:p-8 w-full flex-shrink-0"
-          style={{ backgroundColor: seasonData.headerColor }}
+          className="flex items-center gap-2.5 p-4 md:p-6 lg:p-8 w-full flex-shrink-0 relative"
+          style={{ 
+            backgroundColor: seasonData.headerColor,
+            zIndex: 20 // Ensure interactive elements are above character
+          }}
         >
           <button 
             onClick={() => window.history.back()}
@@ -100,14 +104,17 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
           </span>
         </div>
 
-        {/* White content section - responsive padding */}
-        <div className="flex-1 flex flex-col justify-center p-6 md:p-8 lg:p-10">
+        {/* White content section - with spacing for character */}
+        <div className="flex-1 flex flex-col justify-center p-6 md:p-8 lg:p-10" style={{
+          paddingTop: '80px', // Add space for character
+          minHeight: '200px'
+        }}>
         </div>
       </div>
       
-      {/* Result Text Below Card - responsive spacing */}
+      {/* Result Text Below Card - with proper z-index */}
       <div 
-        className="w-full md:px-8 lg:px-12"
+        className="w-full md:px-8 lg:px-12 relative"
         style={{
           display: 'flex',
           padding: '16px',
@@ -115,7 +122,8 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
           alignItems: 'center',
           gap: '10px',
           marginTop: '10px',
-          marginBottom: '10px'
+          marginBottom: '10px',
+          zIndex: 20 // Ensure text is above character
         }}
       >
         <h1 
@@ -147,13 +155,14 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
         </h1>
       </div>
       
-      {/* Color Palette Text - responsive padding */}
+      {/* Color Palette Text - with proper z-index */}
       <div 
-        className="w-full md:px-8 lg:px-12"
+        className="w-full md:px-8 lg:px-12 relative"
         style={{
           padding: '8px 18px',
           borderRadius: '10px',
-          background: 'transparent'
+          background: 'transparent',
+          zIndex: 20 // Ensure text is above character
         }}
       >
         <span className="md:text-[22px] lg:text-[26px]" style={{

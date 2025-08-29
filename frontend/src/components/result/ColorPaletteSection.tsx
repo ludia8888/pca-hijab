@@ -130,8 +130,8 @@ export const ColorPaletteSection: React.FC<ColorPaletteSectionProps> = ({ season
         </div>
       </div>
 
-      {/* Season Text */}
-      <div 
+      {/* Season Text - Commented out */}
+      {/* <div 
         style={{
           display: 'flex',
           width: '100%',
@@ -160,7 +160,7 @@ export const ColorPaletteSection: React.FC<ColorPaletteSectionProps> = ({ season
         }}>
           Recommended Hijab - Click to view
         </span>
-      </div>
+      </div> */}
     </div>
   );
 };

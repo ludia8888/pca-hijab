@@ -151,21 +151,21 @@ const ResultPageV2 = (): JSX.Element => {
           <ColorPaletteSection seasonKey={seasonKey} />
         </div>
 
-        {/* Section 3: Product Carousel - full width on iPad */}
-        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
+        {/* Section 3: Product Carousel - Commented out */}
+        {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <ProductCarousel personalColor={result.personal_color_en} />
-        </div>
+        </div> */}
 
-        {/* Section 4: QR Code & Actions - full width on iPad */}
-        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
+        {/* Section 4: QR Code & Actions - Commented out */}
+        {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <QRSection 
             result={result} 
             instagramId={instagramId || undefined} 
           />
-        </div>
+        </div> */}
 
-        {/* Bottom Actions - centered on iPad */}
-        <div className="text-center px-4 pb-6 md:pb-8 lg:pb-12 md:px-8 lg:px-12">
+        {/* Bottom Actions - Commented out */}
+        {/* <div className="text-center px-4 pb-6 md:pb-8 lg:pb-12 md:px-8 lg:px-12">
           <button
             onClick={() => {
               trackEvent('button_click', {
@@ -178,7 +178,7 @@ const ResultPageV2 = (): JSX.Element => {
           >
             🔄 Try Again
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
