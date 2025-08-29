@@ -330,14 +330,10 @@ const AnalyzingPage = (): JSX.Element => {
     
     // For depth phases (steps 2-4), update the message based on personal color
     if (currentStep >= 2 && currentStep <= 4 && analysisResult?.personal_color_en) {
-      const season = analysisResult.personal_color_en.toLowerCase();
-      let personalColorKey = 'Spring Warm'; // Default
+      // Use the personal_color_en directly as it already contains the full name
+      const personalColorKey = analysisResult.personal_color_en;
       
-      // Map season to full personal color name
-      if (season === 'spring') personalColorKey = 'Spring Warm';
-      else if (season === 'summer') personalColorKey = 'Summer Cool';
-      else if (season === 'autumn' || season === 'fall') personalColorKey = 'Autumn Warm';
-      else if (season === 'winter') personalColorKey = 'Winter Cool';
+      console.log('[AnalyzingPage] Getting color flow for:', personalColorKey, 'at step:', currentStep);
       
       const colorFlow = COLOR_COMPARISON_FLOWS[personalColorKey as keyof typeof COLOR_COMPARISON_FLOWS];
       
