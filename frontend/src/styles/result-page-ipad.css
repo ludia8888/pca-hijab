@@ -1,0 +1,107 @@
+/* iPad-specific optimizations for Result Page */
+
+/* iPad Portrait (768px - 834px) */
+@media screen and (min-width: 768px) and (max-width: 834px) {
+  /* Character image sizing */
+  .character-image-container {
+    width: 200px !important;
+    top: 80px !important;
+  }
+  
+  /* Container width optimization */
+  .result-container {
+    max-width: 600px !important;
+    padding: 0 24px !important;
+  }
+  
+  /* Color palette adjustments */
+  .color-chip {
+    width: calc((100% - 36px) / 10) !important;
+  }
+  
+  /* Personal color card */
+  .personal-color-card {
+    min-height: 350px !important;
+  }
+}
+
+/* iPad Pro 11" (834px - 1024px) */
+@media screen and (min-width: 834px) and (max-width: 1024px) {
+  /* Character image sizing */
+  .character-image-container {
+    width: 220px !important;
+    top: 90px !important;
+  }
+  
+  /* Container width optimization */
+  .result-container {
+    max-width: 700px !important;
+    padding: 0 32px !important;
+  }
+  
+  /* Color palette - show 10 in a row */
+  .color-chip {
+    width: calc((100% - 36px) / 10) !important;
+  }
+  
+  /* Personal color card */
+  .personal-color-card {
+    min-height: 380px !important;
+  }
+}
+
+/* iPad Landscape (1024px - 1366px) */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  /* Character image for landscape */
+  .character-image-container {
+    width: 180px !important;
+    top: 70px !important;
+  }
+  
+  /* Container for landscape */
+  .result-container {
+    max-width: 900px !important;
+    padding: 0 40px !important;
+  }
+  
+  /* Color palette - show all 10 in one row */
+  .color-chip {
+    width: calc((100% - 36px) / 10) !important;
+  }
+  
+  /* Adjust card height for landscape */
+  .personal-color-card {
+    min-height: 300px !important;
+  }
+}
+
+/* iPad Mini specific (768px x 1024px) */
+@media screen and (width: 768px) and (height: 1024px) {
+  .character-image-container {
+    width: 190px !important;
+  }
+  
+  .result-container {
+    max-width: 580px !important;
+  }
+}
+
+/* Ensure proper layering on all iPads */
+@media screen and (min-width: 768px) and (max-width: 1366px) {
+  /* Character should be visible but not block interactions */
+  .character-image-container {
+    pointer-events: none !important;
+    z-index: 10 !important;
+  }
+  
+  /* Interactive elements should be above character */
+  button, a, [role="button"] {
+    position: relative;
+    z-index: 20 !important;
+  }
+  
+  /* Smooth transitions */
+  * {
+    transition: all 0.3s ease;
+  }
+}
