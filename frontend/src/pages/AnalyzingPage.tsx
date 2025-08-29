@@ -106,6 +106,16 @@ const AnalyzingPage = (): JSX.Element => {
       // Start UI animation flow immediately (don't wait for API)
       // This allows UI to progress while API processes
       setCurrentStep(0);
+      
+      // Safety timeout - force close popup after 35 seconds if still showing
+      const safetyTimeout = setTimeout(() => {
+        if (isAnalyzing && !analysisComplete && !error) {
+          console.warn('[AnalyzingPage] Force closing analysis popup after timeout');
+          setIsAnalyzing(false);
+        }
+      }, 35000); // 35 seconds (5 seconds buffer after the 30-second API timeout)
+      
+      return () => clearTimeout(safetyTimeout);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedFile]);
@@ -124,6 +134,15 @@ const AnalyzingPage = (): JSX.Element => {
         analysisAbortControllerRef.current.abort();
         analysisAbortControllerRef.current = null;
       }
+      
+      // Clear step timer if exists
+      if (stepTimerRef.current) {
+        clearTimeout(stepTimerRef.current);
+        stepTimerRef.current = null;
+      }
+      
+      // Reset analysis state to prevent lingering popup
+      setIsAnalyzing(false);
     };
   }, []);
 
@@ -190,6 +209,7 @@ const AnalyzingPage = (): JSX.Element => {
   const performAnalysis = async (): Promise<void> => {
     if (!uploadedFile) return;
 
+    console.log('[AnalyzingPage] performAnalysis started - isAnalyzing:', isAnalyzing);
     try {
       console.log('Starting analysis for file:', uploadedFile.name);
       
@@ -231,6 +251,11 @@ const AnalyzingPage = (): JSX.Element => {
       
       // Mark analysis as complete - this will allow skipping through UI steps
       setAnalysisComplete(true);
+      
+      // IMPORTANT: Set isAnalyzing to false after successful completion
+      setIsAnalyzing(false);
+      
+      console.log('[AnalyzingPage] Analysis completed successfully - isAnalyzing set to false');
       
       // Save analysis result to backend with automatic session recovery
       try {
@@ -291,6 +316,11 @@ const AnalyzingPage = (): JSX.Element => {
       // Set both error message and type
       setError(errorMessage);
       setErrorType(analysisErrorType);
+      
+      // IMPORTANT: Set isAnalyzing to false after error
+      setIsAnalyzing(false);
+      
+      console.log('[AnalyzingPage] Analysis failed - isAnalyzing set to false, error:', errorMessage);
     }
   };
 

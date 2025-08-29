@@ -127,31 +127,18 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
         }}
       >
         <h1 
-          className="md:text-[22px] lg:text-[26px]"
+          className="md:text-[30px] lg:text-[36px]"
           style={{
             color: '#000',
             textAlign: 'center',
-            fontFamily: 'Pretendard',
-            fontSize: '18px',
+            fontFamily: '"Plus Jakarta Sans"',
+            fontSize: '24px',
             fontStyle: 'normal',
-            fontWeight: 700,
+            fontWeight: 800,
             lineHeight: '140%'
           }}
         >
-          You are{' '}
-          <span 
-            className="md:text-[30px] lg:text-[36px]"
-            style={{
-              color: '#000',
-              fontFamily: '"Plus Jakarta Sans"',
-              fontSize: '24px',
-              fontStyle: 'normal',
-              fontWeight: 800,
-              lineHeight: '140%'
-            }}
-          >
-            {seasonData.title}
-          </span>
+          {seasonData.title}
         </h1>
       </div>
       
