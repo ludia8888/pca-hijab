@@ -67,10 +67,10 @@ export class PersonalColorAPI {
    */
   private static generateRandomResult(): PersonalColorResult {
     const seasons = [
-      { ko: '봄 웜톤', en: 'spring' as const, tone: 'warm' as const },
-      { ko: '여름 쿨톤', en: 'summer' as const, tone: 'cool' as const },
-      { ko: '가을 웜톤', en: 'autumn' as const, tone: 'warm' as const },
-      { ko: '겨울 쿨톤', en: 'winter' as const, tone: 'cool' as const }
+      { ko: '봄 웜톤', en: 'Spring Warm', tone: 'warm' as const },
+      { ko: '여름 쿨톤', en: 'Summer Cool', tone: 'cool' as const },
+      { ko: '가을 웜톤', en: 'Autumn Warm', tone: 'warm' as const },
+      { ko: '겨울 쿨톤', en: 'Winter Cool', tone: 'cool' as const }
     ];
     
     // Filter out the last result to prevent consecutive duplicates
