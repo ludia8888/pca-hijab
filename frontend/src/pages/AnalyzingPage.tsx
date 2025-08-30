@@ -686,9 +686,6 @@ const AnalyzingPage = (): JSX.Element => {
                         <p className="text-xs text-gray-500">
                           Processing your personal colors...
                         </p>
-                        <p className="text-xs text-purple-600 mt-2 font-semibold">
-                          This may take up to 30 seconds
-                        </p>
                       </div>
                       
                       {/* Progress bar */}
