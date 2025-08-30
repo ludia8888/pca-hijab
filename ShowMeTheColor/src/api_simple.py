@@ -73,33 +73,22 @@ async def analyze_personal_color(
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Simple color analysis based on average color
-        # This is a simplified version without face detection
-        img_array = np.array(image)
+        # TEMPORARY: Disable analysis logic and use 100% random results
+        # This is for testing purposes only
         
-        # Calculate average color values
-        avg_r = np.mean(img_array[:, :, 0])
-        avg_g = np.mean(img_array[:, :, 1])
-        avg_b = np.mean(img_array[:, :, 2])
+        # Skip image analysis completely
+        # img_array = np.array(image)
+        # avg_r = np.mean(img_array[:, :, 0])
+        # avg_g = np.mean(img_array[:, :, 1])
+        # avg_b = np.mean(img_array[:, :, 2])
+        # warmth = (avg_r - avg_b) / 255.0
+        # brightness = (avg_r + avg_g + avg_b) / (3 * 255.0)
         
-        # Simple logic to determine season
-        # This is a placeholder - in production, use proper ML model
-        warmth = (avg_r - avg_b) / 255.0
-        brightness = (avg_r + avg_g + avg_b) / (3 * 255.0)
-        
-        if warmth > 0.1 and brightness > 0.6:
-            season = 'spring'
-        elif warmth <= 0.1 and brightness > 0.6:
-            season = 'summer'
-        elif warmth > 0.1 and brightness <= 0.6:
-            season = 'autumn'
-        else:
-            season = 'winter'
-        
-        # Add some randomness for demo purposes
+        # 100% random season selection for even distribution
         seasons = ['spring', 'summer', 'autumn', 'winter']
-        if random.random() < 0.3:  # 30% chance to pick random season
-            season = random.choice(seasons)
+        season = random.choice(seasons)
+        
+        print(f"[DEBUG] Random season selected: {season}")
         
         # Define best and worst colors for each season
         color_recommendations = {
@@ -131,9 +120,8 @@ async def analyze_personal_color(
         
         recommendation = color_recommendations[season]
         
-        # Calculate a fake confidence score based on color values
-        confidence = 75.0 + (brightness * 20.0)
-        confidence = min(95.0, max(75.0, confidence))
+        # Generate random confidence score between 75% and 95%
+        confidence = random.uniform(75.0, 95.0)
         
         response = {
             'personal_color': recommendation['personal_color'],
@@ -145,14 +133,9 @@ async def analyze_personal_color(
         
         if debug:
             response['debug'] = {
+                'mode': 'RANDOM_MODE',
                 'detected_season': season,
-                'avg_colors': {
-                    'r': round(avg_r, 2),
-                    'g': round(avg_g, 2),
-                    'b': round(avg_b, 2)
-                },
-                'warmth': round(warmth, 3),
-                'brightness': round(brightness, 3)
+                'note': 'Analysis logic is temporarily disabled. Using 100% random selection.'
             }
         
         return response
