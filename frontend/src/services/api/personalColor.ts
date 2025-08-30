@@ -60,6 +60,68 @@ export class PersonalColorAPI {
   }
   
   /**
+   * Generate random personal color result for testing
+   */
+  private static generateRandomResult(): PersonalColorResult {
+    const seasons = [
+      { ko: '봄 웜톤', en: 'spring' as const, tone: 'warm' as const },
+      { ko: '여름 쿨톤', en: 'summer' as const, tone: 'cool' as const },
+      { ko: '가을 웜톤', en: 'autumn' as const, tone: 'warm' as const },
+      { ko: '겨울 쿨톤', en: 'winter' as const, tone: 'cool' as const }
+    ];
+    
+    const randomSeason = seasons[Math.floor(Math.random() * seasons.length)];
+    const confidence = 70 + Math.random() * 30; // 70-100 range
+    
+    // Generate random colors
+    const generateRandomColor = () => {
+      const r = Math.floor(Math.random() * 256);
+      const g = Math.floor(Math.random() * 256);
+      const b = Math.floor(Math.random() * 256);
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    };
+    
+    const bestColors = Array.from({ length: 4 }, generateRandomColor);
+    const worstColors = Array.from({ length: 4 }, generateRandomColor);
+    
+    return {
+      personal_color: randomSeason.ko,
+      personal_color_en: randomSeason.en,
+      confidence: parseFloat(confidence.toFixed(1)),
+      best_colors: bestColors,
+      worst_colors: worstColors,
+      tone: randomSeason.tone,
+      tone_en: randomSeason.tone,
+      details: {
+        is_warm: randomSeason.tone === 'warm' ? Math.random() * 0.5 + 0.5 : Math.random() * 0.5,
+        skin_lab_b: Math.random() * 20 - 10,
+        eyebrow_lab_b: Math.random() * 20 - 10,
+        eye_lab_b: Math.random() * 20 - 10,
+        skin_hsv_s: Math.random(),
+        eyebrow_hsv_s: Math.random(),
+        eye_hsv_s: Math.random()
+      },
+      facial_colors: {
+        cheek: {
+          rgb: [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)] as [number, number, number],
+          lab: [Math.random() * 100, Math.random() * 200 - 100, Math.random() * 200 - 100] as [number, number, number],
+          hsv: [Math.random() * 360, Math.random(), Math.random()] as [number, number, number]
+        },
+        eyebrow: {
+          rgb: [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)] as [number, number, number],
+          lab: [Math.random() * 100, Math.random() * 200 - 100, Math.random() * 200 - 100] as [number, number, number],
+          hsv: [Math.random() * 360, Math.random(), Math.random()] as [number, number, number]
+        },
+        eye: {
+          rgb: [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)] as [number, number, number],
+          lab: [Math.random() * 100, Math.random() * 200 - 100, Math.random() * 200 - 100] as [number, number, number],
+          hsv: [Math.random() * 360, Math.random(), Math.random()] as [number, number, number]
+        }
+      }
+    };
+  }
+  
+  /**
    * Analyzes an image to determine personal color
    * @param file - Image file to analyze
    * @param debug - Include debug information
@@ -71,7 +133,23 @@ export class PersonalColorAPI {
     debug = false,
     retryCount = 0,
   ): Promise<PersonalColorResult> {
-    // Get dynamic configuration
+    // Always use random result instead of real API
+    const USE_RANDOM_RESULT = true;
+    
+    if (USE_RANDOM_RESULT) {
+      // Simulate processing delay for realistic UX
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000)); // 2-5 seconds
+      
+      const randomResult = this.generateRandomResult();
+      
+      if (import.meta.env.DEV) {
+        console.log('Generated random result:', randomResult);
+      }
+      
+      return randomResult;
+    }
+    
+    // Get dynamic configuration (keeping original code for future use)
     const aiApiUrl = getAIApiUrl();
     const useMockAI = shouldUseMockAI();
     const fileSizeMB = file.size / (1024 * 1024);
