@@ -10,6 +10,9 @@ from PIL import Image
 import numpy as np
 import random
 
+# Track last result to prevent consecutive duplicates
+last_season_result = None
+
 app = FastAPI(
     title="Personal Color Analysis API",
     description="AI-based personal color analysis service",
@@ -85,10 +88,20 @@ async def analyze_personal_color(
         # brightness = (avg_r + avg_g + avg_b) / (3 * 255.0)
         
         # 100% random season selection for even distribution
-        seasons = ['spring', 'summer', 'autumn', 'winter']
-        season = random.choice(seasons)
+        global last_season_result
         
-        print(f"[DEBUG] Random season selected: {season}")
+        seasons = ['spring', 'summer', 'autumn', 'winter']
+        
+        # Filter out the last result to prevent consecutive duplicates
+        if last_season_result and last_season_result in seasons:
+            available_seasons = [s for s in seasons if s != last_season_result]
+        else:
+            available_seasons = seasons
+        
+        season = random.choice(available_seasons)
+        last_season_result = season  # Store for next time
+        
+        print(f"[DEBUG] Random season selected: {season} (avoiding: {last_season_result})")
         
         # Define best and worst colors for each season
         color_recommendations = {

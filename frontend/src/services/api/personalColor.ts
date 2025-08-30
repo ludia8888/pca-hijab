@@ -3,6 +3,9 @@ import type { PersonalColorResult } from '@/types';
 import { getAIApiUrl, shouldUseMockAI, getApiTimeout, debugApiConfig } from '@/utils/apiConfig';
 
 export class PersonalColorAPI {
+  // Track last result to prevent consecutive duplicates
+  private static lastRandomResult: string | null = null;
+  
   /**
    * Compress image before upload for faster processing
    */
@@ -70,7 +73,15 @@ export class PersonalColorAPI {
       { ko: '겨울 쿨톤', en: 'winter' as const, tone: 'cool' as const }
     ];
     
-    const randomSeason = seasons[Math.floor(Math.random() * seasons.length)];
+    // Filter out the last result to prevent consecutive duplicates
+    const availableSeasons = this.lastRandomResult 
+      ? seasons.filter(s => s.en !== this.lastRandomResult)
+      : seasons;
+    
+    const randomSeason = availableSeasons[Math.floor(Math.random() * availableSeasons.length)];
+    
+    // Store this result as the last one
+    this.lastRandomResult = randomSeason.en;
     const confidence = 70 + Math.random() * 30; // 70-100 range
     
     // Generate random colors
