@@ -41,28 +41,18 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('[MAIN] Unhandled promise rejection:', event.reason);
 });
 
-console.log('[MAIN] Starting preloadEnvironment...');
+console.log('[MAIN] Starting app initialization...');
 
-// Preload environment and TensorFlow before rendering
-Promise.all([
-  preloadEnvironment(),
-  initializeTensorFlow().catch(err => {
-    console.error('[MAIN] TensorFlow initialization failed:', err);
-    // Continue anyway, will retry later
-  })
-]).then(() => {
-  console.log('[MAIN] preloadEnvironment complete, finding root element...');
-  const rootElement = document.getElementById('root');
-  
-  if (!rootElement) {
-    console.error('[MAIN] Root element not found!');
-    return;
-  }
-  
+// Render app immediately without waiting for TensorFlow
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  console.error('[MAIN] Root element not found!');
+} else {
   console.log('[MAIN] Creating React root...');
   const root = createRoot(rootElement);
   
-  console.log('[MAIN] Rendering app...');
+  console.log('[MAIN] Rendering app immediately...');
   root.render(
     <StrictMode>
       <QueryProvider>
@@ -70,23 +60,24 @@ Promise.all([
         {import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED !== 'true' && <SpeedInsights />}
       </QueryProvider>
     </StrictMode>,
-  )
+  );
   console.log('[MAIN] Render call complete');
-}).catch((error) => {
-  console.error('[MAIN] Failed to preload environment:', error);
-  console.error('[MAIN] Stack trace:', error.stack);
   
-  // Still render the app even if preload fails
-  const rootElement = document.getElementById('root');
-  if (rootElement) {
-    console.log('[MAIN] Attempting fallback render...');
-    createRoot(rootElement).render(
-      <StrictMode>
-        <QueryProvider>
-          <App />
-          {import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED !== 'true' && <SpeedInsights />}
-        </QueryProvider>
-      </StrictMode>,
-    )
-  }
-})
+  // Load environment and TensorFlow in background after render
+  console.log('[MAIN] Loading resources in background...');
+  
+  // Preload environment variables (non-blocking)
+  preloadEnvironment().catch(error => {
+    console.error('[MAIN] Failed to preload environment:', error);
+  });
+  
+  // Initialize TensorFlow in background (non-blocking)
+  // Delay slightly to let the UI render first
+  setTimeout(() => {
+    console.log('[MAIN] Starting TensorFlow initialization in background...');
+    initializeTensorFlow().catch(err => {
+      console.error('[MAIN] TensorFlow initialization failed:', err);
+      // Will retry when actually needed
+    });
+  }, 500);
+}

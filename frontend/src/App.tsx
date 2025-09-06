@@ -8,6 +8,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import { performanceMonitor } from './utils/performanceMonitor';
+import { preloadCriticalChunks } from './utils/preloadChunks';
 import './styles/ipad-optimization.css';
 
 function App(): JSX.Element {
@@ -45,6 +46,14 @@ function App(): JSX.Element {
     if (process.env.NODE_ENV === 'production') {
       window.addEventListener('load', handleLoadProd);
     }
+    
+    // Preload critical chunks after initial render
+    setTimeout(() => {
+      console.log('[APP] Starting critical chunks preload...');
+      preloadCriticalChunks().catch(error => {
+        console.warn('[APP] Chunk preloading failed:', error);
+      });
+    }, 100); // Small delay to let the initial render complete
 
     // Cleanup function to remove event listeners
     return () => {

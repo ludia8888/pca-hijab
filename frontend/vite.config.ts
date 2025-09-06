@@ -51,8 +51,10 @@ export default defineConfig(({ command, mode }) => ({
     target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     // Increase chunk size limit to avoid over-splitting
     chunkSizeWarningLimit: 2000,
-    // Disable module preload polyfill that might cause issues
-    modulePreload: false,
+    // Enable module preloading for faster initial load
+    modulePreload: {
+      polyfill: true
+    },
     rollupOptions: {
       output: {
         // Keep TensorFlow in a separate chunk to ensure proper loading
