@@ -76,8 +76,13 @@ router.patch('/:sessionId', optionalAuth, verifySessionOwnership, async (req, re
     
     console.info(`Session update attempt - ID: ${sessionId}, User: ${maskUserId(req.user?.userId || 'anonymous')}`);
     
+    // Check if updateSession method exists
+    if (!db.updateSession) {
+      throw new AppError(500, 'Database update method not available');
+    }
+    
     // Update session with new data
-    const updatedSession = await db.updateSession?.(sessionId, {
+    const updatedSession = await db.updateSession(sessionId, {
       uploadedImageUrl,
       analysisResult
     });

@@ -22,7 +22,12 @@ export class PersonalColorAPI {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
+      const imageUrl = URL.createObjectURL(file);
+      
       img.onload = () => {
+        // Clean up the object URL
+        URL.revokeObjectURL(imageUrl);
+        
         // Calculate new dimensions maintaining aspect ratio
         let { width, height } = img;
         const maxDimension = 1920; // Max width/height for processing
@@ -57,8 +62,12 @@ export class PersonalColorAPI {
         );
       };
       
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = URL.createObjectURL(file);
+      img.onerror = () => {
+        URL.revokeObjectURL(imageUrl);
+        reject(new Error('Failed to load image'));
+      };
+      
+      img.src = imageUrl;
     });
   }
   
@@ -144,8 +153,8 @@ export class PersonalColorAPI {
     debug = false,
     retryCount = 0,
   ): Promise<PersonalColorResult> {
-    // Always use random result instead of real API
-    const USE_RANDOM_RESULT = true;
+    // Toggle for testing: set to true to use random results
+    const USE_RANDOM_RESULT = false;
     
     if (USE_RANDOM_RESULT) {
       // Simulate processing delay for realistic UX

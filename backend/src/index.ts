@@ -119,8 +119,13 @@ app.use(cors({
     
     // In production, be very strict
     if (env.isProduction()) {
-      // Only allow HTTPS origins and explicitly whitelisted origins
-      if (allowedOrigins.includes(origin) || (origin.includes('vercel.app') && origin.startsWith('https://'))) {
+      // Only allow explicitly whitelisted origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Also allow specific Vercel preview URLs for our app only
+      const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai)(-[a-z0-9]+)?\.vercel\.app$/;
+      if (vercelPreviewPattern.test(origin)) {
         return callback(null, true);
       }
       console.warn(`CORS: Blocked unauthorized origin in production: ${origin}`);
@@ -152,12 +157,18 @@ app.options('*', (req: Request, res: Response) => {
   
   // In production, be very strict about origins
   if (env.isProduction()) {
-    if (origin && (origin.includes('vercel.app') && origin.includes('https://') || allowedOrigins.includes(origin))) {
+    if (origin && allowedOrigins.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
     } else {
-      // SECURITY: Never use wildcard in production
-      console.warn(`CORS: Blocked unauthorized origin in production: ${origin}`);
-      return res.status(403).json({ error: 'CORS policy violation' });
+      // Check for specific Vercel preview URLs
+      const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai)(-[a-z0-9]+)?\.vercel\.app$/;
+      if (origin && vercelPreviewPattern.test(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+      } else {
+        // SECURITY: Never use wildcard in production
+        console.warn(`CORS: Blocked unauthorized origin in production: ${origin}`);
+        return res.status(403).json({ error: 'CORS policy violation' });
+      }
     }
   } else {
     // In development, allow localhost but still be cautious

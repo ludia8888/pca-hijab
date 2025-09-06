@@ -126,19 +126,20 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Network error retry logic
+    // Network error retry logic with exponential backoff
     if (!error.response && error.code !== 'ECONNABORTED' && config) {
       // Initialize retry count
       config._retryCount = config._retryCount || 0;
       
-      // Retry up to 1 time for network errors (reduced from 3)
-      if (config._retryCount < 1) {
+      // Retry up to 2 times for network errors
+      const maxRetries = 2;
+      if (config._retryCount < maxRetries) {
         config._retryCount++;
         
-        // Fixed delay: 500ms for single retry
-        const delay = 500;
+        // Exponential backoff: 500ms, 1000ms, 2000ms...
+        const delay = Math.min(500 * Math.pow(2, config._retryCount - 1), 2000);
         
-        secureLog(`[API Retry] Attempt ${config._retryCount} after ${delay}ms`);
+        secureLog(`[API Retry] Attempt ${config._retryCount}/${maxRetries} after ${delay}ms`);
         
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay));

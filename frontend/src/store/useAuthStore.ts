@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      isAuthenticated: true, // DEMO MODE: Always authenticated
+      isAuthenticated: false, // Start as not authenticated
       isLoading: false,
       error: null,
 

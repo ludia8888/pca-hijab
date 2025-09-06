@@ -9,9 +9,11 @@ import sys
 from PIL import Image
 import numpy as np
 import random
+from threading import Lock
 
-# Track last result to prevent consecutive duplicates
+# Thread-safe tracking of last result to prevent consecutive duplicates
 last_season_result = None
+result_lock = Lock()
 
 app = FastAPI(
     title="Personal Color Analysis API",
@@ -19,19 +21,35 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Configure CORS - strict for production
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:5174", 
+    "http://localhost:5001",
+    "https://pca-hijab.vercel.app",
+    "https://noorai.vercel.app",
+    "https://noorai-ashy.vercel.app",
+    "https://pca-hijab-frontend.vercel.app"
+]
+
+# Add preview URLs pattern support
+import re
+vercel_preview_pattern = re.compile(r'^https://(pca-hijab|noorai)(-[a-z0-9]+)?\.vercel\.app$')
+
+def is_allowed_origin(origin: str) -> bool:
+    if origin in allowed_origins:
+        return True
+    if vercel_preview_pattern.match(origin):
+        return True
+    return False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "https://pca-hijab.vercel.app",
-        "https://pca-hijab-*.vercel.app",
-        "*"  # For development
-    ],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r'^https://(pca-hijab|noorai)(-[a-z0-9]+)?\.vercel\.app$',
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
 @app.get("/")
@@ -92,16 +110,18 @@ async def analyze_personal_color(
         
         seasons = ['spring', 'summer', 'autumn', 'winter']
         
-        # Filter out the last result to prevent consecutive duplicates
-        if last_season_result and last_season_result in seasons:
-            available_seasons = [s for s in seasons if s != last_season_result]
-        else:
-            available_seasons = seasons
+        # Thread-safe access to last result
+        with result_lock:
+            # Filter out the last result to prevent consecutive duplicates
+            if last_season_result and last_season_result in seasons:
+                available_seasons = [s for s in seasons if s != last_season_result]
+            else:
+                available_seasons = seasons
+            
+            season = random.choice(available_seasons)
+            last_season_result = season  # Store for next time
         
-        season = random.choice(available_seasons)
-        last_season_result = season  # Store for next time
-        
-        print(f"[DEBUG] Random season selected: {season} (avoiding: {last_season_result})")
+        print(f"[DEBUG] Random season selected: {season}")
         
         # Define best and worst colors for each season
         color_recommendations = {

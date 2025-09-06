@@ -23,23 +23,38 @@ function App(): JSX.Element {
       console.error('[APP] Failed to initialize GA4:', error);
     }
 
+    // Create event handlers to avoid memory leaks
+    const handleLoadDev = () => {
+      setTimeout(() => {
+        performanceMonitor.logMetrics();
+      }, 2000); // Wait for all metrics to be collected
+    };
+
+    const handleLoadProd = () => {
+      setTimeout(() => {
+        performanceMonitor.reportMetrics();
+      }, 5000); // Wait longer to ensure all metrics are collected
+    };
+
     // Log performance metrics after page load
     if (process.env.NODE_ENV === 'development') {
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          performanceMonitor.logMetrics();
-        }, 2000); // Wait for all metrics to be collected
-      });
+      window.addEventListener('load', handleLoadDev);
     }
 
     // Report metrics to analytics in production
     if (process.env.NODE_ENV === 'production') {
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          performanceMonitor.reportMetrics();
-        }, 5000); // Wait longer to ensure all metrics are collected
-      });
+      window.addEventListener('load', handleLoadProd);
     }
+
+    // Cleanup function to remove event listeners
+    return () => {
+      if (process.env.NODE_ENV === 'development') {
+        window.removeEventListener('load', handleLoadDev);
+      }
+      if (process.env.NODE_ENV === 'production') {
+        window.removeEventListener('load', handleLoadProd);
+      }
+    };
   }, []);
 
   console.log('[APP] Rendering app components...');

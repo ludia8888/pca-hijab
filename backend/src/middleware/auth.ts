@@ -81,7 +81,13 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction): v
       req.user = { userId: decoded.userId };
     }
   } catch (error) {
-    // Ignore errors - user is simply not authenticated
+    // Log the error for debugging but don't fail the request
+    if (error instanceof Error) {
+      console.debug('[OptionalAuth] Authentication failed (non-blocking):', error.message);
+    } else {
+      console.debug('[OptionalAuth] Authentication failed (non-blocking):', error);
+    }
+    // User is simply not authenticated - continue without user context
   }
   
   next();

@@ -93,25 +93,13 @@ export class SessionAPI {
       const response = await apiClient.patch(`/sessions/${sessionId}`, updateData);
       return response.data;
     } catch (error) {
-      // If session not found (404), try to recreate it
+      // If session not found (404), log error but don't auto-recreate
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status === 404) {
-          secureWarn('[Session API] Session not found, attempting to recreate...');
-          
-          // Extract instagram ID from the session if possible
-          // For now, create without instagram ID
-          const newSession = await SessionAPI.createSession();
-          secureLog('[Session API] New session created:', newSession.data.sessionId);
-          
-          // Update with the new session ID
-          const response = await apiClient.patch(`/sessions/${newSession.data.sessionId}`, updateData);
-          
-          // Update the store with new session ID
-          const { useAppStore } = await import('@/store');
-          useAppStore.getState().setSessionData(newSession.data.sessionId, newSession.data.instagramId);
-          
-          return response.data;
+          secureWarn(`[Session API] Session not found: ${sessionId}`);
+          // Let the error propagate so the UI can handle it appropriately
+          // (e.g., redirect to home page to create a new session)
         }
       }
       throw error;
