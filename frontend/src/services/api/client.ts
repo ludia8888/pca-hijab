@@ -61,30 +61,46 @@ apiClient.interceptors.request.use(
       }
     }
     
-    // Add CSRF token for non-GET requests
-    if (config.method && config.method.toUpperCase() !== 'GET') {
+    // Add CSRF token for non-GET requests (skip for session creation)
+    const isSessionCreation = config.url === '/sessions' && config.method?.toUpperCase() === 'POST';
+    if (config.method && config.method.toUpperCase() !== 'GET' && !isSessionCreation) {
       console.log('🔐 [API Client] CSRF token needed for:', config.method, config.url);
       try {
         const { CSRFAPI } = await import('./csrf');
         let token = CSRFAPI.getCurrentToken();
         console.log('🎫 [API Client] Current CSRF token exists:', !!token);
         
-        // Get new token if we don't have one
+        // Get new token if we don't have one (with timeout for Instagram)
         if (!token && config.url !== '/csrf-token') {
           console.log('🔄 [API Client] Getting new CSRF token...');
-          token = await CSRFAPI.getToken();
-          console.log('✅ [API Client] New CSRF token obtained:', !!token);
+          
+          // Timeout CSRF fetch after 3 seconds to prevent blocking
+          const csrfPromise = CSRFAPI.getToken();
+          const timeoutPromise = new Promise<null>((resolve) => 
+            setTimeout(() => resolve(null), 3000)
+          );
+          
+          token = await Promise.race([csrfPromise, timeoutPromise]);
+          
+          if (token) {
+            console.log('✅ [API Client] New CSRF token obtained:', !!token);
+          } else {
+            console.warn('⏱️ [API Client] CSRF token fetch timed out, proceeding without token');
+          }
         }
         
         if (token) {
           config.headers['x-csrf-token'] = token;
           console.log('✅ [API Client] CSRF token added to headers');
         } else {
-          console.warn('⚠️ [API Client] No CSRF token available');
+          console.warn('⚠️ [API Client] No CSRF token available, proceeding anyway');
         }
       } catch (error) {
         console.error('❌ [API Client] Failed to get CSRF token:', error);
+        // Continue without CSRF token rather than blocking the request
       }
+    } else if (isSessionCreation) {
+      console.log('🚀 [API Client] Skipping CSRF for session creation');
     }
     
     return config;
