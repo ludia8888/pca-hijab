@@ -9,6 +9,7 @@ import { faceDetectionService } from '@/services/faceDetectionService';
 import { isIOS, isSafari, getBrowserOptimizationSettings } from '@/utils/browserDetection';
 import { getDeviceProfile, getOptimalCameraConstraints, PerformanceMonitor } from '@/utils/deviceProfile';
 import { detectInAppBrowser, getInAppBrowserWarning, getInAppCameraConstraints, needsCameraPermissionWorkaround } from '@/utils/inAppBrowserDetection';
+import { sessionRecoveryHelpers } from '@/store/instagramPersistence';
 import arrowBack from '@/assets/arrow_back.png';
 import ellipse from '@/assets/Ellipse 7.svg';
 import xIcon from '@/assets/X.png';
@@ -16,7 +17,7 @@ import checkIcon from '@/assets/check.png';
 
 const UploadPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { sessionId, setUploadedImage, setLoading, setError, error } = useAppStore();
+  const { sessionId, instagramId, setSessionData, setUploadedImage, setLoading, setError, error } = useAppStore();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
@@ -79,26 +80,68 @@ const UploadPage = (): JSX.Element => {
     };
   }, []);
 
-  // Redirect if no session
+  // Check session with recovery attempts for Instagram browser
   useEffect(() => {
     console.log('🔍 [UploadPage] Checking session, sessionId:', sessionId);
     console.log('🔍 [UploadPage] Page load time:', new Date().toISOString());
     
-    if (!sessionId) {
-      console.log('❌ [UploadPage] No session found, redirecting to home...');
-      trackDropOff('upload_page', 'no_session');
-      navigate(ROUTES.HOME);
-    } else {
-      console.log('✅ [UploadPage] Session found, user can upload image');
-      // Track successful page entry
-      trackEvent('page_enter', {
-        page: 'upload',
-        user_flow_step: 'upload_page_entered',
-        has_session: true,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [sessionId, navigate]);
+    const checkAndRecoverSession = async () => {
+      if (!sessionId) {
+        console.log('⚠️ [UploadPage] No session in store, attempting recovery...');
+        
+        // Try to recover session from various sources
+        const recoveredSession = await sessionRecoveryHelpers.recoverSessionFromAnywhere();
+        
+        if (recoveredSession) {
+          console.log('✅ [UploadPage] Session recovered:', recoveredSession);
+          // Restore session to store
+          setSessionData(recoveredSession, instagramId || undefined);
+          
+          // Track successful recovery
+          trackEvent('session_recovered', {
+            page: 'upload',
+            recovery_source: 'instagram_browser',
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          // Check if we're in Instagram browser
+          const browserInfo = detectInAppBrowser();
+          if (browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram') {
+            console.warn('📱 [UploadPage] Instagram browser detected, showing recovery prompt');
+            
+            // Show a more helpful error message for Instagram users
+            setError('Session lost in Instagram browser. Please tap "..." menu and "Open in Safari/Chrome" for better experience.');
+            
+            // Still try to let them proceed if they have a session in the backend
+            // Give them 2 seconds to see the message before redirecting
+            setTimeout(() => {
+              console.log('❌ [UploadPage] No session recovered, redirecting to start...');
+              trackDropOff('upload_page', 'no_session_instagram');
+              navigate(ROUTES.LANDING); // Go to landing instead of home for Instagram users
+            }, 2000);
+          } else {
+            console.log('❌ [UploadPage] No session found, redirecting to home...');
+            trackDropOff('upload_page', 'no_session');
+            navigate(ROUTES.HOME);
+          }
+        }
+      } else {
+        console.log('✅ [UploadPage] Session found:', sessionId);
+        // Save session to all storages for redundancy
+        await sessionRecoveryHelpers.saveSessionEverywhere(sessionId);
+        
+        // Track successful page entry
+        trackEvent('page_enter', {
+          page: 'upload',
+          user_flow_step: 'upload_page_entered',
+          has_session: true,
+          timestamp: new Date().toISOString()
+        });
+      }
+    };
+    
+    checkAndRecoverSession();
+  }, [sessionId, instagramId, navigate, setSessionData, setError]);
 
   // Initialize face detector on mount
   useEffect(() => {
@@ -744,7 +787,16 @@ const UploadPage = (): JSX.Element => {
       clearInterval(faceDetectionIntervalRef.current);
     }
     
+    // Get Instagram-optimized detection interval
+    const browserInfo = detectInAppBrowser();
+    const detectionInterval = browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram' 
+      ? 800 // 800ms for Instagram (more conservative than default)
+      : 200; // 200ms for regular browsers
+    
     console.log('👤 [FACE DETECTION] Starting face detection interval...');
+    if (browserInfo.isInAppBrowser) {
+      console.log('📱 [FACE DETECTION] Instagram browser detected, using interval:', detectionInterval, 'ms');
+    }
     
     faceDetectionIntervalRef.current = setInterval(async () => {
       
@@ -916,7 +968,7 @@ const UploadPage = (): JSX.Element => {
         setIsProcessingFace(false);
         isProcessingFaceRef.current = false; // Reset ref as well
       }
-    }, 200); // Check every 200ms
+    }, detectionInterval); // Dynamic interval based on browser
     
     console.log('✅ [FACE DETECTION] Interval started');
   };
@@ -2161,6 +2213,15 @@ const UploadPage = (): JSX.Element => {
                           const input = document.createElement('input');
                           input.type = 'file';
                           input.accept = 'image/*';
+                          
+                          // Instagram-specific attributes for better compatibility
+                          const browserInfo = detectInAppBrowser();
+                          if (browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram') {
+                            // Add capture attribute for Instagram
+                            input.setAttribute('capture', 'environment');
+                            console.log('📱 [Upload] Instagram browser detected, added capture attribute');
+                          }
+                          
                           input.onchange = async (e) => {
                             const file = (e.target as HTMLInputElement).files?.[0];
                             if (file) {
@@ -2325,6 +2386,14 @@ const UploadPage = (): JSX.Element => {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
+                
+                // Instagram-specific attributes
+                const browserInfo = detectInAppBrowser();
+                if (browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram') {
+                  input.setAttribute('capture', 'environment');
+                  console.log('📱 [Upload] Instagram browser file input optimized');
+                }
+                
                 input.onchange = async (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {

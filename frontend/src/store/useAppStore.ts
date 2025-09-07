@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { PersonalColorResult, UserPreferences, ViewedProduct, SavedProduct } from '@/types';
+import { createInstagramSafeStorage, sessionRecoveryHelpers } from './instagramPersistence';
 
 export interface AppActions {
   setInstagramId: (id: string) => void;
@@ -8,14 +9,21 @@ export interface AppActions {
   clearUploadedImage: () => void;
   setAnalysisResult: (result: PersonalColorResult) => void;
   setUserPreferences: (preferences: UserPreferences) => void;
+  setRecommendationPreferences: (preferences: UserPreferences) => void; // Alias for compatibility
   initSession: () => void;
-  setSessionData: (sessionId: string, instagramId: string) => void;
+  setSessionData: (sessionId: string, instagramId?: string) => void;
   resetApp: () => void;
+  reset: () => void; // Alias for resetApp
   // Product actions
   addViewedProduct: (productId: string) => void;
   toggleSavedProduct: (productId: string) => void;
   clearViewedProducts: () => void;
   clearSavedProducts: () => void;
+  // UI state actions (for compatibility)
+  setCurrentStep: (step: number) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
 }
 
 export interface AppState {
@@ -23,7 +31,8 @@ export interface AppState {
   instagramId: string | null;
   
   // Image data
-  uploadedImage: File | null;
+  uploadedImage: File | null;  // Actual file for API
+  uploadedFile: File | null;    // Alias for compatibility
   uploadedImagePreview: string | null;
   
   // Analysis results
@@ -31,6 +40,7 @@ export interface AppState {
   
   // User preferences
   userPreferences: UserPreferences | null;
+  recommendationPreferences: UserPreferences | null; // Alias for compatibility
   
   // Session
   sessionId: string | null;
@@ -38,25 +48,33 @@ export interface AppState {
   // Product tracking
   viewedProducts: ViewedProduct[];
   savedProducts: SavedProduct[];
+  
+  // UI state (for compatibility)
+  currentStep: number;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export const useAppStore = create<AppState & AppActions>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         // User data
         instagramId: null,
         setInstagramId: (id) => set({ instagramId: id }),
         
         // Image data
         uploadedImage: null,
+        uploadedFile: null,  // Alias for compatibility
         uploadedImagePreview: null,
         setUploadedImage: (preview, file) => set({ 
           uploadedImagePreview: preview, 
-          uploadedImage: file 
+          uploadedImage: file,
+          uploadedFile: file  // Maintain compatibility
         }),
         clearUploadedImage: () => set({ 
-          uploadedImage: null, 
+          uploadedImage: null,
+          uploadedFile: null,
           uploadedImagePreview: null 
         }),
         
@@ -66,7 +84,15 @@ export const useAppStore = create<AppState & AppActions>()(
         
         // User preferences
         userPreferences: null,
-        setUserPreferences: (preferences) => set({ userPreferences: preferences }),
+        recommendationPreferences: null,
+        setUserPreferences: (preferences) => set({ 
+          userPreferences: preferences,
+          recommendationPreferences: preferences 
+        }),
+        setRecommendationPreferences: (preferences) => set({ 
+          userPreferences: preferences,
+          recommendationPreferences: preferences 
+        }),
         
         // Session
         sessionId: null,
@@ -76,6 +102,10 @@ export const useAppStore = create<AppState & AppActions>()(
         },
         setSessionData: (sessionId, instagramId) => {
           set({ sessionId, instagramId });
+          // Also save session for Instagram browser recovery
+          if (sessionId) {
+            sessionRecoveryHelpers.saveSessionEverywhere(sessionId);
+          }
         },
         
         // Product tracking
@@ -103,20 +133,36 @@ export const useAppStore = create<AppState & AppActions>()(
         clearViewedProducts: () => set({ viewedProducts: [] }),
         clearSavedProducts: () => set({ savedProducts: [] }),
         
+        // UI state (for compatibility)
+        currentStep: 0,
+        isLoading: false,
+        error: null,
+        setCurrentStep: (step) => set({ currentStep: step }),
+        setLoading: (loading) => set({ isLoading: loading }),
+        setError: (error) => set({ error, isLoading: false }),
+        clearError: () => set({ error: null }),
+        
         // Reset
         resetApp: () => set({
           instagramId: null,
           uploadedImage: null,
+          uploadedFile: null,
           uploadedImagePreview: null,
           analysisResult: null,
           userPreferences: null,
+          recommendationPreferences: null,
           sessionId: null,
           viewedProducts: [],
           savedProducts: [],
+          currentStep: 0,
+          isLoading: false,
+          error: null,
         }),
+        reset: () => get().resetApp(), // Alias for compatibility
       }),
       {
         name: 'pca-hijab-store',
+        storage: createInstagramSafeStorage(),
         partialize: (state) => ({
           instagramId: state.instagramId,
           analysisResult: state.analysisResult,

@@ -9,11 +9,17 @@ import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-cpu';
 import { isSafari, isIOS, getBrowserOptimizationSettings } from './browserDetection';
+import { detectInAppBrowser } from './inAppBrowserDetection';
 
 // Global initialization flag
 let isInitialized = false;
 let initializationPromise: Promise<void> | null = null;
 let webglContextLostHandler: (() => void) | null = null;
+let memoryMonitorInterval: NodeJS.Timeout | null = null;
+
+// Memory limits for Instagram browser
+const INSTAGRAM_MEMORY_LIMIT_MB = 60; // Conservative limit for Instagram
+const DEFAULT_MEMORY_LIMIT_MB = 100;
 
 /**
  * Initialize TensorFlow.js with WebGL backend
@@ -41,11 +47,24 @@ async function performInitialization(): Promise<void> {
     
     // Get browser optimization settings
     const browserSettings = getBrowserOptimizationSettings();
+    const browserInfo = detectInAppBrowser();
+    const isInstagram = browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram';
+    
     console.log('🌐 [TensorFlow] Browser detected:', {
       isSafari: isSafari(),
       isIOS: isIOS(),
+      isInstagram,
       optimizationSettings: browserSettings
     });
+    
+    // Set Instagram-specific memory optimizations
+    if (isInstagram) {
+      console.log('📱 [TensorFlow] Instagram browser detected, applying strict memory limits');
+      tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0); // Immediate texture cleanup
+      tf.env().set('WEBGL_PACK_DEPTHWISECONV', false); // Less memory usage
+      tf.env().set('WEBGL_LAZILY_UNPACK', false); // Reduce memory footprint
+      tf.engine().startScope(); // Start memory scope for better cleanup
+    }
 
     // List available backends
     console.log('📊 [TensorFlow] Available backends before init:', tf.engine().backendNames());
@@ -118,6 +137,11 @@ async function performInitialization(): Promise<void> {
     });
 
     isInitialized = true;
+    
+    // Start memory monitoring for Instagram browser
+    if (isInstagram) {
+      startMemoryMonitor();
+    }
   } catch (error) {
     console.error('❌ [TensorFlow] Initialization failed:', error);
     initializationPromise = null;
@@ -179,6 +203,80 @@ export async function getTensorFlow() {
     await initializeTensorFlow();
   }
   return tf;
+}
+
+/**
+ * Memory monitoring for Instagram browser
+ */
+function startMemoryMonitor(): void {
+  if (memoryMonitorInterval) {
+    clearInterval(memoryMonitorInterval);
+  }
+  
+  const browserInfo = detectInAppBrowser();
+  const isInstagram = browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram';
+  const memoryLimit = isInstagram ? INSTAGRAM_MEMORY_LIMIT_MB : DEFAULT_MEMORY_LIMIT_MB;
+  
+  console.log('📦 [TensorFlow] Starting memory monitor with limit:', memoryLimit, 'MB');
+  
+  memoryMonitorInterval = setInterval(() => {
+    const memInfo = tf.memory();
+    const memoryMB = memInfo.numBytes / 1024 / 1024;
+    
+    if (memoryMB > memoryLimit) {
+      console.warn('⚠️ [TensorFlow] Memory usage exceeds limit:', {
+        current: memoryMB.toFixed(2) + ' MB',
+        limit: memoryLimit + ' MB',
+        tensors: memInfo.numTensors
+      });
+      
+      // Force cleanup for Instagram
+      if (isInstagram) {
+        console.log('🧽 [TensorFlow] Forcing memory cleanup for Instagram...');
+        tf.engine().endScope(); // End current scope
+        tf.engine().startScope(); // Start new scope
+        tf.tidy(() => {}); // Force cleanup
+        
+        // If still over limit, dispose all disposable tensors
+        const newMemInfo = tf.memory();
+        const newMemoryMB = newMemInfo.numBytes / 1024 / 1024;
+        if (newMemoryMB > memoryLimit * 0.9) {
+          console.warn('🚨 [TensorFlow] Critical memory pressure, disposing tensors...');
+          tf.disposeVariables();
+        }
+      }
+    }
+  }, 5000); // Check every 5 seconds
+}
+
+/**
+ * Stop memory monitoring
+ */
+export function stopMemoryMonitor(): void {
+  if (memoryMonitorInterval) {
+    clearInterval(memoryMonitorInterval);
+    memoryMonitorInterval = null;
+    console.log('🛑 [TensorFlow] Memory monitor stopped');
+  }
+}
+
+/**
+ * Manual memory cleanup for Instagram browser
+ */
+export function cleanupTensorFlowMemory(): void {
+  const browserInfo = detectInAppBrowser();
+  if (browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram') {
+    console.log('🧽 [TensorFlow] Manual memory cleanup for Instagram...');
+    tf.tidy(() => {});
+    tf.engine().endScope();
+    tf.engine().startScope();
+    
+    const memInfo = tf.memory();
+    console.log('📦 [TensorFlow] Memory after cleanup:', {
+      numTensors: memInfo.numTensors,
+      memoryMB: (memInfo.numBytes / 1024 / 1024).toFixed(2) + ' MB'
+    });
+  }
 }
 
 // Pre-initialize on module load - always do this for better performance

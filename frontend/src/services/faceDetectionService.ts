@@ -5,6 +5,7 @@
 
 import * as faceDetection from '@tensorflow-models/face-detection';
 import '@mediapipe/face_detection';
+import { detectInAppBrowser, getInAppBrowserSettings } from '@/utils/inAppBrowserDetection';
 
 interface FaceRect {
   x: number;
@@ -58,16 +59,35 @@ class FaceDetectionService {
 
   private async initializeInternal(): Promise<void> {
     console.log('🔧 [FaceDetectionService] Initializing MediaPipe face detection...');
+    
+    // Check if we're in Instagram browser and adjust settings
+    const browserInfo = detectInAppBrowser();
+    const isInstagram = browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram';
+    const inAppSettings = getInAppBrowserSettings(browserInfo);
 
     try {
-      // Create MediaPipe face detector - NO FALLBACK
+      // Create MediaPipe face detector with Instagram optimizations
       const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
-      this.detector = await faceDetection.createDetector(model, {
-        runtime: 'mediapipe',
+      
+      // Instagram browser: use more conservative settings
+      const detectorConfig = {
+        runtime: 'mediapipe' as const,
         solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_detection',
-        modelType: 'short', // short range model for selfies
-        minDetectionConfidence: 0.5
-      });
+        modelType: 'short' as const, // short range model for selfies
+        minDetectionConfidence: isInstagram ? 0.4 : 0.5 // Lower threshold for Instagram
+      };
+      
+      if (isInstagram) {
+        console.log('📱 [FaceDetectionService] Instagram browser detected, using optimized settings');
+        console.log('⚙️ [FaceDetectionService] Instagram settings:', {
+          backend: inAppSettings.faceMeshBackend,
+          maxFaces: inAppSettings.faceMeshMaxFaces,
+          refineLandmarks: inAppSettings.faceMeshRefineLandmarks,
+          detectionInterval: inAppSettings.detectionInterval
+        });
+      }
+      
+      this.detector = await faceDetection.createDetector(model, detectorConfig);
       
       this.initialized = true;
       console.log('✅ [FaceDetectionService] MediaPipe face detection initialized');
