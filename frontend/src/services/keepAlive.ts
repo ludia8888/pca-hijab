@@ -89,7 +89,9 @@ class KeepAliveService {
         const startTime = performance.now();
         
         // Use direct axios to bypass interceptors and get raw performance
-        const response = await axios.get(`${url}/api/health`, {
+        // ShowMeTheColor API uses /health, backend uses /api/health
+        const healthEndpoint = url.includes('showmethecolor') ? '/health' : '/api/health';
+        const response = await axios.get(`${url}${healthEndpoint}`, {
           timeout: 30000, // 30 seconds for cold start
           headers: {
             'X-Prewarm': 'true'
@@ -141,7 +143,8 @@ class KeepAliveService {
     for (let i = 0; i < 2; i++) {
       setTimeout(async () => {
         try {
-          await axios.get(`${url}/api/health`, { timeout: 5000 });
+          const healthEndpoint = url.includes('showmethecolor') ? '/health' : '/api/health';
+          await axios.get(`${url}${healthEndpoint}`, { timeout: 5000 });
           console.log(`🔥 Additional warmup ${i + 1} for ${url}`);
         } catch {
           // Ignore errors
@@ -164,7 +167,9 @@ class KeepAliveService {
     // Ping all backends in parallel
     this.BACKEND_URLS.forEach(async (url) => {
       try {
-        await axios.get(`${url}/api/health`, {
+        // ShowMeTheColor API uses /health, backend uses /api/health
+        const healthEndpoint = url.includes('showmethecolor') ? '/health' : '/api/health';
+        await axios.get(`${url}${healthEndpoint}`, {
           timeout: 5000,
           headers: {
             'X-Keep-Alive': 'true'

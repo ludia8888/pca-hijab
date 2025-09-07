@@ -5,7 +5,8 @@ const envApiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_
 // Secure API URL configuration
 export const API_BASE_URL = (() => {
   if (envApiUrl) {
-    const url = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
+    // Don't add /api if URL already contains it
+    const url = envApiUrl.includes('/api') ? envApiUrl : `${envApiUrl}/api`;
     
     // Security check: Ensure HTTPS in production - but just warn, don't throw
     if (import.meta.env.MODE === 'production' && !url.startsWith('https://')) {

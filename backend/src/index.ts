@@ -181,7 +181,7 @@ app.options('*', (req: Request, res: Response) => {
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With, x-csrf-token');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With, x-csrf-token, X-Prewarm, X-Keep-Alive');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.sendStatus(204);
 });

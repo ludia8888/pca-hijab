@@ -40,7 +40,9 @@ export default async function handler(req: Request) {
       backendUrls.map(async (backendUrl) => {
         try {
           const startTime = Date.now();
-          const response = await fetch(`${backendUrl}/api/health`, {
+          // ShowMeTheColor API uses /health, backend uses /api/health
+          const healthEndpoint = backendUrl.includes('showmethecolor') ? '/health' : '/api/health';
+          const response = await fetch(`${backendUrl}${healthEndpoint}`, {
             method: 'GET',
             headers: {
               'X-Prewarm': 'true',
