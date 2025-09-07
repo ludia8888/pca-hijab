@@ -5,8 +5,8 @@ import { useAppStore } from '@/store';
 import { SessionAPI } from '@/services/api/session';
 import { trackSessionStart } from '@/utils/analytics';
 import { CSRFAPI } from '@/services/api/csrf';
-import { keepAliveService } from '@/services/keepAlive';
 import { initializeTensorFlow } from '@/utils/tensorflowInit';
+// Keep-alive service is now started globally in App.tsx
 import backgroundImage_1x from '../assets/배경1.png';
 import mynoorLogo from '../assets/Mynoor.png';
 import star1 from '../assets/별1.png';
@@ -55,9 +55,6 @@ const HIGLandingPage: React.FC = () => {
   useEffect(() => {
     const initializePage = async () => {
       try {
-        // Start keep-alive service to prevent backend cold starts
-        keepAliveService.start();
-        
         // Pre-fetch CSRF token silently
         await CSRFAPI.getToken();
         console.log('✅ CSRF token pre-fetched');
@@ -87,11 +84,6 @@ const HIGLandingPage: React.FC = () => {
     };
     
     initializePage();
-    
-    // Cleanup on unmount
-    return () => {
-      keepAliveService.stop();
-    };
   }, []);
 
   // Calculate optimal scale to prevent overlapping

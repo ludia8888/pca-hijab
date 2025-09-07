@@ -9,6 +9,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import { performanceMonitor } from './utils/performanceMonitor';
 import { preloadCriticalChunks } from './utils/preloadChunks';
+import { keepAliveService } from './services/keepAlive';
 import './styles/ipad-optimization.css';
 
 function App(): JSX.Element {
@@ -23,6 +24,10 @@ function App(): JSX.Element {
     } catch (error) {
       console.error('[APP] Failed to initialize GA4:', error);
     }
+    
+    // Start keep-alive service globally to prevent backend cold starts
+    console.log('[APP] Starting keep-alive service...');
+    keepAliveService.start();
 
     // Create event handlers to avoid memory leaks
     const handleLoadDev = () => {
@@ -63,6 +68,8 @@ function App(): JSX.Element {
       if (process.env.NODE_ENV === 'production') {
         window.removeEventListener('load', handleLoadProd);
       }
+      // Stop keep-alive service on unmount
+      keepAliveService.stop();
     };
   }, []);
 
