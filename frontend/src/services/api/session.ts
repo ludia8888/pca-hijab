@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { getInstagramClient, shouldUseInstagramClient } from './instagramClient';
 import type { PersonalColorResult } from '@/types';
 import { secureLog, secureWarn } from '@/utils/secureLogging';
 
@@ -32,12 +33,34 @@ export class SessionAPI {
    * @returns Promise<SessionResponse>
    */
   static async createSession(instagramId?: string): Promise<SessionResponse> {
+    // Use Instagram-optimized client if detected
+    const client = shouldUseInstagramClient() ? getInstagramClient() : apiClient;
+    const isInstagram = shouldUseInstagramClient();
+    
+    if (isInstagram) {
+      console.log('📱 [SessionAPI] Using Instagram-optimized client (5s timeout, no retries)');
+    }
+    
+    // No retry for Instagram browser - fail fast
+    if (isInstagram) {
+      try {
+        const response = await client.post<SessionResponse>('/sessions', 
+          instagramId ? { instagramId } : {}
+        );
+        return response.data;
+      } catch (error) {
+        secureWarn('Instagram session creation failed:', error);
+        throw error;
+      }
+    }
+    
+    // Regular retry logic for non-Instagram browsers
     let lastError: unknown;
     const maxRetries = 1; // Reduced from 3 to 1 for faster failure
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await apiClient.post<SessionResponse>('/sessions', 
+        const response = await client.post<SessionResponse>('/sessions', 
           instagramId ? { instagramId } : {}
         );
         return response.data;

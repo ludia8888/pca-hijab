@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/utils/constants';
 import { useAppStore } from '@/store';
@@ -6,6 +6,7 @@ import { SessionAPI } from '@/services/api/session';
 import { trackSessionStart } from '@/utils/analytics';
 import { CSRFAPI } from '@/services/api/csrf';
 import { initializeTensorFlow } from '@/utils/tensorflowInit';
+import { detectInAppBrowser } from '@/utils/inAppBrowserDetection';
 // Keep-alive service is now started globally in App.tsx
 import backgroundImage_1x from '../assets/배경1.png';
 import mynoorLogo from '../assets/Mynoor.png';
@@ -24,19 +25,56 @@ const HIGLandingPage: React.FC = () => {
   const [scaleFactor, setScaleFactor] = useState(1);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<string>('');
+  const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null);
+  const cachedCsrfToken = useRef<string | null>(null);
   
   const handleStartAnalysis = async () => {
     if (isCreatingSession) return; // Prevent double clicks
     
+    const browserInfo = detectInAppBrowser();
+    const isInstagram = browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram';
+    
     setIsCreatingSession(true);
     setSessionStatus('Initializing...');
+    
+    // Set timeout for Instagram browser - show skip option after 3 seconds
+    if (isInstagram) {
+      const timeout = setTimeout(() => {
+        setSessionStatus('Taking longer than usual... You can skip and continue');
+      }, 3000);
+      setSessionTimeout(timeout);
+      
+      // Auto-skip after 5 seconds for Instagram
+      setTimeout(() => {
+        if (isCreatingSession) {
+          console.warn('📱 [Instagram] Session creation timeout, navigating anyway');
+          navigate(ROUTES.PHOTOGUIDE);
+          setIsCreatingSession(false);
+          setSessionStatus('');
+        }
+      }, 5000);
+    }
+    
     try {
+      // Use cached CSRF token if available
+      if (cachedCsrfToken.current) {
+        console.log('✅ Using cached CSRF token');
+        // Set it in the API client
+        const { apiClient } = await import('@/services/api/client');
+        apiClient.defaults.headers['x-csrf-token'] = cachedCsrfToken.current;
+      }
+      
       // Create a session before navigating
       setSessionStatus('Creating session...');
       const response = await SessionAPI.createSession();
       setSessionData(response.data.sessionId, response.data.instagramId);
       trackSessionStart(response.data.instagramId || 'anonymous');
       console.log('✅ Session created:', response.data.sessionId);
+      
+      // Clear timeout if session created successfully
+      if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+      }
       
       // Navigate to photo guide
       setSessionStatus('Redirecting...');
@@ -48,36 +86,51 @@ const HIGLandingPage: React.FC = () => {
     } finally {
       setIsCreatingSession(false);
       setSessionStatus('');
+      if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+        setSessionTimeout(null);
+      }
     }
   };
 
   // Pre-fetch CSRF token and warm up backend on mount
   useEffect(() => {
+    const browserInfo = detectInAppBrowser();
+    const isInstagram = browserInfo.isInAppBrowser && browserInfo.browserName === 'instagram';
+    
     const initializePage = async () => {
       try {
-        // Pre-fetch CSRF token silently
-        await CSRFAPI.getToken();
-        console.log('✅ CSRF token pre-fetched');
-        
-        // Warm up backend with a lightweight request
-        await SessionAPI.getSession('warmup').catch(() => {
-          // Ignore errors, this is just to warm up the backend
-          console.log('Backend warmup request sent');
-        });
+        // Pre-fetch CSRF token silently (skip for Instagram to avoid delays)
+        if (!isInstagram) {
+          const token = await CSRFAPI.getToken();
+          cachedCsrfToken.current = token;
+          console.log('✅ CSRF token pre-fetched and cached');
+          
+          // Warm up backend with a lightweight request (skip for Instagram)
+          await SessionAPI.getSession('warmup').catch(() => {
+            // Ignore errors, this is just to warm up the backend
+            console.log('Backend warmup request sent');
+          });
+        } else {
+          console.log('📱 [Instagram] Skipping CSRF pre-fetch and warmup to reduce delays');
+        }
         
         // Preload TensorFlow.js in background while user reads content
-        console.log('🔧 [HIGLandingPage] Starting TensorFlow preload in background...');
-        const tfStartTime = performance.now();
-        initializeTensorFlow()
-          .then(() => {
-            const tfLoadTime = performance.now() - tfStartTime;
-            console.log(`✅ [HIGLandingPage] TensorFlow preloaded in ${Math.round(tfLoadTime)}ms`);
-            console.log('📊 [HIGLandingPage] TensorFlow ready for face detection models');
-          })
-          .catch(error => {
-            console.warn('⚠️ [HIGLandingPage] TensorFlow preload failed:', error);
-            // Don't worry, it will be initialized when needed
-          });
+        // Skip for Instagram to reduce memory pressure
+        if (!isInstagram) {
+          console.log('🔧 [HIGLandingPage] Starting TensorFlow preload in background...');
+          const tfStartTime = performance.now();
+          initializeTensorFlow()
+            .then(() => {
+              const tfLoadTime = performance.now() - tfStartTime;
+              console.log(`✅ [HIGLandingPage] TensorFlow preloaded in ${Math.round(tfLoadTime)}ms`);
+              console.log('📊 [HIGLandingPage] TensorFlow ready for face detection models');
+            })
+            .catch(error => {
+              console.warn('⚠️ [HIGLandingPage] TensorFlow preload failed:', error);
+              // Don't worry, it will be initialized when needed
+            });
+        }
       } catch (error) {
         console.log('Failed to pre-initialize:', error);
       }

@@ -21,6 +21,13 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction):
       console.log('✅ [CSRF] Skipping for GET request');
       return next();
     }
+    
+    // Skip CSRF for session creation (new sessions don't have CSRF yet)
+    // This is safe because creating a session doesn't perform any sensitive action
+    if (req.path === '/sessions' && req.method === 'POST') {
+      console.log('✅ [CSRF] Skipping for session creation (Instagram optimization)');
+      return next();
+    }
 
     const token = req.headers['x-csrf-token'] as string || req.body._csrf;
     const secret = req.cookies.csrfSecret;
