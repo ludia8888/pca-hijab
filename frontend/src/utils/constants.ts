@@ -48,7 +48,7 @@ export const AI_API_URL = (() => {
   }
 })();
 
-export const API_TIMEOUT = 15000; // 15 seconds
+export const API_TIMEOUT = 30000; // 30 seconds (increased for backend cold start scenarios)
 
 // More explicit USE_MOCK_AI logic
 // Only use mock if explicitly set to 'true', not based on AI_API_URL presence
