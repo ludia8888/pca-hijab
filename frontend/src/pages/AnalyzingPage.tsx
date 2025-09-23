@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ANALYSIS_STEPS, ROUTES, COLOR_COMPARISON_FLOWS } from '@/utils/constants';
 import { useAppStore } from '@/store';
@@ -6,7 +6,7 @@ import { analyzeImage } from '@/services/api';
 import { trackAIAnalysis, trackEvent, trackError, trackDropOff, trackEngagement } from '@/utils/analytics';
 import { ImageAnalysisError } from '@/components/ui/ImageAnalysisError/ImageAnalysisError';
 import { parseImageAnalysisError, ImageAnalysisErrorType } from '@/utils/imageAnalysisErrors';
-import FaceLandmarkVisualization from '@/components/analysis/FaceLandmarkVisualization';
+const FaceLandmarkVisualization = lazy(() => import('@/components/analysis/FaceLandmarkVisualization'));
 import { updateSessionWithRecovery } from '@/utils/sessionHelper';
 import guideBackground from '@/assets/가이드배경.jpg';
 import analysisCharacter from '@/assets/분석캐릭터.png';
@@ -632,38 +632,47 @@ const AnalyzingPage = (): JSX.Element => {
             >
               {/* Face Landmark Visualization */}
               {imageUrl && (
-                <FaceLandmarkVisualization
-                  imageUrl={imageUrl}
-                  currentAnalysisStep={currentStep}
-                  personalColorResult={(() => {
-                    if (!analysisResult?.personal_color_en) return null;
-                    const season = analysisResult.personal_color_en.toLowerCase();
-                    // Map season to full personal color name
-                    if (season === 'spring') return 'Spring Warm';
-                    if (season === 'summer') return 'Summer Cool';
-                    if (season === 'autumn' || season === 'fall') return 'Autumn Warm';
-                    if (season === 'winter') return 'Winter Cool';
-                    return 'Spring Warm'; // Default
-                  })()}
-                  onLandmarksDetected={(landmarks) => {
-                  console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
-                  
-                  // Check if scan is complete (Step 1 only)
-                  if (currentStep === 0 && landmarks.some((l: any) => l.scanComplete)) {
-                    console.log('✅ [Step 1] Scan complete, enabling continue button');
-                    setCanSkip(true); // Enable continue button after scan completes
-                  }
-                  
-                  trackEvent('face_landmarks_detected', {
-                    faces_count: landmarks.length,
-                    total_landmarks: landmarks.reduce((sum, face) => sum + (face.keypoints ? face.keypoints.length : 0), 0),
-                    current_analysis_step: currentStep,
-                    step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
-                    user_flow_step: 'landmarks_visualization_synchronized'
-                  });
-                }}
-                  className="w-full h-full"
-                />
+                <Suspense fallback={
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                      <p className="text-sm font-semibold text-gray-700 mt-2">Loading AI model...</p>
+                    </div>
+                  </div>
+                }>
+                  <FaceLandmarkVisualization
+                    imageUrl={imageUrl}
+                    currentAnalysisStep={currentStep}
+                    personalColorResult={(() => {
+                      if (!analysisResult?.personal_color_en) return null;
+                      const season = analysisResult.personal_color_en.toLowerCase();
+                      // Map season to full personal color name
+                      if (season === 'spring') return 'Spring Warm';
+                      if (season === 'summer') return 'Summer Cool';
+                      if (season === 'autumn' || season === 'fall') return 'Autumn Warm';
+                      if (season === 'winter') return 'Winter Cool';
+                      return 'Spring Warm'; // Default
+                    })()}
+                    onLandmarksDetected={(landmarks) => {
+                    console.log(`🎯 [Sync] Face landmarks detected for step ${currentStep}:`, landmarks);
+                    
+                    // Check if scan is complete (Step 1 only)
+                    if (currentStep === 0 && landmarks.some((l: any) => l.scanComplete)) {
+                      console.log('✅ [Step 1] Scan complete, enabling continue button');
+                      setCanSkip(true); // Enable continue button after scan completes
+                    }
+                    
+                    trackEvent('face_landmarks_detected', {
+                      faces_count: landmarks.length,
+                      total_landmarks: landmarks.reduce((sum, face) => sum + (face.keypoints ? face.keypoints.length : 0), 0),
+                      current_analysis_step: currentStep,
+                      step_name: ANALYSIS_STEPS[currentStep]?.id || 'unknown',
+                      user_flow_step: 'landmarks_visualization_synchronized'
+                    });
+                  }}
+                    className="w-full h-full"
+                  />
+                </Suspense>
               )}
               
               {/* Analysis in Progress Overlay - shows while API is processing */}

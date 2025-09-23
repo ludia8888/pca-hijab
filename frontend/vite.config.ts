@@ -59,9 +59,6 @@ export default defineConfig(({ command, mode }) => ({
       output: {
         // Keep TensorFlow in a separate chunk to ensure proper loading
         manualChunks: (id) => {
-          if (id.includes('@tensorflow') || id.includes('face-landmarks-detection')) {
-            return 'tensorflow';
-          }
           if (id.includes('node_modules')) {
             return 'vendor';
           }
@@ -84,11 +81,6 @@ export default defineConfig(({ command, mode }) => ({
       '@tanstack/react-query',
       'clsx',
       'tailwind-merge',
-      // CRITICAL: Force TensorFlow to be pre-bundled
-      '@tensorflow/tfjs',
-      '@tensorflow/tfjs-core',
-      '@tensorflow/tfjs-backend-webgl',
-      '@tensorflow-models/face-landmarks-detection'
     ],
     exclude: [],
     // Force re-optimization on every build
