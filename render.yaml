@@ -5,12 +5,11 @@ services:
   # Backend API Service
   - type: web
     name: pca-hijab-backend
-    runtime: node
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     plan: free
     region: singapore
-    rootDir: backend
-    buildCommand: npm install --production=false && npm run build
-    startCommand: npm start
     buildFilter:
       paths:
         - backend/**
@@ -23,31 +22,23 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: 5001
       - key: CLIENT_URL
-        value: https://pca-hijab.vercel.app
+        value: https://pca-hijab.vercel.app,https://noorai-ashy.vercel.app,https://noorai.vercel.app,https://pca-hijab-frontend.vercel.app
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://pca_hijab_db_fm69_user:VnyKtJJUqgFhE95HRD6EeG6iUoCoax2O@dpg-d39furqli9vc7380a6vg-a.singapore-postgres.render.com/pca_hijab_db_fm69
       - key: ADMIN_API_KEY
-        generateValue: true
+        value: gYlBtxtCYYAtPD6HaHZLKmB3zTNtk9mY
       - key: JWT_SECRET
-        generateValue: true
+        value: 8a111WXL3dZy6/N7SyzkJgOp36Nvs9XHWAhAnViD6GY=
       - key: JWT_REFRESH_SECRET
-        generateValue: true
-      - key: SESSION_SECRET
-        generateValue: true
-      - key: AI_API_URL
-        value: https://showmethecolor-api.onrender.com
-      - key: CORS_ORIGIN
-        value: https://pca-hijab.vercel.app
-      - key: RATE_LIMIT_WINDOW_MS
-        value: 900000
-      - key: RATE_LIMIT_MAX_REQUESTS
-        value: 100
-      - key: JWT_EXPIRES_IN
-        value: 7d
-      - key: JWT_REFRESH_EXPIRES_IN
-        value: 30d
+        value: SVf8UKYy6m8Lr9dVTGUzCzIcjS0g81CaxkVcExJfDB4=
+      - key: EMAIL_ENABLED
+        value: true
+      - key: RESEND_API_KEY
+        value: re_PspAYXmP_37xPU2MiBMZFiCD2yqwEL1XK
+      - key: EMAIL_FROM
+        value: PCA-HIJAB <onboarding@resend.dev>
 
   # AI API Service (ShowMeTheColor)
   - type: web
@@ -70,7 +61,4 @@ services:
       - key: PORT
         value: 8000
 
-databases:
-  - name: pca-hijab-db
-    plan: free
-    region: singapore
+# Database is already created and managed separately
