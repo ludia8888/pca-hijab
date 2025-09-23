@@ -128,13 +128,8 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=app-specific-password
 ```
 
-### AWS SES
-```bash
-npm install @aws-sdk/client-ses
-AWS_ACCESS_KEY_ID=xxxxx
-AWS_SECRET_ACCESS_KEY=xxxxx
-AWS_REGION=us-east-1
-```
+### Other Email Providers
+For other email providers like SendGrid or Mailgun, please refer to their respective documentation for setup instructions.
 
 ## Support
 
