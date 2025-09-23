@@ -61,8 +61,8 @@ class EnvironmentValidator {
   }
 
   private validateProductionRequirements(): void {
-    // DATABASE_URL is no longer required since we're using stub database
     const requiredVars = [
+      'DATABASE_URL',
       'JWT_SECRET', 
       'JWT_REFRESH_SECRET',
       'ADMIN_API_KEY'
@@ -72,6 +72,11 @@ class EnvironmentValidator {
     
     if (missing.length > 0) {
       throw new Error(`FATAL: Missing required environment variables in production: ${missing.join(', ')}`);
+    }
+
+    // Validate DATABASE_URL in production
+    if (!process.env.DATABASE_URL?.startsWith('postgres://') && !process.env.DATABASE_URL?.startsWith('postgresql://')) {
+      throw new Error('FATAL: DATABASE_URL must be a valid PostgreSQL connection string in production');
     }
 
     console.info('✅ All required environment variables validated for production');
