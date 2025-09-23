@@ -3,6 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } fr
 import { API_BASE_URL, API_TIMEOUT } from '@/utils/constants';
 import type { ApiError, ApiResponse } from '@/types';
 import { secureLog, secureError, createSecureRequestLog, createSecureResponseLog, createSecureErrorLog } from '@/utils/secureLogging';
+import { coldStartHandler } from '@/utils/coldStartHandler';
 
 // Extend config with retry metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -29,10 +30,10 @@ if (import.meta.env.MODE === 'development') {
   });
 }
 
-// Create axios instance
+// Create axios instance with dynamic timeout
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: API_TIMEOUT,
+  timeout: coldStartHandler.getTimeout(), // Dynamic timeout based on cold start detection
   headers: {
     'Content-Type': 'application/json',
   },
@@ -42,6 +43,9 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
+    // Apply dynamic timeout for each request
+    config.timeout = coldStartHandler.getTimeout();
+    
     // Secure logging of requests
     secureLog('[API Request]', createSecureRequestLog(config));
     
@@ -115,6 +119,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     secureLog('[API Response]', createSecureResponseLog(response));
+    // Mark successful request for cold start detection
+    coldStartHandler.markSuccess();
     return response;
   },
   async (error: AxiosError<ApiError>) => {
@@ -142,20 +148,26 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Network error retry logic with exponential backoff
-    if (!error.response && error.code !== 'ECONNABORTED' && config) {
+    // Enhanced retry logic with cold start handling
+    const retryConfig = coldStartHandler.getRetryConfig();
+    
+    if (config && retryConfig.shouldRetry(error)) {
       // Initialize retry count
       config._retryCount = config._retryCount || 0;
       
-      // Retry up to 2 times for network errors
-      const maxRetries = 2;
-      if (config._retryCount < maxRetries) {
+      if (config._retryCount < retryConfig.maxRetries) {
         config._retryCount++;
         
-        // Exponential backoff: 500ms, 1000ms, 2000ms...
-        const delay = Math.min(500 * Math.pow(2, config._retryCount - 1), 2000);
+        // Exponential backoff with base delay from config
+        const delay = Math.min(
+          retryConfig.retryDelay * Math.pow(2, config._retryCount - 1), 
+          5000 // Max 5 seconds delay
+        );
         
-        secureLog(`[API Retry] Attempt ${config._retryCount}/${maxRetries} after ${delay}ms`);
+        secureLog(`[API Retry] Attempt ${config._retryCount}/${retryConfig.maxRetries} after ${delay}ms`);
+        
+        // Update timeout for retry (might be a cold start)
+        config.timeout = coldStartHandler.getTimeout();
         
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay));

@@ -54,36 +54,18 @@ export class SessionAPI {
       }
     }
     
-    // Regular retry logic for non-Instagram browsers
-    let lastError: unknown;
-    const maxRetries = 1; // Reduced from 3 to 1 for faster failure
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const response = await client.post<SessionResponse>('/sessions', 
-          instagramId ? { instagramId } : {}
-        );
-        return response.data;
-      } catch (error) {
-        lastError = error;
-        secureWarn(`Session creation attempt ${attempt} failed:`, error);
-        
-        // Don't retry on client errors (4xx)
-        if (error && typeof error === 'object' && 'response' in error) {
-          const axiosError = error as { response?: { status?: number } };
-          if (axiosError.response?.status && axiosError.response.status >= 400 && axiosError.response.status < 500) {
-            throw error;
-          }
-        }
-        
-        // Wait before retrying (fixed 500ms delay)
-        if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
+    // Regular browsers can handle cold starts with proper retries
+    try {
+      const response = await client.post<SessionResponse>('/sessions', 
+        instagramId ? { instagramId } : {}
+      );
+      return response.data;
+    } catch (error) {
+      // The client already has retry logic with cold start handling
+      // Just propagate the error
+      secureWarn('Session creation failed:', error);
+      throw error;
     }
-    
-    throw lastError;
   }
 
   /**

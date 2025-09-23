@@ -1,5 +1,6 @@
 import { apiClient } from './api/client';
 import axios from 'axios';
+import { coldStartHandler } from '@/utils/coldStartHandler';
 
 class KeepAliveService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -98,7 +99,7 @@ class KeepAliveService {
         // ShowMeTheColor API uses /health, backend uses /api/health
         const healthEndpoint = url.includes('showmethecolor') ? '/health' : '/api/health';
         const response = await axios.get(`${url}${healthEndpoint}`, {
-          timeout: 30000 // 30 seconds for cold start
+          timeout: coldStartHandler.getTimeout() // Dynamic timeout for cold start
         });
         
         const responseTime = performance.now() - startTime;

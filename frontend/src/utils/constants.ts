@@ -48,7 +48,7 @@ export const AI_API_URL = (() => {
   }
 })();
 
-export const API_TIMEOUT = 30000; // 30 seconds (increased for backend cold start scenarios)
+export const API_TIMEOUT = 60000; // 60 seconds (increased for Render.com free tier cold starts)
 
 // More explicit USE_MOCK_AI logic
 // Only use mock if explicitly set to 'true', not based on AI_API_URL presence

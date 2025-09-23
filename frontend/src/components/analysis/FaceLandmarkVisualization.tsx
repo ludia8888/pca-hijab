@@ -9,7 +9,7 @@ interface FaceLandmarkVisualizationProps {
   className?: string;
   // External control for synchronization
   currentAnalysisStep?: number;
-  forceAnimationPhase?: 'detecting' | 'extracting' | 'analyzing' | 'complete' | null;
+  forceAnimationPhase?: 'detecting' | 'extracting' | 'depth-1' | 'depth-2' | 'depth-3' | 'complete' | null;
   personalColorResult?: string; // e.g., 'Spring Warm', 'Summer Cool', etc.
 }
 
@@ -51,6 +51,9 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
   const animationStartTimeRef = useRef<number>(0);
   const scanCompleteRef = useRef<boolean>(false);
   const detectionStartedRef = useRef<boolean>(false);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryCountRef = useRef<number>(0);
+  const isMountedRef = useRef<boolean>(true);
 
   // Initialize FaceMesh detector using singleton service
   useEffect(() => {
@@ -94,9 +97,15 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
     // Cleanup on unmount
     return () => {
+      isMountedRef.current = false;
+      // Clear any pending retry timeout
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       // Release reference to the singleton service
       faceMeshService.release();
-      console.log('✅ [FaceLandmark] Released FaceMesh service reference');
+      console.log('✅ [FaceLandmark] Released FaceMesh service reference and cleared retries');
     };
   }, []);
 
@@ -880,14 +889,33 @@ const FaceLandmarkVisualization: React.FC<FaceLandmarkVisualizationProps> = ({
 
   // Detect face landmarks with memory management
   const detectLandmarks = useCallback(async () => {
-    if (!detectorReady || !imageRef.current) return;
+    if (!detectorReady || !imageRef.current || !isMountedRef.current) return;
     
     // Ensure image is fully loaded
     if (!imageRef.current.complete || imageRef.current.naturalWidth === 0) {
-      console.warn('⚠️ Image not fully loaded, retrying...');
-      setTimeout(() => detectLandmarks(), 500);
+      // Check retry limit (max 10 retries)
+      if (retryCountRef.current >= 10) {
+        console.error('❌ Image failed to load after 10 retries');
+        setError('Image failed to load properly. Please try refreshing.');
+        return;
+      }
+      
+      // Only retry if component is still mounted
+      if (isMountedRef.current) {
+        console.warn(`⚠️ Image not fully loaded, retrying... (attempt ${retryCountRef.current + 1}/10)`);
+        retryCountRef.current++;
+        
+        retryTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            detectLandmarks();
+          }
+        }, 500);
+      }
       return;
     }
+    
+    // Reset retry count on successful load
+    retryCountRef.current = 0;
 
     try {
       console.log('🔍 [Synchronized] Starting face landmark detection...');
