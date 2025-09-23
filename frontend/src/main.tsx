@@ -41,7 +41,12 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('[MAIN] Unhandled promise rejection:', event.reason);
 });
 
+
+const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
 console.log('[MAIN] Starting app initialization...');
+console.log('[MAIN] Current route:', typeof window !== 'undefined' ? window.location.pathname : 'unknown');
+console.log('[MAIN] TensorFlow preload enabled:', !isAdminRoute);
 
 // Render app immediately without waiting for TensorFlow
 const rootElement = document.getElementById('root');
@@ -71,13 +76,17 @@ if (!rootElement) {
     console.error('[MAIN] Failed to preload environment:', error);
   });
   
-  // Initialize TensorFlow in background (non-blocking)
-  // Delay slightly to let the UI render first
-  setTimeout(() => {
-    console.log('[MAIN] Starting TensorFlow initialization in background...');
-    initializeTensorFlow().catch(err => {
-      console.error('[MAIN] TensorFlow initialization failed:', err);
-      // Will retry when actually needed
-    });
-  }, 500);
+  // Initialize TensorFlow in background (non-blocking) unless we're on admin routes
+  if (!isAdminRoute) {
+    // Delay slightly to let the UI render first
+    setTimeout(() => {
+      console.log('[MAIN] Starting TensorFlow initialization in background...');
+      initializeTensorFlow().catch(err => {
+        console.error('[MAIN] TensorFlow initialization failed:', err);
+        // Will retry when actually needed
+      });
+    }, 500);
+  } else {
+    console.log('[MAIN] Skipping TensorFlow preload on admin route');
+  }
 }

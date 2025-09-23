@@ -117,6 +117,20 @@ const normalizedAllowedOrigins = new Set(allowedOrigins.map(normalizeOrigin));
 const isOriginAllowed = (origin: string): boolean => normalizedAllowedOrigins.has(normalizeOrigin(origin));
 const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai)(-[a-z0-9]+)?\.vercel\.app$/;
 
+const corsAllowedHeaders = [
+  'Content-Type',
+  'Authorization',
+  'x-api-key',
+  'Accept',
+  'Origin',
+  'X-Requested-With',
+  'x-csrf-token',
+  'x-prewarm',
+  'x-keep-alive'
+];
+
+const corsAllowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or postman)
@@ -150,8 +164,8 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'Accept', 'Origin', 'X-Requested-With', 'x-csrf-token', 'x-prewarm', 'x-keep-alive'],
+  methods: corsAllowedMethods,
+  allowedHeaders: corsAllowedHeaders,
   exposedHeaders: ['Content-Length', 'Content-Type'],
   maxAge: 86400 // 24 hours
 }));
@@ -195,8 +209,8 @@ app.options('*', (req: Request, res: Response) => {
     }
   }
   
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With, x-csrf-token, X-Prewarm, X-Keep-Alive');
+  res.header('Access-Control-Allow-Methods', corsAllowedMethods.join(', '));
+  res.header('Access-Control-Allow-Headers', corsAllowedHeaders.join(', '));
   res.header('Access-Control-Allow-Credentials', 'true');
   res.sendStatus(204);
 });
