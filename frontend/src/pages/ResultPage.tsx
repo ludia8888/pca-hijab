@@ -9,6 +9,7 @@ import { SEASON_COLORS } from '@/utils/colorData';
 import { generateResultCard, downloadResultCard } from '@/utils/resultCardGeneratorV3';
 import { trackAIAnalysis, trackEvent, trackResultDownload, trackEngagement, trackError, trackDropOff } from '@/utils/analytics';
 import { toast } from 'react-hot-toast';
+import { ProductRecommendation } from '@/components/result';
 
 // Helper function to convert API response to season key
 function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS {
@@ -478,6 +479,9 @@ const ResultPage = (): JSX.Element => {
             </div>
           </div>
         </div>
+
+        {/* Product Recommendations */}
+        <ProductRecommendation personalColorEn={result.personal_color_en} />
 
         {/* CTA Section - Elegant Design */}
         <div className="relative">
