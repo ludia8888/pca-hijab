@@ -30,7 +30,7 @@ RUN npm run build
 
 # Create PostgreSQL setup script
 RUN mkdir -p /docker-entrypoint-initdb.d
-COPY backend/init-db.sql /docker-entrypoint-initdb.d/ || echo "No init-db.sql found"
+COPY backend/init-db.sql /docker-entrypoint-initdb.d/
 
 # Create startup script
 RUN echo '#!/bin/bash' > /startup.sh && \
