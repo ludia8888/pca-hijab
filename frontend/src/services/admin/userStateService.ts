@@ -23,7 +23,7 @@ export class UserStateService {
   ): Promise<StateChangeResult> {
     try {
       // API 호출
-      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${user.id}/status`, {
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend-unified.onrender.com'}/api/admin/users/${user.id}/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ export class UserStateService {
   ): Promise<StateChangeResult> {
     try {
       // API 호출
-      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${user.id}/priority`, {
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend-unified.onrender.com'}/api/admin/users/${user.id}/priority`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export class UserStateService {
   ): Promise<StateChangeResult> {
     try {
       // API 호출
-      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${user.id}/message`, {
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend-unified.onrender.com'}/api/admin/users/${user.id}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -270,7 +270,7 @@ export class UserStateService {
     userId: string
   ): Promise<StateChangeResult> {
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend.onrender.com'}/api/admin/users/${userId}`, {
+      const response = await fetch(`${process.env.VITE_BACKEND_URL || 'https://pca-hijab-backend-unified.onrender.com'}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'x-api-key': apiKey

@@ -12,7 +12,7 @@ class KeepAliveService {
   // Multiple backend URLs to wake up
   private readonly BACKEND_URLS = [
     // Use the raw URL without /api suffix for backend
-    (import.meta.env.VITE_API_BASE_URL || 'https://pca-hijab-backend.onrender.com').replace('/api', ''),
+    (import.meta.env.VITE_API_BASE_URL || 'https://pca-hijab-backend-unified.onrender.com').replace('/api', ''),
     import.meta.env.VITE_AI_API_URL || 'https://showmethecolor-api.onrender.com'
   ];
   

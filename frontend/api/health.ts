@@ -32,7 +32,7 @@ export default async function handler(req: Request) {
   if (prewarm) {
     // Pre-warm backend services
     const backendUrls = [
-      process.env.VITE_API_BASE_URL || 'https://pca-hijab-backend.onrender.com',
+      process.env.VITE_API_BASE_URL || 'https://pca-hijab-backend-unified.onrender.com',
       process.env.VITE_AI_API_URL || 'https://showmethecolor-api.onrender.com',
     ];
 

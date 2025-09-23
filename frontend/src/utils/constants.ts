@@ -18,7 +18,7 @@ export const API_BASE_URL = (() => {
   
   // Environment-specific fallbacks
   if (import.meta.env.MODE === 'production') {
-    return 'https://pca-hijab-backend.onrender.com/api';
+    return 'https://pca-hijab-backend-unified.onrender.com/api';
   } else {
     // Development fallback only
     return 'http://localhost:5001/api';
