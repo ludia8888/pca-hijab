@@ -59,31 +59,53 @@ const AnalyzingPage = (): JSX.Element => {
 
   // Redirect if no image and track page entry
   useEffect(() => {
-    if (!uploadedFile) {
+    // Check if we have the necessary data
+    if (!uploadedFile && !uploadedImage) {
+      console.log('[AnalyzingPage] No uploaded file or image, checking session...');
+      
+      // If we have a sessionId, try to recover from session
+      if (sessionId) {
+        // TODO: Implement session recovery to get uploadedImageUrl from backend
+        console.log('[AnalyzingPage] Session found but image recovery not implemented yet');
+      }
+      
       // Track drop-off if user arrives without proper data
       trackDropOff('analyzing_page', 'missing_upload_data');
-      navigate(ROUTES.HOME);
-    } else {
-      // Track successful page entry
-      trackEvent('page_enter', {
-        page: 'analyzing',
-        user_flow_step: 'analyzing_page_entered',
-        file_size_mb: Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100,
-        file_type: uploadedFile.type
-      });
       
-      // Create image URL for visualization
-      const url = uploadedImage || URL.createObjectURL(uploadedFile);
+      // Show error briefly before redirecting
+      setError('Image failed to load properly. Please try refreshing.');
+      setErrorType('NO_FACE_DETECTED' as ImageAnalysisErrorType);
+      
+      // Redirect after a short delay to let user see the error
+      setTimeout(() => {
+        navigate(ROUTES.DIAGNOSIS);
+      }, 2000);
+      
+      return;
+    }
+    
+    // We have the uploaded file or image
+    trackEvent('page_enter', {
+      page: 'analyzing',
+      user_flow_step: 'analyzing_page_entered',
+      file_size_mb: uploadedFile ? Math.round(uploadedFile.size / (1024 * 1024) * 100) / 100 : 0,
+      file_type: uploadedFile?.type || 'recovered'
+    });
+    
+    // Create image URL for visualization
+    if (uploadedFile) {
+      const url = URL.createObjectURL(uploadedFile);
       setImageUrl(url);
       
       // Cleanup URL when component unmounts
       return () => {
-        if (!uploadedImage && url) {
-          URL.revokeObjectURL(url);
-        }
+        URL.revokeObjectURL(url);
       };
+    } else if (uploadedImage) {
+      // uploadedImage is already a string URL
+      setImageUrl(uploadedImage);
     }
-  }, [uploadedFile, uploadedImage, navigate]);
+  }, [uploadedFile, uploadedImage, sessionId, navigate]);
 
   // Start analysis on mount - immediately start both UI and API in parallel
   useEffect(() => {
@@ -630,8 +652,29 @@ const AnalyzingPage = (): JSX.Element => {
                 position: 'relative',
               }}
             >
+              {/* Show error message if no image */}
+              {!imageUrl && error && (
+                <div className="w-full h-full flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4">
+                      <svg className="w-full h-full text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 font-semibold mb-2">{error}</p>
+                    <button 
+                      onClick={() => navigate(ROUTES.DIAGNOSIS)}
+                      className="text-purple-600 font-semibold text-sm hover:text-purple-700 transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               {/* Face Landmark Visualization */}
-              {imageUrl && (
+              {imageUrl && !error && (
                 <Suspense fallback={
                   <div className="w-full h-full flex items-center justify-center bg-gray-100">
                     <div className="text-center">
