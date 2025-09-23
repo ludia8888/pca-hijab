@@ -4,7 +4,7 @@
   "framework": "vite",
   "build": {
     "env": {
-      "FORCE_REBUILD": "2025-01-20-debug-camera-logs"
+      "FORCE_REBUILD": "2025-01-23-cors-fixes"
     }
   },
   "functions": {
@@ -25,10 +25,6 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(self), microphone=(self), geolocation=(self), autoplay=(self), fullscreen=(self)"
-        },
-        {
-          "key": "Feature-Policy",
-          "value": "camera 'self'; microphone 'self'; geolocation 'self'; autoplay 'self'; fullscreen 'self'"
         }
       ]
     },
