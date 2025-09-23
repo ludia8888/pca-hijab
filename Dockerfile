@@ -48,7 +48,7 @@ RUN echo '#!/bin/bash' > /startup.sh && \
     echo '' >> /startup.sh && \
     echo '# Setup database' >> /startup.sh && \
     echo 'su postgres -c "psql -tc \"SELECT 1 FROM pg_database WHERE datname = '\''pca_hijab'\''\" | grep -q 1 || createdb pca_hijab"' >> /startup.sh && \
-    echo 'su postgres -c "psql -c \"DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '\''pca_user'\'') THEN CREATE USER pca_user WITH PASSWORD '\''pca_password'\''; END IF; END \$\$;\""' >> /startup.sh && \
+    echo 'su postgres -c "psql -tc \"SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '\''pca_user'\''\" | grep -q 1 || psql -c \"CREATE USER pca_user WITH PASSWORD '\''pca_password'\'';\""' >> /startup.sh && \
     echo 'su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE pca_hijab TO pca_user;\""' >> /startup.sh && \
     echo 'su postgres -c "psql -c \"ALTER DATABASE pca_hijab OWNER TO pca_user;\""' >> /startup.sh && \
     echo '' >> /startup.sh && \
