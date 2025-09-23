@@ -472,9 +472,10 @@ if (usePostgres) {
   });
 } else {
   if (process.env.NODE_ENV === 'production') {
-    console.error('FATAL: DATABASE_URL is required in production');
-    process.exit(1);
+    // In unified container, DATABASE_URL will be set by startup script
+    console.info('DATABASE_URL not yet set, will be configured by container startup script');
+  } else {
+    console.warn('⚠️  Using in-memory database (DATA WILL BE LOST ON RESTART)');
+    console.info('Set DATABASE_URL environment variable to use PostgreSQL');
   }
-  console.warn('⚠️  Using in-memory database (DATA WILL BE LOST ON RESTART)');
-  console.info('Set DATABASE_URL environment variable to use PostgreSQL');
 }

@@ -62,7 +62,6 @@ class EnvironmentValidator {
 
   private validateProductionRequirements(): void {
     const requiredVars = [
-      'DATABASE_URL',
       'JWT_SECRET', 
       'JWT_REFRESH_SECRET',
       'ADMIN_API_KEY'
@@ -74,8 +73,10 @@ class EnvironmentValidator {
       throw new Error(`FATAL: Missing required environment variables in production: ${missing.join(', ')}`);
     }
 
-    // Validate DATABASE_URL in production
-    if (!process.env.DATABASE_URL?.startsWith('postgres://') && !process.env.DATABASE_URL?.startsWith('postgresql://')) {
+    // DATABASE_URL is optional when using unified container (it will be set in startup script)
+    if (process.env.DATABASE_URL && 
+        !process.env.DATABASE_URL.startsWith('postgres://') && 
+        !process.env.DATABASE_URL.startsWith('postgresql://')) {
       throw new Error('FATAL: DATABASE_URL must be a valid PostgreSQL connection string in production');
     }
 
