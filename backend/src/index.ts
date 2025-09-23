@@ -16,7 +16,8 @@ import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
 import adminRouter from './routes/admin';
 import { debugRouter } from './routes/debug';
-import { authRouter } from './routes/auth';
+// Use stubbed auth router that doesn't require database
+import authRouter from './routes/auth.stub';
 import { productRouter } from './routes/products';
 import { contentRouter } from './routes/contents';
 import { errorHandler } from './middleware/errorHandler';
