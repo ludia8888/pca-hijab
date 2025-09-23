@@ -1,59 +1,79 @@
-# syntax=docker/dockerfile:1.6
+# Use Ubuntu base image for easier PostgreSQL setup
+FROM ubuntu:22.04
 
-###############################################
-# Backend build stage
-###############################################
-FROM node:20-bookworm AS backend-builder
-
-WORKDIR /app/backend
-
-# Install dependencies (including dev deps for TypeScript build)
-COPY backend/package*.json ./
-RUN npm ci
-
-# Copy source and build the TypeScript project
-COPY backend/ ./
-RUN npm run build && npm prune --omit=dev
-
-###############################################
-# Final runtime image with Node.js + PostgreSQL
-###############################################
-FROM node:20-bookworm
-
+# Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install PostgreSQL server and lightweight init system
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends postgresql postgresql-contrib dumb-init; \
-    PG_MAJOR="$(ls -1 /etc/postgresql | head -n 1 || true)"; \
-    if [ -n "$PG_MAJOR" ]; then pg_dropcluster --stop "$PG_MAJOR" main; fi; \
-    rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-14 \
+    postgresql-contrib-14 \
+    nodejs \
+    npm \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
+# Update Node.js to v20
+RUN npm install -g n && n 20 && hash -r
+
+# Create app directory
 WORKDIR /app
 
-# Copy compiled backend code and minimal runtime assets
-COPY --from=backend-builder /app/backend/dist ./backend/dist
-COPY --from=backend-builder /app/backend/package*.json ./backend/
-COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
-COPY --from=backend-builder /app/backend/src/db ./backend/sql
+# Copy backend files
+COPY backend/package*.json ./
+RUN npm ci --only=production
 
-# Ensure writable directories for runtime artifacts
-RUN mkdir -p /app/backend/uploads && \
-    chown -R node:node /app/backend
+COPY backend/ .
+RUN npm run build
 
-# Entrypoint orchestration script
-COPY scripts/docker-entrypoint.sh /usr/local/bin/backend-entrypoint.sh
-RUN chmod +x /usr/local/bin/backend-entrypoint.sh
+# Create PostgreSQL setup script
+RUN mkdir -p /docker-entrypoint-initdb.d
+COPY backend/init-db.sql /docker-entrypoint-initdb.d/ || echo "No init-db.sql found"
 
-# Sensible defaults (override via `docker run -e` for production)
-ENV POSTGRES_DATA_DIR=/var/lib/postgresql/data \
-    POSTGRES_USER=pca_app \
-    POSTGRES_PASSWORD=pca_app_password \
-    POSTGRES_DB=pca_hijab \
-    PORT=5001 \
-    NODE_ENV=development
+# Create startup script
+RUN cat > /startup.sh << 'EOF'
+#!/bin/bash
+set -e
 
-EXPOSE 5001 5432
+# Start PostgreSQL
+service postgresql start
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "/usr/local/bin/backend-entrypoint.sh"]
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL to start..."
+until pg_isready -h localhost -p 5432; do
+  echo "Waiting for PostgreSQL..."
+  sleep 1
+done
+
+# Setup database
+su postgres -c "psql -tc \"SELECT 1 FROM pg_database WHERE datname = 'pca_hijab'\" | grep -q 1 || createdb pca_hijab"
+su postgres -c "psql -c \"DO \\\$\\\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pca_user') THEN CREATE USER pca_user WITH PASSWORD 'pca_password'; END IF; END \\\$\\\$;\""
+su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE pca_hijab TO pca_user;\""
+su postgres -c "psql -c \"ALTER DATABASE pca_hijab OWNER TO pca_user;\""
+
+# Initialize schema if exists
+if [ -f /docker-entrypoint-initdb.d/init-db.sql ]; then
+    su postgres -c "PGPASSWORD=pca_password psql -U pca_user -h localhost -d pca_hijab -f /docker-entrypoint-initdb.d/init-db.sql" || echo "Schema initialization skipped"
+fi
+
+# Configure PostgreSQL for local connections
+su postgres -c "psql -c \"ALTER USER pca_user WITH SUPERUSER;\""
+
+# Export environment variables
+export DATABASE_URL="postgresql://pca_user:pca_password@localhost:5432/pca_hijab"
+export NODE_ENV="production"
+export PORT=${PORT:-5001}
+
+# Start Node.js backend
+cd /app
+exec node dist/index.js
+EOF
+
+RUN chmod +x /startup.sh
+
+# Expose port
+EXPOSE 5001
+
+# Start the application
+CMD ["/startup.sh"]

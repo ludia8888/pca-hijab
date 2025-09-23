@@ -1,3 +1,4 @@
+# Backend + PostgreSQL Unified Dockerfile
 # Use Ubuntu base image for easier PostgreSQL setup
 FROM ubuntu:22.04
 
