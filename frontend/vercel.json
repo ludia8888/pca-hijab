@@ -4,7 +4,7 @@
   "framework": "vite",
   "build": {
     "env": {
-      "FORCE_REBUILD": "2025-01-23-cors-fixes"
+      "FORCE_REBUILD": "2025-01-23-tensorflow-admin-optimization"
     }
   },
   "functions": {
