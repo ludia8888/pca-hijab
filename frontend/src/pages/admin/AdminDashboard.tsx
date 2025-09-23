@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Package, FileText, BarChart2 } from 'lucide-react';
+import { LogOut, Package, FileText } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { ProductForm, ProductList, ContentForm, ContentList, AdminLoadingState } from '@/components/admin';
 import { useAdminStore } from '@/store/useAdminStore';
-import AdminAnalytics from './AdminAnalytics';
 import type { Product, Content } from '@/types/admin';
 
-type TabType = 'products' | 'contents' | 'analytics';
+type TabType = 'products' | 'contents';
 type ViewMode = 'list' | 'create' | 'edit';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { logout, setApiKey } = useAdminStore();
+  const { logout, setApiKey, apiKey } = useAdminStore();
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Auto-set API key on mount (bypass login)
   useEffect(() => {
-    // Use the actual API key from Render environment
-    setApiKey('6TQvZTz1ohwmS0PYCe4e8CRgR/MTWTlJZ711ntaZ7yw=');
+    // Use the actual API key from backend .env file
+    const adminApiKey = 'gYlBtxtCYYAtPD6HaHZLKmB3zTNtk9mY';
+    console.log('[AdminDashboard] Setting API key...');
+    setApiKey(adminApiKey);
+    
+    // Small delay to ensure store is updated
+    setTimeout(() => {
+      console.log('[AdminDashboard] API key set, initializing...');
+      setIsInitialized(true);
+    }, 100);
   }, [setApiKey]);
+  
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -123,74 +132,59 @@ const AdminDashboard: React.FC = () => {
                 <FileText className="w-4 h-4" />
                 컨텐츠 관리
               </button>
-              
-              <button
-                onClick={() => {
-                  setActiveTab('analytics');
-                  setViewMode('list');
-                  setEditingProduct(null);
-                  setEditingContent(null);
-                }}
-                className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === 'analytics'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <BarChart2 className="w-4 h-4" />
-                분석
-              </button>
             </div>
           </div>
         </nav>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Product Management */}
-          {activeTab === 'products' && (
-            <>
-              {viewMode === 'list' && (
-                <ProductList
-                  onCreateClick={handleCreateClick}
-                  onEditClick={handleEditProductClick}
-                />
-              )}
-              
-              {(viewMode === 'create' || viewMode === 'edit') && (
-                <ProductForm
-                  product={editingProduct || undefined}
-                  onSuccess={handleFormSuccess}
-                  onCancel={handleFormCancel}
-                />
-              )}
-            </>
-          )}
-
-          {/* Content Management */}
-          {activeTab === 'contents' && (
-            <>
-              {viewMode === 'list' && (
-                <ContentList
-                  onCreateClick={handleCreateClick}
-                  onEditClick={handleEditContentClick}
-                />
-              )}
-              
-              {(viewMode === 'create' || viewMode === 'edit') && (
-                <ContentForm
-                  content={editingContent || undefined}
-                  onSuccess={handleFormSuccess}
-                  onCancel={handleFormCancel}
-                />
-              )}
-            </>
-          )}
-          
-          {/* Analytics */}
-          {activeTab === 'analytics' && (
-            <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
-              <AdminAnalytics />
+          {/* Show loading while initializing */}
+          {!isInitialized ? (
+            <div className="flex justify-center items-center min-h-[400px]">
+              <AdminLoadingState />
             </div>
+          ) : (
+            <>
+              {/* Product Management */}
+              {activeTab === 'products' && (
+                <>
+                  {viewMode === 'list' && (
+                    <ProductList
+                      onCreateClick={handleCreateClick}
+                      onEditClick={handleEditProductClick}
+                    />
+                  )}
+                  
+                  {(viewMode === 'create' || viewMode === 'edit') && (
+                    <ProductForm
+                      product={editingProduct || undefined}
+                      onSuccess={handleFormSuccess}
+                      onCancel={handleFormCancel}
+                    />
+                  )}
+                </>
+              )}
+
+              {/* Content Management */}
+              {activeTab === 'contents' && (
+                <>
+                  {viewMode === 'list' && (
+                    <ContentList
+                      onCreateClick={handleCreateClick}
+                      onEditClick={handleEditContentClick}
+                    />
+                  )}
+                  
+                  {(viewMode === 'create' || viewMode === 'edit') && (
+                    <ContentForm
+                      content={editingContent || undefined}
+                      onSuccess={handleFormSuccess}
+                      onCancel={handleFormCancel}
+                    />
+                  )}
+                </>
+              )}
+            </>
           )}
         </main>
       </div>
