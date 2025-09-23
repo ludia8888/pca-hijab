@@ -61,7 +61,7 @@ RUN echo '#!/bin/bash' > /startup.sh && \
     echo 'su postgres -c "psql -c \"ALTER USER pca_user WITH SUPERUSER;\""' >> /startup.sh && \
     echo '' >> /startup.sh && \
     echo '# Export environment variables' >> /startup.sh && \
-    echo 'export DATABASE_URL="postgresql://pca_user:pca_password@localhost:5432/pca_hijab"' >> /startup.sh && \
+    echo 'export DATABASE_URL="postgresql://pca_user:pca_password@localhost:5432/pca_hijab?sslmode=disable"' >> /startup.sh && \
     echo 'export NODE_ENV="production"' >> /startup.sh && \
     echo 'export PORT=${PORT:-5001}' >> /startup.sh && \
     echo '' >> /startup.sh && \
