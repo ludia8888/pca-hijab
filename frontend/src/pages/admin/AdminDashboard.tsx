@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Package, FileText, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -13,7 +13,13 @@ type ViewMode = 'list' | 'create' | 'edit';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { logout } = useAdminStore();
+  const { logout, setApiKey } = useAdminStore();
+  
+  // Auto-set API key on mount (bypass login)
+  useEffect(() => {
+    // Use the actual API key from Render environment
+    setApiKey('6TQvZTz1ohwmS0PYCe4e8CRgR/MTWTlJZ711ntaZ7yw=');
+  }, [setApiKey]);
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -21,7 +27,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/'); // Go to home instead of login page
   };
 
   const handleCreateClick = () => {

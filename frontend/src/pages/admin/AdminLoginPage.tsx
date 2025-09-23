@@ -15,13 +15,11 @@ const AdminLoginPage = (): JSX.Element => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Track admin login page access
+  // Auto-redirect to dashboard (bypass login)
   useEffect(() => {
-    trackEvent('admin_login_page_access', {
-      page: 'admin_login',
-      user_flow_step: 'admin_login_page_entered'
-    });
-  }, []);
+    // Automatically redirect to dashboard
+    navigate('/admin/dashboard');
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
