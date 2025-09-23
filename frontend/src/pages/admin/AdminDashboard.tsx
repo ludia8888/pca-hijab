@@ -17,8 +17,8 @@ const AdminDashboard: React.FC = () => {
   
   // Auto-set API key on mount (bypass login)
   useEffect(() => {
-    // Use the actual API key from backend .env file
-    const adminApiKey = 'gYlBtxtCYYAtPD6HaHZLKmB3zTNtk9mY';
+    // Use the actual API key from Render backend
+    const adminApiKey = '0pbqXL3GT/lJtjy/WhOJblqbgevmZORbkerEsoCillk=';
     console.log('[AdminDashboard] Setting API key...');
     setApiKey(adminApiKey);
     
