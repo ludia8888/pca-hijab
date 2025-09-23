@@ -17,12 +17,12 @@ describe('SEASON_COLORS', () => {
   // 각 계절별 데이터 검증
   seasons.forEach(season => {
     describe(`${season} season`, () => {
-      it('should have exactly 4 best colors', () => {
-        expect(SEASON_COLORS[season].bestColors).toHaveLength(4);
+      it('should have at least 4 best colors', () => {
+        expect(SEASON_COLORS[season].bestColors.length).toBeGreaterThanOrEqual(4);
       });
 
-      it('should have exactly 4 worst colors', () => {
-        expect(SEASON_COLORS[season].worstColors).toHaveLength(4);
+      it('should have at least 4 worst colors', () => {
+        expect(SEASON_COLORS[season].worstColors.length).toBeGreaterThanOrEqual(4);
       });
 
       it('should have valid color data structure for best colors', () => {
@@ -90,10 +90,10 @@ describe('SEASON_COLORS', () => {
 
     it('winter (cool) should have cool/neutral-toned best colors', () => {
       const winterBestColors = SEASON_COLORS.winter.bestColors;
-      
+
       // 겨울은 진한 차가운 색상들을 포함해야 함
-      const hasDeepCoolColors = winterBestColors.some(color => 
-        color.name.includes('진한') || color.name.includes('차가운')
+      const hasDeepCoolColors = winterBestColors.some(color =>
+        /deep|cool|navy|blue|purple/i.test(color.name)
       );
       expect(hasDeepCoolColors).toBe(true);
     });

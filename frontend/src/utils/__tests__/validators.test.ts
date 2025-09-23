@@ -63,9 +63,9 @@ describe('validateImageFile', () => {
   });
 
   // 파일 크기 체크
-  it('should reject files larger than 5MB', () => {
-    // 6MB 파일 생성
-    const largeContent = new Uint8Array(6 * 1024 * 1024);
+  it('should reject files larger than 10MB', () => {
+    // 11MB 파일 생성
+    const largeContent = new Uint8Array(11 * 1024 * 1024);
     const largeFile = new File([largeContent], 'large.jpg', { type: 'image/jpeg' });
 
     const result = validateImageFile(largeFile);

@@ -19,12 +19,10 @@ import { debugRouter } from './routes/debug';
 import { authRouter } from './routes/auth';
 import { productRouter } from './routes/products';
 import { contentRouter } from './routes/contents';
-// import { analyticsRouter } from './routes/analytics';
 import { errorHandler } from './middleware/errorHandler';
 import { getCSRFToken } from './middleware/csrf';
 import { db } from './db';
 import { tokenCleanupService } from './services/tokenCleanupService';
-// import { initializeGA4Client } from './services/ga4';
 
 const app = express();
 const PORT = config.PORT;
@@ -266,7 +264,6 @@ app.use('/api/recommendations', recommendationRouter);
 app.use('/api/products', productRouter);
 app.use('/api/contents', contentRouter);
 app.use('/api/admin', adminRouter);
-// app.use('/api/analytics', analyticsRouter);
 app.use('/api/debug', debugRouter);
 
 // Database initialization completed - endpoint removed for security
@@ -275,7 +272,6 @@ app.use('/api/debug', debugRouter);
 app.use(errorHandler);
 
 // Initialize GA4 client
-// initializeGA4Client().catch(console.error);
 
 // Start server
 app.listen(PORT, () => {

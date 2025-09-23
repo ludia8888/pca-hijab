@@ -6,7 +6,7 @@ import { QueryProvider } from './hooks/QueryProvider'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { preloadEnvironment } from './utils/preload'
 import { setupChunkErrorHandler } from './utils/chunkErrorHandler'
-import { initializeTensorFlow } from './utils/tensorflowInit'
+import { scheduleTensorFlowPreinit } from './utils/tensorflowInit'
 import './index.css'
 import './styles/admin-theme.css'
 import App from './App.tsx'
@@ -78,14 +78,8 @@ if (!rootElement) {
   
   // Initialize TensorFlow in background (non-blocking) unless we're on admin routes
   if (!isAdminRoute) {
-    // Delay slightly to let the UI render first
-    setTimeout(() => {
-      console.log('[MAIN] Starting TensorFlow initialization in background...');
-      initializeTensorFlow().catch(err => {
-        console.error('[MAIN] TensorFlow initialization failed:', err);
-        // Will retry when actually needed
-      });
-    }, 500);
+    console.log('[MAIN] Scheduling TensorFlow pre-init in background...');
+    scheduleTensorFlowPreinit(500);
   } else {
     console.log('[MAIN] Skipping TensorFlow preload on admin route');
   }

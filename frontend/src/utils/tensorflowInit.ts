@@ -279,14 +279,24 @@ export function cleanupTensorFlowMemory(): void {
   }
 }
 
-// Pre-initialize on module load - always do this for better performance
-// This starts loading TensorFlow.js immediately when the app starts
-if (typeof window !== 'undefined') {
-  console.log('🚀 [TensorFlow] Pre-initializing on app start...');
-  // Start initialization immediately but don't block
+/**
+ * Optional helper to schedule TensorFlow pre-initialization.
+ * Callers decide when (and if) TensorFlow should warm up.
+ */
+export function scheduleTensorFlowPreinit(delay = 100): void {
+  if (typeof window === 'undefined') return;
+
+  const shouldPreinitialize = !window.location.pathname.startsWith('/admin');
+  console.log('🚀 [TensorFlow] Considering pre-initialization...', { shouldPreinitialize });
+
+  if (!shouldPreinitialize) {
+    console.log('🚫 [TensorFlow] Pre-initialization skipped for admin route');
+    return;
+  }
+
   setTimeout(() => {
     initializeTensorFlow().catch(error => {
       console.error('❌ [TensorFlow] Pre-initialization failed:', error);
     });
-  }, 100); // Small delay to not block initial render
+  }, delay);
 }

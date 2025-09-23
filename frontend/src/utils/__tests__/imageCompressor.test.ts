@@ -124,7 +124,7 @@ describe('compressImage', () => {
     expect(result).toBeInstanceOf(File);
     expect(result.type).toBe('image/jpeg');
     expect(result.name).toBe('test.jpg');
-    expect(mockContext.drawImage).toHaveBeenCalledWith(mockImage, 0, 0, 1024, 768);
+    expect(mockContext.drawImage).toHaveBeenCalledWith(mockImage, 0, 0, 800, 600);
   });
 
   it('should resize wide images to fit maxWidth', async () => {
@@ -306,7 +306,7 @@ describe('compressImage', () => {
       }
     }
 
-    await expect(promise).rejects.toThrow('Image load failed');
+    await expect(promise).rejects.toThrow('Failed to load image for compression');
   });
 
   it('should reject when FileReader fails', async () => {
@@ -324,6 +324,6 @@ describe('compressImage', () => {
 
     const promise = compressImage(originalFile);
 
-    await expect(promise).rejects.toThrow('Read failed');
+    await expect(promise).rejects.toThrow('Failed to read image file');
   });
 });

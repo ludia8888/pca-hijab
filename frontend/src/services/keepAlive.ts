@@ -61,23 +61,28 @@ class KeepAliveService {
       });
       
       if (edgeResponse.ok) {
-        const data = await edgeResponse.json();
-        console.log('⚡ Edge pre-warm response:', data);
-        
-        // Check if any backends had cold starts
-        if (data.backends) {
-          const coldStarts = data.backends.filter((b: any) => b.coldStart);
-          if (coldStarts.length > 0) {
-            this.coldStartDetected = true;
-            console.warn('🐌 Cold starts detected:', coldStarts);
-            
-            // Additional warmup for cold-started services
-            coldStarts.forEach((backend: any) => {
-              if (backend.url) {
-                this.additionalWarmup(backend.url);
-              }
-            });
+        const contentType = edgeResponse.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await edgeResponse.json();
+          console.log('⚡ Edge pre-warm response:', data);
+          
+          // Check if any backends had cold starts
+          if (data.backends) {
+            const coldStarts = data.backends.filter((b: any) => b.coldStart);
+            if (coldStarts.length > 0) {
+              this.coldStartDetected = true;
+              console.warn('🐌 Cold starts detected:', coldStarts);
+              
+              // Additional warmup for cold-started services
+              coldStarts.forEach((backend: any) => {
+                if (backend.url) {
+                  this.additionalWarmup(backend.url);
+                }
+              });
+            }
           }
+        } else {
+          console.log('⚡ Edge pre-warm responded with non-JSON payload, skipping decode');
         }
       }
     } catch (error) {
@@ -93,10 +98,7 @@ class KeepAliveService {
         // ShowMeTheColor API uses /health, backend uses /api/health
         const healthEndpoint = url.includes('showmethecolor') ? '/health' : '/api/health';
         const response = await axios.get(`${url}${healthEndpoint}`, {
-          timeout: 30000, // 30 seconds for cold start
-          headers: {
-            'X-Prewarm': 'true'
-          }
+          timeout: 30000 // 30 seconds for cold start
         });
         
         const responseTime = performance.now() - startTime;
@@ -171,10 +173,7 @@ class KeepAliveService {
         // ShowMeTheColor API uses /health, backend uses /api/health
         const healthEndpoint = url.includes('showmethecolor') ? '/health' : '/api/health';
         await axios.get(`${url}${healthEndpoint}`, {
-          timeout: 5000,
-          headers: {
-            'X-Keep-Alive': 'true'
-          }
+          timeout: 5000
         });
         console.log(`🏓 Keep-alive ping sent to ${url}`);
       } catch (error) {

@@ -15,13 +15,13 @@ describe('LoadingSpinner', () => {
       render(<LoadingSpinner />);
       
       const spinner = screen.getByRole('status');
-      expect(spinner).toHaveAttribute('aria-label', '로딩 중');
+      expect(spinner).toHaveAttribute('aria-label', 'Loading');
     });
 
     it('should have screen reader text', () => {
       render(<LoadingSpinner />);
       
-      const srText = screen.getByText('로딩 중');
+      const srText = screen.getByText('Loading');
       expect(srText).toBeInTheDocument();
       expect(srText).toHaveClass('sr-only');
     });
@@ -92,7 +92,7 @@ describe('LoadingSpinner', () => {
       render(<LoadingSpinner />);
       
       // Screen reader text exists but no visible label
-      const visibleTexts = screen.queryAllByText('로딩 중');
+      const visibleTexts = screen.queryAllByText('Loading');
       const visibleLabel = visibleTexts.find(el => !el.classList.contains('sr-only'));
       expect(visibleLabel).toBeUndefined();
     });

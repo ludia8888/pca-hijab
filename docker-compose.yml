@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pca-hijab-db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-pca_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pca_password}
+      - POSTGRES_DB=${POSTGRES_DB:-pca_hijab}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pca_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend-api:
+    build: ./backend
+    container_name: pca-hijab-backend
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - AI_API_URL=http://ai-api:8000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pca_user}:${POSTGRES_PASSWORD:-pca_password}@db:5432/${POSTGRES_DB:-pca_hijab}
+      - ADMIN_API_KEY=${ADMIN_API_KEY:-defaultAdminKey123}
+      - SESSION_SECRET=${SESSION_SECRET:-defaultSessionSecret}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
+    depends_on:
+      db:
+        condition: service_healthy
+      ai-api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ai-api:
+    build: ./ShowMeTheColor
+    container_name: pca-hijab-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    volumes:
+      - ./ShowMeTheColor/res:/app/res
+
+  frontend:
+    build: ./frontend
+    container_name: pca-hijab-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_BACKEND_URL=http://backend-api:5001
+      - VITE_AI_API_URL=http://ai-api:8000
+    depends_on:
+      - backend-api
+      - ai-api
+    restart: unless-stopped
+
+networks:
+  default:
+    name: pca-hijab-network
+
+volumes:
+  postgres_data:

@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  backend-api:
+    image: pca-hijab-backend:latest
+    container_name: pca-hijab-backend
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - AI_API_URL=http://ai-api:8000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+    depends_on:
+      db:
+        condition: service_healthy
+      ai-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - pca-hijab-network
+
+  ai-api:
+    image: pca-hijab-ai:latest
+    container_name: pca-hijab-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    volumes:
+      - ./ShowMeTheColor/res:/app/res:ro
+    networks:
+      - pca-hijab-network
+
+  frontend:
+    image: pca-hijab-frontend:latest
+    container_name: pca-hijab-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - VITE_BACKEND_URL=${VITE_BACKEND_URL}
+      - VITE_AI_API_URL=${VITE_AI_API_URL}
+    depends_on:
+      - backend-api
+      - ai-api
+    restart: unless-stopped
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - pca-hijab-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: pca-hijab-db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - pca-hijab-network
+
+networks:
+  pca-hijab-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
