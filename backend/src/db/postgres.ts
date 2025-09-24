@@ -830,6 +830,22 @@ export class PostgresDatabase {
   // Product methods
   async createProduct(data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
     const productId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    // First, try to get column information
+    try {
+      const columnQuery = `
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'products' 
+        ORDER BY ordinal_position
+      `;
+      const columns = await pool.query(columnQuery);
+      console.log('[PostgreSQL] Products table columns:', columns.rows.map(r => r.column_name));
+    } catch (e) {
+      console.error('[PostgreSQL] Failed to get column info:', e);
+    }
+    
+    // Use proper snake_case column names
     const query = `
       INSERT INTO products (
         id, name, category, price, thumbnail_url, detail_image_urls,
