@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '@/types';
+import { getImageUrl } from '@/utils/imageUrl';
 
 // Labels for display
 const PRODUCT_CATEGORY_LABELS = {
@@ -45,7 +46,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product Image */}
       <div className="aspect-square w-full overflow-hidden bg-gray-50">
         <img
-          src={product.thumbnailUrl}
+          src={getImageUrl(product.thumbnailUrl)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"

@@ -7,6 +7,7 @@ import { ProductAPI } from '@/services/api/admin';
 import { useAdminStore } from '@/store/useAdminStore';
 import type { Product, ProductFormData, ProductCategory, PersonalColorType } from '@/types/admin';
 import { CATEGORY_LABELS, PERSONAL_COLOR_LABELS } from '@/types/admin';
+import { getImageUrl } from '@/utils/imageUrl';
 
 interface ProductFormProps {
   product?: Product;
@@ -42,8 +43,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
     isActive: product?.isActive ?? true
   });
 
-  const [thumbnailPreview, setThumbnailPreview] = useState<string>(product?.thumbnailUrl || '');
-  const [detailPreviews, setDetailPreviews] = useState<string[]>(product?.detailImageUrls || []);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>(product ? getImageUrl(product.thumbnailUrl) : '');
+  const [detailPreviews, setDetailPreviews] = useState<string[]>(product ? product.detailImageUrls.map(url => getImageUrl(url)) : []);
   const [displayPrice, setDisplayPrice] = useState<string>(formatPrice(product?.price || 0));
 
   // Image upload mutation

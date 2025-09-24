@@ -2,6 +2,7 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '@/types';
+import { getImageUrl } from '@/utils/imageUrl';
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +24,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, rating = 4.5, review
     >
       <div className="aspect-square relative">
         <img
-          src={product.thumbnailUrl}
+          src={getImageUrl(product.thumbnailUrl)}
           alt={product.name}
           className="w-full h-full object-cover"
         />

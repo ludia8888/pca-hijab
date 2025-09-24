@@ -7,6 +7,7 @@ import { ProductAPI } from '@/services/api/admin';
 import { useAdminStore } from '@/store/useAdminStore';
 import type { Product, ProductCategory, PersonalColorType } from '@/types/admin';
 import { CATEGORY_LABELS, PERSONAL_COLOR_LABELS } from '@/types/admin';
+import { getImageUrl } from '@/utils/imageUrl';
 
 interface ProductListProps {
   onCreateClick: () => void;
@@ -200,7 +201,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
               {/* Product Image */}
               <div className="relative aspect-square">
                 <img
-                  src={product.thumbnailUrl}
+                  src={getImageUrl(product.thumbnailUrl)}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />

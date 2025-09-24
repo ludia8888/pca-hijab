@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui';
 import { useAppStore } from '@/store';
 import { PageLayout } from '@/components/layout';
 import { CATEGORY_LABELS, PERSONAL_COLOR_LABELS } from '@/types';
+import { getImageUrl, getImageUrls } from '@/utils/imageUrl';
 
 const ProductDetailPage = () => {
   console.log('[ProductDetailPage] Component loaded successfully');
@@ -118,7 +119,7 @@ const ProductDetailPage = () => {
     );
   }
 
-  const allImages = [product.thumbnailUrl, ...product.detailImageUrls];
+  const allImages = [getImageUrl(product.thumbnailUrl), ...getImageUrls(product.detailImageUrls)];
 
   return (
     <PageLayout noPadding>
