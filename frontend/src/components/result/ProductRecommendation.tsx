@@ -1,8 +1,6 @@
 import React from 'react';
 import { Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import type { Product } from '@/types';
-import { getImageUrl } from '@/utils/imageUrl';
 
 interface ProductCardProps {
   product: Product;
@@ -10,41 +8,58 @@ interface ProductCardProps {
   reviews?: number;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, rating = 4.5, reviews = 808 }) => {
-  const navigate = useNavigate();
-  
-  // Generate random rating between 4.3 and 4.9 if not provided
-  const displayRating = rating || (4.3 + Math.random() * 0.6);
-  const displayReviews = reviews || Math.floor(100 + Math.random() * 900);
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const displayRating = 4.3 + Math.random() * 0.6;
+  const displayReviews = Math.floor(100 + Math.random() * 900);
   
   return (
-    <div 
-      className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={() => navigate(`/products/${product.id}`)}
+    <a 
+      href={product.shopeeLink} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="block bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
     >
-      <div className="aspect-square relative">
-        <img
-          src={getImageUrl(product.thumbnailUrl)}
-          alt={product.name}
-          className="w-full h-full object-cover"
+      <div className="aspect-square relative bg-white p-4">
+        <div 
+          className="w-full h-full rounded-lg"
+          style={{ backgroundColor: getColorForProduct(product.name) }}
         />
       </div>
-      <div className="p-3">
-        <h4 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
+      <div className="p-2">
+        <h4 className="font-medium text-xs text-gray-900 mb-1 line-clamp-2">
           {product.name}
         </h4>
         <div className="flex items-center gap-1">
-          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-          <span className="text-sm font-medium text-gray-900">
+          <Star className="w-3 h-3 text-yellow-500 fill-current" />
+          <span className="text-xs font-medium text-gray-900">
             {displayRating.toFixed(1)}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-[10px] text-gray-500">
             ({displayReviews})
           </span>
         </div>
       </div>
-    </div>
+    </a>
   );
+};
+
+// Helper function to get color for each product
+const getColorForProduct = (productName: string): string => {
+  const colorMap: Record<string, string> = {
+    'Moonshot - Melting Mood Lip - Alluring': '#FF7F50',
+    'KARADIUM - Butter Coral': '#FFA07A',
+    'molette - Apple Cheeky': '#FFB6C1',
+    'Moonshot - Shy': '#FFB6C1',
+    'KARADIUM - Cozy Pink': '#FFC0CB',
+    'molette - Dewy Berry': '#DA70D6',
+    'Moonshot - Honest': '#A52A2A',
+    'KARADIUM - Pecan Sand': '#D2691E',
+    'molette - Coco Choco': '#8B4513',
+    'Moonshot - Oort Pink': '#FF1493',
+    'KARADIUM - Rosy Berry': '#DC143C',
+    'molette - Tingle Cherry': '#8B0000'
+  };
+  return colorMap[productName] || '#FF6B6B';
 };
 
 interface ProductRecommendationProps {
@@ -281,34 +296,16 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
   const seasonName = getSeasonName(personalColorEn);
 
   return (
-    <div className="mb-6">
-      <h3 className="text-lg font-bold text-gray-900 mb-4">
-        <span style={{ color: '#FF6B6B' }}>{seasonName}</span>을 위한
-        <br />
-        추천 립 제품을 확인해보세요
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden p-3 mb-4">
+      <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
+        <span className="text-base">💄</span> {seasonName}을 위한 추천 립 제품
       </h3>
         
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-        </div>
-      ) : (
-        <>
-          {/* Show only lip products */}
-          {hijabProducts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="mb-2">아직 등록된 제품이 없습니다.</p>
-              <p className="text-sm">곧 멋진 립 제품들이 추가될 예정입니다!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-3">
-              {hijabProducts.slice(0, 3).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+      <div className="grid grid-cols-3 gap-3">
+        {mockProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
     </div>
   );
 };
