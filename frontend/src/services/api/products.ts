@@ -80,17 +80,39 @@ export class ProductAPI {
    * @returns Promise<ProductsResponse>
    */
   static async getRecommendedProducts(personalColorEn: string): Promise<ProductsResponse> {
+    console.log('[ProductAPI] getRecommendedProducts called with:', personalColorEn);
+    
     // Map the general personal color to specific types
+    // Handle various formats: 'spring', 'Spring', 'Spring Warm', etc.
     const colorMapping: Record<string, PersonalColorType> = {
       'spring': 'spring_warm',
       'autumn': 'autumn_warm',
       'summer': 'summer_cool',
-      'winter': 'winter_cool'
+      'winter': 'winter_cool',
+      'spring warm': 'spring_warm',
+      'autumn warm': 'autumn_warm',
+      'summer cool': 'summer_cool',
+      'winter cool': 'winter_cool'
     };
     
-    const personalColorType = colorMapping[personalColorEn.toLowerCase()];
+    // Extract season from the personal color string
+    const lowerColor = personalColorEn.toLowerCase();
+    let personalColorType = colorMapping[lowerColor];
+    
+    // If not found, try to extract just the season part
     if (!personalColorType) {
-      throw new Error(`Invalid personal color: ${personalColorEn}`);
+      const seasonMatch = lowerColor.match(/(spring|summer|autumn|winter)/);
+      if (seasonMatch) {
+        personalColorType = colorMapping[seasonMatch[1]];
+      }
+    }
+    
+    console.log('[ProductAPI] Mapped to personal color type:', personalColorType);
+    
+    if (!personalColorType) {
+      console.error('[ProductAPI] Invalid personal color:', personalColorEn);
+      // Return empty result instead of throwing error
+      return { success: true, data: [] };
     }
     
     return this.getProductsByPersonalColor(personalColorType);

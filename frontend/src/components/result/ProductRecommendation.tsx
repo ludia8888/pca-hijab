@@ -61,21 +61,37 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
       try {
         setIsLoading(true);
         
+        console.log('[ProductRecommendation] Fetching for personal color:', personalColorEn);
+        
         // Import ProductAPI dynamically to avoid circular dependencies
         const { ProductAPI } = await import('@/services/api/products');
         
         // Fetch recommended products
-        const response = await ProductAPI.getRecommendedProducts(personalColorEn);
-        const products = response.data || [];
+        let products = [];
+        try {
+          const response = await ProductAPI.getRecommendedProducts(personalColorEn);
+          console.log('[ProductRecommendation] API Response:', response);
+          products = response.data || [];
+        } catch (error) {
+          console.log('[ProductRecommendation] Failed to get recommended products, fetching all products');
+          // If recommended products fail, get all products as fallback
+          const allProductsResponse = await ProductAPI.getProducts();
+          products = allProductsResponse.data || [];
+        }
+        
+        console.log('[ProductRecommendation] Total products found:', products.length);
         
         // Separate hijab and beauty products
         const hijabs = products.filter(p => p.category === 'hijab').slice(0, 3);
         const beauty = products.filter(p => ['lens', 'lip', 'eyeshadow', 'tint'].includes(p.category)).slice(0, 3);
         
+        console.log('[ProductRecommendation] Hijab products:', hijabs.length);
+        console.log('[ProductRecommendation] Beauty products:', beauty.length);
+        
         setHijabProducts(hijabs);
         setBeautyProducts(beauty);
       } catch (error) {
-        console.error('Failed to fetch product recommendations:', error);
+        console.error('[ProductRecommendation] Failed to fetch product recommendations:', error);
         // Use empty arrays on error
         setHijabProducts([]);
         setBeautyProducts([]);
@@ -87,10 +103,7 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
     fetchRecommendations();
   }, [personalColorEn]);
   
-  // Don't show section if no products
-  if (!isLoading && hijabProducts.length === 0 && beautyProducts.length === 0) {
-    return null;
-  }
+  // Show section even if no products (with empty state message)
   
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
@@ -106,30 +119,40 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Hijab Products Row */}
-            {hijabProducts.length > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                {hijabProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-                {/* Fill empty slots if less than 3 products */}
-                {hijabProducts.length < 3 && Array.from({ length: 3 - hijabProducts.length }).map((_, i) => (
-                  <div key={`empty-hijab-${i}`} className="bg-gray-50 rounded-lg aspect-square" />
-                ))}
+            {/* Show products or empty state */}
+            {hijabProducts.length === 0 && beautyProducts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="mb-2">아직 등록된 상품이 없습니다.</p>
+                <p className="text-sm">곧 멋진 상품들이 추가될 예정입니다!</p>
               </div>
-            )}
-            
-            {/* Beauty Products Row */}
-            {beautyProducts.length > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                {beautyProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-                {/* Fill empty slots if less than 3 products */}
-                {beautyProducts.length < 3 && Array.from({ length: 3 - beautyProducts.length }).map((_, i) => (
-                  <div key={`empty-beauty-${i}`} className="bg-gray-50 rounded-lg aspect-square" />
-                ))}
-              </div>
+            ) : (
+              <>
+                {/* Hijab Products Row */}
+                {hijabProducts.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {hijabProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                    {/* Fill empty slots if less than 3 products */}
+                    {hijabProducts.length < 3 && Array.from({ length: 3 - hijabProducts.length }).map((_, i) => (
+                      <div key={`empty-hijab-${i}`} className="bg-gray-50 rounded-lg aspect-square" />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Beauty Products Row */}
+                {beautyProducts.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {beautyProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                    {/* Fill empty slots if less than 3 products */}
+                    {beautyProducts.length < 3 && Array.from({ length: 3 - beautyProducts.length }).map((_, i) => (
+                      <div key={`empty-beauty-${i}`} className="bg-gray-50 rounded-lg aspect-square" />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
