@@ -1,46 +1,129 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { Product } from '@/types';
 
-// Mock data for products - all set to Lip category
-const mockProducts: Product[] = [
-  {
-    id: 'prod_lip_1',
-    name: 'Velvet Rose Lip',
-    category: 'lip',
-    price: 22.50,
-    thumbnailUrl: 'https://placehold.co/300x300/E8B4B4/3B1389?text=Lip+1',
-    personalColors: ['spring_warm', 'summer_cool'],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prod_lip_2',
-    name: 'Coral Kiss Lip',
-    category: 'lip',
-    price: 24.00,
-    thumbnailUrl: 'https://placehold.co/300x300/FFDAB9/3B1389?text=Lip+2',
-    personalColors: ['autumn_warm', 'spring_warm'],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prod_lip_3',
-    name: 'Ruby Red Lip',
-    category: 'lip',
-    price: 26.99,
-    thumbnailUrl: 'https://placehold.co/300x300/E0B0B0/3B1389?text=Lip+3',
-    personalColors: ['winter_cool', 'summer_cool'],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+interface ProductInfo {
+  id: string;
+  brand: string;
+  name: string;
+  link: string;
+  thumbnailUrl: string;
+}
 
-export const ProductCarousel: React.FC = () => {
-  const navigate = useNavigate();
+const recommendedProductsData: Record<string, ProductInfo[]> = {
+  spring_warm: [
+    {
+      id: 'sw1',
+      brand: 'Moonshot',
+      name: 'Alluring',
+      link: 'https://en.moonshot-beauty.com/product/melting-mood-lip-and-cheeksheer-glow/131/?cate_no=1&display_group=2',
+      thumbnailUrl: 'https://placehold.co/300x300/FFB3BA/3B1389?text=Alluring',
+    },
+    {
+      id: 'sw2',
+      brand: 'KARADIUM',
+      name: 'Butter coral',
+      link: 'https://smartstore.naver.com/karadium/products/9255588817',
+      thumbnailUrl: 'https://placehold.co/300x300/FFDAB9/3B1389?text=Butter+coral',
+    },
+    {
+      id: 'sw3',
+      brand: 'molette',
+      name: 'Apple cheeky',
+      link: 'http://smartstore.naver.com/molette_official/products/11582095583',
+      thumbnailUrl: 'https://placehold.co/300x300/FFC3A0/3B1389?text=Apple+cheeky',
+    },
+  ],
+  summer_cool: [
+    {
+      id: 'sc1',
+      brand: 'Moonshot',
+      name: 'Shy',
+      link: 'https://en.moonshot-beauty.com/product/melting-mood-lip-and-cheeksheer-glow/131/?cate_no=1&display_group=2',
+      thumbnailUrl: 'https://placehold.co/300x300/E6E6FA/3B1389?text=Shy',
+    },
+    {
+      id: 'sc2',
+      brand: 'KARADIUM',
+      name: 'Cozy pink',
+      link: 'https://smartstore.naver.com/karadium/products/9255588817',
+      thumbnailUrl: 'https://placehold.co/300x300/FFE4E1/3B1389?text=Cozy+pink',
+    },
+    {
+      id: 'sc3',
+      brand: 'molette',
+      name: 'Dewy berry',
+      link: 'http://smartstore.naver.com/molette_official/products/11582095583',
+      thumbnailUrl: 'https://placehold.co/300x300/DDA0DD/3B1389?text=Dewy+berry',
+    },
+  ],
+  autumn_warm: [
+    {
+      id: 'aw1',
+      brand: 'Moonshot',
+      name: 'Honest',
+      link: 'https://en.moonshot-beauty.com/product/melting-mood-lip-and-cheeksheer-glow/131/?cate_no=1&display_group=2',
+      thumbnailUrl: 'https://placehold.co/300x300/CD853F/3B1389?text=Honest',
+    },
+    {
+      id: 'aw2',
+      brand: 'KARADIUM',
+      name: 'Pecan sand',
+      link: 'https://smartstore.naver.com/karadium/products/9255588817',
+      thumbnailUrl: 'https://placehold.co/300x300/D2691E/3B1389?text=Pecan+sand',
+    },
+    {
+      id: 'aw3',
+      brand: 'molette',
+      name: 'Coco choco',
+      link: 'http://smartstore.naver.com/molette_official/products/11582095583',
+      thumbnailUrl: 'https://placehold.co/300x300/8B4513/3B1389?text=Coco+choco',
+    },
+  ],
+  winter_cool: [
+    {
+      id: 'wc1',
+      brand: 'Moonshot',
+      name: 'Oort pink',
+      link: 'https://en.moonshot-beauty.com/product/jelly-moon-glow-tint/158/?cate_no=56&display_group=1',
+      thumbnailUrl: 'https://placehold.co/300x300/4169E1/FFFFFF?text=Oort+pink',
+    },
+    {
+      id: 'wc2',
+      brand: 'KARADIUM',
+      name: 'Rosy berry',
+      link: 'https://smartstore.naver.com/karadium/products/9255588817',
+      thumbnailUrl: 'https://placehold.co/300x300/C71585/FFFFFF?text=Rosy+berry',
+    },
+    {
+      id: 'wc3',
+      brand: 'molette',
+      name: 'Tingle cherry',
+      link: 'http://smartstore.naver.com/molette_official/products/11582095583',
+      thumbnailUrl: 'https://placehold.co/300x300/FF1493/FFFFFF?text=Tingle+cherry',
+    },
+  ],
+};
+
+interface ProductCarouselProps {
+  personalColor: string; // e.g., "Spring Warm"
+}
+
+// Helper function to map display name to data key
+const getPersonalColorKey = (color: string): string => {
+  const lowerCaseColor = color.toLowerCase();
+  if (lowerCaseColor.includes('spring')) return 'spring_warm';
+  if (lowerCaseColor.includes('summer')) return 'summer_cool';
+  if (lowerCaseColor.includes('autumn')) return 'autumn_warm';
+  if (lowerCaseColor.includes('winter')) return 'winter_cool';
+  return 'spring_warm'; // Default fallback
+};
+
+export const ProductCarousel: React.FC<ProductCarouselProps> = ({ personalColor }) => {
+  const personalColorKey = getPersonalColorKey(personalColor);
+  const productsToShow = recommendedProductsData[personalColorKey] || [];
+
+  const handleProductClick = (link: string) => {
+    window.open(link, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="bg-white rounded-2xl p-4 md:p-6">
@@ -48,10 +131,10 @@ export const ProductCarousel: React.FC = () => {
         👍 Recommended Lip Products
       </h3>
       <div className="grid grid-cols-3 gap-3 md:gap-4">
-        {mockProducts.map((product) => (
+        {productsToShow.map((product) => (
           <div
             key={product.id}
-            onClick={() => navigate(`/products/${product.id}`)}
+            onClick={() => handleProductClick(product.link)}
             className="border border-gray-200 rounded-xl p-2 cursor-pointer hover:shadow-lg transition-shadow bg-white"
           >
             <div className="relative w-full aspect-square mb-2">
@@ -62,14 +145,10 @@ export const ProductCarousel: React.FC = () => {
               />
             </div>
             <div className="text-left">
+              <p className="text-xs text-gray-500 truncate">{product.brand}</p>
               <h4 className="text-sm md:text-base font-bold text-gray-800 truncate">
                 {product.name}
               </h4>
-              <div className="flex items-center text-xs text-gray-500 mt-1">
-                <span className="text-yellow-500">⭐</span>
-                <span className="ml-1 font-semibold">4.5</span>
-                <span className="ml-1">(500+)</span>
-              </div>
             </div>
           </div>
         ))}
