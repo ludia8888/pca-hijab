@@ -74,42 +74,42 @@ const getMockProducts = (personalColorEn: string): Product[] => {
     'spring_warm': [
       {
         id: '1',
-        name: 'Soft Coral Hijab',
-        category: 'hijab',
-        price: 25000,
-        thumbnailUrl: '/uploads/hijabs/spring-coral-hijab.svg',
+        name: 'Moonshot - Melting Mood Lip - Alluring',
+        category: 'lip',
+        price: 15000,
+        thumbnailUrl: '/uploads/products/moonshot-alluring.svg',
         detailImageUrls: [],
         personalColors: ['spring_warm'],
-        description: '봄 웜톤에 어울리는 코랄색 히잡',
-        shopeeLink: '#',
+        description: '봄 웜톤을 위한 따뜻한 코랄 립 컬러',
+        shopeeLink: 'https://en.moonshot-beauty.com/product/melting-mood-lip-and-cheeksheer-glow/131/?cate_no=1&display_group=2',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
       {
         id: '2', 
-        name: 'Peach Blossom Hijab',
-        category: 'hijab',
-        price: 28000,
-        thumbnailUrl: '/uploads/hijabs/spring-peach-hijab.svg',
+        name: 'KARADIUM - Butter Coral',
+        category: 'lip',
+        price: 12000,
+        thumbnailUrl: '/uploads/products/karadium-butter-coral.svg',
         detailImageUrls: [],
         personalColors: ['spring_warm'],
-        description: '복숭아꽃처럼 화사한 봄 웜톤 히잡',
-        shopeeLink: '#',
+        description: '버터처럼 부드러운 봄 웜톤 코랄 립',
+        shopeeLink: 'https://smartstore.naver.com/karadium/products/9255588817',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
       {
         id: '3',
-        name: 'Light Camel Hijab', 
-        category: 'hijab',
-        price: 22000,
-        thumbnailUrl: '/uploads/hijabs/spring-camel-hijab.svg',
+        name: 'molette - Apple Cheeky', 
+        category: 'lip',
+        price: 18000,
+        thumbnailUrl: '/uploads/products/molette-apple-cheeky.svg',
         detailImageUrls: [],
         personalColors: ['spring_warm'],
-        description: '라이트 카멜색의 데일리 히잡',
-        shopeeLink: '#',
+        description: '사과처럼 상큼한 봄 웜톤 립 컬러',
+        shopeeLink: 'http://smartstore.naver.com/molette_official/products/11582095583',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -118,13 +118,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
     'autumn_warm': [
       {
         id: '4',
-        name: 'Burnt Sienna Hijab',
-        category: 'hijab', 
-        price: 30000,
-        thumbnailUrl: '/uploads/hijabs/autumn-sienna-hijab.svg',
+        name: 'Moonshot - Honest',
+        category: 'lip', 
+        price: 15000,
+        thumbnailUrl: '/uploads/products/moonshot-honest.svg',
         detailImageUrls: [],
         personalColors: ['autumn_warm'],
-        description: '가을 웜톤을 위한 번트 시에나 히잡',
+        description: '가을 웜톤을 위한 차분한 브라운 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -132,13 +132,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
       },
       {
         id: '5',
-        name: 'Chocolate Brown Hijab',
-        category: 'hijab',
-        price: 26000,
-        thumbnailUrl: '/uploads/hijabs/autumn-brown-hijab.svg',
+        name: 'KARADIUM - Pecan Sand',
+        category: 'lip',
+        price: 12000,
+        thumbnailUrl: '/uploads/products/karadium-pecan-sand.svg',
         detailImageUrls: [],
         personalColors: ['autumn_warm'],
-        description: '초콜릿 브라운의 가을 웜톤 히잡',
+        description: '피칸 샌드 컬러의 가을 웜톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -146,13 +146,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
       },
       {
         id: '6',
-        name: 'Olive Khaki Hijab',
-        category: 'hijab',
-        price: 24000,
-        thumbnailUrl: '/uploads/hijabs/autumn-olive-hijab.svg',
+        name: 'molette - Coco Choco',
+        category: 'lip',
+        price: 18000,
+        thumbnailUrl: '/uploads/products/molette-coco-choco.svg',
         detailImageUrls: [],
         personalColors: ['autumn_warm'],
-        description: '올리브 카키색의 가을 히잡',
+        description: '코코아처럼 달콤한 가을 웜톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -162,13 +162,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
     'summer_cool': [
       {
         id: '7',
-        name: 'Rose Quartz Hijab',
-        category: 'hijab',
-        price: 27000,
-        thumbnailUrl: '/uploads/hijabs/summer-rose-hijab.svg',
+        name: 'Moonshot - Shy',
+        category: 'lip',
+        price: 15000,
+        thumbnailUrl: '/uploads/products/moonshot-shy.svg',
         detailImageUrls: [],
         personalColors: ['summer_cool'],
-        description: '로즈쿼츠색의 여름 쿨톤 히잡',
+        description: '수줍은듯한 핑크 여름 쿨톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -176,13 +176,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
       },
       {
         id: '8',
-        name: 'Lavender Mist Hijab',
-        category: 'hijab',
-        price: 29000,
-        thumbnailUrl: '/uploads/hijabs/summer-lavender-hijab.svg',
+        name: 'KARADIUM - Cozy Pink',
+        category: 'lip',
+        price: 12000,
+        thumbnailUrl: '/uploads/products/karadium-cozy-pink.svg',
         detailImageUrls: [],
         personalColors: ['summer_cool'],
-        description: '라벤더 미스트 여름 쿨톤 히잡',
+        description: '편안한 핑크 여름 쿨톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -190,13 +190,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
       },
       {
         id: '9',
-        name: 'Powder Blue Hijab',
-        category: 'hijab',
-        price: 25000,
-        thumbnailUrl: '/uploads/hijabs/summer-blue-hijab.svg',
+        name: 'molette - Dewy Berry',
+        category: 'lip',
+        price: 18000,
+        thumbnailUrl: '/uploads/products/molette-dewy-berry.svg',
         detailImageUrls: [],
         personalColors: ['summer_cool'],
-        description: '파우더 블루 여름 쿨톤 히잡',
+        description: '촉촉한 베리 여름 쿨톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -206,27 +206,27 @@ const getMockProducts = (personalColorEn: string): Product[] => {
     'winter_cool': [
       {
         id: '10',
-        name: 'Fuchsia Pink Hijab',
-        category: 'hijab',
-        price: 31000,
-        thumbnailUrl: '/uploads/hijabs/winter-fuchsia-hijab.svg',
+        name: 'Moonshot - Oort Pink',
+        category: 'lip',
+        price: 15000,
+        thumbnailUrl: '/uploads/products/moonshot-oort-pink.svg',
         detailImageUrls: [],
         personalColors: ['winter_cool'],
-        description: '퓨샤 핑크의 겨울 쿨톤 히잡',
-        shopeeLink: '#',
+        description: '우주처럼 신비로운 핑크 겨울 쿨톤 립',
+        shopeeLink: 'https://en.moonshot-beauty.com/product/jelly-moon-glow-tint/158/?cate_no=56&display_group=1',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
       {
         id: '11',
-        name: 'Burgundy Velvet Hijab',
-        category: 'hijab',
-        price: 33000,
-        thumbnailUrl: '/uploads/hijabs/winter-burgundy-hijab.svg',
+        name: 'KARADIUM - Rosy Berry',
+        category: 'lip',
+        price: 12000,
+        thumbnailUrl: '/uploads/products/karadium-rosy-berry.svg',
         detailImageUrls: [],
         personalColors: ['winter_cool'],
-        description: '버건디 벨벳 겨울 쿨톤 히잡',
+        description: '로즈 베리 겨울 쿨톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -234,13 +234,13 @@ const getMockProducts = (personalColorEn: string): Product[] => {
       },
       {
         id: '12',
-        name: 'Midnight Navy Hijab',
-        category: 'hijab',
-        price: 28000,
-        thumbnailUrl: '/uploads/hijabs/winter-navy-hijab.svg',
+        name: 'molette - Tingle Cherry',
+        category: 'lip',
+        price: 18000,
+        thumbnailUrl: '/uploads/products/molette-tingle-cherry.svg',
         detailImageUrls: [],
         personalColors: ['winter_cool'],
-        description: '미드나잇 네이비 겨울 쿨톤 히잡',
+        description: '체리처럼 생동감 있는 겨울 쿨톤 립',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -282,21 +282,21 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
         
         console.log('[ProductRecommendation] Total products found:', products.length);
         
-        // Separate hijab and beauty products
-        const hijabs = products.filter(p => p.category === 'hijab').slice(0, 3);
-        const beauty = products.filter(p => ['lens', 'lip', 'eyeshadow', 'tint'].includes(p.category)).slice(0, 3);
+        // Separate lip and other beauty products
+        const lips = products.filter(p => p.category === 'lip').slice(0, 3);
+        const beauty = products.filter(p => ['lens', 'eyeshadow', 'tint'].includes(p.category)).slice(0, 3);
         
-        console.log('[ProductRecommendation] Hijab products:', hijabs.length);
+        console.log('[ProductRecommendation] Lip products:', lips.length);
         console.log('[ProductRecommendation] Beauty products:', beauty.length);
         
         // If no products from API, use mock data
-        if (hijabs.length === 0 && beauty.length === 0) {
+        if (lips.length === 0 && beauty.length === 0) {
           console.log('[ProductRecommendation] No products from API, using mock data');
           const mockProducts = getMockProducts(personalColorEn);
           setHijabProducts(mockProducts);
           setBeautyProducts([]);
         } else {
-          setHijabProducts(hijabs);
+          setHijabProducts(lips);
           setBeautyProducts(beauty);
         }
       } catch (error) {
@@ -340,7 +340,7 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
       <h3 className="text-lg font-bold text-gray-900 mb-4">
         <span style={{ color: '#FF6B6B' }}>{seasonName}</span>을 위한
         <br />
-        추천 히잡을 클릭해 보세요
+        추천 립 제품을 확인해보세요
       </h3>
         
       {isLoading ? (
@@ -349,11 +349,11 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
         </div>
       ) : (
         <>
-          {/* Show only hijab products */}
+          {/* Show only lip products */}
           {hijabProducts.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <p className="mb-2">아직 등록된 히잡이 없습니다.</p>
-              <p className="text-sm">곧 멋진 상품들이 추가될 예정입니다!</p>
+              <p className="mb-2">아직 등록된 제품이 없습니다.</p>
+              <p className="text-sm">곧 멋진 립 제품들이 추가될 예정입니다!</p>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
