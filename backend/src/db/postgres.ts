@@ -839,20 +839,34 @@ export class PostgresDatabase {
       RETURNING *
     `;
     
-    const result = await pool.query(query, [
-      productId,
-      data.name,
-      data.category,
-      data.price,
-      data.thumbnailUrl,
-      data.detailImageUrls,
-      data.personalColors,
-      data.description,
-      data.shopeeLink,
-      data.isActive
-    ]);
-    
-    return this.mapProductRow(result.rows[0]);
+    try {
+      const result = await pool.query(query, [
+        productId,
+        data.name,
+        data.category,
+        data.price,
+        data.thumbnailUrl,
+        data.detailImageUrls || [],  // Ensure array
+        data.personalColors || [],   // Ensure array
+        data.description || '',      // Ensure string
+        data.shopeeLink || '',       // Ensure string
+        data.isActive !== undefined ? data.isActive : true
+      ]);
+      
+      return this.mapProductRow(result.rows[0]);
+    } catch (error: any) {
+      console.error('[PostgreSQL] Product creation failed:', {
+        error: error.message,
+        detail: error.detail,
+        hint: error.hint,
+        code: error.code,
+        constraint: error.constraint,
+        table: error.table,
+        column: error.column,
+        data: data
+      });
+      throw error;
+    }
   }
 
   async getProduct(productId: string): Promise<Product | undefined> {
