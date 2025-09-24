@@ -846,12 +846,13 @@ export class PostgresDatabase {
     }
     
     // Use correct column names from the actual database
+    // Note: brand and name_ko are required by the database
     const query = `
       INSERT INTO products (
-        id, name, category, price, image_url, additional_images,
+        id, name, brand, category, price, image_url, additional_images,
         personal_colors, description, product_link, is_available
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
     
@@ -859,6 +860,7 @@ export class PostgresDatabase {
       const result = await pool.query(query, [
         productId,
         data.name,
+        data.name,  // Use name as brand for now (brand is NOT NULL)
         data.category,
         data.price,
         data.thumbnailUrl,
@@ -969,11 +971,12 @@ export class PostgresDatabase {
       thumbnailUrl: row.image_url,  // Map from image_url
       detailImageUrls: row.additional_images || [],  // Map from additional_images
       personalColors: row.personal_colors || [],
-      description: row.description,
-      shopeeLink: row.product_link,  // Map from product_link
+      description: row.description || '',
+      shopeeLink: row.product_link || '',  // Map from product_link
       isActive: row.is_available,  // Map from is_available
       createdAt: row.created_at,
       updatedAt: row.updated_at
+      // Note: row.brand and row.name_ko exist but are not part of our Product interface
     };
   }
 
