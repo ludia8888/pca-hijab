@@ -157,7 +157,7 @@ router.post('/products', async (req, res, next) => {
       detailImageUrls: detailImageUrls || [],
       personalColors,
       description,
-      shopeeLink,
+      shopeeLink: shopeeLink || '', // Provide empty string as default
       isActive: isActive !== false
     });
     
@@ -178,7 +178,7 @@ router.put('/products/:id', async (req, res, next) => {
     
     // Validate category if provided
     if (updates.category) {
-      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
       if (!validCategories.includes(updates.category)) {
         throw new AppError(400, 'Invalid category');
       }
@@ -190,6 +190,11 @@ router.put('/products/:id', async (req, res, next) => {
       if (!Array.isArray(updates.personalColors) || !updates.personalColors.every((pc: string) => validPersonalColors.includes(pc as PersonalColorType))) {
         throw new AppError(400, 'Invalid personal colors');
       }
+    }
+    
+    // Convert empty shopeeLink to empty string if needed
+    if (updates.shopeeLink === null || updates.shopeeLink === undefined) {
+      updates.shopeeLink = '';
     }
     
     if (!db.updateProduct) {
