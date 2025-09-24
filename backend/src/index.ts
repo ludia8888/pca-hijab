@@ -114,7 +114,7 @@ const allowedOrigins = config.CLIENT_URL
 const normalizeOrigin = (origin: string): string => origin.trim().replace(/\/$/, '').toLowerCase();
 const normalizedAllowedOrigins = new Set(allowedOrigins.map(normalizeOrigin));
 const isOriginAllowed = (origin: string): boolean => normalizedAllowedOrigins.has(normalizeOrigin(origin));
-const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai)(-[a-z0-9]+)?\.vercel\.app$/;
+const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai|noor)(-[a-z0-9]+)?(-[a-zA-Z0-9-]+)?\.vercel\.app$/;
 
 const corsAllowedHeaders = [
   'Content-Type',
@@ -125,7 +125,8 @@ const corsAllowedHeaders = [
   'X-Requested-With',
   'x-csrf-token',
   'x-prewarm',
-  'x-keep-alive'
+  'x-keep-alive',
+  'x-vercel-skip-toolbar'
 ];
 
 const corsAllowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
