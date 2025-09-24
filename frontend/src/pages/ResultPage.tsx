@@ -435,6 +435,9 @@ const ResultPage = (): JSX.Element => {
             </div>
           </div>
 
+          {/* Product Recommendations - Moved here after best colors */}
+          <ProductRecommendation personalColorEn={result.personal_color_en} />
+
           {/* Avoid Colors */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-3">
@@ -479,9 +482,6 @@ const ResultPage = (): JSX.Element => {
             </div>
           </div>
         </div>
-
-        {/* Product Recommendations */}
-        <ProductRecommendation personalColorEn={result.personal_color_en} />
 
         {/* CTA Section - Elegant Design */}
         <div className="relative">
