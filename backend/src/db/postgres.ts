@@ -845,11 +845,11 @@ export class PostgresDatabase {
       console.error('[PostgreSQL] Failed to get column info:', e);
     }
     
-    // Use proper snake_case column names
+    // Use correct column names from the actual database
     const query = `
       INSERT INTO products (
-        id, name, category, price, thumbnail_url, detail_image_urls,
-        personal_colors, description, shopee_link, is_active
+        id, name, category, price, image_url, additional_images,
+        personal_colors, description, product_link, is_available
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
@@ -896,8 +896,17 @@ export class PostgresDatabase {
     const values: any[] = [];
     let paramIndex = 1;
 
+    // Map our field names to actual database column names
+    const fieldMapping: Record<string, string> = {
+      thumbnailUrl: 'image_url',
+      detailImageUrls: 'additional_images',
+      shopeeLink: 'product_link',
+      isActive: 'is_available'
+    };
+    
     Object.entries(updates).forEach(([key, value]) => {
-      const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      // Use custom mapping if exists, otherwise convert to snake_case
+      const dbKey = fieldMapping[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
       fields.push(`${dbKey} = $${paramIndex}`);
       values.push(value);
       paramIndex++;
@@ -957,12 +966,12 @@ export class PostgresDatabase {
       name: row.name,
       category: row.category,
       price: row.price,
-      thumbnailUrl: row.thumbnail_url,
-      detailImageUrls: row.detail_image_urls || [],
+      thumbnailUrl: row.image_url,  // Map from image_url
+      detailImageUrls: row.additional_images || [],  // Map from additional_images
       personalColors: row.personal_colors || [],
       description: row.description,
-      shopeeLink: row.shopee_link,
-      isActive: row.is_active,
+      shopeeLink: row.product_link,  // Map from product_link
+      isActive: row.is_available,  // Map from is_available
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
