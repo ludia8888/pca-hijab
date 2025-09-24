@@ -128,7 +128,7 @@ export const ProductCarousel: React.FC<ProductCarouselProps> = ({ personalColor 
   return (
     <div className="bg-white rounded-2xl p-4 md:p-6">
       <h3 className="text-xl font-bold text-gray-900 mb-4">
-        👍 Recommended Lip Products
+        Recommended Lip Products
       </h3>
       <div className="grid grid-cols-3 gap-3 md:gap-4">
         {productsToShow.map((product) => (
