@@ -976,12 +976,12 @@ export class PostgresDatabase {
       name: row.name,
       category: row.category,
       price: row.price,
-      thumbnailUrl: row.image_url,  // Map from image_url
-      detailImageUrls: row.additional_images || [],  // Map from additional_images
+      thumbnailUrl: row.thumbnail_url,  // Map from thumbnail_url
+      detailImageUrls: row.detail_image_urls || [],  // Map from detail_image_urls
       personalColors: row.personal_colors || [],
       description: row.description || '',
-      shopeeLink: row.product_link || '',  // Map from product_link
-      isActive: row.is_available,  // Map from is_available
+      shopeeLink: row.shopee_link || '',  // Map from shopee_link
+      isActive: row.is_active,  // Map from is_active
       createdAt: row.created_at,
       updatedAt: row.updated_at
       // Note: row.brand and row.name_ko exist but are not part of our Product interface
