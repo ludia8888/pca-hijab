@@ -28,6 +28,15 @@ export const errorHandler = (
 
   // Unexpected errors
   console.error('ERROR:', err);
+  console.error('ERROR Details:', {
+    message: err.message,
+    stack: err.stack,
+    body: req.body,
+    url: req.url,
+    method: req.method,
+    headers: req.headers
+  });
+  
   res.status(500).json({
     success: false,
     error: 'Internal server error',

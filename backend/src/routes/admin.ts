@@ -119,6 +119,8 @@ router.get('/products/:id', async (req, res, next) => {
 // POST /api/admin/products - Create new product
 router.post('/products', async (req, res, next) => {
   try {
+    console.log('[Admin API] Create product request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       name,
       category,
@@ -131,14 +133,40 @@ router.post('/products', async (req, res, next) => {
       isActive
     } = req.body;
     
+    console.log('[Admin API] Extracted fields:', {
+      name,
+      category,
+      price,
+      thumbnailUrl,
+      personalColors,
+      shopeeLink,
+      isActive
+    });
+    
     // Validation
-    if (!name || !category || !price || !thumbnailUrl || !personalColors) {
+    if (!name || !category || price === undefined || price === null || !thumbnailUrl || !personalColors) {
+      console.error('[Admin API] Missing required fields:', {
+        name: !!name,
+        category: !!category,
+        price: price,
+        price_type: typeof price,
+        thumbnailUrl: !!thumbnailUrl,
+        personalColors: !!personalColors
+      });
       throw new AppError(400, 'Missing required fields');
+    }
+    
+    // Validate price is a positive number
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      console.error('[Admin API] Invalid price:', price, 'converted to:', numPrice);
+      throw new AppError(400, 'Price must be a positive number');
     }
     
     const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
     if (!validCategories.includes(category)) {
-      throw new AppError(400, 'Invalid category');
+      console.error('[Admin API] Invalid category:', category);
+      throw new AppError(400, `Invalid category: ${category}`);
     }
     
     const validPersonalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
@@ -147,19 +175,37 @@ router.post('/products', async (req, res, next) => {
     }
     
     if (!db.createProduct) {
+      console.error('[Admin API] db.createProduct is not available');
       throw new AppError(500, 'Product functionality not available');
     }
-    const product = await db.createProduct({
+    
+    const productData = {
       name,
       category,
-      price: Number(price),
+      price: numPrice, // Use validated price
       thumbnailUrl,
       detailImageUrls: detailImageUrls || [],
       personalColors,
-      description,
+      description: description || '', // Ensure description is not undefined
       shopeeLink: shopeeLink || '', // Provide empty string as default
       isActive: isActive !== false
-    });
+    };
+    
+    console.log('[Admin API] Creating product with data:', JSON.stringify(productData, null, 2));
+    
+    let product;
+    try {
+      product = await db.createProduct(productData);
+      console.log('[Admin API] Product created successfully:', product.id);
+    } catch (dbError) {
+      console.error('[Admin API] Database error creating product:', dbError);
+      console.error('[Admin API] Error details:', {
+        message: dbError.message,
+        stack: dbError.stack,
+        code: dbError.code
+      });
+      throw dbError;
+    }
     
     res.status(201).json({
       success: true,
@@ -180,7 +226,8 @@ router.put('/products/:id', async (req, res, next) => {
     if (updates.category) {
       const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
       if (!validCategories.includes(updates.category)) {
-        throw new AppError(400, 'Invalid category');
+        console.error('[Admin API] Invalid category in update:', updates.category);
+        throw new AppError(400, `Invalid category: ${updates.category}`);
       }
     }
     

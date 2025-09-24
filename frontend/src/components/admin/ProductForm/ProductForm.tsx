@@ -168,6 +168,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
       return;
     }
 
+    // Log the data being sent
+    console.log('[ProductForm] Submitting product data:', formData);
+    console.log('[ProductForm] Data type check:', {
+      name: typeof formData.name,
+      category: formData.category,
+      price: formData.price,
+      personalColors: formData.personalColors,
+      shopeeLink: formData.shopeeLink,
+      shopeeLink_type: typeof formData.shopeeLink
+    });
+
     productMutation.mutate(formData);
   }, [formData, productMutation, addToast]);
 
