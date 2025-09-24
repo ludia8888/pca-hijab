@@ -199,11 +199,13 @@ router.post('/products', async (req, res, next) => {
       console.log('[Admin API] Product created successfully:', product.id);
     } catch (dbError) {
       console.error('[Admin API] Database error creating product:', dbError);
-      console.error('[Admin API] Error details:', {
-        message: dbError.message,
-        stack: dbError.stack,
-        code: dbError.code
-      });
+      if (dbError instanceof Error) {
+        console.error('[Admin API] Error details:', {
+          message: dbError.message,
+          stack: dbError.stack,
+          code: (dbError as any).code
+        });
+      }
       throw dbError;
     }
     
