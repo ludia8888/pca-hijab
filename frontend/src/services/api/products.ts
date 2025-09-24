@@ -115,6 +115,10 @@ export class ProductAPI {
       return { success: true, data: [] };
     }
     
-    return this.getProductsByPersonalColor(personalColorType);
+    // Use the random endpoint to get diverse product recommendations
+    const response = await apiClient.get<ProductsResponse>(
+      `/products/random?personalColor=${personalColorType}&limit=6`
+    );
+    return response.data;
   }
 }

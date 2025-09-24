@@ -40,6 +40,46 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// GET /api/products/random - Get random products by personal color (public)
+router.get('/random', async (req, res, next) => {
+  try {
+    const { personalColor, limit = '3' } = req.query;
+    
+    if (!personalColor || typeof personalColor !== 'string') {
+      throw new AppError(400, 'personalColor is required');
+    }
+    
+    const validPersonalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
+    if (!validPersonalColors.includes(personalColor as PersonalColorType)) {
+      throw new AppError(400, 'Invalid personal color');
+    }
+    
+    if (!db.getProductsByPersonalColor) {
+      throw new AppError(500, 'Product functionality not available');
+    }
+    
+    // Get products for this personal color
+    const products = await db.getProductsByPersonalColor(personalColor as PersonalColorType);
+    const activeProducts = products.filter(p => p.isActive);
+    
+    if (activeProducts.length === 0) {
+      throw new AppError(404, 'Product not found');
+    }
+    
+    // Shuffle and limit
+    const shuffled = activeProducts.sort(() => Math.random() - 0.5);
+    const limitNum = parseInt(limit as string, 10);
+    const result = shuffled.slice(0, limitNum);
+    
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/products/:id - Get single product (public)
 router.get('/:id', async (req, res, next) => {
   try {
