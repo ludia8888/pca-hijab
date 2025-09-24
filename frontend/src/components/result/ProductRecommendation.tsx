@@ -253,65 +253,10 @@ const getMockProducts = (personalColorEn: string): Product[] => {
 };
 
 export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ personalColorEn }) => {
-  const [hijabProducts, setHijabProducts] = React.useState<Product[]>([]);
-  const [beautyProducts, setBeautyProducts] = React.useState<Product[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  
-  React.useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        setIsLoading(true);
-        
-        console.log('[ProductRecommendation] Fetching for personal color:', personalColorEn);
-        
-        // Import ProductAPI dynamically to avoid circular dependencies
-        const { ProductAPI } = await import('@/services/api/products');
-        
-        // Fetch recommended products
-        let products = [];
-        try {
-          const response = await ProductAPI.getRecommendedProducts(personalColorEn);
-          console.log('[ProductRecommendation] API Response:', response);
-          products = response.data || [];
-        } catch (error) {
-          console.log('[ProductRecommendation] Failed to get recommended products, fetching all products');
-          // If recommended products fail, get all products as fallback
-          const allProductsResponse = await ProductAPI.getProducts();
-          products = allProductsResponse.data || [];
-        }
-        
-        console.log('[ProductRecommendation] Total products found:', products.length);
-        
-        // Separate lip and other beauty products
-        const lips = products.filter(p => p.category === 'lip').slice(0, 3);
-        const beauty = products.filter(p => ['lens', 'eyeshadow', 'tint'].includes(p.category)).slice(0, 3);
-        
-        console.log('[ProductRecommendation] Lip products:', lips.length);
-        console.log('[ProductRecommendation] Beauty products:', beauty.length);
-        
-        // If no products from API, use mock data
-        if (lips.length === 0 && beauty.length === 0) {
-          console.log('[ProductRecommendation] No products from API, using mock data');
-          const mockProducts = getMockProducts(personalColorEn);
-          setHijabProducts(mockProducts);
-          setBeautyProducts([]);
-        } else {
-          setHijabProducts(lips);
-          setBeautyProducts(beauty);
-        }
-      } catch (error) {
-        console.error('[ProductRecommendation] Failed to fetch product recommendations:', error);
-        // Use mock data as fallback
-        const mockProducts = getMockProducts(personalColorEn);
-        setHijabProducts(mockProducts);
-        setBeautyProducts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchRecommendations();
-  }, [personalColorEn]);
+  // 하드코딩으로 바로 설정
+  const mockProducts = getMockProducts(personalColorEn);
+  const [hijabProducts] = React.useState<Product[]>(mockProducts);
+  const [isLoading] = React.useState(false);
   
   // Show section even if no products (with empty state message)
   
