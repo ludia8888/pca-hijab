@@ -28,7 +28,15 @@ const getSSLConfig = () => {
     }
   }
   
-  // Development - allow non-SSL connections
+  // Development - if connecting to a remote database, use SSL
+  if (databaseUrl.includes('render.com') || 
+      databaseUrl.includes('railway.app') || 
+      databaseUrl.includes('dpg-')) {  // Render internal database URLs
+    return { 
+      rejectUnauthorized: false // Allow self-signed certificates in dev
+    };
+  }
+  
   return false;
 };
 

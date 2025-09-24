@@ -105,58 +105,55 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
   
   // Show section even if no products (with empty state message)
   
+  // Get season name in Korean
+  const getSeasonName = (personalColor: string): string => {
+    const seasonMap: Record<string, string> = {
+      'spring': '봄 웜',
+      'summer': '여름 쿨',
+      'autumn': '가을 웜',
+      'winter': '겨울 쿨'
+    };
+    
+    const lowerColor = personalColor.toLowerCase();
+    for (const [key, value] of Object.entries(seasonMap)) {
+      if (lowerColor.includes(key)) {
+        return value;
+      }
+    }
+    return '당신';
+  };
+
+  const seasonName = getSeasonName(personalColorEn);
+
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
-      <div className="p-4">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <span className="text-xl">🛍️</span> 
-          <span>추천 히잡을 클릭해 보세요</span>
-        </h3>
+    <div className="mb-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">
+        <span style={{ color: '#FF6B6B' }}>{seasonName}</span>을 위한
+        <br />
+        추천 히잡을 클릭해 보세요
+      </h3>
         
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Show products or empty state */}
-            {hijabProducts.length === 0 && beautyProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p className="mb-2">아직 등록된 상품이 없습니다.</p>
-                <p className="text-sm">곧 멋진 상품들이 추가될 예정입니다!</p>
-              </div>
-            ) : (
-              <>
-                {/* Hijab Products Row */}
-                {hijabProducts.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3">
-                    {hijabProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                    {/* Fill empty slots if less than 3 products */}
-                    {hijabProducts.length < 3 && Array.from({ length: 3 - hijabProducts.length }).map((_, i) => (
-                      <div key={`empty-hijab-${i}`} className="bg-gray-50 rounded-lg aspect-square" />
-                    ))}
-                  </div>
-                )}
-                
-                {/* Beauty Products Row */}
-                {beautyProducts.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3">
-                    {beautyProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                    {/* Fill empty slots if less than 3 products */}
-                    {beautyProducts.length < 3 && Array.from({ length: 3 - beautyProducts.length }).map((_, i) => (
-                      <div key={`empty-beauty-${i}`} className="bg-gray-50 rounded-lg aspect-square" />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        </div>
+      ) : (
+        <>
+          {/* Show only hijab products */}
+          {hijabProducts.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="mb-2">아직 등록된 히잡이 없습니다.</p>
+              <p className="text-sm">곧 멋진 상품들이 추가될 예정입니다!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {hijabProducts.slice(0, 3).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
