@@ -132,11 +132,11 @@ router.post('/products', async (req, res, next) => {
     } = req.body;
     
     // Validation
-    if (!name || !category || !price || !thumbnailUrl || !personalColors || !shopeeLink) {
+    if (!name || !category || !price || !thumbnailUrl || !personalColors) {
       throw new AppError(400, 'Missing required fields');
     }
     
-    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
     if (!validCategories.includes(category)) {
       throw new AppError(400, 'Invalid category');
     }

@@ -149,7 +149,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
     e.preventDefault();
     
     // Validation
-    if (!formData.name || !formData.thumbnailUrl || formData.personalColors.length === 0 || !formData.shopeeLink) {
+    if (!formData.name || !formData.thumbnailUrl || formData.personalColors.length === 0) {
       addToast({
         type: 'error',
         title: '입력 오류',
@@ -158,8 +158,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
       return;
     }
     
-    // Validate Shopee link format
-    if (!formData.shopeeLink.includes('shopee')) {
+    // Validate Shopee link format if provided
+    if (formData.shopeeLink && !formData.shopeeLink.includes('shopee')) {
       addToast({
         type: 'error',
         title: '유효하지 않은 링크',
@@ -241,7 +241,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                쇼피 링크 <span className="text-red-500">*</span>
+                쇼피 링크
               </label>
               <div className="relative">
                 <Input
@@ -249,7 +249,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
                   value={formData.shopeeLink}
                   onChange={(e) => setFormData(prev => ({ ...prev, shopeeLink: e.target.value }))}
                   placeholder="https://shopee.sg/..."
-                  required
                   className="pl-10"
                 />
                 <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
