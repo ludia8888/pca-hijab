@@ -15,30 +15,12 @@ export const ProductCarousel: React.FC<ProductCarouselProps> = ({ personalColor 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Fetch products
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => ProductAPI.getProducts(),
+  // Fetch recommended products
+  const { data: recommendedProducts = [], isLoading } = useQuery({
+    queryKey: ['recommendedProducts', personalColor],
+    queryFn: () => ProductAPI.getRecommendedProducts(personalColor),
     select: (response) => response.data,
-  });
-
-  // Map personal color to type
-  const getPersonalColorType = (color: string): PersonalColorType | null => {
-    const colorMapping: Record<string, PersonalColorType> = {
-      'Spring Warm': 'spring_warm',
-      'Summer Cool': 'summer_cool',
-      'Autumn Warm': 'autumn_warm',
-      'Winter Cool': 'winter_cool'
-    };
-    return colorMapping[color] || null;
-  };
-
-  const personalColorType = getPersonalColorType(personalColor);
-
-  // Filter products based on personal color
-  const recommendedProducts = products.filter((product) => {
-    if (!personalColorType) return false;
-    return product.personalColors?.includes(personalColorType);
+    enabled: !!personalColor, // Only run query if personalColor is available
   });
 
   // Category labels

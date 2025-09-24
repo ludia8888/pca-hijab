@@ -161,10 +161,10 @@ const ResultPageV2 = (): JSX.Element => {
           <ColorPaletteSection seasonKey={seasonKey} />
         </div>
 
-        {/* Section 3: Product Carousel - Commented out */}
-        {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
+        {/* Section 3: Product Carousel */}
+        <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
           <ProductCarousel personalColor={result.personal_color_en} />
-        </div> */}
+        </div>
 
         {/* Section 4: QR Code & Actions - Commented out */}
         {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
