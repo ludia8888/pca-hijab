@@ -51,6 +51,207 @@ interface ProductRecommendationProps {
   personalColorEn: string;
 }
 
+// Mock data fallback for when API has no products
+const getMockProducts = (personalColorEn: string): Product[] => {
+  const colorMapping: Record<string, string> = {
+    'spring': 'spring_warm',
+    'autumn': 'autumn_warm', 
+    'summer': 'summer_cool',
+    'winter': 'winter_cool'
+  };
+  
+  const lowerColor = personalColorEn.toLowerCase();
+  let personalColorType = colorMapping[lowerColor];
+  
+  if (!personalColorType) {
+    const seasonMatch = lowerColor.match(/(spring|summer|autumn|winter)/);
+    if (seasonMatch) {
+      personalColorType = colorMapping[seasonMatch[1]];
+    }
+  }
+  
+  const mockData: Record<string, Product[]> = {
+    'spring_warm': [
+      {
+        id: '1',
+        name: 'Soft Coral Hijab',
+        category: 'hijab',
+        price: 25000,
+        thumbnailUrl: '/uploads/hijabs/spring-coral-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['spring_warm'],
+        description: '봄 웜톤에 어울리는 코랄색 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '2', 
+        name: 'Peach Blossom Hijab',
+        category: 'hijab',
+        price: 28000,
+        thumbnailUrl: '/uploads/hijabs/spring-peach-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['spring_warm'],
+        description: '복숭아꽃처럼 화사한 봄 웜톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '3',
+        name: 'Light Camel Hijab', 
+        category: 'hijab',
+        price: 22000,
+        thumbnailUrl: '/uploads/hijabs/spring-camel-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['spring_warm'],
+        description: '라이트 카멜색의 데일리 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ],
+    'autumn_warm': [
+      {
+        id: '4',
+        name: 'Burnt Sienna Hijab',
+        category: 'hijab', 
+        price: 30000,
+        thumbnailUrl: '/uploads/hijabs/autumn-sienna-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['autumn_warm'],
+        description: '가을 웜톤을 위한 번트 시에나 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '5',
+        name: 'Chocolate Brown Hijab',
+        category: 'hijab',
+        price: 26000,
+        thumbnailUrl: '/uploads/hijabs/autumn-brown-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['autumn_warm'],
+        description: '초콜릿 브라운의 가을 웜톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '6',
+        name: 'Olive Khaki Hijab',
+        category: 'hijab',
+        price: 24000,
+        thumbnailUrl: '/uploads/hijabs/autumn-olive-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['autumn_warm'],
+        description: '올리브 카키색의 가을 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ],
+    'summer_cool': [
+      {
+        id: '7',
+        name: 'Rose Quartz Hijab',
+        category: 'hijab',
+        price: 27000,
+        thumbnailUrl: '/uploads/hijabs/summer-rose-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['summer_cool'],
+        description: '로즈쿼츠색의 여름 쿨톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '8',
+        name: 'Lavender Mist Hijab',
+        category: 'hijab',
+        price: 29000,
+        thumbnailUrl: '/uploads/hijabs/summer-lavender-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['summer_cool'],
+        description: '라벤더 미스트 여름 쿨톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '9',
+        name: 'Powder Blue Hijab',
+        category: 'hijab',
+        price: 25000,
+        thumbnailUrl: '/uploads/hijabs/summer-blue-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['summer_cool'],
+        description: '파우더 블루 여름 쿨톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ],
+    'winter_cool': [
+      {
+        id: '10',
+        name: 'Fuchsia Pink Hijab',
+        category: 'hijab',
+        price: 31000,
+        thumbnailUrl: '/uploads/hijabs/winter-fuchsia-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['winter_cool'],
+        description: '퓨샤 핑크의 겨울 쿨톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '11',
+        name: 'Burgundy Velvet Hijab',
+        category: 'hijab',
+        price: 33000,
+        thumbnailUrl: '/uploads/hijabs/winter-burgundy-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['winter_cool'],
+        description: '버건디 벨벳 겨울 쿨톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '12',
+        name: 'Midnight Navy Hijab',
+        category: 'hijab',
+        price: 28000,
+        thumbnailUrl: '/uploads/hijabs/winter-navy-hijab.svg',
+        detailImageUrls: [],
+        personalColors: ['winter_cool'],
+        description: '미드나잇 네이비 겨울 쿨톤 히잡',
+        shopeeLink: '#',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ]
+  };
+  
+  return mockData[personalColorType] || mockData['spring_warm'];
+};
+
 export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ personalColorEn }) => {
   const [hijabProducts, setHijabProducts] = React.useState<Product[]>([]);
   const [beautyProducts, setBeautyProducts] = React.useState<Product[]>([]);
@@ -88,12 +289,21 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
         console.log('[ProductRecommendation] Hijab products:', hijabs.length);
         console.log('[ProductRecommendation] Beauty products:', beauty.length);
         
-        setHijabProducts(hijabs);
-        setBeautyProducts(beauty);
+        // If no products from API, use mock data
+        if (hijabs.length === 0 && beauty.length === 0) {
+          console.log('[ProductRecommendation] No products from API, using mock data');
+          const mockProducts = getMockProducts(personalColorEn);
+          setHijabProducts(mockProducts);
+          setBeautyProducts([]);
+        } else {
+          setHijabProducts(hijabs);
+          setBeautyProducts(beauty);
+        }
       } catch (error) {
         console.error('[ProductRecommendation] Failed to fetch product recommendations:', error);
-        // Use empty arrays on error
-        setHijabProducts([]);
+        // Use mock data as fallback
+        const mockProducts = getMockProducts(personalColorEn);
+        setHijabProducts(mockProducts);
         setBeautyProducts([]);
       } finally {
         setIsLoading(false);
