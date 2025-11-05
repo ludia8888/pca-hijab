@@ -64,7 +64,7 @@ const VerifyEmailPage = (): JSX.Element => {
   };
 
   return (
-    <PageLayout>
+    <PageLayout showDefaultHeader>
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-xl p-8">

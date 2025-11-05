@@ -84,7 +84,7 @@ const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <PageLayout>
+    <PageLayout showDefaultHeader>
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md p-8">
           <div className="text-center mb-8">

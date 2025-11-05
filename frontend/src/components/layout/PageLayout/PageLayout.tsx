@@ -2,6 +2,7 @@ import { cn } from '@/utils/cn';
 import { useLocation } from 'react-router-dom';
 import { BottomNavigation } from '@/components/navigation';
 import { ROUTES } from '@/utils/constants';
+import { Header } from '../Header';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface PageLayoutProps {
   footer?: React.ReactNode;
   className?: string;
   noPadding?: boolean;
+  showDefaultHeader?: boolean;
 }
 
 export const PageLayout = ({
@@ -17,6 +19,7 @@ export const PageLayout = ({
   footer,
   className,
   noPadding = false,
+  showDefaultHeader = false,
 }: PageLayoutProps): JSX.Element => {
   const location = useLocation();
   
@@ -28,7 +31,8 @@ export const PageLayout = ({
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {header}
+      {/* 기본 헤더를 필요시에만 노출하여 중복 표출을 방지 */}
+      {(showDefaultHeader && header === undefined) ? <Header /> : header ?? null}
       
       <main 
         className={cn(

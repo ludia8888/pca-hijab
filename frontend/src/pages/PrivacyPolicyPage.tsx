@@ -1,10 +1,12 @@
 import React from 'react';
-import { PageLayout } from '../components/layout/PageLayout/PageLayout';
+import { Header, PageLayout } from '@/components/layout';
 import { motion } from 'framer-motion';
 
 export function PrivacyPolicyPage() {
   return (
-    <PageLayout showBackButton={true}>
+    <PageLayout
+      header={<Header title="Privacy Policy" showBack />}
+    >
       <div className="py-8 px-4 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

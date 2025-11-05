@@ -26,7 +26,7 @@ const MyPage = (): JSX.Element => {
   // }, [isAuthenticated, navigate]);
   
   return (
-    <PageLayout>
+    <PageLayout showDefaultHeader>
       <div className="max-w-7xl mx-auto w-full">
         {/* Header */}
         <div className="mb-6">

@@ -81,7 +81,7 @@ const ResetPasswordPage = (): JSX.Element => {
   };
 
   return (
-    <PageLayout>
+    <PageLayout showDefaultHeader>
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">

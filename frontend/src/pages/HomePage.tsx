@@ -78,7 +78,7 @@ const HomePage = (): JSX.Element => {
 
   if (loading) {
     return (
-      <PageLayout>
+      <PageLayout showDefaultHeader>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -90,7 +90,7 @@ const HomePage = (): JSX.Element => {
   }
 
   return (
-    <PageLayout>
+    <PageLayout showDefaultHeader>
       <div className="max-w-7xl mx-auto">
 
         {/* Content Carousel - Optional */}
