@@ -107,18 +107,11 @@ export const Header = ({
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Link to="/login">
-                  <Button variant="secondary" size="sm">
-                    로그인
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button size="sm">
-                    회원가입
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/login">
+                <Button variant="secondary" size="sm">
+                  로그인
+                </Button>
+              </Link>
             )}
           </div>
         </div>

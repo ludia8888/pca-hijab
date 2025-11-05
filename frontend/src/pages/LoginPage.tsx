@@ -88,13 +88,7 @@ const LoginPage = (): JSX.Element => {
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">로그인</h1>
-            <p className="text-gray-600">
-              계정이 없으신가요?{' '}
-              <Link to="/signup" className="text-primary hover:underline">
-                회원가입
-              </Link>
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">로그인</h1>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -180,6 +174,17 @@ const LoginPage = (): JSX.Element => {
               로그인
             </Button>
           </form>
+
+          <div className="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+            <Text variant="body-sm" color="gray" mb="2">
+              PCA HIJAB이 처음이신가요?
+            </Text>
+            <Link to="/signup">
+              <Button fullWidth size="lg" variant="outline">
+                지금 바로 회원가입
+              </Button>
+            </Link>
+          </div>
 
           <div className="mt-8">
             <div className="relative">
