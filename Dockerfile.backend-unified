@@ -42,34 +42,41 @@ RUN cat > /startup.sh << 'EOF'
 #!/bin/bash
 set -e
 
-# Start PostgreSQL
-su postgres -c "pg_ctl start -D /var/lib/postgresql/data -l /var/lib/postgresql/logfile"
+if [ -z "${DATABASE_URL}" ]; then
+    echo "DATABASE_URL not provided. Starting bundled PostgreSQL instance (development fallback)."
 
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to start..."
-for i in {1..30}; do
-    if su postgres -c "pg_isready"; then
-        echo "PostgreSQL is ready!"
-        break
+    # Start PostgreSQL
+    su postgres -c "pg_ctl start -D /var/lib/postgresql/data -l /var/lib/postgresql/logfile"
+
+    # Wait for PostgreSQL to be ready
+    echo "Waiting for PostgreSQL to start..."
+    for i in {1..30}; do
+        if su postgres -c "pg_isready"; then
+            echo "PostgreSQL is ready!"
+            break
+        fi
+        echo "Waiting... ($i/30)"
+        sleep 1
+    done
+
+    # Create database and user if not exists
+    su postgres -c "psql -c \"SELECT 1 FROM pg_database WHERE datname = 'pca_hijab'\" | grep -q 1 || createdb pca_hijab"
+    su postgres -c "psql -c \"SELECT 1 FROM pg_user WHERE usename = 'pca_user'\" | grep -q 1 || psql -c \"CREATE USER pca_user WITH PASSWORD 'pca_password';\""
+    su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE pca_hijab TO pca_user;\""
+
+    # Initialize database schema
+    if [ -f /docker-entrypoint-initdb.d/init-db.sql ]; then
+        su postgres -c "psql -U pca_user -d pca_hijab -f /docker-entrypoint-initdb.d/init-db.sql" || echo "Schema already exists"
     fi
-    echo "Waiting... ($i/30)"
-    sleep 1
-done
 
-# Create database and user if not exists
-su postgres -c "psql -c \"SELECT 1 FROM pg_database WHERE datname = 'pca_hijab'\" | grep -q 1 || createdb pca_hijab"
-su postgres -c "psql -c \"SELECT 1 FROM pg_user WHERE usename = 'pca_user'\" | grep -q 1 || psql -c \"CREATE USER pca_user WITH PASSWORD 'pca_password';\""
-su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE pca_hijab TO pca_user;\""
-
-# Initialize database schema
-if [ -f /docker-entrypoint-initdb.d/init-db.sql ]; then
-    su postgres -c "psql -U pca_user -d pca_hijab -f /docker-entrypoint-initdb.d/init-db.sql" || echo "Schema already exists"
+    export DATABASE_URL="postgresql://pca_user:pca_password@localhost:5432/pca_hijab"
+else
+    echo "External DATABASE_URL detected. Skipping bundled PostgreSQL startup."
 fi
 
-# Set environment variables
-export DATABASE_URL="postgresql://pca_user:pca_password@localhost:5432/pca_hijab"
-export NODE_ENV="production"
-export PORT=5001
+# Ensure defaults but do not override provided values
+export NODE_ENV="${NODE_ENV:-production}"
+export PORT="${PORT:-5001}"
 
 # Start Node.js backend
 cd /app/backend
