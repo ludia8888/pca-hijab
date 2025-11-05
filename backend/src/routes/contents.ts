@@ -175,6 +175,70 @@ router.get('/slug/:slug', async (req, res, next) => {
   }
 });
 
+// GET /api/contents/related/:id - Get related contents (public)
+router.get('/related/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const limitParam = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
+    const limit = Number.parseInt(limitParam ?? '4', 10);
+    const limitValue = Number.isNaN(limit) || limit <= 0 ? 4 : Math.min(limit, 12);
+
+    if (!db.getContent || !db.getAllContents) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    
+    // Get the current content
+    const currentContent = await db.getContent(id);
+    if (!currentContent || currentContent.status !== 'published') {
+      throw new AppError(404, 'Content not found');
+    }
+    
+    // Get all published contents
+    const contents = await db.getAllContents({ status: 'published' });
+
+    const normalizedCurrentTags = Array.isArray(currentContent.tags)
+      ? currentContent.tags.filter((tag): tag is string => Boolean(tag))
+      : [];
+    const tagsSet = new Set(normalizedCurrentTags);
+
+    const relatedContents = contents
+      .filter((candidate) => candidate.id !== id && candidate.status === 'published')
+      .map((candidate) => {
+        const candidateTags = Array.isArray(candidate.tags)
+          ? candidate.tags.filter((tag): tag is string => Boolean(tag))
+          : [];
+        const sharedTagCount = candidateTags.reduce((count, tag) => (tagsSet.has(tag) ? count + 1 : count), 0);
+        const sameCategory = candidate.category === currentContent.category;
+        const relevanceScore = (sameCategory ? 10 : 0) + sharedTagCount;
+        const recentDate = candidate.publishedAt || candidate.createdAt;
+
+        return {
+          content: candidate,
+          relevanceScore,
+          sameCategory,
+          sharedTagCount,
+          recentDate: new Date(recentDate),
+        };
+      })
+      .filter(({ sameCategory, sharedTagCount }) => sameCategory || sharedTagCount > 0)
+      .sort((a, b) => {
+        if (b.relevanceScore !== a.relevanceScore) {
+          return b.relevanceScore - a.relevanceScore;
+        }
+        return b.recentDate.getTime() - a.recentDate.getTime();
+      })
+      .slice(0, limitValue)
+      .map(({ content }) => content);
+
+    res.json({
+      success: true,
+      data: relatedContents
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/contents/:id - Get single content by ID (public)
 router.get('/:id', async (req, res, next) => {
   try {
@@ -193,53 +257,6 @@ router.get('/:id', async (req, res, next) => {
     res.json({
       success: true,
       data: content
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// GET /api/contents/related/:id - Get related contents (public)
-router.get('/related/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { limit = '4' } = req.query;
-    
-    if (!db.getContent || !db.getAllContents) {
-      throw new AppError(500, 'Content functionality not available');
-    }
-    
-    // Get the current content
-    const currentContent = await db.getContent(id);
-    if (!currentContent || currentContent.status !== 'published') {
-      throw new AppError(404, 'Content not found');
-    }
-    
-    // Get all published contents
-    let contents = await db.getAllContents({ status: 'published' });
-    
-    // Filter out current content and find related by category or tags
-    const relatedContents = contents
-      .filter(c => c.id !== id)
-      .filter(c => {
-        // Same category or has common tags
-        const sameCategory = c.category === currentContent.category;
-        const commonTags = c.tags.some(tag => currentContent.tags.includes(tag));
-        return sameCategory || commonTags;
-      })
-      .sort((a, b) => {
-        // Sort by relevance (same category first, then by common tags count)
-        const aRelevance = (a.category === currentContent.category ? 10 : 0) +
-          a.tags.filter(tag => currentContent.tags.includes(tag)).length;
-        const bRelevance = (b.category === currentContent.category ? 10 : 0) +
-          b.tags.filter(tag => currentContent.tags.includes(tag)).length;
-        return bRelevance - aRelevance;
-      })
-      .slice(0, parseInt(limit as string));
-    
-    res.json({
-      success: true,
-      data: relatedContents
     });
   } catch (error) {
     next(error);

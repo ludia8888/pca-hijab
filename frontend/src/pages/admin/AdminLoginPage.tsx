@@ -10,16 +10,17 @@ import { Lock } from 'lucide-react';
 
 const AdminLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { setApiKey } = useAdminStore();
+  const { setApiKey, isAuthenticated } = useAdminStore();
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto-redirect to dashboard (bypass login)
+  // 인증된 경우에만 대시보드로 이동
   useEffect(() => {
-    // Automatically redirect to dashboard
-    navigate('/admin/dashboard');
-  }, [navigate]);
+    if (isAuthenticated) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();

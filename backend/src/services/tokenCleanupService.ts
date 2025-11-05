@@ -22,27 +22,43 @@ class TokenCleanupService {
   private isRunning: boolean = false;
   private cleanupHistory: CleanupStats[] = [];
   private maxHistoryEntries: number = 24; // Keep last 24 cleanup runs
+  private schedulerEnabled: boolean = false;
   
   constructor() {
     // Only start scheduler in production or when explicitly enabled
-    if (this.shouldStartScheduler()) {
+    const override = process.env.ENABLE_TOKEN_CLEANUP?.toLowerCase();
+    this.schedulerEnabled = this.shouldStartScheduler();
+
+    if (this.schedulerEnabled) {
       this.startScheduler();
     } else {
-      console.info('🧹 Token cleanup scheduler disabled (development mode)');
+      if (override === 'false') {
+        console.info('🧹 Token cleanup scheduler disabled via ENABLE_TOKEN_CLEANUP=false override');
+      } else if (config.NODE_ENV !== 'production') {
+        console.info('🧹 Token cleanup scheduler disabled (development mode). Set ENABLE_TOKEN_CLEANUP=true to enable.');
+      } else {
+        console.info('🧹 Token cleanup scheduler disabled by configuration.');
+      }
     }
   }
 
   private shouldStartScheduler(): boolean {
-    // Temporarily disabled until database schema is updated
-    return false;
-    
-    // Always run in production
-    if (config.NODE_ENV === 'production') {
+    const override = process.env.ENABLE_TOKEN_CLEANUP?.toLowerCase();
+    const isProduction = config.NODE_ENV === 'production';
+
+    if (override === 'false') {
+      return false;
+    }
+
+    if (isProduction) {
       return true;
     }
-    
-    // In development, only run if explicitly enabled
-    return process.env.ENABLE_TOKEN_CLEANUP === 'true';
+
+    if (override === 'true') {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -223,7 +239,7 @@ class TokenCleanupService {
   } {
     return {
       isRunning: this.isRunning,
-      schedulerEnabled: this.shouldStartScheduler(),
+      schedulerEnabled: this.schedulerEnabled,
       lastCleanup: this.cleanupHistory.length > 0 
         ? this.cleanupHistory[this.cleanupHistory.length - 1].timestamp 
         : null,

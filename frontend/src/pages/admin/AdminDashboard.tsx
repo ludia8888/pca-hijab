@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Package, FileText } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
-import { ProductForm, ProductList, ContentForm, ContentList, AdminLoadingState } from '@/components/admin';
+import { ProductForm, ProductList, ContentForm, ContentList } from '@/components/admin';
 import { useAdminStore } from '@/store/useAdminStore';
 import type { Product, Content } from '@/types/admin';
 
@@ -12,23 +12,7 @@ type ViewMode = 'list' | 'create' | 'edit';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { logout, setApiKey, apiKey } = useAdminStore();
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Auto-set API key on mount (bypass login)
-  useEffect(() => {
-    // Use the actual API key from Render backend
-    const adminApiKey = '0pbqXL3GT/lJtjy/WhOJblqbgevmZORbkerEsoCillk=';
-    console.log('[AdminDashboard] Setting API key...');
-    setApiKey(adminApiKey);
-    
-    // Small delay to ensure store is updated
-    setTimeout(() => {
-      console.log('[AdminDashboard] API key set, initializing...');
-      setIsInitialized(true);
-    }, 100);
-  }, [setApiKey]);
-  
+  const { logout } = useAdminStore();
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -138,51 +122,42 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Show loading while initializing */}
-          {!isInitialized ? (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <AdminLoadingState />
-            </div>
-          ) : (
+          {/* Product Management */}
+          {activeTab === 'products' && (
             <>
-              {/* Product Management */}
-              {activeTab === 'products' && (
-                <>
-                  {viewMode === 'list' && (
-                    <ProductList
-                      onCreateClick={handleCreateClick}
-                      onEditClick={handleEditProductClick}
-                    />
-                  )}
-                  
-                  {(viewMode === 'create' || viewMode === 'edit') && (
-                    <ProductForm
-                      product={editingProduct || undefined}
-                      onSuccess={handleFormSuccess}
-                      onCancel={handleFormCancel}
-                    />
-                  )}
-                </>
+              {viewMode === 'list' && (
+                <ProductList
+                  onCreateClick={handleCreateClick}
+                  onEditClick={handleEditProductClick}
+                />
               )}
+              
+              {(viewMode === 'create' || viewMode === 'edit') && (
+                <ProductForm
+                  product={editingProduct || undefined}
+                  onSuccess={handleFormSuccess}
+                  onCancel={handleFormCancel}
+                />
+              )}
+            </>
+          )}
 
-              {/* Content Management */}
-              {activeTab === 'contents' && (
-                <>
-                  {viewMode === 'list' && (
-                    <ContentList
-                      onCreateClick={handleCreateClick}
-                      onEditClick={handleEditContentClick}
-                    />
-                  )}
-                  
-                  {(viewMode === 'create' || viewMode === 'edit') && (
-                    <ContentForm
-                      content={editingContent || undefined}
-                      onSuccess={handleFormSuccess}
-                      onCancel={handleFormCancel}
-                    />
-                  )}
-                </>
+          {/* Content Management */}
+          {activeTab === 'contents' && (
+            <>
+              {viewMode === 'list' && (
+                <ContentList
+                  onCreateClick={handleCreateClick}
+                  onEditClick={handleEditContentClick}
+                />
+              )}
+              
+              {(viewMode === 'create' || viewMode === 'edit') && (
+                <ContentForm
+                  content={editingContent || undefined}
+                  onSuccess={handleFormSuccess}
+                  onCancel={handleFormCancel}
+                />
               )}
             </>
           )}
