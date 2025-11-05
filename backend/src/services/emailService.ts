@@ -41,7 +41,7 @@ class EmailService {
       if (this.useResend) {
         this.initializeResend();
       } else {
-        this.initializeTransporter();
+        void this.initializeTransporter();
       }
     } else {
       console.warn('📧 Email service is disabled - emails will be logged instead of sent');

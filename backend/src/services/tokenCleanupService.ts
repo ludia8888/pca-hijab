@@ -7,7 +7,14 @@
 import cron from 'node-cron';
 import { db } from '../db';
 import { config } from '../config/environment';
-import { maskUserId } from '../utils/logging';
+
+interface QueryableDatabase {
+  query: (sql: string, params?: unknown[]) => Promise<{ rowCount: number | null | undefined }>;
+}
+
+const isQueryableDatabase = (database: unknown): database is QueryableDatabase => {
+  return typeof (database as QueryableDatabase)?.query === 'function';
+};
 
 interface CleanupStats {
   timestamp: Date;
@@ -129,28 +136,39 @@ class TokenCleanupService {
     let verificationTokensExpired = 0;
     let passwordResetTokensExpired = 0;
 
+    if (!isQueryableDatabase(db)) {
+      console.info('🧹 Token cleanup skipped - query interface not available on current database');
+      return {
+        timestamp: new Date(),
+        refreshTokensDeleted,
+        verificationTokensExpired,
+        passwordResetTokensExpired,
+        totalOperations: 0
+      };
+    }
+
     try {
       // Clean up expired refresh tokens
-      const refreshResult = await (db as any).query('DELETE FROM refresh_tokens WHERE expires_at < CURRENT_TIMESTAMP');
-      refreshTokensDeleted = refreshResult.rowCount || 0;
+      const refreshResult = await db.query('DELETE FROM refresh_tokens WHERE expires_at < CURRENT_TIMESTAMP');
+      refreshTokensDeleted = refreshResult.rowCount ?? 0;
 
       // Clean up expired verification tokens
-      const verificationResult = await (db as any).query(`
+      const verificationResult = await db.query(`
         UPDATE users 
         SET verification_token = NULL, verification_token_expires = NULL
         WHERE verification_token IS NOT NULL 
           AND verification_token_expires < CURRENT_TIMESTAMP
       `);
-      verificationTokensExpired = verificationResult.rowCount || 0;
+      verificationTokensExpired = verificationResult.rowCount ?? 0;
 
       // Clean up expired password reset tokens
-      const passwordResetResult = await (db as any).query(`
+      const passwordResetResult = await db.query(`
         UPDATE users 
         SET reset_password_token = NULL, reset_password_expires = NULL
         WHERE reset_password_token IS NOT NULL 
           AND reset_password_expires < CURRENT_TIMESTAMP
       `);
-      passwordResetTokensExpired = passwordResetResult.rowCount || 0;
+      passwordResetTokensExpired = passwordResetResult.rowCount ?? 0;
 
     } catch (error) {
       console.error('🚨 Error during cleanup operations:', error);

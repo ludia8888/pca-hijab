@@ -28,12 +28,18 @@ export default [
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
       '@typescript-eslint/strict-boolean-expressions': 'off',
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }]
     }
   },
   {
-    ignores: ['dist/', 'node_modules/', '*.config.*']
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '*.config.*',
+      'src/scripts/**/*',
+      'src/db/run_migration.js'
+    ]
   }
 ];

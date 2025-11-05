@@ -525,7 +525,7 @@ if (process.env.NODE_ENV !== 'production') {
     console.info('DATABASE_URL exists:', true);
     console.info('DATABASE_URL length:', process.env.DATABASE_URL.length);
     // Extract and log only the host part for debugging
-    const hostMatch = process.env.DATABASE_URL.match(/@([^:\/]+)/);
+    const hostMatch = process.env.DATABASE_URL.match(/@([^:/]+)/);
     if (hostMatch) {
       console.info('Database host from env:', hostMatch[1]);
     }
