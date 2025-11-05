@@ -1,10 +1,19 @@
-declare namespace Express {
-  interface Request {
-    rateLimit?: {
-      limit: number;
-      current: number;
-      remaining: number;
-      resetTime?: Date;
-    };
+import type {
+  AuthenticatedRequestUser,
+  Recommendation,
+  RateLimitInfo,
+  Session
+} from './index';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthenticatedRequestUser;
+      session?: Session;
+      recommendation?: Recommendation;
+      rateLimit?: RateLimitInfo;
+    }
   }
 }
+
+export {};

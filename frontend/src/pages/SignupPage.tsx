@@ -30,7 +30,7 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
 
   const strength = getStrength();
   const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
-  const labels = ['약함', '보통', '강함', '매우 강함'];
+  const labels = ['Weak', 'Moderate', 'Strong', 'Very Strong'];
 
   return password ? (
     <div className="mt-2">
@@ -45,7 +45,7 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
         ))}
       </div>
       <Text variant="caption" color="gray">
-        비밀번호 강도: <span className="font-medium">{labels[strength - 1]}</span>
+        Password strength: <span className="font-medium">{labels[strength - 1]}</span>
       </Text>
     </div>
   ) : null;
@@ -108,7 +108,7 @@ const SignupPage = (): JSX.Element => {
         page: 'signup'
       });
 
-      toast.success('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
+      toast.success('Sign-up complete! Please check your email.');
       navigate('/landing');
     } catch (error: any) {
       trackEvent('signup_failed', {
@@ -117,7 +117,7 @@ const SignupPage = (): JSX.Element => {
         page: 'signup'
       });
       
-      toast.error(error.response?.data?.message || '회원가입에 실패했습니다.');
+      toast.error(error.response?.data?.message || 'Failed to sign up.');
     }
   };
 
@@ -126,11 +126,11 @@ const SignupPage = (): JSX.Element => {
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <Text variant="h1" color="gray" mb="2">회원가입</Text>
+            <Text variant="h1" color="gray" mb="2">Create Account</Text>
             <Text color="gray">
-              이미 계정이 있으신가요?{' '}
+              Already have an account?{' '}
               <Link to="/login" className="text-primary-400 hover:text-primary-600 hover:underline transition-colors">
-                로그인
+                Sign In
               </Link>
             </Text>
           </div>
@@ -139,13 +139,13 @@ const SignupPage = (): JSX.Element => {
             <div>
               <Input
                 type="text"
-                label="이름"
-                placeholder="홍길동"
+                label="Full Name"
+                placeholder="Jane Doe"
                 {...register('fullName', {
-                  required: '이름을 입력해주세요',
+                  required: 'Please enter your name.',
                   minLength: {
                     value: 2,
-                    message: '이름은 최소 2자 이상이어야 합니다'
+                    message: 'Name must be at least 2 characters long.'
                   }
                 })}
                 error={errors.fullName?.message}
@@ -157,13 +157,13 @@ const SignupPage = (): JSX.Element => {
             <div>
               <Input
                 type="email"
-                label="이메일"
+                label="Email"
                 placeholder="your@email.com"
                 {...register('email', {
-                  required: '이메일을 입력해주세요',
+                  required: 'Please enter your email address.',
                   pattern: {
                     value: /^\S+@\S+$/i,
-                    message: '올바른 이메일 형식이 아닙니다'
+                    message: 'Please enter a valid email address.'
                   }
                 })}
                 error={errors.email?.message}
@@ -175,17 +175,17 @@ const SignupPage = (): JSX.Element => {
             <div>
               <Input
                 type={showPassword ? 'text' : 'password'}
-                label="비밀번호"
+                label="Password"
                 placeholder="••••••••"
                 {...register('password', {
-                  required: '비밀번호를 입력해주세요',
+                  required: 'Please enter a password.',
                   minLength: {
                     value: 8,
-                    message: '비밀번호는 최소 8자 이상이어야 합니다'
+                    message: 'Passwords must be at least 8 characters long.'
                   },
                   pattern: {
                     value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-                    message: '비밀번호는 대소문자, 숫자, 특수문자를 포함해야 합니다'
+                    message: 'Passwords must include upper and lower case letters, a number, and a special character.'
                   }
                 })}
                 error={errors.password?.message}
@@ -212,12 +212,12 @@ const SignupPage = (): JSX.Element => {
             <div>
               <Input
                 type={showConfirmPassword ? 'text' : 'password'}
-                label="비밀번호 확인"
+                label="Confirm Password"
                 placeholder="••••••••"
                 {...register('confirmPassword', {
-                  required: '비밀번호를 다시 입력해주세요',
+                  required: 'Please re-enter your password.',
                   validate: value =>
-                    value === password || '비밀번호가 일치하지 않습니다'
+                    value === password || 'Passwords do not match.'
                 })}
                 error={errors.confirmPassword?.message}
                 leftIcon={<Lock className="w-5 h-5 text-gray-400" />}
@@ -244,19 +244,19 @@ const SignupPage = (): JSX.Element => {
                 <input
                   type="checkbox"
                   {...register('agreeToTerms', {
-                    required: '이용약관에 동의해주세요'
+                    required: 'Please agree to the terms of service.'
                   })}
                   className="mt-1 mr-2 rounded border-gray-300 text-primary-400 focus:ring-primary-400"
                 />
                 <span className="text-sm text-gray-600">
                   <Link to={ROUTES.TERMS_OF_SERVICE} className="text-primary hover:underline">
-                    이용약관
+                    Terms of Service
                   </Link>
-                  {' 및 '}
+                  {' and '}
                   <Link to="/privacy" className="text-primary hover:underline">
-                    개인정보처리방침
+                    Privacy Policy
                   </Link>
-                  에 동의합니다
+                  . I agree to both.
                 </span>
               </label>
               {errors.agreeToTerms && (
@@ -277,22 +277,22 @@ const SignupPage = (): JSX.Element => {
               loading={isLoading}
               disabled={isLoading}
             >
-              회원가입
+              Sign Up
             </Button>
           </form>
 
           <div className="mt-6 space-y-2">
             <div className="flex items-center text-sm text-gray-600">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              <span>안전한 비밀번호 암호화</span>
+              <span>Secure password encryption</span>
             </div>
             <div className="flex items-center text-sm text-gray-600">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              <span>개인정보 보호 정책 준수</span>
+              <span>Privacy-first data policy</span>
             </div>
             <div className="flex items-center text-sm text-gray-600">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              <span>언제든지 탈퇴 가능</span>
+              <span>Cancel anytime</span>
             </div>
           </div>
         </Card>

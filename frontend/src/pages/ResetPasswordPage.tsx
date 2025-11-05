@@ -20,7 +20,7 @@ const ResetPasswordPage = (): JSX.Element => {
   useEffect(() => {
     // If no token, redirect to forgot password page
     if (!resetToken) {
-      toast.error('유효하지 않은 링크입니다');
+      toast.error('This reset link is invalid.');
       navigate('/forgot-password');
     }
   }, [resetToken, navigate]);
@@ -39,7 +39,7 @@ const ResetPasswordPage = (): JSX.Element => {
 
     // Check if passwords match
     if (password !== confirmPassword) {
-      setConfirmPasswordError('비밀번호가 일치하지 않습니다');
+      setConfirmPasswordError('Passwords do not match.');
       isValid = false;
     }
 
@@ -57,7 +57,7 @@ const ResetPasswordPage = (): JSX.Element => {
 
     try {
       await AuthAPI.resetPassword(resetToken, password);
-      toast.success('비밀번호가 성공적으로 변경되었습니다');
+      toast.success('Your password has been updated.');
       
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -65,10 +65,10 @@ const ResetPasswordPage = (): JSX.Element => {
       }, 2000);
     } catch (error: any) {
       console.error('Reset password error:', error);
-      const errorMessage = error.response?.data?.message || '오류가 발생했습니다. 다시 시도해주세요';
+      const errorMessage = error.response?.data?.message || 'Something went wrong. Please try again.';
       
       if (errorMessage.includes('expired') || errorMessage.includes('invalid')) {
-        toast.error('만료되었거나 유효하지 않은 링크입니다');
+        toast.error('This reset link has expired or is no longer valid.');
         setTimeout(() => {
           navigate('/forgot-password');
         }, 2000);
@@ -86,10 +86,10 @@ const ResetPasswordPage = (): JSX.Element => {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              새 비밀번호 설정
+              Set a new password
             </h2>
             <p className="text-gray-600">
-              안전한 새 비밀번호를 입력해주세요
+              Create a secure password to protect your account.
             </p>
           </div>
 
@@ -98,8 +98,8 @@ const ResetPasswordPage = (): JSX.Element => {
               <div>
                 <Input
                   type="password"
-                  label="새 비밀번호"
-                  placeholder="8자 이상, 영문/숫자/특수문자 포함"
+                  label="New password"
+                  placeholder="At least 8 characters with letters, numbers, and symbols"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   error={passwordError}
@@ -107,14 +107,14 @@ const ResetPasswordPage = (): JSX.Element => {
                   autoFocus
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다
+                  Passwords must be 8+ characters and include letters, numbers, and special symbols.
                 </p>
               </div>
 
               <Input
                 type="password"
-                label="새 비밀번호 확인"
-                placeholder="비밀번호를 다시 입력해주세요"
+                label="Confirm new password"
+                placeholder="Re-enter your new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 error={confirmPasswordError}
@@ -129,7 +129,7 @@ const ResetPasswordPage = (): JSX.Element => {
               loading={isLoading}
               disabled={isLoading || !password || !confirmPassword}
             >
-              비밀번호 변경
+              Update password
             </Button>
 
             <div className="text-center text-sm">
@@ -137,7 +137,7 @@ const ResetPasswordPage = (): JSX.Element => {
                 to="/login"
                 className="font-medium text-purple-600 hover:text-purple-500"
               >
-                로그인으로 돌아가기
+                Back to sign in
               </Link>
             </div>
           </form>

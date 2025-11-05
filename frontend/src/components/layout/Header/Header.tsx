@@ -46,10 +46,10 @@ export const Header = ({
       });
       
       await logout();
-      toast.success('로그아웃되었습니다');
+      toast.success('Signed out successfully');
       navigate('/');
     } catch (error) {
-      toast.error('로그아웃 실패');
+      toast.error('Failed to sign out');
     }
   };
 
@@ -109,7 +109,7 @@ export const Header = ({
             ) : (
               <Link to="/login">
                 <Button variant="secondary" size="sm">
-                  로그인
+                  Sign In
                 </Button>
               </Link>
             )}

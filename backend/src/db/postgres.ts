@@ -1,8 +1,86 @@
 import { Pool } from 'pg';
 import type { Session, Recommendation, PersonalColorResult, UserPreferences, User, RefreshToken, Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus } from '../types';
 
+type QueryParameters = ReadonlyArray<unknown>;
+
+interface DatabaseError extends Error {
+  detail?: string;
+  hint?: string;
+  code?: string;
+  constraint?: string;
+  table?: string;
+  column?: string;
+}
+
+interface UserRow {
+  id: string;
+  email: string;
+  password_hash: string | null;
+  full_name: string | null;
+  instagram_id: string | null;
+  email_verified: boolean;
+  verification_token: string | null;
+  verification_token_expires: Date | null;
+  reset_password_token: string | null;
+  reset_password_expires: Date | null;
+  created_at: Date;
+  updated_at: Date | null;
+}
+
+interface ProductRow {
+  id: string;
+  name: string;
+  category: ProductCategory;
+  price: number;
+  image_url?: string | null;
+  thumbnail_url?: string | null;
+  additional_images?: string[] | null;
+  detail_image_urls?: string[] | null;
+  personal_colors?: PersonalColorType[] | string[] | null;
+  description?: string | null;
+  product_link?: string | null;
+  shopee_link?: string | null;
+  is_available?: boolean | null;
+  is_active?: boolean | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface ContentRow {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  slug: string;
+  thumbnail_url: string | null;
+  content: string;
+  excerpt: string | null;
+  category: ContentCategory;
+  tags: string[] | null;
+  status: ContentStatus;
+  published_at: Date | null;
+  meta_description: string | null;
+  meta_keywords: string | null;
+  view_count: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface DbQueryResult<Row> {
+  rows: Row[];
+  rowCount: number | null;
+}
+
+type RowRecord = Record<string, unknown>;
+
+type SSLConfig =
+  | false
+  | {
+      rejectUnauthorized: boolean;
+      require?: boolean;
+    };
+
 // Secure SSL configuration for database connections
-const getSSLConfig = () => {
+const getSSLConfig = (): SSLConfig => {
   const databaseUrl = process.env.DATABASE_URL;
   
   if (!databaseUrl) {
@@ -91,9 +169,9 @@ export class PostgresDatabase {
   }
 
   // Generic query method for token cleanup service
-  async query(text: string, params?: any[]): Promise<{ rows: any[]; rowCount: number | null }> {
+  async query<Row = RowRecord>(text: string, params: QueryParameters = []): Promise<DbQueryResult<Row>> {
     try {
-      const result = await pool.query(text, params);
+      const result = await pool.query<Row>(text, [...params]);
       return {
         rows: result.rows,
         rowCount: result.rowCount
@@ -479,7 +557,7 @@ export class PostgresDatabase {
   async addAdminAction(
     sessionId: string,
     actionType: string,
-    actionDetails: any,
+    actionDetails: unknown,
     performedBy: string = 'admin'
   ): Promise<boolean> {
     const query = `
@@ -496,7 +574,7 @@ export class PostgresDatabase {
     }
   }
 
-  async getAdminActions(sessionId: string): Promise<any[]> {
+  async getAdminActions(sessionId: string): Promise<RowRecord[]> {
     const query = `
       SELECT * FROM admin_actions
       WHERE session_id = $1
@@ -512,7 +590,7 @@ export class PostgresDatabase {
     }
   }
 
-  async getMessageHistory(sessionId: string): Promise<any[]> {
+  async getMessageHistory(sessionId: string): Promise<RowRecord[]> {
     const query = `
       SELECT * FROM message_history
       WHERE session_id = $1
@@ -529,7 +607,7 @@ export class PostgresDatabase {
   }
 
   // Get unified user view for admin dashboard
-  async getUnifiedUserView(): Promise<any[]> {
+  async getUnifiedUserView(): Promise<RowRecord[]> {
     const query = `
       SELECT 
         s.id,
@@ -608,7 +686,7 @@ export class PostgresDatabase {
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
     const updateFields: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let valueIndex = 1;
 
     if (updates.email !== undefined) {
@@ -818,20 +896,20 @@ export class PostgresDatabase {
   }
 
   // Helper method to map database row to User type
-  private mapUserRow(row: any): User {
+  private mapUserRow(row: UserRow): User {
     return {
       id: row.id,
       email: row.email,
-      passwordHash: row.password_hash,
-      fullName: row.full_name,
-      instagramId: row.instagram_id,
+      passwordHash: row.password_hash ?? '',
+      fullName: row.full_name ?? '',
+      instagramId: row.instagram_id ?? undefined,
       emailVerified: row.email_verified,
-      verificationToken: row.verification_token,
-      verificationTokenExpires: row.verification_token_expires,
-      resetPasswordToken: row.reset_password_token,
-      resetPasswordExpires: row.reset_password_expires,
+      verificationToken: row.verification_token ?? undefined,
+      verificationTokenExpires: row.verification_token_expires ?? undefined,
+      resetPasswordToken: row.reset_password_token ?? undefined,
+      resetPasswordExpires: row.reset_password_expires ?? undefined,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at ?? undefined
     };
   }
 
@@ -880,18 +958,19 @@ export class PostgresDatabase {
       ]);
       
       return this.mapProductRow(result.rows[0]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const dbError = (error instanceof Error ? error : new Error('Unknown database error')) as DatabaseError;
       console.error('[PostgreSQL] Product creation failed:', {
-        error: error.message,
-        detail: error.detail,
-        hint: error.hint,
-        code: error.code,
-        constraint: error.constraint,
-        table: error.table,
-        column: error.column,
-        data: data
+        error: dbError.message,
+        detail: dbError.detail,
+        hint: dbError.hint,
+        code: dbError.code,
+        constraint: dbError.constraint,
+        table: dbError.table,
+        column: dbError.column,
+        data
       });
-      throw error;
+      throw dbError;
     }
   }
 
@@ -903,7 +982,7 @@ export class PostgresDatabase {
 
   async updateProduct(productId: string, updates: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product | undefined> {
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     // Map our field names to actual database column names
@@ -970,21 +1049,30 @@ export class PostgresDatabase {
     return result.rows.map(row => this.mapProductRow(row));
   }
 
-  private mapProductRow(row: any): Product {
+  private mapProductRow(row: ProductRow): Product {
+    const thumbnailUrl = row.image_url ?? row.thumbnail_url ?? '';
+    const detailImagesRaw = row.additional_images ?? row.detail_image_urls ?? [];
+    const detailImageUrls = Array.isArray(detailImagesRaw)
+      ? detailImagesRaw.filter((image): image is string => typeof image === 'string')
+      : [];
+    const personalColorsRaw = row.personal_colors ?? [];
+    const personalColors = Array.isArray(personalColorsRaw)
+      ? (personalColorsRaw.filter((color): color is PersonalColorType => typeof color === 'string') as PersonalColorType[])
+      : [];
+
     return {
       id: row.id,
       name: row.name,
       category: row.category,
       price: row.price,
-      thumbnailUrl: row.thumbnail_url,  // Map from thumbnail_url
-      detailImageUrls: row.detail_image_urls || [],  // Map from detail_image_urls
-      personalColors: row.personal_colors || [],
-      description: row.description || '',
-      shopeeLink: row.shopee_link || '',  // Map from shopee_link
-      isActive: row.is_active,  // Map from is_active
+      thumbnailUrl,
+      detailImageUrls,
+      personalColors,
+      description: row.description ?? undefined,
+      shopeeLink: row.product_link ?? row.shopee_link ?? '',
+      isActive: (row.is_available ?? row.is_active) ?? true,
       createdAt: row.created_at,
       updatedAt: row.updated_at
-      // Note: row.brand and row.name_ko exist but are not part of our Product interface
     };
   }
 
@@ -1045,7 +1133,7 @@ export class PostgresDatabase {
 
   async updateContent(contentId: string, updates: Partial<Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>>): Promise<Content | undefined> {
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     Object.entries(updates).forEach(([key, value]) => {
@@ -1083,7 +1171,7 @@ export class PostgresDatabase {
   async getAllContents(filters?: { category?: ContentCategory; status?: ContentStatus }): Promise<Content[]> {
     let query = 'SELECT * FROM contents';
     const conditions: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (filters?.category) {
@@ -1120,22 +1208,22 @@ export class PostgresDatabase {
     return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
   }
 
-  private mapContentRow(row: any): Content {
+  private mapContentRow(row: ContentRow): Content {
     return {
       id: row.id,
       title: row.title,
-      subtitle: row.subtitle,
+      subtitle: row.subtitle ?? undefined,
       slug: row.slug,
-      thumbnailUrl: row.thumbnail_url,
+      thumbnailUrl: row.thumbnail_url ?? '',
       content: row.content,
-      excerpt: row.excerpt,
+      excerpt: row.excerpt ?? undefined,
       category: row.category,
-      tags: row.tags || [],
+      tags: Array.isArray(row.tags) ? row.tags : [],
       status: row.status,
-      publishedAt: row.published_at,
-      metaDescription: row.meta_description,
-      metaKeywords: row.meta_keywords,
-      viewCount: row.view_count,
+      publishedAt: row.published_at ?? undefined,
+      metaDescription: row.meta_description ?? undefined,
+      metaKeywords: row.meta_keywords ?? undefined,
+      viewCount: row.view_count ?? 0,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };

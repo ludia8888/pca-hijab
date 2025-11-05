@@ -3,17 +3,6 @@ import { AppError } from './errorHandler';
 import { verifyAccessToken } from '../utils/auth';
 import { config } from '../config/environment';
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-      };
-    }
-  }
-}
-
 // Simple API key authentication for admin endpoints
 export const authenticateAdmin = (
   req: Request,

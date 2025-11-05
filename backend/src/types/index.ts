@@ -141,3 +141,13 @@ export interface Content {
   createdAt: Date;
   updatedAt: Date;
 }
+export interface RateLimitInfo {
+  limit: number;
+  current: number;
+  remaining: number;
+  resetTime?: Date;
+}
+
+export interface AuthenticatedRequestUser {
+  userId: string;
+}

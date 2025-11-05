@@ -70,7 +70,7 @@ const LoginPage = (): JSX.Element => {
         page: 'login'
       });
 
-      toast.success('로그인 성공!');
+      toast.success('Signed in successfully!');
       navigate(from, { replace: true });
     } catch (error: any) {
       trackEvent('login_failed', {
@@ -79,7 +79,7 @@ const LoginPage = (): JSX.Element => {
         page: 'login'
       });
       
-      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+      toast.error(error.response?.data?.message || 'Failed to sign in.');
     }
   };
 
@@ -88,20 +88,20 @@ const LoginPage = (): JSX.Element => {
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">로그인</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Sign In</h1>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <Input
                 type="email"
-                label="이메일"
+                label="Email"
                 placeholder="your@email.com"
                 {...register('email', {
-                  required: '이메일을 입력해주세요',
+                  required: 'Please enter your email address.',
                   pattern: {
                     value: /^\S+@\S+$/i,
-                    message: '올바른 이메일 형식이 아닙니다'
+                    message: 'Please enter a valid email address.'
                   }
                 })}
                 error={errors.email?.message}
@@ -113,13 +113,13 @@ const LoginPage = (): JSX.Element => {
             <div>
               <Input
                 type={showPassword ? 'text' : 'password'}
-                label="비밀번호"
+                label="Password"
                 placeholder="••••••••"
                 {...register('password', {
-                  required: '비밀번호를 입력해주세요',
+                  required: 'Please enter your password.',
                   minLength: {
                     value: 6,
-                    message: '비밀번호는 최소 6자 이상이어야 합니다'
+                    message: 'Passwords must be at least 6 characters long.'
                   }
                 })}
                 error={errors.password?.message}
@@ -154,13 +154,13 @@ const LoginPage = (): JSX.Element => {
                   type="checkbox"
                   className="mr-2 rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <span className="text-gray-600">로그인 상태 유지</span>
+                <span className="text-gray-600">Keep me signed in</span>
               </label>
               <Link
                 to="/forgot-password"
                 className="text-primary hover:underline"
               >
-                비밀번호 찾기
+                Forgot password?
               </Link>
             </div>
 
@@ -171,17 +171,17 @@ const LoginPage = (): JSX.Element => {
               loading={isLoading}
               disabled={isLoading}
             >
-              로그인
+              Sign In
             </Button>
           </form>
 
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
             <Text variant="body-sm" color="gray" mb="2">
-              PCA HIJAB이 처음이신가요?
+              New to PCA HIJAB?
             </Text>
             <Link to="/signup">
               <Button fullWidth size="lg" variant="outline">
-                지금 바로 회원가입
+                Create an account
               </Button>
             </Link>
           </div>
@@ -192,7 +192,7 @@ const LoginPage = (): JSX.Element => {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">또는</span>
+                <span className="px-4 bg-white text-gray-500">or</span>
               </div>
             </div>
 
@@ -203,11 +203,11 @@ const LoginPage = (): JSX.Element => {
                   fullWidth
                   size="lg"
                 >
-                  로그인 없이 계속하기
+                  Continue without signing in
                 </Button>
               </Link>
               <Text variant="caption" color="gray" align="center" mt="2">
-                로그인 없이도 퍼스널 컬러 진단을 받을 수 있습니다
+                You can still get a personal color analysis without signing in.
               </Text>
             </div>
           </div>

@@ -30,7 +30,7 @@ const MyPage = (): JSX.Element => {
       <div className="max-w-7xl mx-auto w-full">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">마이페이지</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">My Page</h1>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
@@ -39,7 +39,7 @@ const MyPage = (): JSX.Element => {
             {sessionId && (
               <div className="flex items-center gap-1">
                 <Settings className="w-4 h-4" />
-                <span>세션: {sessionId.slice(0, 8)}...</span>
+                <span>Session: {sessionId.slice(0, 8)}...</span>
               </div>
             )}
           </div>
@@ -62,13 +62,13 @@ const MyPage = (): JSX.Element => {
           {/* Additional Features (Future) */}
           <div className="bg-gray-50 rounded-xl p-6 text-center">
             <Text variant="body-sm" color="gray" mb="2">
-              더 많은 기능이 곧 추가됩니다!
+              More features are coming soon!
             </Text>
             <div className="flex justify-center gap-4">
-              <Text variant="caption" color="gray">• 주문 내역</Text>
-              <Text variant="caption" color="gray">• 리뷰 관리</Text>
-              <Text variant="caption" color="gray">• 알림 설정</Text>
-              <Text variant="caption" color="gray">• 프로필 편집</Text>
+              <Text variant="caption" color="gray">• Order History</Text>
+              <Text variant="caption" color="gray">• Review Management</Text>
+              <Text variant="caption" color="gray">• Notification Settings</Text>
+              <Text variant="caption" color="gray">• Profile Editing</Text>
             </div>
           </div>
         </div>

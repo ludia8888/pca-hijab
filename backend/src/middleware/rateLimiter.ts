@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import type { RateLimitInfo } from '../types';
 
 // Create different rate limiters for different endpoints
 export const loginLimiter = rateLimit({
@@ -13,7 +14,7 @@ export const loginLimiter = rateLimit({
     res.status(429).json({
       success: false,
       error: 'Too many login attempts. Please try again later.',
-      retryAfter: (req as any).rateLimit?.resetTime
+      retryAfter: (req.rateLimit as RateLimitInfo | undefined)?.resetTime
     });
   }
 });
@@ -28,7 +29,7 @@ export const signupLimiter = rateLimit({
     res.status(429).json({
       success: false,
       error: 'Too many signup attempts. Please try again later.',
-      retryAfter: (req as any).rateLimit?.resetTime
+      retryAfter: (req.rateLimit as RateLimitInfo | undefined)?.resetTime
     });
   }
 });

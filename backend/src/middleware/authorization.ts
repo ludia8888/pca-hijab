@@ -3,7 +3,7 @@
  * CRITICAL SECURITY: Ensures users can only access their own resources
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { AppError } from './errorHandler';
 import { db } from '../db';
 import { maskUserId } from '../utils/logging';
@@ -138,11 +138,3 @@ export const verifySessionCreationAuth = async (
 };
 
 // Extend Express Request type to include attached resources
-declare global {
-  namespace Express {
-    interface Request {
-      session?: any; // Session object from database
-      recommendation?: any; // Recommendation object from database
-    }
-  }
-}

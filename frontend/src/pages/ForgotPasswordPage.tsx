@@ -17,7 +17,7 @@ const ForgotPasswordPage = (): JSX.Element => {
 
     // Validate email
     if (!validateEmail(email)) {
-      toast.error('올바른 이메일 주소를 입력해주세요');
+      toast.error('Please enter a valid email address.');
       return;
     }
 
@@ -26,10 +26,10 @@ const ForgotPasswordPage = (): JSX.Element => {
     try {
       await AuthAPI.forgotPassword(email);
       setIsEmailSent(true);
-      toast.success('비밀번호 재설정 링크를 이메일로 전송했습니다');
+      toast.success('We’ve emailed you a password reset link.');
     } catch (error: any) {
       console.error('Forgot password error:', error);
-      toast.error(error.response?.data?.message || '오류가 발생했습니다. 다시 시도해주세요');
+      toast.error(error.response?.data?.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -43,18 +43,18 @@ const ForgotPasswordPage = (): JSX.Element => {
             <div className="text-center">
               <div className="text-5xl mb-4">📧</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                이메일을 확인해주세요
+                Check your inbox
               </h2>
               <p className="text-gray-600">
-                {email}로 비밀번호 재설정 링크를 전송했습니다.
+                We sent a password reset link to {email}.
                 <br />
-                이메일을 확인하고 링크를 클릭하여 비밀번호를 재설정하세요.
+                Open the email and follow the link to set a new password.
               </p>
             </div>
 
             <div className="space-y-4">
               <p className="text-center text-sm text-gray-500">
-                이메일이 도착하지 않았나요?
+                Didn’t get the email?
               </p>
               <Button
                 variant="outline"
@@ -64,7 +64,7 @@ const ForgotPasswordPage = (): JSX.Element => {
                 }}
                 className="w-full"
               >
-                다시 시도
+                Send again
               </Button>
               
               <Button
@@ -72,7 +72,7 @@ const ForgotPasswordPage = (): JSX.Element => {
                 onClick={() => navigate('/login')}
                 className="w-full"
               >
-                로그인으로 돌아가기
+                Back to sign in
               </Button>
             </div>
           </div>
@@ -87,12 +87,12 @@ const ForgotPasswordPage = (): JSX.Element => {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              비밀번호를 잊으셨나요?
+              Forgot your password?
             </h2>
             <p className="text-gray-600">
-              가입할 때 사용한 이메일 주소를 입력하시면
+              Enter the email you used to sign up and we’ll send
               <br />
-              비밀번호 재설정 링크를 보내드립니다.
+              a reset link straight to your inbox.
             </p>
           </div>
 
@@ -100,8 +100,8 @@ const ForgotPasswordPage = (): JSX.Element => {
             <div className="space-y-4">
               <Input
                 type="email"
-                label="이메일"
-                placeholder="example@email.com"
+                label="Email"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -116,16 +116,16 @@ const ForgotPasswordPage = (): JSX.Element => {
               loading={isLoading}
               disabled={isLoading || !email}
             >
-              비밀번호 재설정 링크 전송
+              Email me a reset link
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-gray-600">계정이 기억나셨나요? </span>
+              <span className="text-gray-600">Remember your password? </span>
               <Link
                 to="/login"
                 className="font-medium text-purple-600 hover:text-purple-500"
               >
-                로그인
+                Sign In
               </Link>
             </div>
           </form>
