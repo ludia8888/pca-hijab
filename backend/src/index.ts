@@ -16,8 +16,8 @@ import { sessionRouter } from './routes/sessions';
 import { recommendationRouter } from './routes/recommendations';
 import adminRouter from './routes/admin';
 import { debugRouter } from './routes/debug';
-// Use stubbed auth router that doesn't require database
-import authRouter from './routes/auth.stub';
+import { authRouter } from './routes/auth';
+import authStubRouter from './routes/auth.stub';
 import { productRouter } from './routes/products';
 import { contentRouter } from './routes/contents';
 import { errorHandler } from './middleware/errorHandler';
@@ -27,6 +27,18 @@ import { tokenCleanupService } from './services/tokenCleanupService';
 
 const app = express();
 const PORT = config.PORT;
+
+// Determine which auth router to use
+const useStubAuthRouter = !env.isProduction() && process.env.USE_AUTH_STUB === 'true';
+const resolvedAuthRouter = useStubAuthRouter ? authStubRouter : authRouter;
+
+if (process.env.USE_AUTH_STUB === 'true' && env.isProduction()) {
+  console.warn('USE_AUTH_STUB is set but ignored in production for security reasons.');
+}
+
+if (useStubAuthRouter) {
+  console.warn('⚠️  Using stub authentication router (development only). Do not enable in production.');
+}
 
 // Log secure environment configuration
 env.logConfiguration();
@@ -260,7 +272,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 app.get('/api/csrf-token', getCSRFToken);
 
 // Routes
-app.use('/api/auth', authRouter);
+app.use('/api/auth', resolvedAuthRouter);
 app.use('/api/sessions', sessionRouter);
 app.use('/api/recommendations', recommendationRouter);
 app.use('/api/products', productRouter);
