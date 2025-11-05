@@ -60,8 +60,8 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center">
                 <Package className="w-8 h-8 text-purple-600 mr-3" />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">PCA HIJAB 관리자</h1>
-                  <p className="text-sm text-gray-500">상품 & 컨텐츠 관리 시스템</p>
+                  <h1 className="text-2xl font-bold text-gray-900">PCA HIJAB Admin</h1>
+                  <p className="text-sm text-gray-500">Product & Content Management</p>
                 </div>
               </div>
               
@@ -72,7 +72,7 @@ const AdminDashboard: React.FC = () => {
                   className="flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  로그아웃
+                  Sign Out
                 </Button>
               </div>
             </div>
@@ -97,7 +97,7 @@ const AdminDashboard: React.FC = () => {
                 }`}
               >
                 <Package className="w-4 h-4" />
-                상품 관리
+                Product Management
               </button>
               
               <button
@@ -114,7 +114,7 @@ const AdminDashboard: React.FC = () => {
                 }`}
               >
                 <FileText className="w-4 h-4" />
-                컨텐츠 관리
+                Content Management
               </button>
             </div>
           </div>

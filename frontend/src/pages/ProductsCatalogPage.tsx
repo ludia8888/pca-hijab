@@ -35,16 +35,16 @@ const ProductsCatalogPage: React.FC = () => {
 
   // Tab options
   const tabs: { id: TabType; label: string; icon?: React.ReactNode }[] = [
-    { id: 'all', label: '전체' },
+    { id: 'all', label: 'All' },
     { 
       id: 'recommended', 
-      label: '추천 상품',
+      label: 'Recommended',
       icon: <Crown className="w-4 h-4" />
     },
-    { id: 'hijab', label: '히잡' },
-    { id: 'lens', label: '렌즈' },
-    { id: 'lip', label: '립' },
-    { id: 'eyeshadow', label: '아이쉐도우' }
+    { id: 'hijab', label: 'Hijabs' },
+    { id: 'lens', label: 'Lenses' },
+    { id: 'lip', label: 'Lips' },
+    { id: 'eyeshadow', label: 'Eyeshadow' }
   ];
 
   const personalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
@@ -142,7 +142,7 @@ const ProductsCatalogPage: React.FC = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
-            <p className="text-gray-600">상품을 불러오는 중...</p>
+            <p className="text-gray-600">Loading products...</p>
           </div>
         </div>
       </PageLayout>
@@ -155,13 +155,13 @@ const ProductsCatalogPage: React.FC = () => {
       <PageLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <Text color="error" mb="4">상품을 불러오는 중 오류가 발생했습니다.</Text>
+            <Text color="error" mb="4">We ran into an issue loading products.</Text>
             <Button 
               onClick={() => window.location.reload()}
               variant="solid"
               color="primary"
             >
-              다시 시도
+              Try again
             </Button>
           </div>
         </div>
@@ -175,9 +175,9 @@ const ProductsCatalogPage: React.FC = () => {
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 py-8">
-            <Text variant="h1" color="gray" mb="2">상품 카탈로그</Text>
+            <Text variant="h1" color="gray" mb="2">Product Catalog</Text>
             <Text color="gray">
-              당신의 퍼스널 컬러에 맞는 히잡과 뷰티 제품을 찾아보세요
+              Find hijabs and beauty products that complement your personal color.
             </Text>
           </div>
         </div>
@@ -193,7 +193,7 @@ const ProductsCatalogPage: React.FC = () => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="상품 검색..."
+                  placeholder="Search products..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 {searchTerm && (
@@ -214,13 +214,13 @@ const ProductsCatalogPage: React.FC = () => {
                   onClick={() => setShowColorFilter(!showColorFilter)}
                   icon={<Filter className="w-4 h-4" />}
                 >
-                  퍼스널 컬러 {selectedColors.length > 0 && `(${selectedColors.length})`}
+                  Personal Color {selectedColors.length > 0 && `(${selectedColors.length})`}
                 </Button>
 
                 {/* Color Filter Dropdown */}
                 {showColorFilter && (
                   <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-20">
-                    <Text variant="body-sm" weight="semibold" color="gray" mb="3">퍼스널 컬러</Text>
+                    <Text variant="body-sm" weight="semibold" color="gray" mb="3">Personal Color</Text>
                     <div className="space-y-2 mb-4">
                       {personalColors.map((color) => (
                         <button
@@ -241,7 +241,7 @@ const ProductsCatalogPage: React.FC = () => {
                         onClick={() => setSelectedColors([])}
                         className="text-sm text-purple-600 hover:text-purple-700"
                       >
-                        초기화
+                        Clear filters
                       </button>
                     )}
                   </div>
@@ -260,7 +260,7 @@ const ProductsCatalogPage: React.FC = () => {
                   key={tab.id}
                   onClick={() => {
                     if (tab.id === 'recommended') {
-                      if (checkPersonalColor('추천 상품')) {
+                      if (checkPersonalColor('recommended products')) {
                         setActiveTab(tab.id);
                       }
                     } else {
@@ -286,9 +286,12 @@ const ProductsCatalogPage: React.FC = () => {
           {/* Results count */}
           <div className="mb-6">
             <p className="text-sm text-gray-600">
-              {activeTab === 'all' ? '전체' : 
-               activeTab === 'recommended' ? '추천' : 
-               CATEGORY_LABELS[activeTab]} 카테고리 - 총 {filteredProducts.length}개의 상품
+              Viewing {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'} in{' '}
+              {activeTab === 'all'
+                ? 'All categories'
+                : activeTab === 'recommended'
+                  ? 'Recommended picks'
+                  : `${CATEGORY_LABELS[activeTab]} category`}
             </p>
           </div>
 
@@ -303,12 +306,12 @@ const ProductsCatalogPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
               <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <Text variant="body-lg" weight="medium" color="gray" mb="2">
-                상품이 없습니다
+                No products found
               </Text>
               <Text color="gray">
                 {searchTerm || selectedColors.length > 0
-                  ? '다른 검색 조건을 시도해보세요'
-                  : '곧 새로운 상품이 추가될 예정입니다'}
+                  ? 'Try adjusting the search or filter selections.'
+                  : 'New products are coming soon—stay tuned!'}
               </Text>
             </div>
           )}

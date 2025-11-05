@@ -42,7 +42,7 @@ const ContentDetailPage = (): JSX.Element => {
       }
     } catch (err) {
       console.error('Failed to load content:', err);
-      setError('콘텐츠를 불러오는데 실패했습니다.');
+      setError('We could not load this content. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const ContentDetailPage = (): JSX.Element => {
   const formatDate = (dateString?: string | Date): string => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', { 
+    return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
@@ -103,9 +103,9 @@ const ContentDetailPage = (): JSX.Element => {
       <PageLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-red-600 mb-4">{error || '콘텐츠를 찾을 수 없습니다.'}</p>
+            <p className="text-red-600 mb-4">{error || 'We couldn’t find that article.'}</p>
             <Button onClick={() => navigate('/')}>
-              홈으로 돌아가기
+              Back to home
             </Button>
           </div>
         </div>
@@ -125,7 +125,7 @@ const ContentDetailPage = (): JSX.Element => {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>뒤로가기</span>
+            <span>Back</span>
           </button>
 
           {/* Category */}
@@ -153,18 +153,18 @@ const ContentDetailPage = (): JSX.Element => {
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              {estimateReadTime(content.content)}분 읽기
+              {estimateReadTime(content.content)} min read
             </span>
             <span className="flex items-center gap-1">
               <Eye className="w-4 h-4" />
-              {content.viewCount.toLocaleString()}회
+              {content.viewCount.toLocaleString()} views
             </span>
             <button
               onClick={handleShare}
               className="flex items-center gap-1 hover:text-gray-700"
             >
               <Share2 className="w-4 h-4" />
-              공유
+              Share
             </button>
           </div>
         </header>
@@ -206,7 +206,7 @@ const ContentDetailPage = (): JSX.Element => {
         {relatedContents.length > 0 && (
           <section className="mt-16 pt-8 border-t">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              관련 콘텐츠
+              Related content
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {relatedContents.map((related) => (

@@ -66,8 +66,8 @@ const ProductDetailPage = () => {
       toggleSavedProduct(id);
       addToast({
         type: 'success',
-        title: isSaved ? '저장 취소됨' : '상품이 저장되었습니다',
-        message: isSaved ? '' : '마이페이지에서 확인할 수 있습니다'
+        title: isSaved ? 'Removed from saved list' : 'Added to saved products',
+        message: isSaved ? '' : 'You can review it anytime from My Page.'
       });
     }
   };
@@ -75,7 +75,7 @@ const ProductDetailPage = () => {
   const handleShare = async () => {
     const shareData = {
       title: product?.name,
-      text: `${product?.name} - PCA HIJAB에서 확인하세요!`,
+      text: `${product?.name} — discover it on PCA HIJAB!`,
       url: window.location.href
     };
 
@@ -86,7 +86,7 @@ const ProductDetailPage = () => {
         await navigator.clipboard.writeText(window.location.href);
         addToast({
           type: 'success',
-          title: '링크가 복사되었습니다'
+          title: 'Link copied to clipboard'
         });
       }
     } catch (error) {
@@ -109,9 +109,9 @@ const ProductDetailPage = () => {
       <PageLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-gray-600 mb-4">상품을 찾을 수 없습니다</p>
+            <p className="text-gray-600 mb-4">We couldn’t find this product.</p>
             <Button onClick={() => navigate('/products')}>
-              상품 목록으로 돌아가기
+              Back to product catalog
             </Button>
           </div>
         </div>
@@ -132,7 +132,7 @@ const ProductDetailPage = () => {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">뒤로가기</span>
+              <span className="font-medium">Back</span>
             </button>
           </div>
         </div>
@@ -197,7 +197,7 @@ const ProductDetailPage = () => {
             {/* Personal Colors */}
             {product.personalColors.length > 0 && (
               <div>
-                <Text variant="body-sm" weight="semibold" color="gray" mb="3">추천 퍼스널 컬러</Text>
+                <Text variant="body-sm" weight="semibold" color="gray" mb="3">Recommended personal colors</Text>
                 <div className="flex flex-wrap gap-2">
                   {product.personalColors.map((color) => (
                     <span
@@ -214,7 +214,7 @@ const ProductDetailPage = () => {
             {/* Description */}
             {product.description && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">상품 설명</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Product description</h3>
                 <p className="text-gray-600 leading-relaxed">{product.description}</p>
               </div>
             )}
@@ -229,7 +229,7 @@ const ProductDetailPage = () => {
                 onClick={handleBuyNow}
                 icon={<ShoppingBag className="w-5 h-5" />}
               >
-                Shopee에서 구매하기
+                Shop on Shopee
               </Button>
               
               <Button
@@ -240,15 +240,15 @@ const ProductDetailPage = () => {
                 onClick={handleSave}
                 icon={<Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />}
               >
-                {isSaved ? '저장됨' : '저장하기'}
+                {isSaved ? 'Saved' : 'Save to favorites'}
               </Button>
             </div>
 
             {/* Additional Info */}
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-              <p className="mb-2">• 실제 상품 색상은 모니터 설정에 따라 다를 수 있습니다</p>
-              <p className="mb-2">• 구매 전 Shopee에서 상품 상세 정보를 확인해주세요</p>
-              <p>• 퍼스널 컬러는 참고용이며, 개인 취향에 따라 선택하세요</p>
+              <p className="mb-2">• Actual product colors may vary depending on your monitor settings.</p>
+              <p className="mb-2">• Please review the detailed information on Shopee before purchasing.</p>
+              <p>• Personal color results are a guide—always choose what you love.</p>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ const AdminLoginPage = (): JSX.Element => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // 인증된 경우에만 대시보드로 이동
+  // Redirect authenticated admins straight to the dashboard
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/admin/dashboard', { replace: true });
