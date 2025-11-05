@@ -255,85 +255,111 @@ class InMemoryDatabase {
 
   // User methods - STUBBED for auth bypass
   async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    // Always return stub user
-    return {
-      id: 'stub-user-001',
+    // Prevent duplicate emails (mimic DB unique constraint)
+    const existingUser = await this.getUserByEmail(data.email);
+    if (existingUser) {
+      throw new Error('User already exists with this email');
+    }
+    
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const user: User = {
+      id: userId,
       email: data.email,
-      passwordHash: 'stub',
-      fullName: data.fullName || 'Stub User',
-      emailVerified: true,
+      passwordHash: data.passwordHash,
+      fullName: data.fullName,
+      instagramId: data.instagramId,
+      emailVerified: data.emailVerified ?? false,
+      verificationToken: data.verificationToken,
+      verificationTokenExpires: data.verificationTokenExpires,
+      resetPasswordToken: data.resetPasswordToken,
+      resetPasswordExpires: data.resetPasswordExpires,
       createdAt: new Date(),
       updatedAt: new Date()
     };
+    
+    this.users.set(userId, user);
+    return { ...user };
   }
 
   async getUserById(userId: string): Promise<User | undefined> {
-    // Return stub user for any request
-    return {
-      id: userId,
-      email: 'stub@example.com',
-      passwordHash: 'stub',
-      fullName: 'Stub User',
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    const user = this.users.get(userId);
+    return user ? { ...user } : undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    // Return stub user for any email
-    return {
-      id: 'stub-user-001',
-      email: email,
-      passwordHash: 'stub',
-      fullName: 'Stub User',
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    for (const user of this.users.values()) {
+      if (user.email.toLowerCase() === email.toLowerCase()) {
+        return { ...user };
+      }
+    }
+    return undefined;
   }
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
-    // Return updated stub user
-    return {
-      id: userId,
-      email: updates.email || 'stub@example.com',
-      passwordHash: 'stub',
-      fullName: updates.fullName || 'Stub User',
-      emailVerified: true,
-      createdAt: new Date(),
+    const existing = this.users.get(userId);
+    if (!existing) {
+      return undefined;
+    }
+    
+    const updatedUser: User = {
+      ...existing,
+      ...updates,
+      email: updates.email ?? existing.email,
+      passwordHash: updates.passwordHash ?? existing.passwordHash,
+      fullName: updates.fullName ?? existing.fullName,
+      emailVerified: updates.emailVerified ?? existing.emailVerified,
+      verificationToken: updates.verificationToken ?? existing.verificationToken,
+      verificationTokenExpires: updates.verificationTokenExpires ?? existing.verificationTokenExpires,
+      resetPasswordToken: updates.resetPasswordToken ?? existing.resetPasswordToken,
+      resetPasswordExpires: updates.resetPasswordExpires ?? existing.resetPasswordExpires,
       updatedAt: new Date()
     };
+    
+    this.users.set(userId, updatedUser);
+    return { ...updatedUser };
   }
 
-  // Refresh token methods - STUBBED
+  // Refresh token methods
   async createRefreshToken(data: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken> {
     const tokenId = `refresh_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const refreshToken: RefreshToken = {
-      ...data,
       id: tokenId,
+      userId: data.userId,
+      token: data.token,
+      expiresAt: data.expiresAt,
       createdAt: new Date()
     };
     
     this.refreshTokens.set(tokenId, refreshToken);
-    return refreshToken;
+    return { ...refreshToken };
   }
 
   async getRefreshToken(token: string): Promise<RefreshToken | undefined> {
-    return Array.from(this.refreshTokens.values()).find(rt => rt.token === token);
+    const now = Date.now();
+    for (const rt of this.refreshTokens.values()) {
+      if (rt.token === token && rt.expiresAt.getTime() > now) {
+        return { ...rt };
+      }
+    }
+    return undefined;
   }
 
   async deleteRefreshToken(token: string): Promise<boolean> {
-    const refreshToken = await this.getRefreshToken(token);
-    if (refreshToken) {
-      return this.refreshTokens.delete(refreshToken.id);
+    for (const [id, rt] of this.refreshTokens.entries()) {
+      if (rt.token === token) {
+        this.refreshTokens.delete(id);
+        return true;
+      }
     }
     return false;
   }
 
   async deleteUserRefreshTokens(userId: string): Promise<void> {
-    const userTokens = Array.from(this.refreshTokens.values()).filter(rt => rt.userId === userId);
-    userTokens.forEach(rt => this.refreshTokens.delete(rt.id));
+    for (const [id, rt] of this.refreshTokens.entries()) {
+      if (rt.userId === userId) {
+        this.refreshTokens.delete(id);
+      }
+    }
   }
 
   // Delete a specific session
@@ -353,26 +379,81 @@ class InMemoryDatabase {
     return existed;
   }
 
-  // Email verification methods - STUBBED
+  // Email verification methods
   async getUserByVerificationToken(token: string): Promise<User | undefined> {
-    return undefined; // No email verification needed
+    if (!token) return undefined;
+    const now = Date.now();
+    for (const user of this.users.values()) {
+      if (
+        user.verificationToken === token &&
+        (!user.verificationTokenExpires || user.verificationTokenExpires.getTime() > now) &&
+        user.emailVerified === false
+      ) {
+        return { ...user };
+      }
+    }
+    return undefined;
   }
 
   async verifyUserEmail(userId: string): Promise<boolean> {
-    return true; // Always verified
+    const user = this.users.get(userId);
+    if (!user) return false;
+    
+    user.emailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    user.updatedAt = new Date();
+    
+    this.users.set(userId, user);
+    return true;
   }
 
-  // Password reset methods - STUBBED
+  // Password reset methods
   async getUserByResetToken(token: string): Promise<User | undefined> {
-    return undefined; // No password reset needed
+    if (!token) return undefined;
+    const now = Date.now();
+    for (const user of this.users.values()) {
+      if (
+        user.resetPasswordToken === token &&
+        user.resetPasswordExpires &&
+        user.resetPasswordExpires.getTime() > now
+      ) {
+        return { ...user };
+      }
+    }
+    return undefined;
   }
 
   async resetUserPassword(userId: string, newPasswordHash: string): Promise<boolean> {
-    return true; // Always successful
+    const user = this.users.get(userId);
+    if (!user) return false;
+    
+    user.passwordHash = newPasswordHash;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.updatedAt = new Date();
+    
+    this.users.set(userId, user);
+    return true;
   }
 
   async cleanupExpiredResetTokens(): Promise<void> {
-    // No-op
+    const now = Date.now();
+    for (const user of this.users.values()) {
+      if (user.resetPasswordExpires && user.resetPasswordExpires.getTime() <= now) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        user.updatedAt = new Date();
+      }
+      if (
+        user.verificationTokenExpires &&
+        user.verificationTokenExpires.getTime() <= now
+      ) {
+        user.verificationToken = undefined;
+        user.verificationTokenExpires = undefined;
+        user.updatedAt = new Date();
+      }
+    }
   }
 }
 
