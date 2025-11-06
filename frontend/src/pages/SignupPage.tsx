@@ -163,6 +163,12 @@ const SignupPage = (): JSX.Element => {
               />
             </div>
 
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
             <div>
               <Input
                 type="email"
