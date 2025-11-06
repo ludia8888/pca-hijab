@@ -129,6 +129,9 @@ const pool = new Pool({
 });
 
 export class PostgresDatabase {
+  private schemaChecks = {
+    verificationTokenExpiry: false,
+  };
   // Test database connection
   async testConnection(): Promise<boolean> {
     try {
@@ -644,6 +647,8 @@ export class PostgresDatabase {
 
   // User methods
   async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+    await this.ensureVerificationTokenExpiryColumn();
+
     const query = `
       INSERT INTO users (email, password_hash, full_name, instagram_id, email_verified, verification_token, verification_token_expires)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -686,6 +691,8 @@ export class PostgresDatabase {
   }
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
+    await this.ensureVerificationTokenExpiryColumn();
+
     const updateFields: string[] = [];
     const values: unknown[] = [];
     let valueIndex = 1;
@@ -1238,6 +1245,41 @@ export class PostgresDatabase {
     await pool.query('DELETE FROM users');
     await pool.query('DELETE FROM products');
     await pool.query('DELETE FROM contents');
+  }
+
+  private async ensureVerificationTokenExpiryColumn(): Promise<void> {
+    if (this.schemaChecks.verificationTokenExpiry) {
+      return;
+    }
+
+    const columnCheck = await pool.query<{ exists: boolean }>(
+      `SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'users'
+          AND column_name = 'verification_token_expires'
+      ) AS exists`
+    );
+
+    const hasColumn = columnCheck.rows[0]?.exists === true;
+
+    if (!hasColumn) {
+      console.warn('⚠️ [Database] verification_token_expires column missing. Applying runtime migration.');
+
+      await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMPTZ
+      `);
+
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_users_verification_token_expires
+        ON users(verification_token_expires)
+      `);
+
+      console.info('✅ [Database] verification_token_expires column added to users table');
+    }
+
+    this.schemaChecks.verificationTokenExpiry = true;
   }
 }
 
