@@ -56,9 +56,6 @@ router.get('/:recommendationId', authenticateUser, verifyRecommendationOwnership
   try {
     // Recommendation is already verified and attached by middleware
     const recommendation = req.recommendation;
-    if (!recommendation) {
-      throw new AppError(500, 'Recommendation context missing');
-    }
     
     console.info(`Recommendation accessed - ID: ${recommendation.id}, User: ${maskUserId(req.user!.userId)}`);
     

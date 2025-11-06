@@ -179,9 +179,9 @@ router.get('/slug/:slug', async (req, res, next) => {
 router.get('/related/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const limitRaw = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
-    const parsedLimit = typeof limitRaw === 'string' ? Number.parseInt(limitRaw, 10) : Number.NaN;
-    const limitValue = Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 4 : Math.min(parsedLimit, 12);
+    const limitParam = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
+    const limit = Number.parseInt(limitParam ?? '4', 10);
+    const limitValue = Number.isNaN(limit) || limit <= 0 ? 4 : Math.min(limit, 12);
 
     if (!db.getContent || !db.getAllContents) {
       throw new AppError(500, 'Content functionality not available');

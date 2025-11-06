@@ -23,15 +23,15 @@ function getSeasonKey(personalColorEn: string): keyof typeof SEASON_DESCRIPTIONS
   return seasonMap[personalColorEn] || 'spring';
 }
 
-// ===================== Helper: group palette items into rows of 4 =====================
+// ===================== 컬러칩을 4개씩 묶는 유틸 함수 =====================
 /**
- * Splits an array into evenly sized chunks.
- * @param arr Source array
- * @param chunkSize Chunk length (4 for color palettes)
- * @returns Two-dimensional array (each row contains up to chunkSize items)
+ * 배열을 지정한 크기(chunkSize)만큼 잘라 2차원 배열로 반환합니다.
+ * @param arr 원본 배열
+ * @param chunkSize 한 묶음의 크기 (여기서는 4)
+ * @returns 2차원 배열 (각 행에 4개씩)
  */
 function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
-  // Edge case: if chunk size is less than 1, return the original list as a single chunk
+  // 예외 처리: chunkSize가 1보다 작으면 전체 배열을 한 묶음으로 반환
   if (chunkSize < 1) return [arr];
   const result: T[][] = [];
   for (let i = 0; i < arr.length; i += chunkSize) {
@@ -398,14 +398,14 @@ const ResultPage = (): JSX.Element => {
                 <span className="text-base">🎨</span> Your Color Palette
               </h3>
               {/*
-                1. Render bestColors in rows of four
-                2. Overlay each swatch with its name using a gradient footer
+                1. bestColors를 4개씩 묶어서 여러 줄로 렌더링
+                2. 각 컬러칩 내부 하단에 색상명 + 그라데이션 오버레이
               */}
               <div className="flex flex-col gap-2">
                 {chunkArray([...bestColors], 4).map((row, rowIdx) => (
                   <div key={rowIdx} className="flex gap-2">
                     {row.map((color, colIdx) => {
-                      // Ensure the color object has the expected shape
+                      // color의 타입을 명확히 지정
                       const c = color as { name: string; hex: string; description: string };
                       return (
                         <div key={colIdx} className="flex-1 min-w-0">
@@ -413,19 +413,19 @@ const ResultPage = (): JSX.Element => {
                             className="relative aspect-square rounded-lg shadow-sm overflow-hidden"
                             style={{ backgroundColor: c.hex }}
                           >
-                            {/* Add gradient overlay and display color name */}
+                            {/* 그라데이션 오버레이 + 색상명 */}
                             <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/40 to-transparent flex flex-col items-center">
                               <p className="text-white text-[10px] font-medium text-center">
                                 {c.name}
                               </p>
                             </div>
                           </div>
-                          {/* Color description */}
+                          {/* 색상 설명 */}
                           <p className="text-[9px] text-gray-600 text-center mt-1 leading-tight">{c.description}</p>
                         </div>
                       );
                     })}
-                    {/* Fill remaining columns when the final row has fewer than four items */}
+                    {/* 4개 미만일 때 빈 칸 채우기 */}
                     {row.length < 4 && Array.from({ length: 4 - row.length }).map((_, i) => (
                       <div key={i} className="flex-1 min-w-0" />
                     ))}
@@ -445,14 +445,14 @@ const ResultPage = (): JSX.Element => {
                 <span className="text-base">⚠️</span> Colors to Avoid
               </h3>
               {/*
-                1. Render worstColors in rows of four
-                2. Display each color name with a gradient overlay
+                1. worstColors도 4개씩 묶어서 여러 줄로 렌더링
+                2. 각 컬러칩 내부 하단에 색상명 + 그라데이션 오버레이
               */}
               <div className="flex flex-col gap-2">
                 {chunkArray([...worstColors], 4).map((row, rowIdx) => (
                   <div key={rowIdx} className="flex gap-2">
                     {row.map((color, colIdx) => {
-                      // Ensure the color object has name/hex/description
+                      // color의 타입을 명확히 지정
                       const c = color as { name: string; hex: string; description: string };
                       return (
                         <div key={colIdx} className="flex-1 min-w-0">
@@ -460,19 +460,19 @@ const ResultPage = (): JSX.Element => {
                             className="relative aspect-square rounded-lg shadow-sm overflow-hidden opacity-60"
                             style={{ backgroundColor: c.hex }}
                           >
-                            {/* Gradient overlay with color name */}
+                            {/* 그라데이션 오버레이 + 색상명 */}
                             <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/40 to-transparent flex flex-col items-center">
                               <p className="text-white text-[10px] font-medium text-center">
                                 {c.name}
                               </p>
                             </div>
                           </div>
-                          {/* Color description */}
+                          {/* 색상 설명 */}
                           <p className="text-[9px] text-gray-600 text-center mt-1 leading-tight">{c.description}</p>
                         </div>
                       );
                     })}
-                    {/* Fill empty slots when fewer than four colors remain */}
+                    {/* 4개 미만일 때 빈 칸 채우기 */}
                     {row.length < 4 && Array.from({ length: 4 - row.length }).map((_, i) => (
                       <div key={i} className="flex-1 min-w-0" />
                     ))}
