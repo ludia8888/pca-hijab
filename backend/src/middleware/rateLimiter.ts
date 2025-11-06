@@ -20,9 +20,9 @@ export const loginLimiter = rateLimit({
 });
 
 export const signupLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 signups per hour
-  message: 'Too many accounts created from this IP, please try again after an hour',
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Allow more attempts within a shorter window
+  message: 'Too many accounts created from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
