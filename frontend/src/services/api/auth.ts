@@ -121,6 +121,14 @@ export const AuthAPI = {
     return response.data;
   },
 
+  // Account reminder (username lookup)
+  remindAccount: async (email: string): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post('/auth/find-account', {
+      email: sanitizeEmail(email)
+    });
+    return response.data;
+  },
+
   // Reset password
   resetPassword: async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
     const response = await apiClient.post('/auth/reset-password', {

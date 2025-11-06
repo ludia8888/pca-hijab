@@ -111,7 +111,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error: unknown) {
           const friendlyMessage = resolveErrorMessage(error, 'Signup failed', {
-            409: '이미 가입된 이메일입니다. 다른 이메일 주소를 사용해주세요.'
+            409: 'This email address is already registered. Please sign in or use another email.'
           });
 
           set({

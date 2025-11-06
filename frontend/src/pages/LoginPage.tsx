@@ -27,7 +27,8 @@ const LoginPage = (): JSX.Element => {
   } = useForm<LoginFormData>();
 
   // Get redirect URL from location state or default to home page
-  const from = (location.state as any)?.from?.pathname || '/';
+  const locationState = location.state as { from?: { pathname?: string } } | null;
+  const from = locationState?.from?.pathname || '/';
 
   // If already authenticated, redirect
   useEffect(() => {
@@ -72,14 +73,22 @@ const LoginPage = (): JSX.Element => {
 
       toast.success('Signed in successfully!');
       navigate(from, { replace: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       trackEvent('login_failed', {
         email: data.email,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         page: 'login'
       });
-      
-      toast.error(error.response?.data?.message || 'Failed to sign in.');
+
+      const message =
+        (typeof error === 'object' &&
+          error !== null &&
+          'response' in error &&
+          (error as { response?: { data?: { message?: string } } })?.response?.data?.message) ||
+        (error instanceof Error ? error.message : undefined) ||
+        'Failed to sign in.';
+
+      toast.error(message);
     }
   };
 
@@ -156,12 +165,20 @@ const LoginPage = (): JSX.Element => {
                 />
                 <span className="text-gray-600">Keep me signed in</span>
               </label>
-              <Link
-                to="/forgot-password"
-                className="text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
+              <div className="flex flex-col items-end gap-1 text-right">
+                <Link
+                  to="/find-account"
+                  className="text-primary hover:underline"
+                >
+                  Forgot email?
+                </Link>
+                <Link
+                  to="/forgot-password"
+                  className="text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <Button

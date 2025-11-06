@@ -27,9 +27,16 @@ const ForgotPasswordPage = (): JSX.Element => {
       await AuthAPI.forgotPassword(email);
       setIsEmailSent(true);
       toast.success('We’ve emailed you a password reset link.');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Forgot password error:', error);
-      toast.error(error.response?.data?.message || 'Something went wrong. Please try again.');
+      const message =
+        (typeof error === 'object' &&
+          error !== null &&
+          'response' in error &&
+          (error as { response?: { data?: { message?: string } } })?.response?.data?.message) ||
+        (error instanceof Error ? error.message : undefined) ||
+        'Something went wrong. Please try again.';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +125,16 @@ const ForgotPasswordPage = (): JSX.Element => {
             >
               Email me a reset link
             </Button>
+
+            <div className="text-center text-sm">
+              <span className="text-gray-600">Forgot which email you used? </span>
+              <Link
+                to="/find-account"
+                className="font-medium text-purple-600 hover:text-purple-500"
+              >
+                Find my account
+              </Link>
+            </div>
 
             <div className="text-center text-sm">
               <span className="text-gray-600">Remember your password? </span>

@@ -27,6 +27,11 @@ interface PasswordResetEmailData {
   resetToken: string;
 }
 
+interface AccountReminderEmailData {
+  userEmail: string;
+  userName: string;
+}
+
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
   private resend: Resend | null = null;
@@ -205,6 +210,23 @@ class EmailService {
     await this.sendEmail({
       to: data.userEmail,
       subject: '🔐 Reset your PCA-HIJAB password',
+      html,
+      text
+    });
+  }
+
+  /**
+   * Send account reminder email with username information
+   */
+  async sendAccountReminderEmail(data: AccountReminderEmailData): Promise<void> {
+    const loginUrl = `${config.CLIENT_URL || 'https://pca-hijab.vercel.app'}/login`;
+
+    const html = this.createAccountReminderEmailHTML(data.userName, data.userEmail, loginUrl);
+    const text = this.createAccountReminderEmailText(data.userName, data.userEmail, loginUrl);
+
+    await this.sendEmail({
+      to: data.userEmail,
+      subject: '📮 Your PCA-HIJAB sign-in email',
       html,
       text
     });
@@ -416,6 +438,79 @@ Need help? Contact our support team at support@pca-hijab.com
 
 © 2024 PCA-HIJAB. All rights reserved.
 `;
+  }
+
+  private createAccountReminderEmailHTML(userName: string, userEmail: string, loginUrl: string): string {
+    const safeName = this.sanitizeForEmail(userName);
+    const safeEmail = this.sanitizeForEmail(userEmail);
+
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Your PCA-HIJAB account</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+            h1 { color: #1a1a1a; font-size: 24px; margin: 20px 0; }
+            p { color: #4a4a4a; line-height: 1.6; margin: 15px 0; }
+            .email-box { background-color: #f8f9fa; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; word-break: break-all; margin: 20px 0; border: 1px solid #e9ecef; text-align: center; font-size: 18px; font-weight: 600; color: #1f2937; }
+            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 25px 0; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: transform 0.2s; }
+            .button:hover { transform: translateY(-2px); }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; }
+            .footer p { font-size: 13px; color: #999; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">PCA-HIJAB</div>
+                <h1>Your sign-in email</h1>
+            </div>
+            
+            <p>Hi ${safeName},</p>
+            
+            <p>You asked for a reminder of the email you use to sign in to PCA-HIJAB. You can sign in with:</p>
+            
+            <div class="email-box">${safeEmail}</div>
+            
+            <p>When you’re ready, head to the sign-in page and enter this email along with your password:</p>
+            
+            <div style="text-align: center;">
+                <a href="${loginUrl}" class="button">Go to Sign In</a>
+            </div>
+            
+            <p>If you didn’t request this email or you no longer need the account, you can safely ignore this message.</p>
+            
+            <div class="footer">
+                <p>Need help? Reply to this email and our support team will assist you.</p>
+                <p>Stay colorful,<br />The PCA-HIJAB Team</p>
+            </div>
+        </div>
+    </body>
+    </html>`;
+  }
+
+  private createAccountReminderEmailText(userName: string, userEmail: string, loginUrl: string): string {
+    const safeName = this.sanitizeForEmail(userName);
+    const safeEmail = this.sanitizeForEmail(userEmail);
+
+    return `Hi ${safeName},
+
+You asked for a reminder of the email linked to your PCA-HIJAB account.
+
+You can sign in with: ${safeEmail}
+
+Head to the sign-in page to continue: ${loginUrl}
+
+If you didn’t request this email, you can safely ignore it.
+
+Stay colorful,
+The PCA-HIJAB Team`;
   }
 
   private sanitizeForEmail(input: string): string {

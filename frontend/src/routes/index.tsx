@@ -19,6 +19,7 @@ const CompletionPage = lazy(() => retryChunkLoad(() => import('@/pages/Completio
 const LoginPage = lazy(() => retryChunkLoad(() => import('@/pages/LoginPage')));
 const SignupPage = lazy(() => retryChunkLoad(() => import('@/pages/SignupPage')));
 const ForgotPasswordPage = lazy(() => retryChunkLoad(() => import('@/pages/ForgotPasswordPage')));
+const FindAccountPage = lazy(() => retryChunkLoad(() => import('@/pages/FindAccountPage')));
 const ResetPasswordPage = lazy(() => retryChunkLoad(() => import('@/pages/ResetPasswordPage')));
 const VerifyEmailPage = lazy(() => retryChunkLoad(() => import('@/pages/VerifyEmailPage')));
 const TermsOfServicePage = lazy(() => retryChunkLoad(() => import('@/pages/TermsOfServicePage')));
@@ -186,6 +187,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/find-account',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <FindAccountPage />
           </Suspense>
         ),
       },

@@ -91,6 +91,14 @@ export const passwordResetValidation = [
     .withMessage('Please provide a valid email address')
 ];
 
+export const accountLookupValidation = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .isLength({ max: 255 })
+    .withMessage('Please provide a valid email address')
+];
+
 export const resetPasswordValidation = [
   body('token')
     .isLength({ min: 1 })

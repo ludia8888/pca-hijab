@@ -11,6 +11,7 @@ import { csrfProtection } from '../middleware/csrf';
 import {
   signupValidation,
   loginValidation,
+  accountLookupValidation,
   passwordResetValidation,
   resetPasswordValidation,
   emailVerificationValidation,
@@ -392,6 +393,35 @@ router.post('/forgot-password', passwordResetLimiter, passwordResetValidation, h
     });
   } catch (error) {
     console.error('Password reset request failed:', error);
+    next(error);
+  }
+});
+
+// POST /api/auth/find-account - Send account reminder email
+router.post('/find-account', passwordResetLimiter, accountLookupValidation, handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = req.body;
+
+    const user = await db.getUserByEmail(email);
+
+    if (user) {
+      try {
+        await emailService.sendAccountReminderEmail({
+          userEmail: user.email,
+          userName: user.fullName
+        });
+        console.info(`Account reminder email sent to user: ${maskUserId(user.id)}`);
+      } catch (emailError) {
+        console.error(`Failed to send account reminder email to user: ${maskUserId(user.id)}`, emailError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, we just sent you a reminder.'
+    });
+  } catch (error) {
+    console.error('Account reminder request failed:', error);
     next(error);
   }
 });
