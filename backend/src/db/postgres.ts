@@ -131,6 +131,7 @@ const pool = new Pool({
 export class PostgresDatabase {
   private schemaChecks = {
     verificationTokenExpiry: false,
+    refreshTokenIdDefault: false,
   };
   // Test database connection
   async testConnection(): Promise<boolean> {
@@ -749,6 +750,8 @@ export class PostgresDatabase {
 
   // Refresh token methods
   async createRefreshToken(data: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken> {
+    await this.ensureRefreshTokenIdDefault();
+
     const query = `
       INSERT INTO refresh_tokens (user_id, token, expires_at)
       VALUES ($1, $2, $3)
@@ -1280,6 +1283,35 @@ export class PostgresDatabase {
     }
 
     this.schemaChecks.verificationTokenExpiry = true;
+  }
+
+  private async ensureRefreshTokenIdDefault(): Promise<void> {
+    if (this.schemaChecks.refreshTokenIdDefault) {
+      return;
+    }
+
+    const defaultCheck = await pool.query<{ column_default: string | null }>(
+      `SELECT column_default
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'refresh_tokens'
+         AND column_name = 'id'`
+    );
+
+    const columnDefault = defaultCheck.rows[0]?.column_default ?? null;
+
+    if (!columnDefault || !columnDefault.includes('gen_random_uuid')) {
+      console.warn('⚠️ [Database] refresh_tokens.id default missing. Applying runtime migration.');
+
+      await pool.query(`
+        ALTER TABLE refresh_tokens
+        ALTER COLUMN id SET DEFAULT gen_random_uuid()
+      `);
+
+      console.info('✅ [Database] refresh_tokens.id default set to gen_random_uuid()');
+    }
+
+    this.schemaChecks.refreshTokenIdDefault = true;
   }
 }
 
