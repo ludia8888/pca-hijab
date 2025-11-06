@@ -209,7 +209,7 @@ const DontWorry: React.FC = () => {
         </svg>
       </button>
 
-      {/* Main Container - 402x874 기준 with dynamic scale */}
+      {/* Main container – based on 402x874 design with dynamic scaling */}
       <div 
         className="relative"
         style={{
@@ -303,7 +303,7 @@ const DontWorry: React.FC = () => {
           }}
         />
 
-        {/* Header Section - 원본: top: 66px, height: 177px */}
+        {/* Header section – original spec: top 66px, height 177px */}
         <div
           className="absolute left-1/2 -translate-x-1/2"
           style={{ 
@@ -370,7 +370,7 @@ const DontWorry: React.FC = () => {
           />
         </div>
 
-        {/* Tagline - Photos deleted instantly, We never store your images */}
+        {/* Tagline explaining photo privacy */}
         <div 
           className="absolute left-1/2 -translate-x-1/2 flex flex-col justify-center items-center"
           style={{ 
@@ -413,7 +413,7 @@ const DontWorry: React.FC = () => {
           </div>
         </div>
 
-        {/* CTA Button - 원본: bottom: 90px, height: 57px */}
+        {/* CTA button – original spec bottom 90px, height 57px */}
         <div 
           className="absolute left-1/2 -translate-x-1/2 flex flex-col justify-center items-center"
           style={{ 

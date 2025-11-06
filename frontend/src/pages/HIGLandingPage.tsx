@@ -258,7 +258,7 @@ const HIGLandingPage: React.FC = () => {
         bottom: 0,
       }}
     >
-      {/* Main Container - 402x874 기준 with dynamic scale */}
+      {/* Main container – based on 402x874 design with dynamic scaling */}
       <div 
         className="relative"
         style={{
@@ -268,7 +268,7 @@ const HIGLandingPage: React.FC = () => {
           maxHeight: '100vh',
         }}
       >
-        {/* Header Section - 원본: top: 66px, height: 177px */}
+        {/* Header section – original spec: top 66px, height 177px */}
         <div
           className="absolute left-1/2 -translate-x-1/2"
           style={{ 
@@ -277,7 +277,7 @@ const HIGLandingPage: React.FC = () => {
             top: `${66 * scaleFactor}px`,
           }}
         >
-          {/* Star 1 - 원본: 38x56.682px */}
+          {/* Star 1 – original size 38x56.682px */}
           <img 
             src={star1} 
             alt="" 
@@ -292,7 +292,7 @@ const HIGLandingPage: React.FC = () => {
             }}
           />
           
-          {/* Logo - 원본: 200x151.291px */}
+          {/* Logo – original size 200x151.291px */}
           <img 
             src={mynoorLogo} 
             alt="Mynoor"
@@ -306,7 +306,7 @@ const HIGLandingPage: React.FC = () => {
             }}
           />
           
-          {/* Star 2 - 원본: 34.069x50.818px */}
+          {/* Star 2 – original size 34.069x50.818px */}
           <img 
             src={star2} 
             alt="" 
@@ -322,7 +322,7 @@ const HIGLandingPage: React.FC = () => {
           />
         </div>
 
-        {/* Character Group - 원본: 547.161x530.778px, top: 201px */}
+        {/* Character group – original 547.161x530.778px positioned at top 201px */}
         <div 
           className="absolute"
           style={{ 
@@ -349,7 +349,7 @@ const HIGLandingPage: React.FC = () => {
             }} 
           />
           
-          {/* Orbit - 원본: 505.2x341.16px */}
+          {/* Orbit – original size 505.2x341.16px */}
           <img 
             src={orbitImage} 
             alt=""
@@ -363,7 +363,7 @@ const HIGLandingPage: React.FC = () => {
             }} 
           />
           
-          {/* Star on Orbit - 원본: 32x59px */}
+          {/* Star on orbit – original size 32x59px */}
           <img 
             src={starOnOrbit} 
             alt=""
@@ -378,7 +378,7 @@ const HIGLandingPage: React.FC = () => {
             }} 
           />
           
-          {/* Star 3 - 원본: 77x143px */}
+          {/* Star 3 – original size 77x143px */}
           <img 
             src={star3} 
             alt=""
@@ -393,7 +393,7 @@ const HIGLandingPage: React.FC = () => {
             }} 
           />
           
-          {/* Eyes Group - 원본: 245.732x166.493px */}
+          {/* Eyes group – original size 245.732x166.493px */}
           <div 
             className="absolute"
             style={{ 
@@ -403,7 +403,7 @@ const HIGLandingPage: React.FC = () => {
               left: `${146 * scaleFactor}px`,
             }}
           >
-            {/* Closed Eye - 원본: 118.267x94.293px */}
+            {/* Closed eye – original size 118.267x94.293px */}
             <img 
               src={closedEye} 
               alt=""
@@ -416,7 +416,7 @@ const HIGLandingPage: React.FC = () => {
                 right: `${118 * scaleFactor}px`,
               }} 
             />
-            {/* Open Eye - 원본: 111.931x150.984px */}
+            {/* Open eye – original size 111.931x150.984px */}
             <img 
               src={openEye} 
               alt=""
@@ -432,7 +432,7 @@ const HIGLandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tagline - 원본: bottom: 589px, font: 20px */}
+        {/* Tagline – original positioning bottom 589px, font size 20px */}
         <div 
           className="absolute left-1/2 -translate-x-1/2 flex flex-col justify-center items-center"
           style={{ 
@@ -456,7 +456,7 @@ const HIGLandingPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* CTA Button - 원본: bottom: 90px, height: 57px */}
+        {/* CTA button – original spec bottom 90px, height 57px */}
         <div 
           className="absolute left-1/2 -translate-x-1/2 flex flex-col justify-center items-center"
           style={{ 

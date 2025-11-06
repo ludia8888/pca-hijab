@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import type { QueryResultRow } from 'pg';
 import type { Session, Recommendation, PersonalColorResult, UserPreferences, User, RefreshToken, Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus } from '../types';
 
 type QueryParameters = ReadonlyArray<unknown>;
@@ -12,7 +13,7 @@ interface DatabaseError extends Error {
   column?: string;
 }
 
-interface UserRow {
+interface UserRow extends QueryResultRow {
   id: string;
   email: string;
   password_hash: string | null;
@@ -27,7 +28,7 @@ interface UserRow {
   updated_at: Date | null;
 }
 
-interface ProductRow {
+interface ProductRow extends QueryResultRow {
   id: string;
   name: string;
   category: ProductCategory;
@@ -46,7 +47,7 @@ interface ProductRow {
   updated_at: Date;
 }
 
-interface ContentRow {
+interface ContentRow extends QueryResultRow {
   id: string;
   title: string;
   subtitle: string | null;
@@ -70,7 +71,7 @@ interface DbQueryResult<Row> {
   rowCount: number | null;
 }
 
-type RowRecord = Record<string, unknown>;
+type RowRecord = QueryResultRow;
 
 type SSLConfig =
   | false
@@ -169,7 +170,7 @@ export class PostgresDatabase {
   }
 
   // Generic query method for token cleanup service
-  async query<Row = RowRecord>(text: string, params: QueryParameters = []): Promise<DbQueryResult<Row>> {
+  async query<Row extends QueryResultRow = RowRecord>(text: string, params: QueryParameters = []): Promise<DbQueryResult<Row>> {
     try {
       const result = await pool.query<Row>(text, [...params]);
       return {

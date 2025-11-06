@@ -52,6 +52,9 @@ router.get('/:sessionId', authenticateUser, verifySessionOwnership, async (req, 
   try {
     // Session is already verified and attached by middleware
     const session = req.session;
+    if (!session) {
+      throw new AppError(500, 'Session context missing');
+    }
     
     console.info(`Session accessed - ID: ${session.id}, User: ${maskUserId(req.user!.userId)}`);
     
@@ -73,6 +76,9 @@ router.patch('/:sessionId', optionalAuth, verifySessionOwnership, async (req, re
     
     // Session is already verified and attached by middleware
     const session = req.session;
+    if (!session) {
+      throw new AppError(500, 'Session context missing');
+    }
     
     console.info(`Session update attempt - ID: ${sessionId}, User: ${maskUserId(req.user?.userId || 'anonymous')}`);
     
