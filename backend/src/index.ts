@@ -43,8 +43,8 @@ if (useStubAuthRouter) {
 // Log secure environment configuration
 env.logConfiguration();
 
-// Trust proxy for HTTPS detection behind reverse proxies (Vercel, AWS, etc.)
-app.set('trust proxy', true);
+// Trust proxy for HTTPS detection behind reverse proxies (Render, Vercel, etc.)
+app.set('trust proxy', env.isProduction() ? 1 : false);
 
 // HTTPS enforcement middleware - MUST be before other middleware
 app.use((req: Request, res: Response, next) => {
