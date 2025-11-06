@@ -110,14 +110,23 @@ const SignupPage = (): JSX.Element => {
 
       toast.success('Sign-up complete! Please check your email.');
       navigate('/landing');
-    } catch (error: any) {
+    } catch (error: unknown) {
       trackEvent('signup_failed', {
         email: data.email,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         page: 'signup'
       });
+
+      const message =
+        (typeof error === 'object' &&
+          error !== null &&
+          'response' in error &&
+          (error as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message) ||
+        (error instanceof Error ? error.message : undefined) ||
+        'Failed to sign up.';
       
-      toast.error(error.response?.data?.message || 'Failed to sign up.');
+      toast.error(message);
     }
   };
 

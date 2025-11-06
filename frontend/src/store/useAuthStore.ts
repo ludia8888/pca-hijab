@@ -3,6 +3,34 @@ import { persist } from 'zustand/middleware';
 import { AuthAPI } from '@/services/api/auth';
 import { secureError } from '@/utils/secureLogging';
 
+type ApiErrorResponse = {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+  };
+};
+
+const resolveErrorMessage = (
+  error: unknown,
+  fallbackMessage: string,
+  overrides: Record<number, string> = {}
+): string => {
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  const apiError = error as ApiErrorResponse;
+  const status = apiError?.response?.status;
+
+  if (status && overrides[status]) {
+    return overrides[status];
+  }
+
+  return apiError?.response?.data?.message ?? fallbackMessage;
+};
+
 interface User {
   id: string;
   email: string;
@@ -56,12 +84,16 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = resolveErrorMessage(error, 'Login failed', {
+            401: '이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해주세요.'
+          });
+
           set({
             isLoading: false,
-            error: error.response?.data?.message || 'Login failed'
+            error: message
           });
-          throw error;
+          throw new Error(message);
         }
       },
 
@@ -77,12 +109,16 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const friendlyMessage = resolveErrorMessage(error, 'Signup failed', {
+            409: '이미 가입된 이메일입니다. 다른 이메일 주소를 사용해주세요.'
+          });
+
           set({
             isLoading: false,
-            error: error.response?.data?.message || 'Signup failed'
+            error: friendlyMessage
           });
-          throw error;
+          throw new Error(friendlyMessage);
         }
       },
 
@@ -128,7 +164,7 @@ export const useAuthStore = create<AuthState>()(
             user: response.data.user,
             isAuthenticated: true
           });
-        } catch (error) {
+        } catch {
           // Token might be expired, try to refresh
           try {
             await get().refreshAccessToken();
@@ -138,7 +174,7 @@ export const useAuthStore = create<AuthState>()(
               user: response.data.user,
               isAuthenticated: true
             });
-          } catch (refreshError) {
+          } catch {
             // Both access and refresh failed, logout
             set({
               user: null,
