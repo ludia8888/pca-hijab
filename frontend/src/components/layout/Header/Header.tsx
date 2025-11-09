@@ -6,6 +6,8 @@ import { Button } from '@/components/ui';
 import { User, LogOut } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+import logoNoor from '@/assets/logo-noor.png';
+
 interface HeaderProps {
   title?: string;
   showBack?: boolean;
@@ -15,7 +17,7 @@ interface HeaderProps {
 }
 
 export const Header = ({
-  title = 'Noor.AI',
+  title,
   showBack = false,
   onBack,
   actions,
@@ -83,9 +85,18 @@ export const Header = ({
                 </svg>
               </button>
             )}
-            <h1 className="text-h4 tablet:text-h3 font-bold text-primary">
-              {title}
-            </h1>
+            {/* 기본적으로 텍스트 대신 브랜드 로고를 노출하여 일관성을 유지 */}
+            {title ? (
+              <h1 className="text-h4 tablet:text-h3 font-bold text-primary">
+                {title}
+              </h1>
+            ) : (
+              <img
+                src={logoNoor}
+                alt="Noor.AI logo"
+                className="h-9 tablet:h-10 w-auto object-contain"
+              />
+            )}
           </div>
 
           {/* Right section */}
