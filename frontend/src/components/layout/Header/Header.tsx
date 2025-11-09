@@ -6,7 +6,7 @@ import { Button } from '@/components/ui';
 import { User, LogOut } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-import logoNoor from '@/assets/logo-noor.png';
+import logoNoor from '@/assets/logo-noor.svg';
 
 interface HeaderProps {
   title?: string;
