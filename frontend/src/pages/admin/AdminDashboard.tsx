@@ -60,7 +60,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center">
                 <Package className="w-8 h-8 text-purple-600 mr-3" />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">PCA HIJAB Admin</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">mynoor ai Admin</h1>
                   <p className="text-sm text-gray-500">Product & Content Management</p>
                 </div>
               </div>

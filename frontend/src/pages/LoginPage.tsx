@@ -194,7 +194,7 @@ const LoginPage = (): JSX.Element => {
 
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
             <Text variant="body-sm" color="gray" mb="2">
-              New to PCA HIJAB?
+              New to mynoor ai?
             </Text>
             <Link to="/signup">
               <Button fullWidth size="lg" variant="outline">

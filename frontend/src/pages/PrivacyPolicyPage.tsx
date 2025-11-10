@@ -22,7 +22,7 @@ export function PrivacyPolicyPage() {
 
           <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
             <p className="text-blue-800 font-semibold">
-              Your privacy is important to us. This Privacy Policy explains how PCA-HIJAB collects, uses, and protects your information when you use our AI-powered personal color analysis service.
+              Your privacy is important to us. This Privacy Policy explains how mynoor ai collects, uses, and protects your information when you use our AI-powered personal color analysis service.
             </p>
           </div>
 
@@ -245,7 +245,7 @@ export function PrivacyPolicyPage() {
               If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
             </p>
             <div className="bg-gray-50 p-4 rounded-lg text-gray-700 mb-4">
-              <p className="font-semibold">PCA-HIJAB Privacy Team</p>
+              <p className="font-semibold">mynoor ai Privacy Team</p>
               <p>Email: privacy@pca-hijab.com</p>
               <p>Data Protection Officer: dpo@pca-hijab.com</p>
               <p>Website: https://pca-hijab.vercel.app</p>
@@ -258,7 +258,7 @@ export function PrivacyPolicyPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">14. Privacy Policy Acceptance</h2>
             <p className="text-gray-700 mb-4">
-              By using PCA-HIJAB, you acknowledge that you have read and understood this Privacy Policy and agree to the collection, use, and disclosure of your information as described herein.
+              By using mynoor ai, you acknowledge that you have read and understood this Privacy Policy and agree to the collection, use, and disclosure of your information as described herein.
             </p>
           </section>
 

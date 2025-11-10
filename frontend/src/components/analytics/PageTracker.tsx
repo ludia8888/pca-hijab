@@ -26,14 +26,14 @@ export const PageTracker = ({ children }: PageTrackerProps): JSX.Element => {
     
     // Track page view on route change
     const pageName = getPageName(location.pathname);
-    trackPageView(location.pathname, `${pageName} | PCA Hijab`);
+    trackPageView(location.pathname, `${pageName} | mynoor ai`);
     
     // Track navigation performance
     trackPerformance('page_navigation_time', navigationDuration, location.pathname);
     
     // Update document title for better tracking
     if (pageName) {
-      document.title = `${pageName} | PCA Hijab`;
+      document.title = `${pageName} | mynoor ai`;
     }
 
     // Initialize scroll tracking for this page
@@ -82,7 +82,7 @@ const getPageName = (pathname: string): string => {
     '/admin/dashboard': 'Admin Dashboard',
     '/privacy': 'Privacy Policy',
     '/terms': 'Terms of Service',
-    '/about': 'About PCA Hijab',
+    '/about': 'About mynoor ai',
     '/contact': 'Contact Us',
     '/error': 'Error Page',
     '/404': 'Page Not Found'

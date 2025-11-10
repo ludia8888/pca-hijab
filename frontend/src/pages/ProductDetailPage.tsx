@@ -75,7 +75,7 @@ const ProductDetailPage = () => {
   const handleShare = async () => {
     const shareData = {
       title: product?.name,
-      text: `${product?.name} — discover it on PCA HIJAB!`,
+      text: `${product?.name} — discover it on mynoor ai!`,
       url: window.location.href
     };
 
