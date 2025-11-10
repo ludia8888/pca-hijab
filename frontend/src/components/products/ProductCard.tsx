@@ -5,17 +5,17 @@ import { getImageUrl } from '@/utils/imageUrl';
 
 // Labels for display
 const PRODUCT_CATEGORY_LABELS = {
-  hijab: '히잡',
-  lens: '렌즈',
-  lip: '립',
-  eyeshadow: '아이섀도우'
+  hijab: 'Hijab',
+  lens: 'Contact lens',
+  lip: 'Lip',
+  eyeshadow: 'Eyeshadow'
 } as const;
 
 const PERSONAL_COLOR_LABELS = {
-  spring_warm: '봄 웜톤',
-  autumn_warm: '가을 웜톤',
-  summer_cool: '여름 쿨톤',
-  winter_cool: '겨울 쿨톤'
+  spring_warm: 'Spring Warm',
+  autumn_warm: 'Autumn Warm',
+  summer_cool: 'Summer Cool',
+  winter_cool: 'Winter Cool'
 } as const;
 
 interface ProductCardProps {

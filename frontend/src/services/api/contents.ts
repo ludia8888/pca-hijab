@@ -127,11 +127,11 @@ export class ContentAPI {
    */
   static getCategoryDisplayName(category: ContentCategory): string {
     const categoryNames: Record<ContentCategory, string> = {
-      beauty_tips: '뷰티 팁',
-      hijab_styling: '히잡 스타일링',
-      color_guide: '컬러 가이드',
-      trend: '트렌드',
-      tutorial: '튜토리얼'
+      beauty_tips: 'Beauty Tips',
+      hijab_styling: 'Hijab Styling',
+      color_guide: 'Color Guide',
+      trend: 'Trends',
+      tutorial: 'Tutorials'
     };
     
     return categoryNames[category] || category;

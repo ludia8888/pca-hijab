@@ -54,7 +54,7 @@ export const convertHEICToJPEG = async (file: File): Promise<File> => {
     
     // If conversion fails, throw an error instead of returning the original file
     // This way the user knows the file cannot be processed
-    throw new Error('HEIC 파일 변환에 실패했습니다. 다른 형식의 이미지를 사용해주세요.');
+    throw new Error('Failed to convert the HEIC file. Please upload a different format.');
   }
 };
 
@@ -67,7 +67,7 @@ export const createHEICFallbackPreview = (file: File): string => {
     <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="#f3f4f6"/>
       <text x="50%" y="45%" font-family="system-ui" font-size="16" fill="#6b7280" text-anchor="middle">
-        HEIC 파일
+        HEIC file
       </text>
       <text x="50%" y="55%" font-family="system-ui" font-size="14" fill="#9ca3af" text-anchor="middle">
         ${file.name}

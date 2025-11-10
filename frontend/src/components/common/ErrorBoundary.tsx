@@ -59,20 +59,19 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center p-4">
           <Card className="max-w-md w-full p-8 text-center">
             <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            
+
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              문제가 발생했습니다
+              Something went wrong
             </h2>
-            
+
             <p className="text-gray-600 mb-6">
-              예상치 못한 오류가 발생했습니다. 
-              페이지를 새로고침하거나 잠시 후 다시 시도해주세요.
+              An unexpected error occurred. Please refresh the page or try again in a moment.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="text-left mb-6">
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                  오류 상세 정보 (개발 모드)
+                  Error details (development mode)
                 </summary>
                 <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto">
                   {this.state.error.toString()}
@@ -87,14 +86,14 @@ export class ErrorBoundary extends Component<Props, State> {
                 variant="ghost"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                다시 시도
+                Try again
               </Button>
               
               <Button
                 onClick={() => window.location.href = '/'}
                 className="bg-purple-600 hover:bg-purple-700"
               >
-                홈으로 이동
+                Go to home
               </Button>
             </div>
           </Card>

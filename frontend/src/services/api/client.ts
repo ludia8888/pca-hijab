@@ -49,22 +49,6 @@ apiClient.interceptors.request.use(
     // Secure logging of requests
     secureLog('[API Request]', createSecureRequestLog(config));
     
-    // Add API key for admin routes
-    if (config.url?.includes('/admin/')) {
-      try {
-        const { useAdminStore } = await import('@/store/useAdminStore');
-        const apiKey = useAdminStore.getState().apiKey;
-        if (apiKey) {
-          config.headers['x-api-key'] = apiKey;
-          console.log('[API Client] Added API key to admin request:', config.url);
-        } else {
-          console.warn('[API Client] No API key found for admin request:', config.url);
-        }
-      } catch (error) {
-        console.error('[API Client] Failed to add API key:', error);
-      }
-    }
-    
     // Add CSRF token for non-GET requests (skip for session creation)
     const isSessionCreation = config.url === '/sessions' && config.method?.toUpperCase() === 'POST';
     if (config.method && config.method.toUpperCase() !== 'GET' && !isSessionCreation) {
@@ -180,7 +164,7 @@ apiClient.interceptors.response.use(
     if (error.code === 'ECONNABORTED') {
       const apiError: ApiError = {
         error: 'Request Timeout',
-        detail: '요청 시간이 초과되었습니다. 다시 시도해주세요.',
+        detail: 'The request timed out. Please try again.',
         code: 'TIMEOUT',
       };
       return Promise.reject(apiError);
@@ -199,7 +183,7 @@ apiClient.interceptors.response.use(
       secureError('[Network Error] No response received:', error.request);
       const apiError: ApiError = {
         error: 'Network Error',
-        detail: '네트워크 연결을 확인해주세요',
+        detail: 'Please check your network connection.',
         code: 'NETWORK_ERROR',
       };
       return Promise.reject(apiError);

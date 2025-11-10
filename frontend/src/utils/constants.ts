@@ -128,27 +128,27 @@ export const COLOR_PALETTES = {
   warm: {
     base: ['#FF9966', '#FFB366', '#FFCC99'], // 웜톤 기본 색상
     spring: {
-      name: '봄 웜톤',
+      name: 'Spring Warm',
       colors: ['#FF9999', '#FFCC99', '#FFE5CC', '#FFAA88'],
-      description: '밝고 선명한 코랄과 피치 계열'
+      description: 'Bright and vivid coral and peach hues'
     },
     autumn: {
-      name: '가을 웜톤',
+      name: 'Autumn Warm',
       colors: ['#CC6633', '#996633', '#CC9966', '#805533'],
-      description: '깊고 차분한 브라운과 오렌지 계열'
+      description: 'Deep, cozy browns and earthy oranges'
     }
   },
   cool: {
     base: ['#FF99CC', '#CC99FF', '#99CCFF'], // 쿨톤 기본 색상
     summer: {
-      name: '여름 쿨톤',
+      name: 'Summer Cool',
       colors: ['#FFB3D9', '#D9B3FF', '#B3D9FF', '#E6CCFF'],
-      description: '부드러운 파스텔 핑크와 라벤더 계열'
+      description: 'Soft pastel pinks and lavender shades'
     },
     winter: {
-      name: '겨울 쿨톤',
+      name: 'Winter Cool',
       colors: ['#FF0066', '#CC0066', '#9900CC', '#0066CC'],
-      description: '선명하고 차가운 비비드 톤'
+      description: 'Bold, crisp cool-tone brights'
     }
   }
 };
@@ -260,22 +260,22 @@ export const ROUTES = {
 // Personal Color Descriptions
 export const SEASON_DESCRIPTIONS = {
   spring: {
-    ko: '봄 웜톤',
+    ko: 'Spring Warm',
     en: 'Spring Warm',
     description: 'Clear and vibrant warm colors suit you best',
   },
   summer: {
-    ko: '여름 쿨톤',
+    ko: 'Summer Cool',
     en: 'Summer Cool',
     description: 'Soft and muted cool colors suit you best',
   },
   autumn: {
-    ko: '가을 웜톤',
+    ko: 'Autumn Warm',
     en: 'Autumn Warm',
     description: 'Deep and rich warm colors suit you best',
   },
   winter: {
-    ko: '겨울 쿨톤',
+    ko: 'Winter Cool',
     en: 'Winter Cool',
     description: 'Bold and contrasting cool colors suit you best',
   },

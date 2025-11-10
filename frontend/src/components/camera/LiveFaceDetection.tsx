@@ -160,7 +160,7 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
       ctx.font = 'bold 16px Inter, sans-serif';
       ctx.fillStyle = 'rgba(0, 255, 159, 0.9)';
       ctx.fillText(
-        'AI 얼굴 인식 중...',
+        'Detecting your face...',
         face.box.xMin,
         face.box.yMin - 15
       );
@@ -324,7 +324,7 @@ const LiveFaceDetection: React.FC<LiveFaceDetectionProps> = ({
         <div className="absolute top-4 right-4 z-40 bg-green-500 bg-opacity-90 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse">
           <div className="flex items-center space-x-1">
             <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-            <span>AI 인식 중</span>
+            <span>AI detection in progress</span>
           </div>
         </div>
       )}

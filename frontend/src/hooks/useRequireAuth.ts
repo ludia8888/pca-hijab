@@ -19,10 +19,10 @@ export const useRequireAuth = (): UseRequireAuthReturn => {
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPersonalColorModal, setShowPersonalColorModal] = useState(false);
-  const [authModalFeature, setAuthModalFeature] = useState('이 기능');
-  const [personalColorModalFeature, setPersonalColorModalFeature] = useState('이 기능');
+  const [authModalFeature, setAuthModalFeature] = useState('this feature');
+  const [personalColorModalFeature, setPersonalColorModalFeature] = useState('this feature');
 
-  const checkAuth = useCallback((feature: string = '이 기능'): boolean => {
+  const checkAuth = useCallback((feature: string = 'this feature'): boolean => {
     // DEMO MODE: Always return true (no authentication required)
     return true;
     
@@ -35,7 +35,7 @@ export const useRequireAuth = (): UseRequireAuthReturn => {
     // return true;
   }, [isAuthenticated]);
 
-  const checkPersonalColor = useCallback((feature: string = '이 기능'): boolean => {
+  const checkPersonalColor = useCallback((feature: string = 'this feature'): boolean => {
     // DEMO MODE: Always return true (no personal color check required)
     return true;
     

@@ -13,7 +13,7 @@ interface AuthRequiredProps {
 export const AuthRequired: React.FC<AuthRequiredProps> = ({
   isOpen,
   onClose,
-  feature = '이 기능'
+  feature = 'this feature'
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,10 +64,10 @@ export const AuthRequired: React.FC<AuthRequiredProps> = ({
             {/* Content */}
             <div className="text-center">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                로그인이 필요합니다
+                Sign-in required
               </h3>
               <p className="text-gray-600 mb-6">
-                {feature}을(를) 이용하시려면 먼저 로그인해주세요.
+                Please sign in to use {feature}.
               </p>
             </div>
 
@@ -79,7 +79,7 @@ export const AuthRequired: React.FC<AuthRequiredProps> = ({
                 size="lg"
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
-                로그인
+                Sign in
               </Button>
               
               <Button
@@ -88,14 +88,14 @@ export const AuthRequired: React.FC<AuthRequiredProps> = ({
                 fullWidth
                 size="lg"
               >
-                회원가입
+                Create account
               </Button>
               
               <button
                 onClick={onClose}
                 className="w-full text-center text-sm text-gray-500 hover:text-gray-700 mt-3"
               >
-                나중에 하기
+                Maybe later
               </button>
             </div>
 
@@ -104,12 +104,12 @@ export const AuthRequired: React.FC<AuthRequiredProps> = ({
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div className="text-sm text-gray-600">
-                  <p className="font-medium mb-1">회원 혜택</p>
+                  <p className="font-medium mb-1">Benefits</p>
                   <ul className="space-y-1 text-gray-500">
-                    <li>• 퍼스널 컬러 진단 결과 저장</li>
-                    <li>• 맞춤 상품 추천</li>
-                    <li>• 찜한 상품 관리</li>
-                    <li>• 구매 이력 확인</li>
+                    <li>• Save your personal color diagnosis</li>
+                    <li>• Receive tailored product recommendations</li>
+                    <li>• Manage favorite products</li>
+                    <li>• Review your purchase history</li>
                   </ul>
                 </div>
               </div>

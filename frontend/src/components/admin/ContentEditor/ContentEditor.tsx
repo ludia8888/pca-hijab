@@ -23,7 +23,7 @@ interface ContentEditorProps {
 export const ContentEditor: React.FC<ContentEditorProps> = ({ 
   content, 
   onChange, 
-  placeholder = '내용을 입력하세요...' 
+  placeholder = 'Write your content here...'
 }) => {
   const editor = useEditor({
     extensions: [
@@ -63,14 +63,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   }
 
   const addLink = () => {
-    const url = window.prompt('URL을 입력하세요:');
+    const url = window.prompt('Enter the URL:');
     if (url) {
       editor.chain().focus().setLink({ href: url }).run();
     }
   };
 
   const addImage = () => {
-    const url = window.prompt('이미지 URL을 입력하세요:');
+    const url = window.prompt('Enter the image URL:');
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
@@ -103,21 +103,21 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             isActive={editor.isActive('heading', { level: 1 })}
-            title="제목 1"
+            title="Heading 1"
           >
             <Heading1 className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive('heading', { level: 2 })}
-            title="제목 2"
+            title="Heading 2"
           >
             <Heading2 className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             isActive={editor.isActive('heading', { level: 3 })}
-            title="제목 3"
+            title="Heading 3"
           >
             <Heading3 className="w-4 h-4" />
           </ToolbarButton>
@@ -128,28 +128,28 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
-            title="굵게"
+            title="Bold"
           >
             <Bold className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleItalic().run()}
             isActive={editor.isActive('italic')}
-            title="기울임"
+            title="Italic"
           >
             <Italic className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             isActive={editor.isActive('underline')}
-            title="밑줄"
+            title="Underline"
           >
             <UnderlineIcon className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleCode().run()}
             isActive={editor.isActive('code')}
-            title="코드"
+            title="Code"
           >
             <Code className="w-4 h-4" />
           </ToolbarButton>
@@ -160,21 +160,21 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive('bulletList')}
-            title="글머리 기호"
+            title="Bulleted list"
           >
             <List className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             isActive={editor.isActive('orderedList')}
-            title="번호 매기기"
+            title="Numbered list"
           >
             <ListOrdered className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             isActive={editor.isActive('blockquote')}
-            title="인용구"
+            title="Quote"
           >
             <Quote className="w-4 h-4" />
           </ToolbarButton>
@@ -182,10 +182,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
         {/* Insert */}
         <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
-          <ToolbarButton onClick={addLink} title="링크 추가">
+          <ToolbarButton onClick={addLink} title="Add link">
             <LinkIcon className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={addImage} title="이미지 추가">
+          <ToolbarButton onClick={addImage} title="Add image">
             <ImageIcon className="w-4 h-4" />
           </ToolbarButton>
         </div>
@@ -194,13 +194,13 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
-            title="실행 취소"
+            title="Undo"
           >
             <Undo className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().redo().run()}
-            title="다시 실행"
+            title="Redo"
           >
             <Redo className="w-4 h-4" />
           </ToolbarButton>

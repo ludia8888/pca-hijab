@@ -34,7 +34,7 @@ interface ProductData {
 }
 // Sample hijab products for each season
 const hijabProducts: ProductData[] = [
-  // 봄 웜 (Spring Warm) - Coral, Peach, Light Brown tones
+  // Spring Warm - coral, peach, and light brown tones
   {
     name: 'Soft Coral Chiffon Hijab',
     category: 'hijab',
@@ -42,7 +42,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/spring-coral-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['spring_warm'],
-    description: '부드러운 코랄 컬러의 시폰 히잡으로 봄 웜톤에 완벽하게 어울립니다',
+    description: 'Soft coral chiffon hijab that flatters every Spring Warm complexion.',
     shopee_link: 'https://example.com/coral-hijab',
     is_active: true
   },
@@ -53,7 +53,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/spring-peach-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['spring_warm'],
-    description: '피치 블로썸 컬러의 새틴 히잡으로 화사한 봄 웜톤을 연출',
+    description: 'Peach blossom satin hijab that delivers a bright, warm finish.',
     shopee_link: 'https://example.com/peach-hijab',
     is_active: true
   },
@@ -64,11 +64,11 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/spring-camel-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['spring_warm'],
-    description: '라이트 카멜 컬러의 저지 히잡으로 데일리로 착용하기 좋습니다',
+    description: 'Light camel jersey hijab designed for effortless everyday styling.',
     shopee_link: 'https://example.com/camel-hijab',
     is_active: true
   },
-  // 여름 쿨 (Summer Cool) - Soft Pink, Lavender, Light Blue tones
+  // Summer Cool - soft pink, lavender, and light blue tones
   {
     name: 'Rose Quartz Modal Hijab',
     category: 'hijab',
@@ -76,7 +76,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/summer-rose-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['summer_cool'],
-    description: '로즈 쿼츠 컬러의 모달 히잡으로 여름 쿨톤에 청량감을 더합니다',
+    description: 'Rose quartz modal hijab that adds a refreshing touch to Summer Cool looks.',
     shopee_link: 'https://example.com/rose-hijab',
     is_active: true
   },
@@ -87,7 +87,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/summer-lavender-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['summer_cool'],
-    description: '라벤더 미스트 컬러의 시폰 히잡으로 우아한 여름 쿨톤 연출',
+    description: 'Lavender mist chiffon hijab for an elegant Summer Cool finish.',
     shopee_link: 'https://example.com/lavender-hijab',
     is_active: true
   },
@@ -98,11 +98,11 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/summer-blue-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['summer_cool'],
-    description: '파우더 블루 컬러의 코튼 히잡으로 시원한 여름 쿨톤 스타일',
+    description: 'Powder blue cotton hijab that keeps warm-weather outfits light and airy.',
     shopee_link: 'https://example.com/blue-hijab',
     is_active: true
   },
-  // 가을 웜 (Autumn Warm) - Burnt Orange, Deep Brown, Khaki tones
+  // Autumn Warm - burnt orange, deep brown, and khaki tones
   {
     name: 'Burnt Sienna Wool Hijab',
     category: 'hijab',
@@ -110,7 +110,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/autumn-sienna-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['autumn_warm'],
-    description: '번트 시에나 컬러의 울 히잡으로 가을 웜톤의 깊이감을 표현',
+    description: 'Burnt sienna wool hijab that highlights the richness of Autumn Warm skin.',
     shopee_link: 'https://example.com/sienna-hijab',
     is_active: true
   },
@@ -121,7 +121,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/autumn-brown-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['autumn_warm'],
-    description: '초콜릿 브라운 컬러의 비스코스 히잡으로 가을 웜톤에 풍부함을 더합니다',
+    description: 'Chocolate-brown viscose hijab that adds depth to fall wardrobes.',
     shopee_link: 'https://example.com/brown-hijab',
     is_active: true
   },
@@ -132,11 +132,11 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/autumn-olive-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['autumn_warm'],
-    description: '올리브 카키 컬러의 린넨 히잡으로 자연스러운 가을 웜톤 연출',
+    description: 'Olive khaki linen hijab for an easy, earthy Autumn Warm style.',
     shopee_link: 'https://example.com/olive-hijab',
     is_active: true
   },
-  // 겨울 쿨 (Winter Cool) - Deep Pink, Burgundy, Navy tones
+  // Winter Cool - deep pink, burgundy, and navy tones
   {
     name: 'Fuchsia Pink Satin Hijab',
     category: 'hijab',
@@ -144,7 +144,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/winter-fuchsia-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['winter_cool'],
-    description: '퓨샤 핑크 컬러의 새틴 히잡으로 겨울 쿨톤의 화려함을 표현',
+    description: 'Fuchsia pink satin hijab that amplifies the drama of Winter Cool tones.',
     shopee_link: 'https://example.com/fuchsia-hijab',
     is_active: true
   },
@@ -155,7 +155,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/winter-burgundy-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['winter_cool'],
-    description: '버건디 컬러의 벨벳 히잡으로 고급스러운 겨울 쿨톤 스타일',
+    description: 'Burgundy velvet hijab for a luxurious cold-weather statement.',
     shopee_link: 'https://example.com/burgundy-hijab',
     is_active: true
   },
@@ -166,7 +166,7 @@ const hijabProducts: ProductData[] = [
     thumbnail_url: '/uploads/hijabs/winter-navy-hijab.jpg',
     detail_image_urls: [],
     personal_colors: ['winter_cool'],
-    description: '미드나이트 네이비 컬러의 저지 히잡으로 세련된 겨울 쿨톤 연출',
+    description: 'Midnight navy jersey hijab that delivers a sleek Winter Cool finish.',
     shopee_link: 'https://example.com/navy-hijab',
     is_active: true
   }

@@ -37,6 +37,8 @@ interface User {
   fullName: string;
   instagramId?: string;
   emailVerified: boolean;
+  role: 'user' | 'admin' | 'content_manager';
+  lastLoginAt?: Date;
   hasPersonalColorDiagnosis?: boolean;
   personalColorResult?: {
     season: string;
@@ -86,7 +88,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error: unknown) {
           const message = resolveErrorMessage(error, 'Login failed', {
-            401: '이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해주세요.'
+            401: 'The email or password you entered is incorrect. Please try again.'
           });
 
           set({

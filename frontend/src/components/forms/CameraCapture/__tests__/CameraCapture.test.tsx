@@ -65,22 +65,22 @@ describe('CameraCapture', () => {
     vi.restoreAllMocks();
   });
 
-  describe('렌더링', () => {
+  describe('rendering', () => {
     it('should render camera interface', () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
-      expect(screen.getByRole('button', { name: '닫기' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
     });
 
     it('should show loading state initially', () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
       // Check for loading text
-      expect(screen.getByText('카메라를 준비하고 있습니다...')).toBeInTheDocument();
+      expect(screen.getByText('Preparing camera...')).toBeInTheDocument();
     });
   });
 
-  describe('카메라 권한', () => {
+  describe('camera permission', () => {
     it('should request camera permission on mount', async () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
@@ -101,7 +101,7 @@ describe('CameraCapture', () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
       await waitFor(() => {
-        expect(screen.getByText('카메라 접근 권한이 필요합니다.')).toBeInTheDocument();
+        expect(screen.getByText('Camera access permission is required.')).toBeInTheDocument();
       });
     });
 
@@ -111,7 +111,7 @@ describe('CameraCapture', () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Try Again' })).toBeInTheDocument();
       });
     });
 
@@ -124,10 +124,10 @@ describe('CameraCapture', () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
       await waitFor(() => {
-        expect(screen.getByText('카메라 접근 권한이 필요합니다.')).toBeInTheDocument();
+        expect(screen.getByText('Camera access permission is required.')).toBeInTheDocument();
       });
       
-      const retryButton = screen.getByRole('button', { name: '다시 시도' });
+      const retryButton = screen.getByRole('button', { name: 'Try Again' });
       await user.click(retryButton);
       
       await waitFor(() => {
@@ -136,7 +136,7 @@ describe('CameraCapture', () => {
     });
   });
 
-  describe('카메라 캡처', () => {
+  describe('camera capture', () => {
     it('should capture photo when capture button clicked', async () => {
       const user = userEvent.setup();
       
@@ -154,12 +154,12 @@ describe('CameraCapture', () => {
       
       // Since the camera permission was granted, wait for capture button
       await waitFor(() => {
-        const captureButton = screen.queryByRole('button', { name: '촬영' });
+        const captureButton = screen.queryByRole('button', { name: 'Capture' });
         expect(captureButton).toBeInTheDocument();
       }, { timeout: 3000 });
       
       // Find and click capture button
-      const captureButton = screen.getByRole('button', { name: '촬영' });
+      const captureButton = screen.getByRole('button', { name: 'Capture' });
       
       await act(async () => {
         await user.click(captureButton);
@@ -184,18 +184,18 @@ describe('CameraCapture', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: '촬영' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Capture' })).toBeInTheDocument();
       });
     });
   });
 
-  describe('인터페이스 제어', () => {
+  describe('interface controls', () => {
     it('should close when close button clicked', async () => {
       const user = userEvent.setup();
       
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
-      const closeButton = screen.getByRole('button', { name: '닫기' });
+      const closeButton = screen.getByRole('button', { name: 'Close' });
       await user.click(closeButton);
       
       expect(mockOnClose).toHaveBeenCalled();
@@ -219,18 +219,18 @@ describe('CameraCapture', () => {
       });
       
       // Close the camera
-      const closeButton = screen.getByRole('button', { name: '닫기' });
+      const closeButton = screen.getByRole('button', { name: 'Close' });
       await user.click(closeButton);
       
       expect(mockStop).toHaveBeenCalled();
     });
   });
 
-  describe('접근성', () => {
+  describe('accessibility', () => {
     it('should have proper ARIA labels', () => {
       render(<CameraCapture onCapture={mockOnCapture} onClose={mockOnClose} />);
       
-      expect(screen.getByRole('button', { name: '닫기' })).toHaveAttribute('aria-label', '닫기');
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveAttribute('aria-label', 'Close');
     });
 
     it('should have proper video attributes', () => {
@@ -244,7 +244,7 @@ describe('CameraCapture', () => {
     });
   });
 
-  describe('클린업', () => {
+  describe('cleanup', () => {
     it('should stop camera stream on unmount', async () => {
       const mockStop = vi.fn();
       const mockStreamWithStop = {

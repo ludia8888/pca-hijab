@@ -18,13 +18,13 @@ export const PersonalColorSection = (): JSX.Element => {
           <div className="p-2 bg-purple-100 rounded-lg">
             <Palette className="w-5 h-5 text-purple-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">나의 퍼스널 컬러</h2>
+          <h2 className="text-lg font-semibold text-gray-900">My personal color</h2>
         </div>
         
         <div className="text-center py-8">
           <div className="text-6xl mb-4">🎨</div>
           <p className="text-gray-600 mb-4">
-            아직 퍼스널 컬러 진단을 받지 않으셨네요!
+            You haven’t completed a personal color diagnosis yet.
           </p>
           <button
             onClick={async () => {
@@ -44,8 +44,8 @@ export const PersonalColorSection = (): JSX.Element => {
             disabled={isLoading}
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? '준비 중...' : '퍼스널 컬러 진단하기'}
-            <ChevronRight className="w-4 h-4" />
+            {isLoading ? 'Preparing...' : 'Start personal color analysis'}
+          <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -75,14 +75,14 @@ export const PersonalColorSection = (): JSX.Element => {
           <div className="p-2 bg-purple-100 rounded-lg">
             <Palette className="w-5 h-5 text-purple-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">나의 퍼스널 컬러</h2>
+          <h2 className="text-lg font-semibold text-gray-900">My personal color</h2>
         </div>
         
         <button
           onClick={() => navigate(ROUTES.RESULT)}
           className="text-sm text-purple-600 hover:text-purple-700 font-medium"
         >
-          자세히 보기
+          View details
         </button>
       </div>
       
@@ -92,9 +92,6 @@ export const PersonalColorSection = (): JSX.Element => {
             <h3 className="text-2xl font-bold text-gray-900">
               {seasonInfo.en}
             </h3>
-            <span className="text-lg text-gray-600">
-              ({seasonInfo.ko})
-            </span>
           </div>
           <p className="text-sm text-gray-600">
             {seasonInfo.description}
@@ -102,7 +99,7 @@ export const PersonalColorSection = (): JSX.Element => {
           {analysisResult.confidence && (
             <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              AI 신뢰도 {Math.round(analysisResult.confidence * 100)}%
+              AI confidence {Math.round(analysisResult.confidence * 100)}%
             </div>
           )}
         </div>
@@ -117,7 +114,7 @@ export const PersonalColorSection = (): JSX.Element => {
       
       {/* Best colors preview */}
       <div className="mt-4">
-        <p className="text-sm font-medium text-gray-700 mb-2">추천 컬러</p>
+        <p className="text-sm font-medium text-gray-700 mb-2">Recommended colors</p>
         <div className="flex gap-2">
           {seasonColors.bestColors.slice(0, 6).map((color, index) => (
             <div
@@ -142,7 +139,7 @@ export const PersonalColorSection = (): JSX.Element => {
           onClick={() => navigate(ROUTES.PRODUCTS)}
           className="flex-1 px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
         >
-          맞춤 상품 보기
+          View tailored products
         </button>
         <button
           onClick={async () => {
@@ -162,7 +159,7 @@ export const PersonalColorSection = (): JSX.Element => {
           disabled={isLoading}
           className="flex-1 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? '준비 중...' : '다시 진단하기'}
+          {isLoading ? 'Preparing...' : 'Run diagnosis again'}
         </button>
       </div>
     </div>

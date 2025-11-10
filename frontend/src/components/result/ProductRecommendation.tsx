@@ -95,7 +95,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/moonshot-alluring.svg',
         detailImageUrls: [],
         personalColors: ['spring_warm'],
-        description: '봄 웜톤을 위한 따뜻한 코랄 립 컬러',
+        description: 'A warm coral lip shade tailored for Spring Warm tones.',
         shopeeLink: 'https://en.moonshot-beauty.com/product/melting-mood-lip-and-cheeksheer-glow/131/?cate_no=1&display_group=2',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -109,7 +109,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/karadium-butter-coral.svg',
         detailImageUrls: [],
         personalColors: ['spring_warm'],
-        description: '버터처럼 부드러운 봄 웜톤 코랄 립',
+        description: 'A buttery coral finish that flatters Spring Warm complexions.',
         shopeeLink: 'https://smartstore.naver.com/karadium/products/9255588817',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -123,7 +123,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/molette-apple-cheeky.svg',
         detailImageUrls: [],
         personalColors: ['spring_warm'],
-        description: '사과처럼 상큼한 봄 웜톤 립 컬러',
+        description: 'A crisp apple-inspired hue for bright Spring looks.',
         shopeeLink: 'http://smartstore.naver.com/molette_official/products/11582095583',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -139,7 +139,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/moonshot-honest.svg',
         detailImageUrls: [],
         personalColors: ['autumn_warm'],
-        description: '가을 웜톤을 위한 차분한 브라운 립',
+        description: 'A refined brown lip color for Autumn Warm tones.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -153,7 +153,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/karadium-pecan-sand.svg',
         detailImageUrls: [],
         personalColors: ['autumn_warm'],
-        description: '피칸 샌드 컬러의 가을 웜톤 립',
+        description: 'Pecan sand tones that suit rich autumn palettes.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -167,7 +167,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/molette-coco-choco.svg',
         detailImageUrls: [],
         personalColors: ['autumn_warm'],
-        description: '코코아처럼 달콤한 가을 웜톤 립',
+        description: 'Sweet cocoa-brown pigment for cozy Autumn looks.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -183,7 +183,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/moonshot-shy.svg',
         detailImageUrls: [],
         personalColors: ['summer_cool'],
-        description: '수줍은듯한 핑크 여름 쿨톤 립',
+        description: 'A soft pink tint that enhances Summer Cool undertones.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -197,7 +197,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/karadium-cozy-pink.svg',
         detailImageUrls: [],
         personalColors: ['summer_cool'],
-        description: '편안한 핑크 여름 쿨톤 립',
+        description: 'Comforting pink shades for calm, cool-toned styles.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -211,7 +211,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/molette-dewy-berry.svg',
         detailImageUrls: [],
         personalColors: ['summer_cool'],
-        description: '촉촉한 베리 여름 쿨톤 립',
+        description: 'A dewy berry finish that keeps Summer Cool lips vibrant.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -227,7 +227,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/moonshot-oort-pink.svg',
         detailImageUrls: [],
         personalColors: ['winter_cool'],
-        description: '우주처럼 신비로운 핑크 겨울 쿨톤 립',
+        description: 'A cosmic pink tint that pops on Winter Cool skin.',
         shopeeLink: 'https://en.moonshot-beauty.com/product/jelly-moon-glow-tint/158/?cate_no=56&display_group=1',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -241,7 +241,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/karadium-rosy-berry.svg',
         detailImageUrls: [],
         personalColors: ['winter_cool'],
-        description: '로즈 베리 겨울 쿨톤 립',
+        description: 'Rosy berry pigment designed for Winter Cool tones.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -255,7 +255,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
         thumbnailUrl: '/uploads/products/molette-tingle-cherry.svg',
         detailImageUrls: [],
         personalColors: ['winter_cool'],
-        description: '체리처럼 생동감 있는 겨울 쿨톤 립',
+        description: 'A lively cherry-red finish for striking Winter looks.',
         shopeeLink: '#',
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -268,7 +268,7 @@ const getMockProducts = (personalColorEn: string): Product[] => {
 };
 
 export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ personalColorEn }) => {
-  // 하드코딩으로 바로 설정
+  // Use mock data directly until API output is finalized
   const mockProducts = getMockProducts(personalColorEn);
   const [hijabProducts] = React.useState<Product[]>(mockProducts);
   const [isLoading] = React.useState(false);
@@ -278,10 +278,10 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
   // Get season name in Korean
   const getSeasonName = (personalColor: string): string => {
     const seasonMap: Record<string, string> = {
-      'spring': '봄 웜',
-      'summer': '여름 쿨',
-      'autumn': '가을 웜',
-      'winter': '겨울 쿨'
+      spring: 'Spring Warm',
+      summer: 'Summer Cool',
+      autumn: 'Autumn Warm',
+      winter: 'Winter Cool'
     };
     
     const lowerColor = personalColor.toLowerCase();
@@ -290,7 +290,7 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
         return value;
       }
     }
-    return '당신';
+    return 'you';
   };
 
   const seasonName = getSeasonName(personalColorEn);
@@ -298,7 +298,7 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden p-3 mb-4">
       <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
-        <span className="text-base">💄</span> {seasonName}을 위한 추천 립 제품
+        <span className="text-base">💄</span> Recommended lip products for {seasonName}
       </h3>
         
       <div className="grid grid-cols-3 gap-3">

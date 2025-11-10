@@ -2,9 +2,9 @@ import { http, HttpResponse } from 'msw';
 
 // Shared mock data helpers
 const createMockPersonalColorResult = () => ({
-  personal_color: '가을 웜톤',
+  personal_color: 'Autumn Warm',
   personal_color_en: 'autumn',
-  tone: '따뜻한 톤',
+  tone: 'Warm Tone',
   tone_en: 'warm',
   confidence: 0.92,
   best_colors: ['#D2691E', '#8B4513', '#CD853F', '#A0522D'],

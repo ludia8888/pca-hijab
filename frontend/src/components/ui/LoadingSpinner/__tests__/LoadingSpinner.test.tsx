@@ -98,7 +98,7 @@ describe('LoadingSpinner', () => {
     });
 
     it('should show custom label when provided', () => {
-      const customLabel = '데이터를 불러오는 중...';
+      const customLabel = 'Loading data...';
       render(<LoadingSpinner label={customLabel} />);
       
       // Should have both visible label and screen reader text
@@ -111,7 +111,7 @@ describe('LoadingSpinner', () => {
     });
 
     it('should use custom label for aria-label', () => {
-      const customLabel = '분석 중...';
+      const customLabel = 'Analyzing...';
       render(<LoadingSpinner label={customLabel} />);
       
       const spinner = screen.getByRole('status');

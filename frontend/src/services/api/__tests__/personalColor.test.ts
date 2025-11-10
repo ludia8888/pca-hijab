@@ -36,7 +36,7 @@ describe('PersonalColorAPI', () => {
       server.use(
         http.post('/api/analyze', () => {
           return HttpResponse.json(
-            { status: 'error', message: '이미지가 필요합니다.' },
+            { status: 'error', message: 'An image file is required.' },
             { status: 400 }
           );
         })
@@ -53,7 +53,7 @@ describe('PersonalColorAPI', () => {
       server.use(
         http.post('/api/analyze', () => {
           return HttpResponse.json(
-            { status: 'error', message: '서버 오류가 발생했습니다.' },
+            { status: 'error', message: 'A server error occurred.' },
             { status: 500 }
           );
         })

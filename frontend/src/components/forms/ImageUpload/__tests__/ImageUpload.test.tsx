@@ -63,20 +63,19 @@ describe('ImageUpload', () => {
     vi.clearAllMocks();
   });
 
-  describe('렌더링', () => {
+  describe('rendering', () => {
     it('should render upload area', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      expect(screen.getByText('클릭하여 사진 선택')).toBeInTheDocument();
-      expect(screen.getByText('또는 파일을 여기로 드래그하세요')).toBeInTheDocument();
-      expect(screen.getByText('JPG, PNG, HEIC (최대 10MB)')).toBeInTheDocument();
+      expect(screen.getByText('Add your photo')).toBeInTheDocument();
+      expect(screen.getByText('Tap to choose or drag here')).toBeInTheDocument();
     });
 
     it('should render gallery and camera buttons', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      expect(screen.getByRole('button', { name: '갤러리에서 선택' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '카메라로 촬영' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Gallery/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Camera/ })).toBeInTheDocument();
     });
 
     it('should apply custom className', () => {
@@ -88,12 +87,12 @@ describe('ImageUpload', () => {
         />
       );
       
-      const container = screen.getByText('클릭하여 사진 선택').closest('.w-full');
+      const container = screen.getByText('Add your photo').closest('.w-full');
       expect(container).toHaveClass('custom-class');
     });
   });
 
-  describe('파일 선택', () => {
+  describe('file selection', () => {
     it('should handle file selection via input', async () => {
       const user = userEvent.setup();
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
@@ -146,11 +145,11 @@ describe('ImageUpload', () => {
     });
   });
 
-  describe('드래그 앤 드롭', () => {
+  describe('drag and drop', () => {
     it('should handle drag over', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const dropZone = screen.getByText('클릭하여 사진 선택').closest('div')!;
+      const dropZone = screen.getByText('Add your photo').closest('div')!;
       
       fireEvent.dragOver(dropZone, {
         dataTransfer: { files: [] }
@@ -162,7 +161,7 @@ describe('ImageUpload', () => {
     it('should handle drag leave', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const dropZone = screen.getByText('클릭하여 사진 선택').closest('div')!;
+      const dropZone = screen.getByText('Add your photo').closest('div')!;
       
       fireEvent.dragOver(dropZone, {
         dataTransfer: { files: [] }
@@ -177,7 +176,7 @@ describe('ImageUpload', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
       const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-      const dropZone = screen.getByText('클릭하여 사진 선택').closest('div')!;
+      const dropZone = screen.getByText('Add your photo').closest('div')!;
       
       fireEvent.drop(dropZone, {
         dataTransfer: {
@@ -194,7 +193,7 @@ describe('ImageUpload', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} disabled />);
       
       const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-      const dropZone = screen.getByText('클릭하여 사진 선택').closest('div')!;
+      const dropZone = screen.getByText('Add your photo').closest('div')!;
       
       fireEvent.drop(dropZone, {
         dataTransfer: {
@@ -206,7 +205,7 @@ describe('ImageUpload', () => {
     });
   });
 
-  describe('미리보기', () => {
+  describe('preview', () => {
     it('should show preview after file selection', async () => {
       const user = userEvent.setup();
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
@@ -217,7 +216,7 @@ describe('ImageUpload', () => {
       await user.upload(input, file);
       
       await waitFor(() => {
-        expect(screen.getByAltText('업로드된 이미지')).toBeInTheDocument();
+        expect(screen.getByAltText('Your photo')).toBeInTheDocument();
       });
     });
 
@@ -233,23 +232,23 @@ describe('ImageUpload', () => {
       await user.upload(input, file);
       
       await waitFor(() => {
-        expect(screen.getByAltText('업로드된 이미지')).toBeInTheDocument();
+        expect(screen.getByAltText('Your photo')).toBeInTheDocument();
       });
       
-      const removeButton = screen.getByRole('button', { name: '이미지 제거' });
+      const removeButton = screen.getByRole('button', { name: 'Remove' });
       await user.click(removeButton);
       
       expect(revokeImagePreview).toHaveBeenCalled();
-      expect(screen.queryByAltText('업로드된 이미지')).not.toBeInTheDocument();
+      expect(screen.queryByAltText('Your photo')).not.toBeInTheDocument();
     });
   });
 
-  describe('카메라 기능', () => {
+  describe('camera mode', () => {
     it('should open camera when camera button is clicked', async () => {
       const user = userEvent.setup();
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const cameraButton = screen.getByRole('button', { name: '카메라로 촬영' });
+      const cameraButton = screen.getByRole('button', { name: /Camera/ });
       await user.click(cameraButton);
       
       expect(screen.getByTestId('camera-capture')).toBeInTheDocument();
@@ -259,7 +258,7 @@ describe('ImageUpload', () => {
       const user = userEvent.setup();
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const cameraButton = screen.getByRole('button', { name: '카메라로 촬영' });
+      const cameraButton = screen.getByRole('button', { name: /Camera/ });
       await user.click(cameraButton);
       
       const captureButton = screen.getByText('Capture');
@@ -277,7 +276,7 @@ describe('ImageUpload', () => {
       const user = userEvent.setup();
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const cameraButton = screen.getByRole('button', { name: '카메라로 촬영' });
+      const cameraButton = screen.getByRole('button', { name: /Camera/ });
       await user.click(cameraButton);
       
       expect(screen.getByTestId('camera-capture')).toBeInTheDocument();
@@ -298,7 +297,7 @@ describe('ImageUpload', () => {
       // Force re-render to pick up the mock change
       rerender(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const cameraButton = screen.getByRole('button', { name: '카메라로 촬영' });
+      const cameraButton = screen.getByRole('button', { name: /Camera/ });
       
       // Click should trigger the hidden camera input
       await user.click(cameraButton);
@@ -308,12 +307,12 @@ describe('ImageUpload', () => {
     });
   });
 
-  describe('상태 관리', () => {
+  describe('state management', () => {
     it('should disable interactions when disabled prop is true', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} disabled />);
       
-      const galleryButton = screen.getByRole('button', { name: '갤러리에서 선택' });
-      const cameraButton = screen.getByRole('button', { name: '카메라로 촬영' });
+      const galleryButton = screen.getByRole('button', { name: /Gallery/ });
+      const cameraButton = screen.getByRole('button', { name: /Camera/ });
       
       expect(galleryButton).toBeDisabled();
       expect(cameraButton).toBeDisabled();
@@ -322,17 +321,17 @@ describe('ImageUpload', () => {
     it('should show correct text during drag over', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       
-      const dropZone = screen.getByText('클릭하여 사진 선택').closest('div')!;
+      const dropZone = screen.getByText('Add your photo').closest('div')!;
       
       fireEvent.dragOver(dropZone, {
         dataTransfer: { files: [] }
       });
       
-      expect(screen.getByText('여기에 놓으세요')).toBeInTheDocument();
+      expect(screen.getByText('Drop your photo')).toBeInTheDocument();
     });
   });
 
-  describe('접근성', () => {
+  describe('accessibility', () => {
     it('should have proper file input attributes', () => {
       render(<ImageUpload onUpload={mockOnUpload} onError={mockOnError} />);
       

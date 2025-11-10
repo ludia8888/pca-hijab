@@ -7,9 +7,9 @@ import type { PersonalColorResult } from '@/types';
 
 describe('RecommendationAPI', () => {
   const mockPersonalColorResult: PersonalColorResult = {
-    personal_color: '가을 웜톤',
+    personal_color: 'Autumn Warm',
     personal_color_en: 'autumn',
-    tone: '따뜻한 톤',
+    tone: 'Warm Tone',
     tone_en: 'warm',
     confidence: 0.92
   };
@@ -32,7 +32,7 @@ describe('RecommendationAPI', () => {
         http.post('/api/recommendations', async () => {
           return HttpResponse.json({
             success: true,
-            message: '추천이 성공적으로 등록되었습니다.',
+            message: 'Recommendation request submitted successfully.',
             recommendationId: 'rec_' + Date.now()
           });
         })
@@ -52,7 +52,7 @@ describe('RecommendationAPI', () => {
           return HttpResponse.json(
             {
               success: false,
-              message: '필수 정보가 누락되었습니다.'
+              message: 'Required information is missing.'
             },
             { status: 400 }
           );
@@ -72,7 +72,7 @@ describe('RecommendationAPI', () => {
       server.use(
         http.post('/api/recommendations', () => {
           return HttpResponse.json(
-            { message: '서버 오류' },
+            { message: 'Server error' },
             { status: 500 }
           );
         })

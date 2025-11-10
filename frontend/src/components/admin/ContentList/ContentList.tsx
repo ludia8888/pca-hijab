@@ -39,16 +39,16 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
       queryClient.invalidateQueries({ queryKey: ['admin', 'contents'] });
       addToast({
         type: 'success',
-        title: '컨텐츠 삭제 완료',
-        message: '컨텐츠가 성공적으로 삭제되었습니다.'
+        title: 'Content deleted',
+        message: 'The content item was removed successfully.'
       });
       setDeleteConfirmId(null);
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: '삭제 실패',
-        message: '컨텐츠 삭제 중 오류가 발생했습니다.'
+        title: 'Deletion failed',
+        message: 'Something went wrong while deleting the content.'
       });
     }
   });
@@ -61,15 +61,15 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
       queryClient.invalidateQueries({ queryKey: ['admin', 'contents'] });
       addToast({
         type: 'success',
-        title: '상태 변경 완료',
-        message: '컨텐츠 상태가 변경되었습니다.'
+        title: 'Status updated',
+        message: 'Content status has been updated.'
       });
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: '상태 변경 실패',
-        message: '상태 변경 중 오류가 발생했습니다.'
+        title: 'Status update failed',
+        message: 'Something went wrong while updating the status.'
       });
     }
   });
@@ -97,7 +97,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">컨텐츠를 불러오는 중 오류가 발생했습니다.</p>
+        <p className="text-red-500">Failed to load contents.</p>
       </div>
     );
   }
@@ -106,9 +106,9 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">컨텐츠 관리</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Content management</h2>
         <Button onClick={onCreateClick} leftIcon={<Plus className="w-4 h-4" />}>
-          새 컨텐츠 작성
+          Create new content
         </Button>
       </div>
 
@@ -123,7 +123,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="제목, 부제목, 태그로 검색..."
+                placeholder="Search by title, subtitle, or tags..."
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
@@ -135,7 +135,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
             onChange={(e) => setFilterCategory(e.target.value as ContentCategory | '')}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value="">모든 카테고리</option>
+            <option value="">All categories</option>
             {Object.entries(CONTENT_CATEGORY_LABELS).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
@@ -147,7 +147,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
             onChange={(e) => setFilterStatus(e.target.value as ContentStatus | '')}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <option value="">모든 상태</option>
+            <option value="">All statuses</option>
             {Object.entries(CONTENT_STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
@@ -164,8 +164,8 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
         <Card className="p-12 text-center">
           <p className="text-gray-500">
             {searchTerm || filterCategory || filterStatus
-              ? '검색 결과가 없습니다.'
-              : '아직 작성된 컨텐츠가 없습니다.'}
+              ? 'No content matches the current filters.'
+              : 'No content has been created yet.'}
           </p>
           {!searchTerm && !filterCategory && !filterStatus && (
             <Button
@@ -173,7 +173,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
               onClick={onCreateClick}
               className="mt-4"
             >
-              첫 컨텐츠 작성하기
+              Create the first content
             </Button>
           )}
         </Card>
@@ -221,11 +221,11 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {new Date(content.createdAt).toLocaleDateString('ko-KR')}
+                      {new Date(content.createdAt).toLocaleDateString('en-US')}
                     </span>
                     <span className="flex items-center gap-1">
                       <Eye className="w-3 h-3" />
-                      {content.viewCount.toLocaleString()} 조회
+                      {content.viewCount.toLocaleString()} views
                     </span>
                   </div>
 
@@ -251,7 +251,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
                       onClick={() => onEditClick(content)}
                       leftIcon={<Edit className="w-4 h-4" />}
                     >
-                      편집
+                      Edit
                     </Button>
                     <Button
                       variant="ghost"
@@ -259,7 +259,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
                       onClick={() => handleTogglePublish(content)}
                       loading={togglePublishMutation.isPending}
                     >
-                      {content.status === 'published' ? '발행 취소' : '발행하기'}
+                      {content.status === 'published' ? 'Unpublish' : 'Publish'}
                     </Button>
                     <Button
                       variant="ghost"
@@ -268,7 +268,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
                       leftIcon={<Trash2 className="w-4 h-4" />}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      삭제
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -283,10 +283,10 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
         isOpen={!!deleteConfirmId}
         onClose={() => setDeleteConfirmId(null)}
         onConfirm={() => deleteConfirmId && handleDelete(deleteConfirmId)}
-        title="컨텐츠 삭제"
-        message="정말로 이 컨텐츠를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-        confirmText="삭제"
-        cancelText="취소"
+        title="Delete content"
+        message="Are you sure you want to delete this content? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
         confirmVariant="danger"
         isLoading={deleteMutation.isPending}
       />

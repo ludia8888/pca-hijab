@@ -1,82 +1,88 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminStore } from '@/store/useAdminStore';
-import { ProductAPI } from '@/services/api/admin';
-console.log('[AdminLoginPage] ProductAPI imported:', ProductAPI);
+import { useAuthStore } from '@/store/useAuthStore';
 import { Button, Input, Card } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { trackEvent, trackError, trackEngagement } from '@/utils/analytics';
 import { Lock } from 'lucide-react';
 
+const ADMIN_ROLES = ['admin', 'content_manager'];
+
 const AdminLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const { setApiKey, isAuthenticated } = useAdminStore();
-  const [apiKeyInput, setApiKeyInput] = useState('');
+  const {
+    login,
+    logout,
+    isAuthenticated,
+    user,
+    isLoading,
+    error: authError,
+    clearError
+  } = useAuthStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect authenticated admins straight to the dashboard
+  const hasAdminRole =
+    isAuthenticated && user && ADMIN_ROLES.includes(user.role);
+
   useEffect(() => {
-    if (isAuthenticated) {
+    if (hasAdminRole) {
       navigate('/admin/dashboard', { replace: true });
+    } else if (isAuthenticated && user && !hasAdminRole) {
+      setError('You do not have admin permissions.');
     }
-  }, [isAuthenticated, navigate]);
+  }, [hasAdminRole, isAuthenticated, navigate, user]);
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    console.log('[AdminLoginPage] Form submitted with API key length:', apiKeyInput.length);
     setError('');
-    setIsLoading(true);
+    clearError();
 
-    // Track login attempt
     trackEvent('admin_login_attempt', {
-      page: 'admin_login',
-      api_key_length: apiKeyInput.length,
+      method: 'password',
+      email,
       user_flow_step: 'admin_login_submitted'
     });
-
     trackEngagement('admin_login', 'login_attempt');
 
     try {
-      console.log('[AdminLoginPage] Calling ProductAPI.verifyApiKey...');
-      // Verify API key with lightweight endpoint
-      const isValid = await ProductAPI.verifyApiKey(apiKeyInput);
-      console.log('[AdminLoginPage] API key verification result:', isValid);
-      
-      if (isValid) {
-        // Track successful login
-        trackEvent('admin_login_success', {
-          page: 'admin_login',
-          user_flow_step: 'admin_login_successful'
-        });
+      await login(email, password);
+      const currentUser = useAuthStore.getState().user;
 
-        // If successful, save API key and navigate to dashboard
-        setApiKey(apiKeyInput);
-        navigate('/admin/dashboard');
-      } else {
-        // Track failed login
+      if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {
         trackEvent('admin_login_failed', {
-          page: 'admin_login',
-          failure_reason: 'invalid_api_key',
-          api_key_length: apiKeyInput.length,
-          user_flow_step: 'admin_login_failed'
+          failure_reason: 'insufficient_role',
+          email
         });
-        
-        setError('Invalid API key. Please try again.');
+        await logout();
+        setError('This account does not have admin permissions.');
+        return;
       }
-    } catch (error) {
-      // Track login error
-      trackError('admin_login_error', error instanceof Error ? error.message : 'Unknown login error', 'admin_login');
-      trackEvent('admin_login_failed', {
-        page: 'admin_login',
-        failure_reason: 'api_error',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        user_flow_step: 'admin_login_error'
+
+      trackEvent('admin_login_success', {
+        user_flow_step: 'admin_login_successful',
+        role: currentUser.role
       });
-      
-      setError('Invalid API key. Please try again.');
-    } finally {
-      setIsLoading(false);
+      navigate('/admin/dashboard');
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Sign-in failed. Please try again.';
+      trackError('admin_login_error', message, 'admin_login');
+      trackEvent('admin_login_failed', {
+        failure_reason: 'invalid_credentials',
+        email,
+        message
+      });
+      setError(message);
     }
   };
 
@@ -89,55 +95,45 @@ const AdminLoginPage = (): JSX.Element => {
               <Lock className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Access</h1>
-            <p className="text-gray-600 mt-2">Enter your API key to continue</p>
+            <p className="text-gray-600 mt-2">Sign in with your admin account.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              type="password"
-              label="API Key"
-              value={apiKeyInput}
-              onChange={(e) => {
-                const value = e.target.value;
-                setApiKeyInput(value);
-                
-                // Track form interaction
-                if (value.length === 1 && apiKeyInput.length === 0) {
-                  // First character typed
-                  trackEvent('admin_form_interaction', {
-                    field_name: 'api_key',
-                    interaction_type: 'input_start',
-                    user_flow_step: 'admin_form_started'
-                  });
-                } else if (value.length >= 4 && value.length % 4 === 0) {
-                  // Track input progress every 4 characters
-                  trackEvent('admin_form_validation', {
-                    field_name: 'api_key',
-                    input_length: value.length,
-                    user_flow_step: 'admin_form_validation'
-                  });
-                }
-              }}
-              placeholder="Enter admin API key"
-              error={error}
+              type="email"
+              label="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@example.com"
               required
               fullWidth
+            />
+
+            <Input
+              type="password"
+              label="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              required
+              fullWidth
+              error={error}
             />
 
             <Button
               type="submit"
               fullWidth
               size="lg"
-              disabled={!apiKeyInput || isLoading}
+              disabled={!email || !password || isLoading}
               loading={isLoading}
             >
-              {isLoading ? 'Verifying...' : 'Login'}
+              {isLoading ? 'Verifying...' : 'Sign in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
-              Contact system administrator if you need access
+              Need access? Contact your system administrator.
             </p>
           </div>
         </Card>

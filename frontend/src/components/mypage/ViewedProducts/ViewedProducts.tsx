@@ -41,14 +41,14 @@ export const ViewedProducts = (): JSX.Element => {
       setProducts(sortedProducts);
     } catch (err) {
       console.error('Failed to load viewed products:', err);
-      setError('상품을 불러오는데 실패했습니다.');
+      setError('Failed to load recently viewed products.');
     } finally {
       setLoading(false);
     }
   };
   
   const handleClearAll = (): void => {
-    if (window.confirm('모든 최근 본 상품을 삭제하시겠습니까?')) {
+    if (window.confirm('Remove all recently viewed products?')) {
       clearViewedProducts();
       setProducts([]);
     }
@@ -62,12 +62,12 @@ export const ViewedProducts = (): JSX.Element => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
     
-    if (diffMins < 1) return '방금 전';
-    if (diffMins < 60) return `${diffMins}분 전`;
-    if (diffHours < 24) return `${diffHours}시간 전`;
-    if (diffDays < 7) return `${diffDays}일 전`;
-    
-    return date.toLocaleDateString('ko-KR');
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+
+    return date.toLocaleDateString('en-US');
   };
   
   return (
@@ -77,7 +77,7 @@ export const ViewedProducts = (): JSX.Element => {
           <div className="p-2 bg-blue-100 rounded-lg">
             <Clock className="w-5 h-5 text-blue-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">최근 본 상품</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Recently viewed</h2>
           {viewedProducts?.length > 0 && (
             <span className="text-sm text-gray-500">({viewedProducts.length})</span>
           )}
@@ -89,7 +89,7 @@ export const ViewedProducts = (): JSX.Element => {
             className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
           >
             <Trash2 className="w-3 h-3" />
-            전체 삭제
+            Clear all
           </button>
         )}
       </div>
@@ -97,7 +97,7 @@ export const ViewedProducts = (): JSX.Element => {
       {loading ? (
         <div className="py-12 text-center">
           <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-sm text-gray-500">상품을 불러오는 중...</p>
+          <p className="text-sm text-gray-500">Loading products...</p>
         </div>
       ) : error ? (
         <div className="py-12 text-center">
@@ -106,18 +106,18 @@ export const ViewedProducts = (): JSX.Element => {
             onClick={loadProducts}
             className="text-sm text-purple-600 hover:text-purple-700"
           >
-            다시 시도
+            Try again
           </button>
         </div>
       ) : !viewedProducts?.length ? (
         <div className="py-12 text-center">
           <div className="text-6xl mb-4">👀</div>
-          <p className="text-gray-600 mb-4">최근 본 상품이 없습니다.</p>
+          <p className="text-gray-600 mb-4">You haven’t viewed any products yet.</p>
           <button
             onClick={() => navigate(ROUTES.PRODUCTS)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
           >
-            상품 둘러보기
+            Browse products
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -142,7 +142,7 @@ export const ViewedProducts = (): JSX.Element => {
           
           {viewedProducts && viewedProducts.length > 8 && (
             <p className="text-xs text-gray-500 text-center mt-4">
-              최근 본 상품은 최대 10개까지 저장됩니다.
+              Up to 10 recently viewed products are stored.
             </p>
           )}
         </>

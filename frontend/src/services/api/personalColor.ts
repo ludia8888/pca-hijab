@@ -264,13 +264,13 @@ export class PersonalColorAPI {
         // Preserve original error for better categorization, but provide Korean fallbacks
         if (error.code === 'ECONNABORTED') {
           const timeoutSeconds = Math.round(apiTimeout / 1000);
-          const timeoutError = new Error(`분석이 ${timeoutSeconds}초를 초과했습니다. 이미지 크기를 줄이거나 다른 이미지로 시도해주세요.`);
+          const timeoutError = new Error(`The analysis took longer than ${timeoutSeconds} seconds. Please try a smaller or different image.`);
           (timeoutError as any).originalError = error;
           (timeoutError as any).errorType = 'timeout';
           throw timeoutError;
         }
         if (error.code === 'ECONNREFUSED') {
-          const connectionError = new Error('AI 분석 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          const connectionError = new Error('Unable to reach the AI analysis service. Please try again shortly.');
           (connectionError as any).originalError = error;
           (connectionError as any).errorType = 'connection_refused';
           throw connectionError;
@@ -278,13 +278,13 @@ export class PersonalColorAPI {
         
         // For API errors with response data, preserve the original response
         if (error.response?.status === 500) {
-          const serverError = new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+          const serverError = new Error('A server error occurred. Please try again later.');
           (serverError as any).response = error.response;
           (serverError as any).originalError = error;
           throw serverError;
         }
         if (error.response?.status === 413) {
-          const fileSizeError = new Error('파일 크기가 너무 큽니다. 10MB 이하의 파일을 업로드해주세요.');
+          const fileSizeError = new Error('The file is too large. Please upload an image smaller than 10MB.');
           (fileSizeError as any).response = error.response;
           (fileSizeError as any).originalError = error;
           throw fileSizeError;

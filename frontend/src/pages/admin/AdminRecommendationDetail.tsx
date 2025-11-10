@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAdminStore } from '@/store/useAdminStore';
 import { ProductAPI } from '@/services/api/admin';
 import { Card, Button, LoadingSpinner } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
@@ -10,40 +9,34 @@ import type { Recommendation } from '@/types';
 const AdminRecommendationDetail = (): JSX.Element => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { apiKey } = useAdminStore();
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const loadRecommendation = useCallback(async (): Promise<void> => {
-    if (!apiKey || !id) return;
+    if (!id) return;
 
     setIsLoading(true);
     try {
-      const data = await ProductAPI.getRecommendation(apiKey, id);
+      const data = await ProductAPI.getRecommendation(id);
       setRecommendation(data);
     } catch {
       // Handle error silently
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, id]);
+  }, [id]);
 
   useEffect(() => {
-    if (!apiKey || !id) {
-      navigate('/admin/login');
-      return;
-    }
-
     loadRecommendation();
-  }, [apiKey, id, navigate, loadRecommendation]);
+  }, [id, loadRecommendation]);
 
   const handleStatusUpdate = async (newStatus: 'pending' | 'processing' | 'completed'): Promise<void> => {
-    if (!apiKey || !id || !recommendation) return;
+    if (!id || !recommendation) return;
 
     setIsUpdating(true);
     try {
-      const updated = await ProductAPI.updateRecommendationStatus(apiKey, id, newStatus);
+      const updated = await ProductAPI.updateRecommendationStatus(id, newStatus);
       setRecommendation(updated);
     } catch {
       // Handle error silently
@@ -164,13 +157,13 @@ const AdminRecommendationDetail = (): JSX.Element => {
               <div>
                 <p className="text-sm text-gray-600">Season</p>
                 <p className="font-medium capitalize">
-                  {recommendation.personalColorResult.personal_color_en} ({recommendation.personalColorResult.personal_color})
+                  {recommendation.personalColorResult.personal_color_en}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Tone</p>
                 <p className="font-medium">
-                  {recommendation.personalColorResult.tone_en} ({recommendation.personalColorResult.tone})
+                  {recommendation.personalColorResult.tone_en}
                 </p>
               </div>
             </div>

@@ -14,7 +14,7 @@ export const SEASON_DATA = {
     backgroundColor: '#FFF5E6',
     accentColor: '#FF9999',
     character: springCharacter,
-    description: '화사하고 따뜻한 이미지의 봄 웜톤',
+    description: 'Radiant and lively hues perfect for Spring Warm tones.',
   },
   summer: {
     title: 'Summer Cool',
@@ -23,7 +23,7 @@ export const SEASON_DATA = {
     backgroundColor: '#E6F2FF',
     accentColor: '#87CEEB',
     character: summerCharacter,
-    description: '시원하고 부드러운 이미지의 여름 쿨톤',
+    description: 'Soft, breezy colors that flatter Summer Cool complexions.',
   },
   autumn: {
     title: 'Autumn Warm',
@@ -32,7 +32,7 @@ export const SEASON_DATA = {
     backgroundColor: '#FFF0E6',
     accentColor: '#CD853F',
     character: autumnCharacter,
-    description: '깊고 따뜻한 이미지의 가을 웜톤',
+    description: 'Rich, warm shades that highlight Autumn Warm depth.',
   },
   winter: {
     title: 'Winter Cool',
@@ -41,7 +41,7 @@ export const SEASON_DATA = {
     backgroundColor: '#F0E6FF',
     accentColor: '#9370DB',
     character: winterCharacter,
-    description: '차갑고 선명한 이미지의 겨울 쿨톤',
+    description: 'Crisp, high-contrast tones for bold Winter Cool looks.',
   }
 };
 

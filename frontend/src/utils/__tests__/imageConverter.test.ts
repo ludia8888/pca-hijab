@@ -125,7 +125,7 @@ describe('imageConverter', () => {
 
       const heicFile = new File(['test'], 'test.heic', { type: 'image/heic' });
       
-      await expect(convertHEICToJPEG(heicFile)).rejects.toThrow('HEIC 파일 변환에 실패했습니다');
+      await expect(convertHEICToJPEG(heicFile)).rejects.toThrow('Failed to convert the HEIC file');
     });
   });
 

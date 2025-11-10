@@ -33,7 +33,7 @@ interface ProductData {
   is_active: boolean;
 }
 const products: ProductData[] = [
-  // 봄 웜 (Spring Warm)
+  // Spring Warm
   {
     name: 'Moonshot - Melting Mood Lip - Alluring',
     category: 'lip',
@@ -41,7 +41,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/moonshot-alluring.jpg',
     detail_image_urls: [],
     personal_colors: ['spring_warm'],
-    description: '봄 웜톤을 위한 따뜻한 코랄 립 컬러',
+    description: 'A warm coral lip color tailored for Spring Warm tones.',
     shopee_link: 'https://en.moonshot-beauty.com/product/melting-mood-lip-and-cheeksheer-glow/131/?cate_no=1&display_group=2',
     is_active: true
   },
@@ -52,7 +52,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/karadium-butter-coral.jpg',
     detail_image_urls: [],
     personal_colors: ['spring_warm'],
-    description: '부드러운 버터 코랄 컬러로 봄 웜톤에 완벽',
+    description: 'Soft butter-coral finish that flatters Spring Warm skin.',
     shopee_link: 'https://smartstore.naver.com/karadium/products/9255588817',
     is_active: true
   },
@@ -63,11 +63,11 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/molette-apple-cheeky.jpg',
     detail_image_urls: [],
     personal_colors: ['spring_warm'],
-    description: '사과처럼 상큼한 봄 웜톤 립 컬러',
+    description: 'A fresh apple-inspired lip shade for Spring looks.',
     shopee_link: 'http://smartstore.naver.com/molette_official/products/11582095583',
     is_active: true
   },
-  // 여름 쿨 (Summer Cool)
+  // Summer Cool
   {
     name: 'Moonshot - Shy',
     category: 'lip',
@@ -75,7 +75,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/moonshot-shy.jpg',
     detail_image_urls: [],
     personal_colors: ['summer_cool'],
-    description: '여름 쿨톤을 위한 부드러운 핑크 립 컬러',
+    description: 'A gentle pink lip color designed for Summer Cool undertones.',
     shopee_link: '',
     is_active: true
   },
@@ -86,7 +86,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/karadium-cozy-pink.jpg',
     detail_image_urls: [],
     personal_colors: ['summer_cool'],
-    description: '포근한 핑크 컬러로 여름 쿨톤에 어울림',
+    description: 'Cozy pink pigment that suits Summer Cool complexions.',
     shopee_link: '',
     is_active: true
   },
@@ -97,11 +97,11 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/molette-dewy-berry.jpg',
     detail_image_urls: [],
     personal_colors: ['summer_cool'],
-    description: '촉촉한 베리 컬러로 여름 쿨톤에 완벽',
+    description: 'Moist berry shade that complements Summer Cool palettes.',
     shopee_link: '',
     is_active: true
   },
-  // 가을 웜 (Autumn Warm)
+  // Autumn Warm
   {
     name: 'Moonshot - Honest',
     category: 'lip',
@@ -109,7 +109,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/moonshot-honest.jpg',
     detail_image_urls: [],
     personal_colors: ['autumn_warm'],
-    description: '가을 웜톤을 위한 정직한 브라운 립 컬러',
+    description: 'A true brown lip color made for Autumn Warm tones.',
     shopee_link: '',
     is_active: true
   },
@@ -120,7 +120,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/karadium-pecan-sand.jpg',
     detail_image_urls: [],
     personal_colors: ['autumn_warm'],
-    description: '피칸 샌드 컬러로 가을 웜톤에 어울림',
+    description: 'Pecan-sand hue that enhances autumn-inspired makeup.',
     shopee_link: '',
     is_active: true
   },
@@ -131,11 +131,11 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/molette-coco-choco.jpg',
     detail_image_urls: [],
     personal_colors: ['autumn_warm'],
-    description: '초콜릿 브라운 컬러로 가을 웜톤에 완벽',
+    description: 'Chocolate-brown finish ideal for Autumn Warm styling.',
     shopee_link: '',
     is_active: true
   },
-  // 겨울 쿨 (Winter Cool)
+  // Winter Cool
   {
     name: 'Moonshot - Jelly Moon Glow Tint - Oort Pink',
     category: 'lip',
@@ -143,7 +143,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/moonshot-oort-pink.jpg',
     detail_image_urls: [],
     personal_colors: ['winter_cool'],
-    description: '겨울 쿨톤을 위한 선명한 핑크 립 틴트',
+    description: 'A vivid pink lip tint created for Winter Cool tones.',
     shopee_link: 'https://en.moonshot-beauty.com/product/jelly-moon-glow-tint/158/?cate_no=56&display_group=1',
     is_active: true
   },
@@ -154,7 +154,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/karadium-rosy-berry.jpg',
     detail_image_urls: [],
     personal_colors: ['winter_cool'],
-    description: '로지 베리 컬러로 겨울 쿨톤에 어울림',
+    description: 'Rosy berry shade perfect for Winter Cool complexions.',
     shopee_link: '',
     is_active: true
   },
@@ -165,7 +165,7 @@ const products: ProductData[] = [
     thumbnail_url: '/uploads/products/molette-tingle-cherry.jpg',
     detail_image_urls: [],
     personal_colors: ['winter_cool'],
-    description: '체리 레드 컬러로 겨울 쿨톤에 완벽',
+    description: 'Cherry-red pigment that brings Winter Cool looks to life.',
     shopee_link: '',
     is_active: true
   }

@@ -8,7 +8,7 @@ interface ActionLoaderProps {
 }
 
 const ActionLoader: React.FC<ActionLoaderProps> = ({ 
-  message = '처리 중...', 
+  message = 'Processing...', 
   size = 'md',
   className = '' 
 }) => {

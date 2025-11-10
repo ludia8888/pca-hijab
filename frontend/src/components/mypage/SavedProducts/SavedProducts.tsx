@@ -38,14 +38,14 @@ export const SavedProducts = (): JSX.Element => {
       setProducts(sortedProducts);
     } catch (err) {
       console.error('Failed to load saved products:', err);
-      setError('상품을 불러오는데 실패했습니다.');
+      setError('Failed to load saved products.');
     } finally {
       setLoading(false);
     }
   };
   
   const handleClearAll = (): void => {
-    if (window.confirm('모든 저장한 상품을 삭제하시겠습니까?')) {
+    if (window.confirm('Remove all saved products?')) {
       clearSavedProducts();
       setProducts([]);
     }
@@ -53,7 +53,7 @@ export const SavedProducts = (): JSX.Element => {
   
   const formatSavedDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', { 
+    return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
@@ -79,7 +79,7 @@ export const SavedProducts = (): JSX.Element => {
           <div className="p-2 bg-pink-100 rounded-lg">
             <Heart className="w-5 h-5 text-pink-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">저장한 상품</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Saved products</h2>
           {savedProducts?.length > 0 && (
             <span className="text-sm text-gray-500">({savedProducts.length})</span>
           )}
@@ -91,7 +91,7 @@ export const SavedProducts = (): JSX.Element => {
             className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
           >
             <Trash2 className="w-3 h-3" />
-            전체 삭제
+            Clear all
           </button>
         )}
       </div>
@@ -99,7 +99,7 @@ export const SavedProducts = (): JSX.Element => {
       {loading ? (
         <div className="py-12 text-center">
           <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-sm text-gray-500">상품을 불러오는 중...</p>
+          <p className="text-sm text-gray-500">Loading products...</p>
         </div>
       ) : error ? (
         <div className="py-12 text-center">
@@ -108,15 +108,15 @@ export const SavedProducts = (): JSX.Element => {
             onClick={loadProducts}
             className="text-sm text-purple-600 hover:text-purple-700"
           >
-            다시 시도
+            Try again
           </button>
         </div>
       ) : !savedProducts?.length ? (
         <div className="py-12 text-center">
           <div className="text-6xl mb-4">💝</div>
-          <p className="text-gray-600 mb-4">저장한 상품이 없습니다.</p>
+          <p className="text-gray-600 mb-4">No saved products yet.</p>
           <p className="text-sm text-gray-500">
-            마음에 드는 상품을 찾아 하트를 눌러보세요!
+            Tap the heart on any product you love to keep it here.
           </p>
         </div>
       ) : (
@@ -127,10 +127,10 @@ export const SavedProducts = (): JSX.Element => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-purple-600 font-medium">
-                    총 {products.length}개 상품
+                    Total {products.length} items
                   </p>
                   <p className="text-xs text-purple-500 mt-1">
-                    예상 총액: {formatPrice(totalPrice)}
+                    Estimated total: {formatPrice(totalPrice)}
                   </p>
                 </div>
                 <button
@@ -143,7 +143,7 @@ export const SavedProducts = (): JSX.Element => {
                   className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  쇼피에서 모두 보기
+                  Open all on Shopee
                 </button>
               </div>
             </div>
@@ -158,7 +158,7 @@ export const SavedProducts = (): JSX.Element => {
                   <ProductCard product={product} />
                   {savedInfo && (
                     <div className="absolute top-14 left-2 right-2 px-2 py-1 bg-white/90 rounded-lg shadow-sm text-xs text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {formatSavedDate(savedInfo.savedAt)} 저장됨
+                      Saved on {formatSavedDate(savedInfo.savedAt)}
                     </div>
                   )}
                 </div>
@@ -168,7 +168,7 @@ export const SavedProducts = (): JSX.Element => {
           
           {/* Tip */}
           <p className="text-xs text-gray-500 text-center mt-4">
-            💡 여러 상품을 한번에 보려면 "쇼피에서 모두 보기"를 클릭하세요.
+            💡 Click "Open all on Shopee" to compare everything at once.
           </p>
         </>
       )}
