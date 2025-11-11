@@ -13,6 +13,10 @@ export interface User {
   resetPasswordExpires?: Date;
   role: UserRole;
   lastLoginAt?: Date;
+  // Personal color diagnosis (optional persistence)
+  hasPersonalColorDiagnosis?: boolean;
+  personalColorResult?: PersonalColorResult;
+  diagnosedAt?: Date;
   createdAt: Date;
   updatedAt?: Date;
 }

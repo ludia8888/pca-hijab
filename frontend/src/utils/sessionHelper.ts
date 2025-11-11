@@ -44,8 +44,9 @@ export async function updateSessionWithRecovery(
   } catch (error) {
     if (error && typeof error === 'object' && 'response' in error) {
       const axiosError = error as { response?: { status?: number } };
-      if (axiosError.response?.status === 404) {
-        // Session not found, ensure we have a valid one and retry
+      if (axiosError.response?.status === 404 || axiosError.response?.status === 403) {
+        // 404: session missing after cold start
+        // 403: session exists but now owned by anonymous user while client is logged-in
         const newSessionId = await ensureValidSession();
         await SessionAPI.updateSession(newSessionId, updateData);
         return;

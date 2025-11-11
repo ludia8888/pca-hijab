@@ -52,7 +52,8 @@ const ResultPageV2 = (): JSX.Element => {
             const response = await AuthAPI.updatePersonalColorDiagnosis({
               season: analysisResult.personal_color,
               seasonEn: analysisResult.personal_color_en,
-              confidence: analysisResult.confidence || 0
+              confidence: analysisResult.confidence || 0,
+              personalColorResult: analysisResult
             });
             
             if (response.data.user) {

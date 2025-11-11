@@ -10,6 +10,11 @@ import { createSecureSessionLog, maskUserId, maskInstagramId } from '../utils/lo
 
 const router = Router();
 
+// Lightweight warmup endpoint for keep-alive pings
+router.get('/warmup', (_req, res) => {
+  res.json({ success: true, message: 'sessions warmup ok' });
+});
+
 // POST /api/sessions - Create a new session (Instagram ID optional)
 router.post('/', optionalAuth, async (req, res, next) => {
   try {

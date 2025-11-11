@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { PersonalColorResult } from '@/types';
 import { sanitizeEmail, sanitizeName } from '@/utils/sanitize';
 
 export interface LoginRequest {
@@ -158,6 +159,7 @@ export const AuthAPI = {
     season: string;
     seasonEn: string;
     confidence: number;
+    personalColorResult?: PersonalColorResult;
   }): Promise<UserResponse> => {
     const response = await apiClient.put<UserResponse>('/auth/personal-color', diagnosisData);
     return response.data;

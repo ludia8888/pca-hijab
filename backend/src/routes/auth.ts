@@ -531,6 +531,70 @@ router.post('/forgot-password', passwordResetLimiter, passwordResetValidation, h
   }
 });
 
+// PUT /api/auth/personal-color - Save user's personal color diagnosis (no-op storage for now)
+// 목적: 프론트엔드에서 진단 결과 저장 호출 시 404가 발생하지 않도록 안전하게 수용
+// 보안: 인증 필수, 현재는 사용자 레코드의 updatedAt만 갱신하여 응답에 최신 사용자 정보를 반환
+router.put('/personal-color', authenticateUser, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) throw new AppError(401, 'Authentication required');
+
+    const user = await db.getUserById(userId);
+    if (!user) throw new AppError(404, 'User not found');
+
+    const { season, seasonEn, confidence } = req.body as {
+      season?: string;
+      seasonEn?: string;
+      confidence?: number;
+    };
+
+    // Map free-form season to canonical enums
+    const seasonKey = (() => {
+      const s = (seasonEn || season || '').toString().toLowerCase();
+      if (s.includes('spring')) return 'spring';
+      if (s.includes('summer')) return 'summer';
+      if (s.includes('autumn')) return 'autumn';
+      if (s.includes('winter')) return 'winter';
+      return 'spring';
+    })() as 'spring' | 'summer' | 'autumn' | 'winter';
+    const toneKey = seasonKey === 'spring' || seasonKey === 'autumn' ? 'warm' : 'cool';
+
+    // Build minimal PersonalColorResult object
+    const personalColorResult = {
+      personal_color: season || seasonKey,
+      personal_color_en: seasonKey,
+      personal_color_ko: undefined,
+      tone: toneKey,
+      tone_en: toneKey,
+      details: {
+        is_warm: toneKey === 'warm' ? 1 : 0,
+        skin_lab_b: 0,
+        eyebrow_lab_b: 0,
+        eye_lab_b: 0,
+        skin_hsv_s: 0,
+        eyebrow_hsv_s: 0,
+        eye_hsv_s: 0,
+      },
+      facial_colors: {
+        cheek: { rgb: [0, 0, 0], lab: [0, 0, 0], hsv: [0, 0, 0] },
+        eyebrow: { rgb: [0, 0, 0], lab: [0, 0, 0], hsv: [0, 0, 0] },
+        eye: { rgb: [0, 0, 0], lab: [0, 0, 0], hsv: [0, 0, 0] },
+      },
+      confidence: typeof confidence === 'number' ? confidence : 0,
+    };
+
+    const updated = await db.updateUser(user.id, {
+      hasPersonalColorDiagnosis: true,
+      personalColorResult,
+      diagnosedAt: new Date(),
+    });
+
+    res.json({ success: true, data: { user: sanitizeUser(updated || user) } });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/auth/find-account - Send account reminder email
 router.post('/find-account', passwordResetLimiter, accountLookupValidation, handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
