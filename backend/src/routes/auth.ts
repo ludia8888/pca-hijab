@@ -30,6 +30,7 @@ import {
 } from '../utils/auth';
 import { maskUserId } from '../utils/logging';
 import { emailService } from '../services/emailService';
+import { config } from '../config/environment';
 import { ensureSeedAdmin } from '../services/adminBootstrap';
 import { logAdminAction } from '../services/adminAuditService';
 import { ADMIN_ROLES } from '../config/roles';
@@ -73,11 +74,16 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
     const passwordHash = await hashPassword(password);
     console.log('✅ [SIGNUP] Password hashed');
 
-    // Generate verification token with expiry
-    console.log('🎫 [SIGNUP] Generating verification token...');
-    const verificationToken = generateRandomToken();
-    const verificationTokenExpires = getVerificationTokenExpiryDate();
-    console.log('✅ [SIGNUP] Token generated');
+    const requireEmailVerification = config.REQUIRE_EMAIL_VERIFICATION;
+    let verificationToken: string | undefined;
+    let verificationTokenExpires: Date | undefined;
+    if (requireEmailVerification) {
+      // Generate verification token with expiry
+      console.log('🎫 [SIGNUP] Generating verification token...');
+      verificationToken = generateRandomToken();
+      verificationTokenExpires = getVerificationTokenExpiryDate();
+      console.log('✅ [SIGNUP] Token generated');
+    }
 
     // Create user
     console.log('👤 [SIGNUP] Creating user in database...');
@@ -85,49 +91,67 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
       email,
       passwordHash,
       fullName,
-      emailVerified: false,
+      emailVerified: !requireEmailVerification,
       verificationToken,
       verificationTokenExpires,
       role: 'user'
     });
     console.log('✅ [SIGNUP] User created with ID:', user.id);
 
-    // SECURITY: 이메일 인증 전에는 액세스/리프레시 토큰을 발급하지 않습니다.
-    // 사용자는 이메일 인증 후 로그인 절차를 통해 토큰을 받게 됩니다.
-
-    // Send verification email
-    console.log('📨 [SIGNUP] Attempting to send verification email...');
-    try {
-      await emailService.sendVerificationEmail({
-        userEmail: user.email,
-        userName: user.fullName,
-        verificationToken
-      });
-      console.log(`✅ [SIGNUP] Verification email sent to: ${user.email}`);
-      console.info(`Verification email sent to user: ${maskUserId(user.id)}`);
-    } catch (emailError) {
-      console.error('❌ [SIGNUP] Email send failed:', {
-        error: emailError instanceof Error ? emailError.message : emailError,
-        user: user.email
-      });
-      console.error(`Failed to send verification email to user: ${maskUserId(user.id)}`, emailError);
-      // Don't fail registration if email fails - user can request resend
-    }
-
-    console.log('🎉 [SIGNUP] Registration successful, sending response...');
-    console.info(`User registered successfully - ID: ${maskUserId(user.id)}`);
-
-    const response = {
-      success: true,
-      message: 'User registered successfully. Please check your email to verify your account.',
-      data: {
-        user: sanitizeUser(user)
+    if (requireEmailVerification) {
+      // Send verification email and return without issuing tokens
+      console.log('📨 [SIGNUP] Attempting to send verification email...');
+      try {
+        await emailService.sendVerificationEmail({
+          userEmail: user.email,
+          userName: user.fullName,
+          verificationToken: verificationToken!
+        });
+        console.log(`✅ [SIGNUP] Verification email sent to: ${user.email}`);
+        console.info(`Verification email sent to user: ${maskUserId(user.id)}`);
+      } catch (emailError) {
+        console.error('❌ [SIGNUP] Email send failed:', {
+          error: emailError instanceof Error ? emailError.message : emailError,
+          user: user.email
+        });
       }
-    };
-    
-    console.log('📤 [SIGNUP] Sending response:', response);
-    res.status(201).json(response);
-    console.log('✅ [SIGNUP] Response sent successfully');
+
+      console.log('🎉 [SIGNUP] Registration successful (verification required), sending response...');
+      const response = {
+        success: true,
+        message: 'User registered successfully. Please check your email to verify your account.',
+        data: {
+          user: sanitizeUser(user)
+        }
+      };
+      res.status(201).json(response);
+    } else {
+      // Issue tokens immediately and set cookies
+      console.log('🔑 [SIGNUP] Generating JWT tokens (verification disabled)...');
+      const tokens = generateTokens(user.id, user.role);
+      await db.createRefreshToken({
+        userId: user.id,
+        token: tokens.refreshToken,
+        expiresAt: getRefreshTokenExpiryDate()
+      });
+      res.cookie('accessToken', tokens.accessToken, {
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000
+      });
+      res.cookie('refreshToken', tokens.refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+      console.log('🎉 [SIGNUP] Registration successful (verification disabled), sending response...');
+      const response = {
+        success: true,
+        message: 'User registered successfully.',
+        data: {
+          user: sanitizeUser(user)
+        }
+      };
+      res.status(201).json(response);
+    }
     
   } catch (error) {
     console.error('❌ [SIGNUP] Signup failed:', {
@@ -156,9 +180,11 @@ router.post('/login', loginLimiter, csrfProtection, loginValidation, handleValid
       throw new AppError(401, 'Invalid credentials');
     }
 
-    // Enforce email verification for non-admin users
-    if (!ADMIN_ROLES.includes(user.role) && !user.emailVerified) {
-      throw new AppError(403, 'Email not verified. Please check your inbox to verify your account.');
+    // Enforce email verification for non-admin users (only when enabled)
+    if (config.REQUIRE_EMAIL_VERIFICATION) {
+      if (!ADMIN_ROLES.includes(user.role) && !user.emailVerified) {
+        throw new AppError(403, 'Email not verified. Please check your inbox to verify your account.');
+      }
     }
 
     await db.updateUser(user.id, { lastLoginAt: new Date() });

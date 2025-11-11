@@ -110,7 +110,7 @@ const SignupPage = (): JSX.Element => {
         page: 'signup'
       });
 
-      toast.success('Sign-up complete! Please verify your email before signing in.');
+      toast.success('Sign-up complete!');
       // 회원가입 직후에는 로그인 상태가 아니므로, 랜딩 이동만 수행
       window.location.assign(LANDING_URL);
     } catch (error: unknown) {

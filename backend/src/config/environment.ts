@@ -10,7 +10,8 @@ interface EnvironmentConfig {
   CLIENT_URL?: string;
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
-  ADMIN_API_KEY: string;
+  // Feature flags
+  REQUIRE_EMAIL_VERIFICATION: boolean;
   
   // Email configuration
   EMAIL_ENABLED: boolean;
@@ -46,7 +47,8 @@ class EnvironmentValidator {
       CLIENT_URL: process.env.CLIENT_URL,
       JWT_SECRET: this.validateJWTSecret(process.env.JWT_SECRET, 'JWT_SECRET'),
       JWT_REFRESH_SECRET: this.validateJWTSecret(process.env.JWT_REFRESH_SECRET, 'JWT_REFRESH_SECRET'),
-      ADMIN_API_KEY: this.validateAdminApiKey(process.env.ADMIN_API_KEY),
+      // Feature flags (default: no verification required unless explicitly enabled)
+      REQUIRE_EMAIL_VERIFICATION: process.env.REQUIRE_EMAIL_VERIFICATION === 'true',
       
       // Email configuration
       EMAIL_ENABLED: this.validateEmailEnabled(),
@@ -63,8 +65,7 @@ class EnvironmentValidator {
   private validateProductionRequirements(): void {
     const requiredVars = [
       'JWT_SECRET', 
-      'JWT_REFRESH_SECRET',
-      'ADMIN_API_KEY'
+      'JWT_REFRESH_SECRET'
     ];
 
     const missing = requiredVars.filter(varName => !process.env[varName]);
@@ -117,41 +118,6 @@ class EnvironmentValidator {
         return fallback;
       }
       return secret;
-    }
-  }
-
-  private validateAdminApiKey(apiKey: string | undefined): string {
-    const isProduction = process.env.NODE_ENV === 'production';
-    
-    if (isProduction) {
-      if (!apiKey) {
-        throw new Error('FATAL: ADMIN_API_KEY environment variable is required in production');
-      }
-      
-      // Validate API key strength
-      if (apiKey.length < 24) {
-        throw new Error('FATAL: ADMIN_API_KEY must be at least 24 characters long in production');
-      }
-      
-      // Check for weak API keys
-      const weakKeys = [
-        'admin', 'password', 'key', 'secret', 'change-me', 'api-key',
-        '123456', 'admin123', 'adminkey'
-      ];
-      
-      if (weakKeys.some(weak => apiKey.toLowerCase().includes(weak))) {
-        throw new Error('FATAL: ADMIN_API_KEY appears to contain weak/default values. Use a cryptographically secure random string.');
-      }
-      
-      return apiKey;
-    } else {
-      // Development fallback
-      const fallback = 'dev-admin-api-key-not-for-production';
-      if (!apiKey) {
-        console.warn('⚠️  WARNING: Using development ADMIN_API_KEY. NEVER use in production!');
-        return fallback;
-      }
-      return apiKey;
     }
   }
 
@@ -222,7 +188,7 @@ class EnvironmentValidator {
         hasClientUrl: !!this.config.CLIENT_URL,
         hasJwtSecret: !!this.config.JWT_SECRET,
         hasRefreshSecret: !!this.config.JWT_REFRESH_SECRET,
-        hasAdminKey: !!this.config.ADMIN_API_KEY,
+        requireEmailVerification: this.config.REQUIRE_EMAIL_VERIFICATION,
         emailEnabled: this.config.EMAIL_ENABLED,
         hasSmtpConfig: !!(this.config.SMTP_HOST && this.config.EMAIL_FROM)
       });
