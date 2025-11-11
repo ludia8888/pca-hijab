@@ -1,3 +1,5 @@
+export type UserRole = 'user' | 'admin' | 'content_manager';
+
 export interface User {
   id: string;
   email: string;
@@ -9,6 +11,8 @@ export interface User {
   verificationTokenExpires?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  role: UserRole;
+  lastLoginAt?: Date;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -150,4 +154,11 @@ export interface RateLimitInfo {
 
 export interface AuthenticatedRequestUser {
   userId: string;
+  role: UserRole;
+}
+
+export interface AdminContext {
+  userId: string;
+  email: string;
+  role: UserRole;
 }

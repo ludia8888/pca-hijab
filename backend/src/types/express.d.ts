@@ -1,5 +1,6 @@
 import type {
   AuthenticatedRequestUser,
+  AdminContext,
   Recommendation,
   RateLimitInfo,
   Session
@@ -9,6 +10,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthenticatedRequestUser;
+      adminUser?: AdminContext;
       session?: Session;
       recommendation?: Recommendation;
       rateLimit?: RateLimitInfo;

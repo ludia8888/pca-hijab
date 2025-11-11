@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { AuthTokens, User } from '../types';
+import { AuthTokens, User, UserRole } from '../types';
 import { config } from '../config/environment';
 
 // Use validated environment configuration
@@ -22,15 +22,25 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 };
 
 // Token generation
-export const generateTokens = (userId: string): AuthTokens => {
+interface TokenPayload {
+  userId: string;
+  role: UserRole;
+}
+
+const buildTokenPayload = (userId: string, role: UserRole): TokenPayload => ({
+  userId,
+  role
+});
+
+export const generateTokens = (userId: string, role: UserRole): AuthTokens => {
   const accessToken = jwt.sign(
-    { userId, type: 'access' },
+    { ...buildTokenPayload(userId, role), type: 'access' },
     JWT_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
   );
 
   const refreshToken = jwt.sign(
-    { userId, type: 'refresh' },
+    { ...buildTokenPayload(userId, role), type: 'refresh' },
     JWT_REFRESH_SECRET,
     { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
   );
@@ -39,25 +49,30 @@ export const generateTokens = (userId: string): AuthTokens => {
 };
 
 // Token verification
-export const verifyAccessToken = (token: string): { userId: string } => {
+export interface AccessTokenPayload {
+  userId: string;
+  role: UserRole;
+}
+
+export const verifyAccessToken = (token: string): AccessTokenPayload => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     if (decoded.type !== 'access') {
       throw new Error('Invalid token type');
     }
-    return { userId: decoded.userId };
+    return { userId: decoded.userId, role: decoded.role ?? 'user' };
   } catch (error) {
     throw new Error('Invalid or expired access token');
   }
 };
 
-export const verifyRefreshToken = (token: string): { userId: string } => {
+export const verifyRefreshToken = (token: string): AccessTokenPayload => {
   try {
     const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as any;
     if (decoded.type !== 'refresh') {
       throw new Error('Invalid token type');
     }
-    return { userId: decoded.userId };
+    return { userId: decoded.userId, role: decoded.role ?? 'user' };
   } catch (error) {
     throw new Error('Invalid or expired refresh token');
   }
