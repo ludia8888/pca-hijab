@@ -136,6 +136,7 @@ export class PostgresDatabase {
     refreshTokenIdDefault: false,
     userRoleColumn: false,
     userLastLoginAtColumn: false,
+    adminActionsTable: false,
   };
   // Test database connection
   async testConnection(): Promise<boolean> {
@@ -569,6 +570,7 @@ export class PostgresDatabase {
     actionDetails: unknown,
     performedBy: string = 'admin'
   ): Promise<boolean> {
+    await this.ensureAdminActionsTable();
     const query = `
       INSERT INTO admin_actions (session_id, action_type, action_details, performed_by)
       VALUES ($1, $2, $3, $4)
@@ -1418,6 +1420,44 @@ export class PostgresDatabase {
       }
       this.schemaChecks.userLastLoginAtColumn = true;
     }
+  }
+
+  // Ensure admin_actions table exists for audit logging
+  private async ensureAdminActionsTable(): Promise<void> {
+    if (this.schemaChecks.adminActionsTable) {
+      return;
+    }
+
+    const tableCheck = await pool.query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.tables
+         WHERE table_schema = 'public'
+           AND table_name = 'admin_actions'
+       ) AS exists`
+    );
+
+    const exists = tableCheck.rows[0]?.exists === true;
+    if (!exists) {
+      console.warn('⚠️ [Database] admin_actions table missing. Applying runtime migration.');
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS admin_actions (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          session_id VARCHAR(50),
+          action_type TEXT NOT NULL,
+          action_details JSONB,
+          performed_by TEXT NOT NULL,
+          performed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_admin_actions_performed_at
+        ON admin_actions(performed_at DESC)
+      `);
+      console.info('✅ [Database] admin_actions table created');
+    }
+
+    this.schemaChecks.adminActionsTable = true;
   }
 }
 
