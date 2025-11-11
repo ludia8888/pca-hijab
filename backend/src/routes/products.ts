@@ -137,7 +137,7 @@ router.get('/category/:category', async (req, res, next) => {
   try {
     const { category } = req.params;
     
-    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
+    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
     if (!validCategories.includes(category as ProductCategory)) {
       throw new AppError(400, 'Invalid category');
     }

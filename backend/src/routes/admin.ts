@@ -185,7 +185,7 @@ router.post('/products', async (req, res, next) => {
       throw new AppError(400, 'Price must be a positive number');
     }
     
-    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
+    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
     if (!validCategories.includes(category)) {
       console.error('[Admin API] Invalid category:', category);
       throw new AppError(400, `Invalid category: ${category}`);
@@ -252,7 +252,7 @@ router.put('/products/:id', async (req, res, next) => {
     
     // Validate category if provided
     if (updates.category) {
-      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow', 'tint'];
+      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
       if (!validCategories.includes(updates.category)) {
         console.error('[Admin API] Invalid category in update:', updates.category);
         throw new AppError(400, `Invalid category: ${updates.category}`);
