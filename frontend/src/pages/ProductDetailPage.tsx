@@ -6,6 +6,7 @@ import { Button, LoadingSpinner, Text } from '@/components/ui';
 import { ProductAPI } from '@/services/api/products';
 import { useToast } from '@/components/ui';
 import { useAppStore } from '@/store';
+import { useAuthStore } from '@/store/useAuthStore';
 import { PageLayout } from '@/components/layout';
 import { CATEGORY_LABELS, PERSONAL_COLOR_LABELS } from '@/types';
 import { getImageUrl, getImageUrls } from '@/utils/imageUrl';
@@ -16,6 +17,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const store = useAppStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   
   // Debug logging
   console.log('[ProductDetailPage] Store methods:', Object.keys(store));
@@ -41,10 +43,11 @@ const ProductDetailPage = () => {
 
   // Add to viewed products when product loads
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (product && id) {
       addViewedProduct(id);
     }
-  }, [product, id, addViewedProduct]);
+  }, [product, id, addViewedProduct, isAuthenticated]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {

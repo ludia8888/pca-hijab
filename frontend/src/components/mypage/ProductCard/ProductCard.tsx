@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { useAppStore } from '@/store';
+import { useAuthStore } from '@/store/useAuthStore';
 import type { Product } from '@/types';
 
 interface ProductCardProps {
@@ -10,13 +11,16 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.Element => {
   const { savedProducts, toggleSavedProduct, addViewedProduct } = useAppStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [imageError, setImageError] = useState(false);
   
   const isSaved = savedProducts?.some(p => p.productId === product.id) || false;
   
   const handleCardClick = (): void => {
-    // Track product view
-    addViewedProduct(product.id);
+    // Track product view (로그인 사용자만 기록)
+    if (isAuthenticated) {
+      addViewedProduct(product.id);
+    }
     
     if (onProductClick) {
       onProductClick(product);
