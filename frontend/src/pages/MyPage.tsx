@@ -11,8 +11,15 @@ import { trackEvent } from '@/utils/analytics';
 const MyPage = (): JSX.Element => {
   const navigate = useNavigate();
   const { instagramId, sessionId } = useAppStore();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, checkAuth } = useAuthStore();
   
+  // 사용자 정보가 메모리에 없으면 로드(페이지 새로고침 등)
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      void checkAuth();
+    }
+  }, [isAuthenticated, user, checkAuth]);
+
   // DEMO MODE: Authentication check disabled
   // Redirect if not authenticated
   // useEffect(() => {
