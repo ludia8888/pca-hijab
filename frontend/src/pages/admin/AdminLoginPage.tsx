@@ -11,7 +11,7 @@ const ADMIN_ROLES = ['admin', 'content_manager'];
 const AdminLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
   const {
-    login,
+    adminLogin,
     logout,
     isAuthenticated,
     user,
@@ -53,7 +53,7 @@ const AdminLoginPage = (): JSX.Element => {
     trackEngagement('admin_login', 'login_attempt');
 
     try {
-      await login(email, password);
+      await adminLogin(email, password);
       const currentUser = useAuthStore.getState().user;
 
       if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {

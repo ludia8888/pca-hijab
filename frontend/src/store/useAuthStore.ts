@@ -58,6 +58,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
@@ -95,6 +96,30 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: message
           });
+          throw new Error(message);
+        }
+      },
+
+      // Admin login using dedicated endpoint
+      adminLogin: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await AuthAPI.adminLogin(email, password);
+          const { user } = response.data;
+
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          });
+        } catch (error: unknown) {
+          const message = resolveErrorMessage(error, 'Admin login failed', {
+            401: 'Invalid admin credentials. Please check and try again.',
+            503: 'Admin login is not configured on the server.'
+          });
+
+          set({ isLoading: false, error: message });
           throw new Error(message);
         }
       },

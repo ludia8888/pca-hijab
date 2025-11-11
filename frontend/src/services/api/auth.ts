@@ -22,6 +22,8 @@ export interface AuthResponse {
       fullName: string;
       instagramId?: string;
       emailVerified: boolean;
+      role: 'user' | 'admin' | 'content_manager';
+      lastLoginAt?: string;
       createdAt: Date;
       updatedAt?: Date;
     };
@@ -48,6 +50,8 @@ export interface UserResponse {
       fullName: string;
       instagramId?: string;
       emailVerified: boolean;
+      role: 'user' | 'admin' | 'content_manager';
+      lastLoginAt?: string;
       createdAt: Date;
       updatedAt?: Date;
     };
@@ -117,6 +121,15 @@ export const AuthAPI = {
   forgotPassword: async (email: string): Promise<{ success: boolean; message: string }> => {
     const response = await apiClient.post('/auth/forgot-password', { 
       email: sanitizeEmail(email)
+    });
+    return response.data;
+  },
+
+  // Admin login (ENV-seeded credentials)
+  adminLogin: async (email: string, password: string): Promise<UserResponse> => {
+    const response = await apiClient.post<UserResponse>('/auth/admin-login', {
+      email: sanitizeEmail(email),
+      password
     });
     return response.data;
   },
