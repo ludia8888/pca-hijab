@@ -112,6 +112,7 @@ export const useAuthStore = create<AuthState>()(
             error: null
           });
         } catch (error: unknown) {
+          const status = (error as ApiErrorResponse)?.response?.status;
           const friendlyMessage = resolveErrorMessage(error, 'Signup failed', {
             409: 'This email address is already registered. Please sign in or use another email.'
           });
@@ -120,7 +121,9 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: friendlyMessage
           });
-          throw new Error(friendlyMessage);
+
+          const enriched = Object.assign(new Error(friendlyMessage), { status });
+          throw enriched;
         }
       },
 

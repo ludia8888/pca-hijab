@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PageLayout } from '@/components/layout';
-import { Button, Input, Card, Text } from '@/components/ui';
+import { Button, Input, Card, Text, ConfirmModal } from '@/components/ui';
 import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import { ROUTES } from '@/utils/constants';
@@ -56,6 +56,7 @@ const SignupPage = (): JSX.Element => {
   const { signup, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showAccountExistsModal, setShowAccountExistsModal] = useState(false);
 
   const {
     register,
@@ -127,6 +128,15 @@ const SignupPage = (): JSX.Element => {
         'Failed to sign up.';
       
       toast.error(message);
+
+      // If backend responded with 409 (account exists), show guidance modal
+      const status =
+        (typeof error === 'object' && error !== null && 'status' in error
+          ? (error as { status?: number }).status
+          : undefined);
+      if (status === 409) {
+        setShowAccountExistsModal(true);
+      }
     }
   };
 
@@ -312,6 +322,21 @@ const SignupPage = (): JSX.Element => {
           </div>
         </Card>
       </div>
+      <ConfirmModal
+        isOpen={showAccountExistsModal}
+        type="info"
+        title="Account already exists"
+        message={
+          'An account with this email already exists. Please sign in instead.'
+        }
+        confirmText="Go to Login"
+        cancelText="Close"
+        onConfirm={() => {
+          setShowAccountExistsModal(false);
+          navigate('/login');
+        }}
+        onCancel={() => setShowAccountExistsModal(false)}
+      />
     </PageLayout>
   );
 };
