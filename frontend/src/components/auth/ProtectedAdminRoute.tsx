@@ -25,8 +25,8 @@ export const ProtectedAdminRoute = (): JSX.Element => {
     isAuthenticated &&
     user &&
     ['admin', 'content_manager'].includes(user.role as string);
-  // Start in checking state if we appear authenticated but lack admin user context
-  const [checking, setChecking] = useState(() => isAuthenticated && !isAdminUser);
+  // Start idle; trigger verification effect explicitly when needed
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     const { onHydrate, onFinishHydration } = getPersistHelpers();
