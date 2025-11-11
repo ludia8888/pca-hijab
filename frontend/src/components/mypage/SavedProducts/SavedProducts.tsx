@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Heart, Trash2, ShoppingBag } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { ProductAPI } from '@/services/api';
@@ -7,6 +9,8 @@ import type { Product } from '@/types';
 
 export const SavedProducts = (): JSX.Element => {
   const { savedProducts, clearSavedProducts } = useAppStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +100,17 @@ export const SavedProducts = (): JSX.Element => {
         )}
       </div>
       
-      {loading ? (
+      {!isAuthenticated ? (
+        <div className="py-10 text-center">
+          <p className="text-gray-600 mb-3">로그인 후 저장한 상품을 볼 수 있습니다.</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+          >
+            로그인 하러가기
+          </button>
+        </div>
+      ) : loading ? (
         <div className="py-12 text-center">
           <div className="w-8 h-8 border-3 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
           <p className="text-sm text-gray-500">Loading products...</p>

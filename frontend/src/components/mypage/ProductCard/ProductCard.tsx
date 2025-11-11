@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -11,6 +13,8 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.Element => {
   const { savedProducts, toggleSavedProduct, addViewedProduct } = useAppStore();
+  const navigate = useNavigate();
+  const { addToast } = useToast();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [imageError, setImageError] = useState(false);
   
@@ -32,6 +36,11 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
   
   const handleSaveToggle = (e: React.MouseEvent): void => {
     e.stopPropagation(); // Prevent card click
+    if (!isAuthenticated) {
+      addToast({ type: 'error', title: '로그인이 필요합니다', message: '저장 기능은 로그인 후 이용 가능합니다.' });
+      navigate('/login');
+      return;
+    }
     toggleSavedProduct(product.id);
   };
   
