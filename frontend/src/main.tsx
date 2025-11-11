@@ -81,7 +81,7 @@ if (!rootElement) {
     <StrictMode>
       <QueryProvider>
         <App />
-        {import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED !== 'true' && <SpeedInsights />}
+        {!isAdminRoute && import.meta.env.VITE_VERCEL_ANALYTICS_DISABLED !== 'true' && <SpeedInsights />}
       </QueryProvider>
     </StrictMode>,
   );

@@ -131,6 +131,10 @@ const normalizedAllowedOrigins = new Set(allowedOrigins.map(normalizeOrigin));
 const isOriginAllowed = (origin: string): boolean => normalizedAllowedOrigins.has(normalizeOrigin(origin));
 const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai|noor)(-[a-z0-9]+)?(-[a-zA-Z0-9-]+)?\.vercel\.app$/;
 
+// Emergency CORS bypass for debugging (set only temporarily!)
+// Set env CORS_ALLOW_ALL=true to mirror any Origin in Access-Control-Allow-Origin
+const allowAllOrigins = process.env.CORS_ALLOW_ALL === 'true';
+
 const corsAllowedHeaders = [
   'Content-Type',
   'Authorization',
@@ -145,7 +149,7 @@ const corsAllowedHeaders = [
 
 const corsAllowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or postman)
     if (!origin) return callback(null, true);
@@ -154,6 +158,10 @@ app.use(cors({
 
     // In production, be very strict
     if (env.isProduction()) {
+      if (allowAllOrigins) {
+        console.warn(`CORS: ALLOW_ALL enabled — mirroring origin: ${origin}`);
+        return callback(null, true);
+      }
       // Only allow explicitly whitelisted origins
       if (isOriginAllowed(origin)) {
         return callback(null, true);
@@ -182,7 +190,9 @@ app.use(cors({
   allowedHeaders: corsAllowedHeaders,
   exposedHeaders: ['Content-Length', 'Content-Type'],
   maxAge: 86400 // 24 hours
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -202,7 +212,7 @@ const resolvedUploadsDir = uploadDirCandidates.find((p) => {
 
 if (resolvedUploadsDir) {
   console.info('[Static] Serving uploads from:', resolvedUploadsDir);
-  app.use('/uploads', express.static(resolvedUploadsDir));
+  app.use('/uploads', cors(corsOptions), express.static(resolvedUploadsDir));
 } else {
   console.warn('[Static] uploads directory not found in any candidate path:', uploadDirCandidates);
 }
@@ -213,6 +223,13 @@ app.options('*', (req: Request, res: Response) => {
   
   // In production, be very strict about origins
   if (env.isProduction()) {
+    if (allowAllOrigins && origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Methods', corsAllowedMethods.join(', '));
+      res.header('Access-Control-Allow-Headers', corsAllowedHeaders.join(', '));
+      res.header('Access-Control-Allow-Credentials', 'true');
+      return res.sendStatus(204);
+    }
     if (origin && isOriginAllowed(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
     } else {
