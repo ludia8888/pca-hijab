@@ -16,6 +16,12 @@ const PhotoGuide: React.FC = () => {
     navigate(ROUTES.DONTWORRY);
   };
 
+  // 뒤로가기 핸들러: 포토가이드에서는 랜딩(/landing)으로 이동
+  // - /dontworry의 뒤로가기와 동일한 스타일/경험 제공
+  const handleBack = () => {
+    navigate(ROUTES.LANDING);
+  };
+
   // Calculate optimal scale to prevent overlapping
   useEffect(() => {
     const calculateScale = () => {
@@ -100,6 +106,41 @@ const PhotoGuide: React.FC = () => {
            right: 0,
            bottom: 0
          }}>
+      {/* 뒤로가기 버튼 - /dontworry 페이지와 동일한 스타일 */}
+      <button
+        onClick={handleBack}
+        className="absolute z-50 transition-opacity hover:opacity-60"
+        style={{
+          top: `${20 * scaleFactor}px`,
+          left: `${20 * scaleFactor}px`,
+          width: `${32 * scaleFactor}px`,
+          height: `${32 * scaleFactor}px`,
+          background: 'transparent',
+          border: `${1 * scaleFactor}px solid rgba(59, 19, 137, 0.15)`,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+        aria-label="Go back"
+      >
+        <svg 
+          width={`${18 * scaleFactor}px`} 
+          height={`${18 * scaleFactor}px`} 
+          viewBox="0 0 24 24" 
+          fill="none"
+          style={{ marginRight: `${2 * scaleFactor}px` }}
+        >
+          <path 
+            d="M15 18L9 12L15 6" 
+            stroke="rgba(59, 19, 137, 0.4)" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
       {/* Full screen background */}
       <div 
         className="absolute"
