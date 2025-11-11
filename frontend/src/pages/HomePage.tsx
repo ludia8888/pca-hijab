@@ -112,6 +112,12 @@ const HomePage = (): JSX.Element => {
                       src={getImageUrl(content.thumbnailUrl)}
                       alt={content.title}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        // Fallback to a neutral Unsplash image if thumbnail fails
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1520975922371-5e73c1bb0b9b?q=80&w=1200&auto=format&fit=crop';
+                        e.currentTarget.onerror = null;
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                     
@@ -171,15 +177,15 @@ const HomePage = (): JSX.Element => {
               </button>
 
               {/* Dots indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
                 {featuredContents.map((_, index) => (
                   <button
                     key={index}
                     onClick={(e) => { e.stopPropagation(); goToSlide(index); }}
-                    className={`w-2 h-2 rounded-full transition-all ${
+                    className={`w-1 h-1 rounded-full transition-all ${
                       index === currentSlide 
-                        ? 'bg-white w-4' 
-                        : 'bg-white/50 hover:bg-white/70'
+                        ? 'bg-white w-2' 
+                        : 'bg-white/60 hover:bg-white/80'
                     }`}
                   />
                 ))}
