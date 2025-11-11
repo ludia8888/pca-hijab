@@ -20,6 +20,7 @@ const AdminLoginPage = (): JSX.Element => {
     error: authError,
     clearError
   } = useAuthStore();
+  const isAdminSession = useAuthStore((s) => s.isAdminSession);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,13 +29,14 @@ const AdminLoginPage = (): JSX.Element => {
   const navigatedRef = useRef(false);
 
   useEffect(() => {
-    if (hasAdminRole && !navigatedRef.current) {
+    // 자동 리디렉션은 관리자 세션 플래그가 있을 때에만 수행
+    if (hasAdminRole && isAdminSession && !navigatedRef.current) {
       navigatedRef.current = true;
       navigate('/admin/dashboard', { replace: true });
     } else if (isAuthenticated && user && !hasAdminRole) {
       setError('You do not have admin permissions.');
     }
-  }, [hasAdminRole, isAuthenticated, navigate, user]);
+  }, [hasAdminRole, isAdminSession, isAuthenticated, navigate, user]);
 
   useEffect(() => {
     if (authError) {
@@ -86,8 +88,8 @@ const AdminLoginPage = (): JSX.Element => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">관리자 로그인</h1>
-            <p className="text-gray-600 mt-2">관리자 계정으로 로그인하세요.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Sign-in</h1>
+            <p className="text-gray-600 mt-2">Sign in with your admin credentials.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -121,12 +123,12 @@ const AdminLoginPage = (): JSX.Element => {
               disabled={!email || !password || isLoading}
               loading={isLoading}
             >
-              {isLoading ? '확인 중...' : '로그인'}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">접근 권한이 필요하신가요? 시스템 관리자에게 문의하세요.</p>
+            <p className="text-sm text-gray-500">Need access? Please contact the system administrator.</p>
           </div>
         </Card>
       </div>
