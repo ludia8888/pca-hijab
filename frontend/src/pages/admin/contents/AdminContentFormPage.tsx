@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { PageLayout } from '@/components/layout';
+import { PageLayout, Header } from '@/components/layout';
 import { ContentForm } from '@/components/admin';
 import { ProductAPI } from '@/services/api/admin';
 
@@ -16,7 +16,9 @@ const AdminContentFormPage: React.FC = () => {
   });
 
   return (
-    <PageLayout>
+    <PageLayout
+      header={<Header title={id ? 'Edit Content' : 'New Content'} showBack onBack={() => navigate('/admin/contents')} />}
+    >
       <div className="max-w-3xl mx-auto py-6">
         <ContentForm
           content={content}
@@ -32,4 +34,3 @@ const AdminContentFormPage: React.FC = () => {
 };
 
 export default AdminContentFormPage;
-

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { PageLayout } from '@/components/layout';
+import { PageLayout, Header } from '@/components/layout';
 import { ProductForm } from '@/components/admin';
 import { ProductAPI } from '@/services/api/admin';
 
@@ -16,7 +16,9 @@ const AdminProductFormPage: React.FC = () => {
   });
 
   return (
-    <PageLayout>
+    <PageLayout
+      header={<Header title={id ? 'Edit Product' : 'New Product'} showBack onBack={() => navigate('/admin/products')} />}
+    >
       <div className="max-w-3xl mx-auto py-6">
         <ProductForm
           product={product}
@@ -32,4 +34,3 @@ const AdminProductFormPage: React.FC = () => {
 };
 
 export default AdminProductFormPage;
-

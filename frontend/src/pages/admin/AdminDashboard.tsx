@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { LogOut, Package, FileText, User } from 'lucide-react';
+import { LogOut, Package, FileText, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { ProductForm, ProductList, ContentForm, ContentList, UsersList } from '@/components/admin';
@@ -67,6 +67,13 @@ const AdminDashboard: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="mr-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="w-6 h-6 text-gray-700" />
+                </button>
                 <Package className="w-8 h-8 text-purple-600 mr-3" />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
