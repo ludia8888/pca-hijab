@@ -32,6 +32,7 @@ import { maskUserId } from '../utils/logging';
 import { emailService } from '../services/emailService';
 import { config } from '../config/environment';
 import { ensureSeedAdmin } from '../services/adminBootstrap';
+import type { PersonalColorResult } from '../types';
 import { logAdminAction } from '../services/adminAuditService';
 import { ADMIN_ROLES } from '../config/roles';
 
@@ -557,10 +558,10 @@ router.put('/personal-color', authenticateUser, async (req: Request, res: Respon
       if (s.includes('winter')) return 'winter';
       return 'spring';
     })() as 'spring' | 'summer' | 'autumn' | 'winter';
-    const toneKey = seasonKey === 'spring' || seasonKey === 'autumn' ? 'warm' : 'cool';
+    const toneKey: 'warm' | 'cool' = (seasonKey === 'spring' || seasonKey === 'autumn') ? 'warm' : 'cool';
 
     // Build minimal PersonalColorResult object
-    const personalColorResult = {
+    const personalColorResult: PersonalColorResult = {
       personal_color: season || seasonKey,
       personal_color_en: seasonKey,
       personal_color_ko: undefined,
