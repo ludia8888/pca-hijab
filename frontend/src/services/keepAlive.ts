@@ -1,6 +1,7 @@
 import { apiClient } from './api/client';
 import axios from 'axios';
 import { coldStartHandler } from '@/utils/coldStartHandler';
+import { API_BASE_URL, AI_API_URL } from '@/utils/constants';
 
 class KeepAliveService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -11,9 +12,9 @@ class KeepAliveService {
   
   // Multiple backend URLs to wake up
   private readonly BACKEND_URLS = [
-    // Use the raw URL without /api suffix for backend
-    (import.meta.env.VITE_API_BASE_URL || 'https://pca-hijab-backend-unified.onrender.com').replace('/api', ''),
-    import.meta.env.VITE_AI_API_URL || 'https://showmethecolor-api.onrender.com'
+    // Normalise to base origins (remove trailing /api if present)
+    API_BASE_URL.replace(/\/api$/, ''),
+    AI_API_URL.replace(/\/api$/, '')
   ];
   
   /**

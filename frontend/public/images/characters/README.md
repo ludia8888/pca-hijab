@@ -1,32 +1,23 @@
-# Character Images for AI Analysis
+# Character Images for Analysis Steps
 
-이 폴더에 만화 캐릭터 이미지들을 준비해주세요.
+`frontend/src/pages/AnalyzingPage.tsx`와 `frontend/src/utils/constants.ts`에서 분석 단계별 캐릭터 이미지를 사용합니다. 현재 배포본에는 이미지가 없으므로 아래 가이드를 참고해 자산을 추가하세요.
 
-## 필요한 이미지 파일들:
+## 필요한 파일명 (PNG/JPG)
+- `detective-analyzing.png` – 얼굴 인식 단계
+- `scientist-extracting.png` – 색상 추출 단계
+- `wizard-converting.png` – 색공간 변환 단계
+- `analyst-thinking.png` – 웜/쿨톤 판별 단계
+- `artist-creating.png` – 최종 팔레트 생성 단계
 
-### 캐릭터 이미지 (PNG/JPG, 300x300px 권장)
-- `detective-analyzing.png` - 🕵️‍♀️ 탐정 캐릭터 (얼굴 인식 단계)
-- `scientist-extracting.png` - 👩‍🔬 과학자 캐릭터 (색상 추출 단계)  
-- `wizard-converting.png` - 🧙‍♀️ 마법사 캐릭터 (색공간 변환 단계)
-- `analyst-thinking.png` - 👩‍💼 분석가 캐릭터 (웜/쿨톤 판별 단계)
-- `artist-creating.png` - 👩‍🎨 아티스트 캐릭터 (최종 분류 단계)
+## 디자인 가이드
+- 히잡을 착용한 친근한 캐릭터, 300x300px 이상, 투명 배경 PNG 권장
+- 서비스 주 색상(코랄/퍼플)과 조화되는 팔레트 사용
+- 각 단계별로 소품이나 포즈를 달리해 스토리텔링 강화
+- 말풍선 자산(`../speech-bubbles`)과 함께 노출됨
 
-## 캐릭터 컨셉:
-- **탐정**: 돋보기를 들고 세심하게 관찰하는 모습
-- **과학자**: 실험복을 입고 색상 샘플을 분석하는 모습  
-- **마법사**: 마법 지팡이로 색상을 변환하는 마법적인 모습
-- **분석가**: 차트나 그래프를 보며 분석하는 전문적인 모습
-- **아티스트**: 팔레트와 붓을 들고 색상을 조합하는 창작적인 모습
+## 적용 방법
+1. 위 파일명을 그대로 사용하여 이미지를 저장합니다.
+2. 필요 시 `AnalyzingPage.tsx`의 경로(`/images/characters/...`)를 확인하세요.
+3. 이미지 추가 후 `npm run build`로 경로가 올바른지 확인합니다.
 
-## 스타일 가이드:
-- 친근하고 귀여운 만화 스타일
-- 히잡을 착용한 여성 캐릭터로 통일
-- 밝고 따뜻한 색조 사용
-- 각 캐릭터별 고유한 의상과 소품
-- 표정은 집중하되 친근한 느낌
-
-## 파일 형식:
-- PNG 또는 JPG
-- 투명 배경 선호 (PNG)
-- 해상도: 300x300px 이상
-- 파일 크기: 500KB 이하 권장
+※ 결과 페이지(`ResultPageV2.tsx`)에서도 동일 자산을 재사용할 수 있습니다.

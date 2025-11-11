@@ -1,121 +1,87 @@
 # Docker 배포 가이드
 
-## 전체 스택 Docker 구성
+PCA-HIJAB 전체 스택(프론트엔드, 백엔드, AI API, PostgreSQL)을 Docker Compose로 실행할 수 있습니다. `docker-compose.yml`은 개발/테스트용, `docker-compose.prod.yml`은 사전 빌드된 이미지를 사용하는 프로덕션용입니다.
 
-PCA-HIJAB 프로젝트의 모든 서비스를 Docker로 배포할 수 있습니다.
+## 1. 구성 요소
+- **frontend**: Nginx 컨테이너가 Vite 빌드 산출물을 서빙 (기본 포트 3000/80)
+- **backend-api**: Express + TypeScript (포트 5001)
+- **ai-api**: FastAPI(ShowMeTheColor) (포트 8000)
+- **db**: PostgreSQL 15-alpine (포트 5432)
 
-### 서비스 구성
-- **PostgreSQL**: 데이터베이스 (Port 5432)
-- **Backend API**: Express.js 백엔드 (Port 5001)
-- **AI API**: FastAPI 인공지능 서비스 (Port 8000)
-- **Frontend**: React 프론트엔드 (Port 3000/80)
-
-### 시작하기
-
-1. **환경 변수 설정**
-   ```bash
-   cp .env.docker .env
-   # .env 파일을 열어서 필요한 값들을 수정하세요
-   ```
-
-2. **개발 환경에서 실행**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **프로덕션 환경에서 실행**
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-### 유용한 명령어
-
-**서비스 상태 확인:**
+## 2. 사전 준비
 ```bash
-docker-compose ps
+cp .env.docker .env               # 필요 값으로 수정
+npm --prefix frontend run build   # 프론트 빌드(환경변수 반영 필수)
+```
+프론트엔드 빌드에는 `VITE_API_BASE_URL`, `VITE_AI_API_URL` 등이 필요합니다. `.env.production` 혹은 `.env`를 작성한 뒤 `npm run build`를 실행하거나 Docker 빌드 ARG로 값을 주입하세요.
+
+## 3. 실행 방법
+- **개발 모드 (소스 빌드)**
+  ```bash
+  docker-compose up --build -d
+  ```
+- **프로덕션 모드 (미리 빌드된 이미지)**
+  ```bash
+  docker-compose -f docker-compose.prod.yml up -d
+  ```
+
+## 4. 자주 사용하는 명령어
+```bash
+docker-compose ps                         # 컨테이너 상태
+docker-compose logs -f backend-api        # 백엔드 로그 보기
+docker exec -it pca-hijab-db psql -U pca_user -d pca_hijab  # DB 접속
+
+docker-compose restart backend-api        # 특정 서비스 재시작
+docker-compose down                       # 서비스 종료
+docker-compose down -v                    # 볼륨까지 제거
 ```
 
-**로그 확인:**
-```bash
-docker-compose logs -f backend-api
-docker-compose logs -f ai-api
-docker-compose logs -f db
-```
-
-**데이터베이스 접속:**
-```bash
-docker exec -it pca-hijab-db psql -U pca_user -d pca_hijab
-```
-
-**서비스 재시작:**
-```bash
-docker-compose restart backend-api
-```
-
-**전체 종료:**
-```bash
-docker-compose down
-```
-
-**데이터 포함 전체 삭제:**
-```bash
-docker-compose down -v
-```
-
-### 환경 변수 설정
-
-`.env.docker` 파일을 참고하여 다음 환경 변수를 설정하세요:
-
+## 5. .env 템플릿
 ```env
-# 데이터베이스
+# PostgreSQL
 POSTGRES_USER=pca_user
-POSTGRES_PASSWORD=your-secure-password-here
+POSTGRES_PASSWORD=change-me
 POSTGRES_DB=pca_hijab
 
-# 백엔드
-ADMIN_API_KEY=your-admin-api-key
-SESSION_SECRET=your-session-secret
-CORS_ORIGINS=https://your-domain.com
+# backend-api
+PORT=5001
+NODE_ENV=production
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+CLIENT_URL=https://your-frontend-domain.com
+JWT_SECRET=replace-with-32-char-secret
+JWT_REFRESH_SECRET=replace-with-32-char-secret
+EMAIL_ENABLED=true
+RESEND_API_KEY=re_xxx   # 또는 SMTP_* 변수를 사용하세요
+EMAIL_FROM="PCA-HIJAB <noreply@your-domain.com>"
+CORS_ORIGINS=https://your-frontend-domain.com
+ADMIN_SEED_EMAIL=admin@example.com      # 선택
+ADMIN_SEED_PASSWORD=super-secure-pass   # 선택
+ADMIN_SEED_NAME="Seed Admin"            # 선택
 
-# 프론트엔드 (프로덕션)
-VITE_BACKEND_URL=https://api.your-domain.com
+# frontend 빌드 시 사용
+VITE_API_BASE_URL=https://api.your-domain.com/api
 VITE_AI_API_URL=https://ai.your-domain.com
 ```
+> `SESSION_SECRET`는 현재 코드에서 사용하지 않으므로 설정하지 않아도 됩니다.
 
-### 프로덕션 배포 시 주의사항
-
+## 6. 프로덕션 체크리스트
 1. **보안**
-   - 강력한 비밀번호 사용
-   - HTTPS 인증서 설정 (nginx/ssl 폴더)
-   - 방화벽 규칙 설정
-
+   - HTTPS 인증서(Nginx) 적용 (`frontend/nginx.conf`, `ssl/` 참고)
+   - 강력한 비밀번호/키 사용 및 `.env` 비공개 유지
+   - 방화벽으로 80/443/5001/8000/5432 등 필요한 포트만 오픈
 2. **백업**
-   - PostgreSQL 데이터 정기 백업
-   - Docker 볼륨 백업
-
+   - PostgreSQL 볼륨(`postgres_data`) 정기 스냅샷
+   - `uploads/` 폴더(관리자 업로드 이미지) 백업
 3. **모니터링**
-   - 헬스체크 엔드포인트 모니터링
-   - 로그 수집 및 분석
+   - `/api/health`, `/health` Ping
+   - `docker stats`로 리소스 사용량 확인
+   - Render/UptimeRobot 등 외부 모니터링 서비스와 병행
 
-### 트러블슈팅
+## 7. 트러블슈팅 팁
+- **DB 연결 실패**: DB 컨테이너 상태 확인 → `docker-compose logs db` → 백엔드 재시작
+- **AI API OOM**: `docker stats`로 메모리 사용량 확인 후 Compose에서 리소스 제한 조정
+- **프론트가 API에 연결되지 않을 때**: 빌드 시 반영된 `VITE_API_BASE_URL` 값 확인, 변경 시 `npm run build` 다시 실행
+- **이미지 빌드 실패**: `docker-compose build --no-cache` 명령으로 캐시 제거 후 재빌드
 
-**데이터베이스 연결 실패:**
-```bash
-# 데이터베이스가 준비될 때까지 기다리기
-docker-compose logs db
-# 백엔드 재시작
-docker-compose restart backend-api
-```
-
-**AI API 메모리 부족:**
-```bash
-# Docker 리소스 제한 확인
-docker stats
-# 필요시 docker-compose.yml에서 리소스 제한 추가
-```
-
-**이미지 빌드 실패:**
-```bash
-# 캐시 없이 다시 빌드
-docker-compose build --no-cache
-```
+---
+컨테이너 구성을 환경에 맞게 조정해도 좋습니다. Render/Vercel 배포와 혼용할 때는 `RENDER_ENV_SETUP.md`, `MONITORING_SETUP.md`, `EMAIL_SETUP.md`와 값이 일치하는지 반드시 확인하세요.

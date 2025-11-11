@@ -12,7 +12,6 @@ const SENSITIVE_FIELDS = [
   'token',
   'accessToken',
   'refreshToken',
-  'apiKey',
   'userId',
   'instagramId',
   'sessionId',

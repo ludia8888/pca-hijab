@@ -120,7 +120,6 @@ async function runE2ETest() {
     console.log('\n🔐 Admin Page Access:');
     console.log('  URL: http://localhost:3000/admin/login');
     console.log('  Note: Admin page requires API key authentication');
-    console.log('  Check backend/.env for ADMIN_API_KEY');
     
   } catch (error) {
     console.error('❌ E2E Test Failed:', error.response?.data || error.message);

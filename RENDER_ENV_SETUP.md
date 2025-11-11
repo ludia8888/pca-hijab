@@ -1,76 +1,61 @@
 # 🚀 Render Environment Variables Setup
 
-## Required Environment Variables for Production
+Render 백엔드 서비스(`pca-hijab-backend`)에 아래 환경 변수를 등록해야 프로덕션 기능이 정상 동작합니다. 예시 값은 반드시 교체하세요.
 
-Add these to your Render backend service:
-
+## 필수 변수
 ```bash
-# Email Service (Resend) - REQUIRED
-EMAIL_ENABLED=true
-RESEND_API_KEY=re_PspAYXmP_37xPU2MiBMZFiCD2yqwEL1XK
-CLIENT_URL=https://pca-hijab.vercel.app
-EMAIL_FROM=PCA-HIJAB <onboarding@resend.dev>
-
-# Database - REQUIRED  
-DATABASE_URL=postgresql://user:password@host:5432/dbname
-
-# Security - REQUIRED (Generate new ones!)
-JWT_SECRET=your-secure-jwt-secret-here-min-32-chars
-JWT_REFRESH_SECRET=your-secure-refresh-secret-here-min-32-chars
-ADMIN_API_KEY=your-secure-admin-api-key-here
-
 # Server
 NODE_ENV=production
 PORT=5001
+CLIENT_URL=https://pca-hijab.vercel.app,https://noorai-ashy.vercel.app  # 여러 도메인일 경우 콤마로 구분
+
+# Security
+JWT_SECRET=<32자 이상 랜덤 문자열>
+JWT_REFRESH_SECRET=<32자 이상 랜덤 문자열>
+
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/pca_hijab
+
+# Email (Resend or SMTP 중 택1)
+EMAIL_ENABLED=true
+RESEND_API_KEY=<re_xxx 값>              # Resend 사용 시
+EMAIL_FROM="PCA-HIJAB <noreply@domain>"
+# SMTP 사용 시: SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, EMAIL_FROM_NAME
+
+# 기타
+ENABLE_TOKEN_CLEANUP=false    # PostgreSQL 사용 + 스케줄링 필요 시 true
+USE_AUTH_STUB=false           # 개발 편의용 stub는 프로덕션에서 false 유지
+ADMIN_SEED_EMAIL=            # (선택) 자동 부팅용 관리자 계정
+ADMIN_SEED_PASSWORD=         # (선택) 위 계정 비밀번호
+ADMIN_SEED_NAME="Seed Admin" # (선택)
 ```
+> `CORS_ORIGINS`는 코드 내 화이트리스트가 정의되어 있으므로 필요 시 추가할 수 있습니다. `SESSION_SECRET`는 사용하지 않습니다.
 
-## How to Add on Render:
+## 입력 방법
+1. [Render Dashboard](https://dashboard.render.com) → 서비스 선택 → **Environment** 탭 이동  
+2. **Add Environment Variable** 클릭 후 Key/Value 입력 (여러 도메인은 콤마 구분)  
+3. 저장 시 자동으로 재배포가 진행됩니다. 재배포를 원치 않으면 **Add Secret File** 기능을 고려하세요.
 
-1. Go to [Render Dashboard](https://dashboard.render.com)
-2. Select your backend service (`pca-hijab-backend`)
-3. Click **Environment** tab
-4. Click **Add Environment Variable**
-5. Add each variable above (one by one)
-6. Click **Save Changes**
-7. Service will automatically redeploy
-
-## Generate Secure Secrets:
-
-For JWT_SECRET and JWT_REFRESH_SECRET, generate secure values:
-
+## 안전한 시크릿 생성
 ```bash
-# Option 1: Use Node.js
+# Node.js
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
-# Option 2: Use OpenSSL
+# OpenSSL
 openssl rand -hex 32
-
-# Option 3: Use online generator
-# https://randomkeygen.com/
 ```
+`ADMIN_SEED_EMAIL/PASSWORD`를 지정하면 배포 시 자동으로 해당 이메일 계정이 생성(또는 admin 롤로 승격)되어 초기 로그인에 활용할 수 있습니다.
 
-## Verify Setup:
+## 설정 확인 체크리스트
+1. `https://pca-hijab-backend-unified.onrender.com/api/health` 응답 확인 (`status: ok`)
+2. 회원가입/인증/로그인 플로우 테스트  
+3. 비밀번호 재설정 이메일 수신 확인  
+4. CORS 오류 여부(브라우저 콘솔) 확인
 
-After deployment, test:
-
-1. Check health: `https://pca-hijab-backend.onrender.com/api/health`
-2. Test signup with real email
-3. Check email inbox for verification
-4. Click verification link
-5. Confirm account is activated
-
-## Important Notes:
-
-⚠️ **NEVER commit these values to GitHub**
-⚠️ **Generate NEW secret keys - don't use the examples**
-⚠️ **Keep RESEND_API_KEY secure**
-
-## Troubleshooting:
-
-- If emails not sending: Check Render logs
-- If database errors: Verify DATABASE_URL format
-- If auth fails: Check JWT secrets are set
+## 참고 & 주의 사항
+- 스크립트 `scripts/setup_render_env.py` / `scripts/setup-render-env.sh`는 샘플 값을 주입하므로 실서비스 전 반드시 바꿔 주세요.
+- `.env` 파일은 Git에 절대 커밋하지 않습니다. Render 환경 탭에서 직접 수동 입력 또는 Secret File 사용을 권장합니다.
+- Render의 Free 플랜은 슬립 상태가 발생하므로 `MONITORING_SETUP.md` 기반 외부 ping을 병행하세요.
 
 ---
-
-Last updated: 2025-01-15
+Last updated: 2025-02-16

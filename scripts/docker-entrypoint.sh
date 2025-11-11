@@ -118,12 +118,13 @@ SQL_DIR="/app/backend/sql"
 apply_sql "${SQL_DIR}/init-fixed.sql"
 apply_sql "${SQL_DIR}/add_session_columns_migration.sql"
 apply_sql "${SQL_DIR}/add_admin_features_migration.sql"
+apply_sql "${SQL_DIR}/add_user_roles_migration.sql"
 apply_sql "${SQL_DIR}/fix_verification_token_expiry.sql"
 apply_sql "${SQL_DIR}/products_contents_schema.sql"
 
 log "starting backend API on port ${PORT}"
 runuser -u node -- env PORT="${PORT}" NODE_ENV="${NODE_ENV}" DATABASE_URL="${DATABASE_URL}" \
-  ADMIN_API_KEY="${ADMIN_API_KEY:-}" JWT_SECRET="${JWT_SECRET:-}" JWT_REFRESH_SECRET="${JWT_REFRESH_SECRET:-}" \
+  JWT_SECRET="${JWT_SECRET:-}" JWT_REFRESH_SECRET="${JWT_REFRESH_SECRET:-}" \
   CLIENT_URL="${CLIENT_URL:-}" EMAIL_ENABLED="${EMAIL_ENABLED:-false}" \
   node /app/backend/dist/index.js &
 BACKEND_PID=$!

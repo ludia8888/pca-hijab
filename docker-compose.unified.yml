@@ -13,7 +13,6 @@ services:
       - DATABASE_URL=postgresql://pca_user:pca_password@localhost:5432/pca_hijab
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-in-production
-      - ADMIN_API_KEY=your-secure-admin-api-key-change-in-production
       - CLIENT_URL=https://pca-hijab-frontend.onrender.com
       - AI_API_URL=https://showmethecolor-api.onrender.com
     volumes:

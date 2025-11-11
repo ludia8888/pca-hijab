@@ -3,7 +3,7 @@
  * Handles localStorage limitations in Instagram iOS browser
  */
 
-import { StateStorage } from 'zustand/middleware';
+import type { StateStorage } from 'zustand/middleware';
 import { detectInAppBrowser, inAppStorage } from '@/utils/inAppBrowserDetection';
 
 /**

@@ -11,7 +11,6 @@ services:
       - PORT=5001
       - AI_API_URL=http://ai-api:8000
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - ADMIN_API_KEY=${ADMIN_API_KEY}
       - SESSION_SECRET=${SESSION_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
     depends_on:

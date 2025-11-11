@@ -996,13 +996,6 @@ async function seedMockData() {
   try {
     console.log('🌱 Starting to seed mock data...');
     
-    // Check if we can connect to database
-    const adminApiKey = process.env.ADMIN_API_KEY;
-    if (!adminApiKey) {
-      console.error('❌ ADMIN_API_KEY not found in environment variables');
-      process.exit(1);
-    }
-
     // Check if product/content methods are available
     if (!db.createProduct || !db.createContent) {
       console.error('❌ Database does not support products/contents. Make sure you are using the correct database implementation.');

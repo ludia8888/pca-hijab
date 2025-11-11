@@ -13,6 +13,7 @@ const STUB_USER = {
   email: 'user@example.com',
   name: 'Test User',
   emailVerified: true,
+  role: 'user' as const,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
 };
@@ -27,7 +28,7 @@ router.post('/signup', signupLimiter, csrfProtection, async (req: Request, res: 
     const { email, name } = req.body;
 
     // Generate tokens for stubbed user
-    const { accessToken, refreshToken } = generateTokens(STUB_USER.id);
+    const { accessToken, refreshToken } = generateTokens(STUB_USER.id, STUB_USER.role);
 
     // Set refresh token cookie
     res.cookie('refreshToken', refreshToken, {
@@ -45,7 +46,8 @@ router.post('/signup', signupLimiter, csrfProtection, async (req: Request, res: 
           id: STUB_USER.id,
           email: email || STUB_USER.email,
           name: name || STUB_USER.name,
-          emailVerified: true
+          emailVerified: true,
+          role: STUB_USER.role
         },
         accessToken
       }
@@ -69,7 +71,7 @@ router.post('/login', loginLimiter, csrfProtection, async (req: Request, res: Re
     const { email } = req.body;
 
     // Generate tokens for stubbed user
-    const { accessToken, refreshToken } = generateTokens(STUB_USER.id);
+    const { accessToken, refreshToken } = generateTokens(STUB_USER.id, STUB_USER.role);
 
     // Set refresh token cookie
     res.cookie('refreshToken', refreshToken, {
@@ -87,7 +89,8 @@ router.post('/login', loginLimiter, csrfProtection, async (req: Request, res: Re
           id: STUB_USER.id,
           email: email || STUB_USER.email,
           name: STUB_USER.name,
-          emailVerified: true
+          emailVerified: true,
+          role: STUB_USER.role
         },
         accessToken
       }
@@ -132,7 +135,7 @@ router.post('/logout', authenticateUser, csrfProtection, async (req: Request, re
 router.post('/refresh', async (req: Request, res: Response) => {
   try {
     // Generate new tokens
-    const { accessToken, refreshToken } = generateTokens(STUB_USER.id);
+    const { accessToken, refreshToken } = generateTokens(STUB_USER.id, STUB_USER.role);
 
     // Set new refresh token cookie
     res.cookie('refreshToken', refreshToken, {

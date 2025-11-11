@@ -7,7 +7,6 @@ echo "🚀 Starting local test environment for Admin page..."
 # Backend 환경변수 설정
 export NODE_ENV=development
 export PORT=5000
-export ADMIN_API_KEY=test-admin-key
 export DATABASE_URL=""
 
 # Backend 실행
@@ -22,11 +21,12 @@ echo "✅ Test environment is ready!"
 echo ""
 echo "📋 Test Instructions:"
 echo "1. Open browser: http://localhost:3000/admin/login"
-echo "2. Enter API Key: test-admin-key"
-echo "3. You should see the admin dashboard"
+echo "2. Sign in with an admin account (email/password)."
+echo "3. You should see the admin dashboard after authentication."
 echo ""
-echo "🔑 Test Credentials:"
-echo "   API Key: test-admin-key"
+echo "🔑 Example admin credentials (ensure this user exists in DB):"
+echo "   Email: admin@example.com"
+echo "   Password: ********"
 echo ""
 echo "Press Ctrl+C to stop the backend server"
 

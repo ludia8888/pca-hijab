@@ -24,6 +24,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { getCSRFToken } from './middleware/csrf';
 import { db } from './db';
 import { tokenCleanupService } from './services/tokenCleanupService';
+import { ensureSeedAdmin } from './services/adminBootstrap';
 
 const app = express();
 const PORT = config.PORT;
@@ -131,7 +132,6 @@ const vercelPreviewPattern = /^https:\/\/(pca-hijab|noorai|noor)(-[a-z0-9]+)?(-[
 const corsAllowedHeaders = [
   'Content-Type',
   'Authorization',
-  'x-api-key',
   'Accept',
   'Origin',
   'X-Requested-With',
@@ -304,5 +304,9 @@ app.listen(PORT, () => {
   console.info('🧹 Cleanup service status:', {
     schedulerEnabled: cleanupStatus.schedulerEnabled,
     environment: cleanupStatus.environment
+  });
+
+  ensureSeedAdmin().catch((error) => {
+    console.error('[AdminBootstrap] Failed to seed admin user:', error);
   });
 });

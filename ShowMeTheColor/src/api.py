@@ -36,7 +36,7 @@ app.add_middleware(
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["Content-Type", "Authorization", "x-api-key", "Accept", "Origin", "Cache-Control", "X-Requested-With"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "Cache-Control", "X-Requested-With"],
     expose_headers=["Content-Length", "Content-Type"],
     max_age=3600
 )
@@ -61,7 +61,7 @@ async def options_analyze():
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, Accept, Origin, Cache-Control, X-Requested-With",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Origin, Cache-Control, X-Requested-With",
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Max-Age": "3600"
         }
@@ -175,7 +175,7 @@ async def analyze_personal_color(
             headers={
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key"
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
             }
         )
         
