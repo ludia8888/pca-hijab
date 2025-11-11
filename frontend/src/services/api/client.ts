@@ -40,6 +40,10 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Enable sending cookies
 });
 
+// 401 처리용 전역 리프레시 제어 (중복 요청 방지)
+let isRefreshing = false;
+let refreshWaitQueue: Array<() => void> = [];
+
 // Persisted admin access token support (for 3rd-party cookie blocked environments)
 try {
   if (typeof window !== 'undefined') {
@@ -227,3 +231,42 @@ export async function apiRequest<T>(
     };
   }
 }
+    // 토큰 만료(401) 처리: 새 액세스 토큰 발급 후 재시도
+    if (error.response?.status === 401 && !config?._retry) {
+      // 이미 리프레시 중이면 큐에 대기시켰다가 재시도
+      if (isRefreshing) {
+        await new Promise<void>((resolve) => refreshWaitQueue.push(resolve));
+        config._retry = true;
+        return apiClient.request(config);
+      }
+
+      try {
+        isRefreshing = true;
+        const { AuthAPI } = await import('./auth');
+        try {
+          await AuthAPI.refreshToken(); // 쿠키 갱신
+        } catch (e) {
+          // 리프레시 실패 시, 저장된 관리자 헤더 제거 후 오류 반환(재로그인 유도)
+          try { delete apiClient.defaults.headers.common['Authorization']; } catch {}
+          isRefreshing = false;
+          // 대기 중 요청 모두 해제(실패 경로)
+          refreshWaitQueue.splice(0).forEach(fn => fn());
+          return Promise.reject(error);
+        }
+
+        // 리프레시 성공: Authorization 헤더는 쿠키 우선 사용을 위해 제거
+        try { delete apiClient.defaults.headers.common['Authorization']; } catch {}
+
+        // 대기 중 요청들 깨우기
+        isRefreshing = false;
+        refreshWaitQueue.splice(0).forEach(fn => fn());
+
+        // 원 요청 재시도
+        config._retry = true;
+        return apiClient.request(config);
+      } catch (e) {
+        isRefreshing = false;
+        refreshWaitQueue.splice(0).forEach(fn => fn());
+        return Promise.reject(error);
+      }
+    }
