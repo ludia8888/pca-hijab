@@ -737,6 +737,39 @@ export class PostgresDatabase {
     return this.mapUserRow(result.rows[0]);
   }
 
+  // List users with optional filters + pagination
+  async getAllUsers(filters?: { search?: string; role?: string; emailVerified?: boolean; offset?: number; limit?: number }): Promise<User[]> {
+    const where: string[] = [];
+    const values: unknown[] = [];
+    let idx = 1;
+    if (filters?.search) {
+      where.push(`(LOWER(email) LIKE $${idx} OR LOWER(full_name) LIKE $${idx})`);
+      values.push(`%${filters.search.toLowerCase()}%`);
+      idx++;
+    }
+    if (filters?.role) {
+      where.push(`role = $${idx}`);
+      values.push(filters.role);
+      idx++;
+    }
+    if (typeof filters?.emailVerified === 'boolean') {
+      where.push(`email_verified = $${idx}`);
+      values.push(filters.emailVerified);
+      idx++;
+    }
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const limit = typeof filters?.limit === 'number' ? Math.max(1, Math.min(100, filters!.limit)) : 20;
+    const offset = typeof filters?.offset === 'number' ? Math.max(0, filters!.offset) : 0;
+    const query = `
+      SELECT * FROM users
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    const result = await pool.query<UserRow>(query, values);
+    return result.rows.map(row => this.mapUserRow(row));
+  }
+
   async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
     await this.ensureVerificationTokenExpiryColumn();
     await this.ensureUserRoleAndLastLoginColumns();

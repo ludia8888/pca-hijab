@@ -196,6 +196,21 @@ export const AdminAPI = {
     const response = await apiClient.get('/admin/verify');
     return response.data;
   },
+  users: {
+    getAll: async (params?: { q?: string; role?: 'user' | 'admin' | 'content_manager'; verified?: boolean; page?: number; limit?: number }) => {
+      const search = new URLSearchParams();
+      if (params?.q) search.append('q', params.q);
+      if (params?.role) search.append('role', params.role);
+      if (typeof params?.verified === 'boolean') search.append('verified', String(params.verified));
+      if (params?.page) search.append('page', String(params.page));
+      if (params?.limit) search.append('limit', String(params.limit));
+      const qs = search.toString();
+      const response = await apiClient.get<{ success: boolean; data: Array<{ id: string; email: string; fullName: string; role: string; emailVerified: boolean; lastLoginAt?: string; createdAt: string; instagramId?: string }> }>(
+        `/admin/users${qs ? `?${qs}` : ''}`
+      );
+      return response.data.data;
+    }
+  }
 };
 
 // Log successful module load

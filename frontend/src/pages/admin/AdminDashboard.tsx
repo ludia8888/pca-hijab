@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { LogOut, Package, FileText } from 'lucide-react';
+import { LogOut, Package, FileText, User } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
-import { ProductForm, ProductList, ContentForm, ContentList } from '@/components/admin';
+import { ProductForm, ProductList, ContentForm, ContentList, UsersList } from '@/components/admin';
 import { useAdminStore } from '@/store/useAdminStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Product, Content } from '@/types/admin';
 
-type TabType = 'products' | 'contents';
+type TabType = 'products' | 'contents' | 'users';
 type ViewMode = 'list' | 'create' | 'edit';
 
 const AdminDashboard: React.FC = () => {
@@ -127,6 +127,24 @@ const AdminDashboard: React.FC = () => {
                 <FileText className="w-4 h-4" />
                 Content Management
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('users');
+                  setViewMode('list');
+                  setEditingProduct(null);
+                  setEditingContent(null);
+                  setSearchParams({ tab: 'users', view: 'list' }, { replace: false });
+                }}
+                className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  activeTab === 'users'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                Customer Management
+              </button>
             </div>
           </div>
         </nav>
@@ -151,6 +169,11 @@ const AdminDashboard: React.FC = () => {
                 onEditClick={handleEditContentClick}
               />
             </>
+          )}
+
+          {/* Users Management */}
+          {activeTab === 'users' && (
+            <UsersList />
           )}
         </main>
       </div>

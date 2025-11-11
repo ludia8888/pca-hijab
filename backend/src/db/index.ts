@@ -1,4 +1,4 @@
-import { Session, Recommendation, User, RefreshToken, Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus } from '../types';
+import { Session, Recommendation, User, RefreshToken, Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus, UserRole } from '../types';
 import { db as postgresDb } from './postgres';
 
 // In-memory storage as fallback for development
@@ -346,6 +346,26 @@ class InMemoryDatabase {
   }
 
   // User methods - STUBBED for auth bypass
+  async getAllUsers(filters?: { search?: string; role?: UserRole; emailVerified?: boolean; offset?: number; limit?: number }): Promise<User[]> {
+    let list = Array.from(this.users.values());
+    // Filters
+    if (filters?.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(u => (u.email?.toLowerCase().includes(q) || u.fullName?.toLowerCase().includes(q)));
+    }
+    if (filters?.role) {
+      list = list.filter(u => u.role === filters.role);
+    }
+    if (typeof filters?.emailVerified === 'boolean') {
+      list = list.filter(u => u.emailVerified === filters.emailVerified);
+    }
+    // Sort by createdAt desc
+    list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Pagination
+    const start = Math.max(0, filters?.offset ?? 0);
+    const end = (filters?.limit ?? list.length) + start;
+    return list.slice(start, end).map(u => ({ ...u }));
+  }
   async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     // Prevent duplicate emails (mimic DB unique constraint)
     const existingUser = await this.getUserByEmail(data.email);
@@ -565,6 +585,7 @@ interface Database {
   getRecommendationsByStatus(status: Recommendation['status']): Promise<Recommendation[]>;
   testConnection?(): Promise<boolean>;
   // User methods
+  getAllUsers?(filters?: { search?: string; role?: UserRole; emailVerified?: boolean; offset?: number; limit?: number }): Promise<User[]>;
   createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User>;
   getUserById(userId: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;

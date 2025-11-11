@@ -687,3 +687,28 @@ router.delete('/contents/:id', async (req, res, next) => {
 });
 
 export default router;
+// GET /api/admin/users - List registered users (sanitized)
+router.get('/users', async (req, res, next) => {
+  try {
+    const { q, role, verified, page = '1', limit = '20' } = req.query as Record<string, string>;
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit || '20', 10) || 20));
+    const offset = (pageNum - 1) * limitNum;
+
+    // Fetch users via DB helpers when available
+    const users = db.getAllUsers
+      ? await db.getAllUsers({
+          search: q,
+          role: role as any,
+          emailVerified: typeof verified === 'string' ? verified === 'true' : undefined,
+          offset,
+          limit: limitNum,
+        })
+      : [];
+
+    // Sanitize
+    const { sanitizeUser } = await import('../utils/auth');
+    const sanitized = users.map(u => sanitizeUser(u));
+    res.json({ success: true, data: sanitized, pagination: { page: pageNum, limit: limitNum, count: sanitized.length } });
+  } catch (error) { next(error); }
+});

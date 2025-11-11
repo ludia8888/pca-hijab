@@ -4,3 +4,4 @@ export * from './ProductList';
 export * from './ContentList';
 export * from './ContentForm';
 export * from './ContentEditor';
+export * from './UsersList';
