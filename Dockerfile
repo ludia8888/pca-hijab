@@ -20,10 +20,12 @@ WORKDIR /app
 
 # Copy backend files
 COPY backend/package*.json ./
-RUN npm ci --only=production
+# Install all deps for build (dev deps include TypeScript)
+RUN npm ci
 
 COPY backend/ .
-RUN npm run build
+RUN npm run build \
+    && npm prune --omit=dev
 
 # Create startup script that requires managed PostgreSQL
 RUN cat <<'EOF' > /startup.sh
