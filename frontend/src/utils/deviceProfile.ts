@@ -138,7 +138,8 @@ function detectiPhoneModel(): string | null {
       '14,2': 'iPhone 13 Pro',
       '14,5': 'iPhone 13',
       '14,4': 'iPhone 13 mini',
-      '14,8': 'iPhone SE (3rd generation)',
+      // iPhone SE (3rd generation) is iPhone14,6
+      '14,6': 'iPhone SE (3rd generation)',
       '14,7': 'iPhone 14',
       '14,8': 'iPhone 14 Plus',
       '15,2': 'iPhone 14 Pro',

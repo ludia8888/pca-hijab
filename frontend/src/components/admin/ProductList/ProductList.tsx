@@ -24,8 +24,6 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   // Fetch products
   const { data: products = [], isLoading, error } = useQuery({
@@ -75,16 +73,6 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
     setFilters({});
     setSearchTerm('');
   }, [setFilters]);
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds(prev => {
