@@ -16,8 +16,15 @@ export const logAdminAction = async (
   }
 
   try {
-    if (typeof db.addAdminAction === 'function') {
-      await db.addAdminAction(
+    const maybeAdd = (db as unknown as { addAdminAction?: (
+      sessionId: string | null,
+      actionType: string,
+      actionDetails: unknown,
+      performedBy?: string
+    ) => Promise<boolean> }).addAdminAction;
+
+    if (typeof maybeAdd === 'function') {
+      await maybeAdd(
         sessionId,
         actionType,
         {
