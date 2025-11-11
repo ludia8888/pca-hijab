@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Filter, ExternalLink } from 'lucide-react';
+import { Search, Filter, ExternalLink, Plus } from 'lucide-react';
 import { Button, Card, Input, LoadingSpinner, ConfirmModal } from '@/components/ui';
 import { useToast } from '@/components/ui';
 import { ProductAPI } from '@/services/api/admin';
