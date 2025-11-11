@@ -21,12 +21,12 @@ export const ProtectedAdminRoute = (): JSX.Element => {
   const [{ hydrated }, setHydrationState] = useState(() => ({
     hydrated: getPersistHelpers().hasHydrated,
   }));
-  // Start in checking state if we appear authenticated but lack admin user context
-  const [checking, setChecking] = useState(() => isAuthenticated && !isAdminUser);
   const isAdminUser =
     isAuthenticated &&
     user &&
     ['admin', 'content_manager'].includes(user.role as string);
+  // Start in checking state if we appear authenticated but lack admin user context
+  const [checking, setChecking] = useState(() => isAuthenticated && !isAdminUser);
 
   useEffect(() => {
     const { onHydrate, onFinishHydration } = getPersistHelpers();
