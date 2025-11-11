@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogOut, Package, FileText } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
@@ -15,6 +15,7 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { clearProductState } = useAdminStore();
   const logout = useAuthStore((state) => state.logout);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -29,29 +30,44 @@ const AdminDashboard: React.FC = () => {
   const handleCreateClick = () => {
     setEditingProduct(null);
     setViewMode('create');
+    // URL에 상태를 반영하여 브라우저 뒤로가기 시 리스트로 복귀하도록 히스토리 스택 구성
+    setSearchParams({ tab: activeTab, view: 'create' }, { replace: false });
   };
 
   const handleEditProductClick = (product: Product) => {
     setEditingProduct(product);
     setViewMode('edit');
+    setSearchParams({ tab: 'products', view: 'edit', id: product.id }, { replace: false });
   };
 
   const handleEditContentClick = (content: Content) => {
     setEditingContent(content);
     setViewMode('edit');
+    setSearchParams({ tab: 'contents', view: 'edit', id: content.id }, { replace: false });
   };
 
   const handleFormSuccess = () => {
     setViewMode('list');
     setEditingProduct(null);
     setEditingContent(null);
+    // 저장/취소 후에는 리스트로 상태를 정리하되 히스토리를 덮어써서(replace) 뒤로가기로 다시 폼으로 가지 않게 함
+    setSearchParams({ tab: activeTab, view: 'list' }, { replace: true });
   };
 
   const handleFormCancel = () => {
     setViewMode('list');
     setEditingProduct(null);
     setEditingContent(null);
+    setSearchParams({ tab: activeTab, view: 'list' }, { replace: true });
   };
+
+  // URL 쿼리파라미터 ↔ 내부 상태 동기화
+  useEffect(() => {
+    const tab = (searchParams.get('tab') as TabType) || 'products';
+    const view = (searchParams.get('view') as ViewMode) || 'list';
+    setActiveTab(tab);
+    setViewMode(view);
+  }, [searchParams]);
 
   return (
     <PageLayout>
@@ -92,6 +108,7 @@ const AdminDashboard: React.FC = () => {
                   setViewMode('list');
                   setEditingProduct(null);
                   setEditingContent(null);
+                  setSearchParams({ tab: 'products', view: 'list' }, { replace: false });
                 }}
                 className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                   activeTab === 'products'
@@ -109,6 +126,7 @@ const AdminDashboard: React.FC = () => {
                   setViewMode('list');
                   setEditingProduct(null);
                   setEditingContent(null);
+                  setSearchParams({ tab: 'contents', view: 'list' }, { replace: false });
                 }}
                 className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                   activeTab === 'contents'
