@@ -32,21 +32,25 @@ const buildTokenPayload = (userId: string, role: UserRole): TokenPayload => ({
   role
 });
 
-export const generateTokens = (userId: string, role: UserRole): AuthTokens => {
+// Backward-compatible overloads: allow calling with (userId) only, defaulting role to 'user'
+export function generateTokens(userId: string): AuthTokens;
+export function generateTokens(userId: string, role: UserRole): AuthTokens;
+export function generateTokens(userId: string, role?: UserRole): AuthTokens {
+  const effectiveRole: UserRole = role ?? 'user';
   const accessToken = jwt.sign(
-    { ...buildTokenPayload(userId, role), type: 'access' },
+    { ...buildTokenPayload(userId, effectiveRole), type: 'access' },
     JWT_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
   );
 
   const refreshToken = jwt.sign(
-    { ...buildTokenPayload(userId, role), type: 'refresh' },
+    { ...buildTokenPayload(userId, effectiveRole), type: 'refresh' },
     JWT_REFRESH_SECRET,
     { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
   );
 
   return { accessToken, refreshToken };
-};
+}
 
 // Token verification
 export interface AccessTokenPayload {
