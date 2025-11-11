@@ -173,6 +173,15 @@ export const ProductAPI = {
       console.log('[Admin API] Deleting content:', id);
       const response = await apiClient.delete<{ success: boolean; message: string }>(`/admin/contents/${id}`);
       return response.data;
+    },
+
+    // Bulk delete contents by IDs
+    bulkDelete: async (ids: string[]) => {
+      const response = await apiClient.post<{ success: boolean; message: string }>(
+        '/admin/contents/bulk-delete',
+        { ids }
+      );
+      return response.data;
     }
   },
 

@@ -123,6 +123,19 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
+            onClick={() => {
+              setSelectedIds(prev => {
+                // 전체 선택/해제 토글
+                const allIds = new Set(filteredProducts.map(p => p.id));
+                const isAllSelected = filteredProducts.every(p => prev.has(p.id));
+                return isAllSelected ? new Set<string>() : allIds;
+              });
+            }}
+          >
+            전체 선택/해제
+          </Button>
+          <Button
+            variant="ghost"
             className="text-red-600 hover:text-red-700"
             disabled={selectedIds.size === 0}
             onClick={() => setBulkConfirmOpen(true)}
@@ -304,7 +317,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                       className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 hover:underline"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      Shopee
+                      link
                     </a>
                   )}
                 </div>

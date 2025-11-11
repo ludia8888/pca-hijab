@@ -603,6 +603,26 @@ router.put('/contents/:id', async (req, res, next) => {
   }
 });
 
+// POST /api/admin/contents/bulk-delete - Bulk delete contents by IDs
+router.post('/contents/bulk-delete', async (req, res, next) => {
+  try {
+    const { ids } = req.body as { ids?: string[] };
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      throw new AppError(400, 'ids is required');
+    }
+    if (!db.deleteContent) {
+      throw new AppError(500, 'Content functionality not available');
+    }
+    for (const id of ids) {
+      await db.deleteContent(id);
+    }
+    auditAdmin(req, 'contents_bulk_delete', { count: ids.length });
+    res.json({ success: true, message: 'Selected contents deleted' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // PUT /api/admin/contents/:id/status - Update content status
 router.put('/contents/:id/status', async (req, res, next) => {
   try {
