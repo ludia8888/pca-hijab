@@ -132,11 +132,22 @@ class EmailService {
           html: options.html,
           text: options.text,
         });
-        
+
+        // Resend SDK returns either { data } or { error }
+        const anyResult = result as unknown as { data?: { id?: string }; error?: { name?: string; message?: string } };
+        if (anyResult.error || !anyResult.data?.id) {
+          console.error('❌ Resend API error:', {
+            to: maskEmail(options.to),
+            subject: options.subject,
+            error: anyResult.error?.message || 'Unknown error',
+          });
+          throw new Error(`Resend API error: ${anyResult.error?.message || 'No message'}`);
+        }
+
         console.info('✅ Email sent via Resend:', {
           to: maskEmail(options.to),
           subject: options.subject,
-          id: result.data?.id
+          id: anyResult.data.id
         });
       } else if (this.transporter) {
         // Use SMTP
