@@ -162,6 +162,7 @@ const SignupPage = (): JSX.Element => {
                 type="text"
                 label="Full Name"
                 placeholder="Jane Doe"
+                autoComplete="name"
                 {...register('fullName', {
                   required: 'Please enter your name.',
                   minLength: {
@@ -186,6 +187,7 @@ const SignupPage = (): JSX.Element => {
                 type="email"
                 label="Email"
                 placeholder="your@email.com"
+                autoComplete="email"
                 {...register('email', {
                   required: 'Please enter your email address.',
                   pattern: {
@@ -204,6 +206,7 @@ const SignupPage = (): JSX.Element => {
                 type={showPassword ? 'text' : 'password'}
                 label="Password"
                 placeholder="••••••••"
+                autoComplete="new-password"
                 {...register('password', {
                   required: 'Please enter a password.',
                   minLength: {
@@ -241,6 +244,7 @@ const SignupPage = (): JSX.Element => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 label="Confirm Password"
                 placeholder="••••••••"
+                autoComplete="new-password"
                 {...register('confirmPassword', {
                   required: 'Please re-enter your password.',
                   validate: value =>

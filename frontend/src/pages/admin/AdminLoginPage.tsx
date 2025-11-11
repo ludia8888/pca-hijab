@@ -102,6 +102,7 @@ const AdminLoginPage = (): JSX.Element => {
             <Input
               type="email"
               label="Email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
@@ -112,6 +113,7 @@ const AdminLoginPage = (): JSX.Element => {
             <Input
               type="password"
               label="Password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"

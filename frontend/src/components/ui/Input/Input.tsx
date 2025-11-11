@@ -82,6 +82,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={error ? errorId : helperText ? helperId : undefined}
             disabled={disabled}
             required={required}
+            // Provide sensible autocomplete defaults to remove console warnings and improve UX
+            autoComplete={
+              props.autoComplete ?? (
+                props.type === 'password'
+                  ? 'current-password'
+                  : props.type === 'email'
+                    ? 'email'
+                    : undefined
+              )
+            }
             {...props}
           />
 

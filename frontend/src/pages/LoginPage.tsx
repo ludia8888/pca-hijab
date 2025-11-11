@@ -109,6 +109,7 @@ const LoginPage = (): JSX.Element => {
                 type="email"
                 label="Email"
                 placeholder="your@email.com"
+                autoComplete="username"
                 {...register('email', {
                   required: 'Please enter your email address.',
                   pattern: {
@@ -127,6 +128,7 @@ const LoginPage = (): JSX.Element => {
                 type={showPassword ? 'text' : 'password'}
                 label="Password"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 {...register('password', {
                   required: 'Please enter your password.',
                   minLength: {
