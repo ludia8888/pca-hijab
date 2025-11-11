@@ -44,6 +44,23 @@ window.addEventListener('unhandledrejection', (event) => {
 
 const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
+// On admin routes, aggressively disable Service Worker/caches to avoid stale bundles
+if (isAdminRoute && 'serviceWorker' in navigator) {
+  (async () => {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(name => caches.delete(name)));
+      }
+      console.log('[MAIN] Admin route: disabled service worker and cleared caches');
+    } catch (e) {
+      console.warn('[MAIN] Failed to clear SW/caches on admin route', e);
+    }
+  })();
+}
+
 console.log('[MAIN] Starting app initialization...');
 console.log('[MAIN] Current route:', typeof window !== 'undefined' ? window.location.pathname : 'unknown');
 console.log('[MAIN] TensorFlow preload enabled:', !isAdminRoute);
