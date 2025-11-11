@@ -24,6 +24,8 @@ interface UserRow extends QueryResultRow {
   verification_token_expires: Date | null;
   reset_password_token: string | null;
   reset_password_expires: Date | null;
+  role: string;
+  last_login_at: Date | null;
   created_at: Date;
   updated_at: Date | null;
 }
@@ -560,7 +562,7 @@ export class PostgresDatabase {
   }
 
   async addAdminAction(
-    sessionId: string,
+    sessionId: string | null,
     actionType: string,
     actionDetails: unknown,
     performedBy: string = 'admin'
@@ -579,15 +581,17 @@ export class PostgresDatabase {
     }
   }
 
-  async getAdminActions(sessionId: string): Promise<RowRecord[]> {
+  async getAdminActions(sessionId?: string): Promise<RowRecord[]> {
     const query = `
       SELECT * FROM admin_actions
-      WHERE session_id = $1
+      ${sessionId ? 'WHERE session_id = $1' : ''}
       ORDER BY performed_at DESC
     `;
     
     try {
-      const result = await pool.query(query, [sessionId]);
+      const result = sessionId
+        ? await pool.query(query, [sessionId])
+        : await pool.query(query);
       return result.rows;
     } catch (error) {
       console.error('Failed to get admin actions:', error);
@@ -651,8 +655,18 @@ export class PostgresDatabase {
     await this.ensureVerificationTokenExpiryColumn();
 
     const query = `
-      INSERT INTO users (email, password_hash, full_name, instagram_id, email_verified, verification_token, verification_token_expires)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO users (
+        email,
+        password_hash,
+        full_name,
+        instagram_id,
+        email_verified,
+        verification_token,
+        verification_token_expires,
+        role,
+        last_login_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
     
@@ -663,7 +677,9 @@ export class PostgresDatabase {
       data.instagramId || null,
       data.emailVerified || false,
       data.verificationToken || null,
-      data.verificationTokenExpires || null
+      data.verificationTokenExpires || null,
+      data.role || 'user',
+      data.lastLoginAt || null
     ]);
     
     return this.mapUserRow(result.rows[0]);
@@ -681,13 +697,30 @@ export class PostgresDatabase {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const query = `SELECT * FROM users WHERE email = $1`;
+    // 이메일 비교는 대소문자를 구분하지 않으며,
+    // Gmail의 로컬파트 점(.) 유무 차이로 인한 불일치를 허용한다.
+    //  - 기본: LOWER(email) = LOWER($1)
+    //  - 추가: gmail.com / googlemail.com의 경우 점 제거 후 비교
+    const query = `
+      SELECT *
+      FROM users
+      WHERE LOWER(email) = LOWER($1)
+         OR (
+              (
+                LOWER(email) LIKE '%@gmail.com' OR
+                LOWER(email) LIKE '%@googlemail.com'
+              )
+              AND REPLACE(LOWER(email), '.', '') = REPLACE(LOWER($1), '.', '')
+            )
+      LIMIT 1
+    `;
+
     const result = await pool.query(query, [email]);
-    
+
     if (result.rows.length === 0) {
       return undefined;
     }
-    
+
     return this.mapUserRow(result.rows[0]);
   }
 
@@ -710,6 +743,10 @@ export class PostgresDatabase {
       updateFields.push(`full_name = $${valueIndex++}`);
       values.push(updates.fullName);
     }
+    if (updates.instagramId !== undefined) {
+      updateFields.push(`instagram_id = $${valueIndex++}`);
+      values.push(updates.instagramId);
+    }
     if (updates.emailVerified !== undefined) {
       updateFields.push(`email_verified = $${valueIndex++}`);
       values.push(updates.emailVerified);
@@ -718,6 +755,10 @@ export class PostgresDatabase {
       updateFields.push(`verification_token = $${valueIndex++}`);
       values.push(updates.verificationToken);
     }
+    if (updates.verificationTokenExpires !== undefined) {
+      updateFields.push(`verification_token_expires = $${valueIndex++}`);
+      values.push(updates.verificationTokenExpires);
+    }
     if (updates.resetPasswordToken !== undefined) {
       updateFields.push(`reset_password_token = $${valueIndex++}`);
       values.push(updates.resetPasswordToken);
@@ -725,6 +766,14 @@ export class PostgresDatabase {
     if (updates.resetPasswordExpires !== undefined) {
       updateFields.push(`reset_password_expires = $${valueIndex++}`);
       values.push(updates.resetPasswordExpires);
+    }
+    if (updates.role !== undefined) {
+      updateFields.push(`role = $${valueIndex++}`);
+      values.push(updates.role);
+    }
+    if (updates.lastLoginAt !== undefined) {
+      updateFields.push(`last_login_at = $${valueIndex++}`);
+      values.push(updates.lastLoginAt);
     }
 
     if (updateFields.length === 0) {
@@ -919,6 +968,8 @@ export class PostgresDatabase {
       verificationTokenExpires: row.verification_token_expires ?? undefined,
       resetPasswordToken: row.reset_password_token ?? undefined,
       resetPasswordExpires: row.reset_password_expires ?? undefined,
+      role: (row.role as User['role']) ?? 'user',
+      lastLoginAt: row.last_login_at ?? undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at ?? undefined
     };

@@ -30,6 +30,9 @@ import {
 } from '../utils/auth';
 import { maskUserId } from '../utils/logging';
 import { emailService } from '../services/emailService';
+import { ensureSeedAdmin } from '../services/adminBootstrap';
+import { logAdminAction } from '../services/adminAuditService';
+import { ADMIN_ROLES } from '../config/roles';
 
 const router = Router();
 
@@ -84,13 +87,14 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
       fullName,
       emailVerified: false,
       verificationToken,
-      verificationTokenExpires
+      verificationTokenExpires,
+      role: 'user'
     });
     console.log('✅ [SIGNUP] User created with ID:', user.id);
 
     // Generate tokens
     console.log('🔑 [SIGNUP] Generating JWT tokens...');
-    const tokens = generateTokens(user.id);
+    const tokens = generateTokens(user.id, user.role);
     console.log('✅ [SIGNUP] JWT tokens generated');
 
     // Create refresh token in database
@@ -172,11 +176,18 @@ router.post('/login', loginLimiter, csrfProtection, loginValidation, handleValid
       throw new AppError(401, 'Invalid credentials');
     }
 
+    // Enforce email verification for non-admin users
+    if (!ADMIN_ROLES.includes(user.role) && !user.emailVerified) {
+      throw new AppError(403, 'Email not verified. Please check your inbox to verify your account.');
+    }
+
+    await db.updateUser(user.id, { lastLoginAt: new Date() });
+
     // Invalidate all existing refresh tokens for this user (token rotation)
     await db.deleteUserRefreshTokens(user.id);
 
     // Generate new tokens
-    const tokens = generateTokens(user.id);
+    const tokens = generateTokens(user.id, user.role);
 
     // Create refresh token in database
     await db.createRefreshToken({
@@ -197,6 +208,21 @@ router.post('/login', loginLimiter, csrfProtection, loginValidation, handleValid
     });
 
     console.info(`User logged in successfully - ID: ${maskUserId(user.id)}`);
+
+    if (ADMIN_ROLES.includes(user.role)) {
+      void logAdminAction(
+        'admin_login',
+        {
+          ip: req.ip,
+          userAgent: req.get('user-agent') || 'unknown'
+        },
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role
+        }
+      );
+    }
 
     res.json({
       success: true,
@@ -236,7 +262,7 @@ router.post('/refresh', async (req, res, next) => {
     }
 
     // Generate new tokens
-    const tokens = generateTokens(user.id);
+    const tokens = generateTokens(user.id, user.role);
 
     // Delete old refresh token
     await db.deleteRefreshToken(refreshToken);
@@ -285,6 +311,24 @@ router.post('/logout', csrfProtection, authenticateUser, async (req, res, next) 
     // Clear cookies
     res.clearCookie('accessToken', cookieOptions);
     res.clearCookie('refreshToken', cookieOptions);
+
+    if (req.user && ADMIN_ROLES.includes(req.user.role)) {
+      const adminUser = await db.getUserById(req.user.userId);
+      if (adminUser) {
+        void logAdminAction(
+          'admin_logout',
+          {
+            ip: req.ip,
+            userAgent: req.get('user-agent') || 'unknown'
+          },
+          {
+            userId: adminUser.id,
+            email: adminUser.email,
+            role: adminUser.role
+          }
+        );
+      }
+    }
 
     res.json({
       success: true,
@@ -344,6 +388,86 @@ router.post('/verify-email', emailVerificationValidation, handleValidationErrors
     });
   } catch (error) {
     console.error('Email verification failed:', error);
+    next(error);
+  }
+});
+
+// POST /api/auth/admin-login - Admin login via environment credentials
+router.post('/admin-login', loginLimiter, csrfProtection, loginValidation, handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body;
+
+    const seedEmail = process.env.ADMIN_SEED_EMAIL;
+    const seedPassword = process.env.ADMIN_SEED_PASSWORD;
+
+    if (!seedEmail || !seedPassword) {
+      throw new AppError(503, 'Admin login not configured');
+    }
+
+    const normalizeForCompare = (e: string): string => {
+      const lower = e.trim().toLowerCase();
+      const atIdx = lower.lastIndexOf('@');
+      if (atIdx < 0) return lower;
+      const local = lower.slice(0, atIdx);
+      const domain = lower.slice(atIdx + 1);
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        return `${local.replace(/\./g, '')}@${domain}`;
+      }
+      return lower;
+    };
+
+    const matchesEmail = normalizeForCompare(email) === normalizeForCompare(seedEmail);
+    const matchesPassword = password === seedPassword;
+
+    if (!matchesEmail || !matchesPassword) {
+      throw new AppError(401, 'Invalid admin credentials');
+    }
+
+    // Ensure seed admin exists and is synchronized
+    await ensureSeedAdmin();
+
+    // Fetch admin user from DB
+    const adminUser = await db.getUserByEmail(seedEmail);
+    if (!adminUser || !ADMIN_ROLES.includes(adminUser.role)) {
+      throw new AppError(500, 'Admin account not available');
+    }
+
+    // Token rotation: invalidate existing refresh tokens
+    await db.deleteUserRefreshTokens(adminUser.id);
+
+    // Generate new tokens
+    const tokens = generateTokens(adminUser.id, adminUser.role);
+
+    // Create refresh token record
+    await db.createRefreshToken({
+      userId: adminUser.id,
+      token: tokens.refreshToken,
+      expiresAt: getRefreshTokenExpiryDate()
+    });
+
+    // Set cookies
+    res.cookie('accessToken', tokens.accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    // Audit
+    void logAdminAction(
+      'admin_login',
+      { ip: req.ip, userAgent: req.get('user-agent') || 'unknown' },
+      { userId: adminUser.id, email: adminUser.email, role: adminUser.role }
+    );
+
+    res.json({
+      success: true,
+      message: 'Admin login successful',
+      data: { user: sanitizeUser(adminUser) }
+    });
+  } catch (error) {
     next(error);
   }
 });
