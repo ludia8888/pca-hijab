@@ -35,6 +35,10 @@ const MyPage = lazy(() => retryChunkLoad(() => import('@/pages/MyPage')));
 const AdminLoginPage = lazy(() => retryChunkLoad(() => import('@/pages/admin/AdminLoginPage')));
 const AdminDashboard = lazy(() => retryChunkLoad(() => import('@/pages/admin/AdminDashboard')));
 const AdminRecommendationDetail = lazy(() => retryChunkLoad(() => import('@/pages/admin/AdminRecommendationDetail')));
+const AdminProductsListPage = lazy(() => retryChunkLoad(() => import('@/pages/admin/products/AdminProductsListPage')));
+const AdminProductFormPage = lazy(() => retryChunkLoad(() => import('@/pages/admin/products/AdminProductFormPage')));
+const AdminContentsListPage = lazy(() => retryChunkLoad(() => import('@/pages/admin/contents/AdminContentsListPage')));
+const AdminContentFormPage = lazy(() => retryChunkLoad(() => import('@/pages/admin/contents/AdminContentFormPage')));
 
 // Loading component
 const PageLoader = (): JSX.Element => (
@@ -268,6 +272,54 @@ const router = createBrowserRouter([
             element: (
               <Suspense fallback={<PageLoader />}>
                 <AdminDashboard />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminProductsListPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products/new',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminProductFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products/:id/edit',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminProductFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'contents',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminContentsListPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'contents/new',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminContentFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'contents/:id/edit',
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AdminContentFormPage />
               </Suspense>
             ),
           },

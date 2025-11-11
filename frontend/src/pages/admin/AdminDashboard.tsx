@@ -28,37 +28,27 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleCreateClick = () => {
-    setEditingProduct(null);
-    setViewMode('create');
-    // URL에 상태를 반영하여 브라우저 뒤로가기 시 리스트로 복귀하도록 히스토리 스택 구성
-    setSearchParams({ tab: activeTab, view: 'create' }, { replace: false });
+    if (activeTab === 'products') {
+      navigate('/admin/products/new');
+    } else {
+      navigate('/admin/contents/new');
+    }
   };
 
   const handleEditProductClick = (product: Product) => {
-    setEditingProduct(product);
-    setViewMode('edit');
-    setSearchParams({ tab: 'products', view: 'edit', id: product.id }, { replace: false });
+    navigate(`/admin/products/${product.id}/edit`);
   };
 
   const handleEditContentClick = (content: Content) => {
-    setEditingContent(content);
-    setViewMode('edit');
-    setSearchParams({ tab: 'contents', view: 'edit', id: content.id }, { replace: false });
+    navigate(`/admin/contents/${content.id}/edit`);
   };
 
   const handleFormSuccess = () => {
-    setViewMode('list');
-    setEditingProduct(null);
-    setEditingContent(null);
-    // 저장/취소 후에는 리스트로 상태를 정리하되 히스토리를 덮어써서(replace) 뒤로가기로 다시 폼으로 가지 않게 함
-    setSearchParams({ tab: activeTab, view: 'list' }, { replace: true });
+    // no-op: 폼은 별도 라우트에서 처리
   };
 
   const handleFormCancel = () => {
-    setViewMode('list');
-    setEditingProduct(null);
-    setEditingContent(null);
-    setSearchParams({ tab: activeTab, view: 'list' }, { replace: true });
+    // no-op: 폼은 별도 라우트에서 처리
   };
 
   // URL 쿼리파라미터 ↔ 내부 상태 동기화
@@ -146,40 +136,20 @@ const AdminDashboard: React.FC = () => {
           {/* Product Management */}
           {activeTab === 'products' && (
             <>
-              {viewMode === 'list' && (
-                <ProductList
-                  onCreateClick={handleCreateClick}
-                  onEditClick={handleEditProductClick}
-                />
-              )}
-              
-              {(viewMode === 'create' || viewMode === 'edit') && (
-                <ProductForm
-                  product={editingProduct || undefined}
-                  onSuccess={handleFormSuccess}
-                  onCancel={handleFormCancel}
-                />
-              )}
+              <ProductList
+                onCreateClick={handleCreateClick}
+                onEditClick={handleEditProductClick}
+              />
             </>
           )}
 
           {/* Content Management */}
           {activeTab === 'contents' && (
             <>
-              {viewMode === 'list' && (
-                <ContentList
-                  onCreateClick={handleCreateClick}
-                  onEditClick={handleEditContentClick}
-                />
-              )}
-              
-              {(viewMode === 'create' || viewMode === 'edit') && (
-                <ContentForm
-                  content={editingContent || undefined}
-                  onSuccess={handleFormSuccess}
-                  onCancel={handleFormCancel}
-                />
-              )}
+              <ContentList
+                onCreateClick={handleCreateClick}
+                onEditClick={handleEditContentClick}
+              />
             </>
           )}
         </main>
