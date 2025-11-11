@@ -150,7 +150,7 @@ const corsAllowedHeaders = [
 const corsAllowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'];
 
 const corsOptions = {
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (like mobile apps or postman)
     if (!origin) return callback(null, true);
     
