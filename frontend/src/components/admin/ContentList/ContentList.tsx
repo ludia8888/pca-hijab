@@ -319,6 +319,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
         title="콘텐츠 삭제"
         message="이 콘텐츠를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
         confirmText="삭제"
+        confirmButtonClass="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
         cancelText="취소"
         confirmVariant="danger"
         isLoading={deleteMutation.isPending}
@@ -343,6 +344,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
         title="선택 삭제"
         message={`선택한 ${selectedIds.size}개 콘텐츠를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
         confirmText="삭제"
+        confirmButtonClass="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
       />
     </div>
   );

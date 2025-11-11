@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Filter, ExternalLink, Plus } from 'lucide-react';
+import { Search, Filter, ExternalLink, Plus, CheckSquare, Trash2, Trash } from 'lucide-react';
 import { Button, Card, Input, LoadingSpinner, ConfirmModal } from '@/components/ui';
 import { useToast } from '@/components/ui';
 import { ProductAPI } from '@/services/api/admin';
@@ -106,37 +106,59 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-bold">상품 관리</h2>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSelectedIds(prev => {
-                // 전체 선택/해제 토글
-                const allIds = new Set(filteredProducts.map(p => p.id));
-                const isAllSelected = filteredProducts.every(p => prev.has(p.id));
-                return isAllSelected ? new Set<string>() : allIds;
-              });
-            }}
-          >
-            전체 선택/해제
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-red-600 hover:text-red-700"
-            disabled={selectedIds.size === 0}
-            onClick={() => setBulkConfirmOpen(true)}
-          >
-            선택 삭제
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-red-600 hover:text-red-700"
-            onClick={() => setDeleteConfirmId('ALL')}
-          >
-            전체 삭제
-          </Button>
+          {/* 액션 툴바: 선택/삭제 관련 */}
+          <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-sm">
+            <Button
+              size="sm"
+              variant="soft"
+              color="gray"
+              className="gap-2"
+              onClick={() => {
+                setSelectedIds(prev => {
+                  // 전체 선택/해제 토글
+                  const allIds = new Set(filteredProducts.map(p => p.id));
+                  const isAllSelected = filteredProducts.every(p => prev.has(p.id));
+                  return isAllSelected ? new Set<string>() : allIds;
+                });
+              }}
+            >
+              <CheckSquare className="w-4 h-4" />
+              전체 선택/해제
+            </Button>
+            <Button
+              size="sm"
+              variant="soft"
+              color="error"
+              className="gap-2"
+              disabled={selectedIds.size === 0}
+              onClick={() => setBulkConfirmOpen(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              선택 삭제
+              {selectedIds.size > 0 && (
+                <span className="ml-1 rounded-full bg-red-100 text-red-700 text-[10px] leading-none px-1.5 py-1">
+                  {selectedIds.size}
+                </span>
+              )}
+            </Button>
+            <span className="w-px h-6 bg-gray-200 mx-0.5" />
+            <Button
+              size="sm"
+              variant="outline"
+              color="error"
+              className="gap-2"
+              disabled={filteredProducts.length === 0}
+              onClick={() => setDeleteConfirmId('ALL')}
+            >
+              <Trash className="w-4 h-4" />
+              전체 삭제
+            </Button>
+          </div>
+
+          {/* 주요 CTA: 상품 추가 */}
           <Button onClick={onCreateClick} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             상품 추가
@@ -344,6 +366,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
         title={deleteConfirmId === 'ALL' ? '전체 삭제' : '상품 삭제'}
         message={deleteConfirmId === 'ALL' ? '모든 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : '이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'}
         confirmText="삭제"
+        confirmButtonClass="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
         isLoading={deleteMutation.isPending}
       />
 
@@ -366,6 +389,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
         title="선택 삭제"
         message={`선택한 ${selectedIds.size}개 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
         confirmText="삭제"
+        confirmButtonClass="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
       />
     </div>
   );
