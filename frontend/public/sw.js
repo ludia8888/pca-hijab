@@ -1,11 +1,11 @@
 // Enhanced service worker for better caching
-const CACHE_VERSION = 'v3-2025-01-14';
+const CACHE_VERSION = 'v4-2025-11-11';
 const CACHE_NAME = `pca-hijab-${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
 // Don't force clear caches - only remove old versions
-const FORCE_CLEAR_OLD_CACHES = false;
+const FORCE_CLEAR_OLD_CACHES = true;
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Install');
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
   }
   
   // Determine caching strategy based on resource type
-  const isStaticAsset = url.pathname.includes('.js') || 
+  const isStaticAsset = (url.pathname.includes('.js') && !url.pathname.startsWith('/api/')) || 
                         url.pathname.includes('.css') ||
                         url.pathname.includes('.woff') ||
                         url.pathname.includes('.woff2') ||
