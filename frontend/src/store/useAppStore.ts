@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { PersonalColorResult, UserPreferences, ViewedProduct, SavedProduct } from '@/types';
 import { createInstagramSafeStorage, sessionRecoveryHelpers } from './instagramPersistence';
+// 게스트(비로그인) 시 '최근 본 상품'이 동작하지 않도록 상태 확인에 사용
+import { useAuthStore } from './useAuthStore';
 
 export interface AppActions {
   setInstagramId: (id: string) => void;
@@ -112,13 +114,20 @@ export const useAppStore = create<AppState & AppActions>()(
         viewedProducts: [],
         savedProducts: [],
         
-        addViewedProduct: (productId) => set((state) => {
-          // Remove if already exists to avoid duplicates
-          const filtered = state.viewedProducts.filter(p => p.productId !== productId);
-          // Add to beginning and limit to 10 items
-          const newViewed: ViewedProduct = { productId, viewedAt: new Date().toISOString() };
-          return { viewedProducts: [newViewed, ...filtered].slice(0, 10) };
-        }),
+        // 최근 본 상품 기록: 비로그인(게스트) 상태에서는 동작하지 않도록 차단
+        addViewedProduct: (productId) => {
+          const { isAuthenticated } = useAuthStore.getState();
+          if (!isAuthenticated) {
+            // 게스트는 기록하지 않음
+            return;
+          }
+          set((state) => {
+            // 중복 방지: 기존 항목 제거 후 맨 앞에 추가, 최대 10개 유지
+            const filtered = state.viewedProducts.filter(p => p.productId !== productId);
+            const newViewed: ViewedProduct = { productId, viewedAt: new Date().toISOString() };
+            return { viewedProducts: [newViewed, ...filtered].slice(0, 10) };
+          });
+        },
         
         toggleSavedProduct: (productId) => set((state) => {
           const exists = state.savedProducts.find(p => p.productId === productId);

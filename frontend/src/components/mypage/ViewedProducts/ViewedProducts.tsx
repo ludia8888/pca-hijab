@@ -6,19 +6,25 @@ import { ProductAPI } from '@/services/api';
 import { ProductCard } from '../ProductCard';
 import { ROUTES } from '@/utils/constants';
 import type { Product } from '@/types';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export const ViewedProducts = (): JSX.Element => {
   const navigate = useNavigate();
   const { viewedProducts, clearViewedProducts } = useAppStore();
+  const { isAuthenticated } = useAuthStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // 로그인 상태에서만 최근 본 상품 불러오기
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (viewedProducts?.length > 0) {
       loadProducts();
+    } else {
+      setProducts([]);
     }
-  }, [viewedProducts]);
+  }, [viewedProducts, isAuthenticated]);
   
   const loadProducts = async (): Promise<void> => {
     setLoading(true);
@@ -70,6 +76,30 @@ export const ViewedProducts = (): JSX.Element => {
     return date.toLocaleDateString('en-US');
   };
   
+  // 비로그인(게스트)인 경우, 섹션 비활성화 안내 노출
+  if (!isAuthenticated) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Clock className="w-5 h-5 text-blue-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Recently viewed</h2>
+        </div>
+        <p className="text-sm text-gray-600">
+          Please sign in to use the recently viewed feature.
+        </p>
+        <button
+          onClick={() => navigate('/login')}
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
+        >
+          Go to Sign In
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
