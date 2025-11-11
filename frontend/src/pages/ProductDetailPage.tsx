@@ -232,7 +232,7 @@ const ProductDetailPage = () => {
                 onClick={handleBuyNow}
                 icon={<ShoppingBag className="w-5 h-5" />}
               >
-                Shop on Shopee
+                Shop
               </Button>
               
               <Button
