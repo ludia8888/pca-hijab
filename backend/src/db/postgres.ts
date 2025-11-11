@@ -1199,14 +1199,13 @@ export class PostgresDatabase {
       console.error('[PostgreSQL] Failed to get column info:', e);
     }
     
-    // Use correct column names from the actual database
-    // Note: brand and name_ko are required by the database
+    // Use correct column names from our schema (see init-fixed.sql)
     const query = `
       INSERT INTO products (
-        id, name, brand, category, price, image_url, additional_images,
-        personal_colors, description, product_link, is_available
+        id, name, category, price, thumbnail_url, detail_image_urls,
+        personal_colors, description, shopee_link, is_active
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
     
@@ -1214,7 +1213,6 @@ export class PostgresDatabase {
       const result = await pool.query(query, [
         productId,
         data.name,
-        data.name,  // Use name as brand for now (brand is NOT NULL)
         data.category,
         data.price,
         data.thumbnailUrl,
@@ -1255,10 +1253,10 @@ export class PostgresDatabase {
 
     // Map our field names to actual database column names
     const fieldMapping: Record<string, string> = {
-      thumbnailUrl: 'image_url',
-      detailImageUrls: 'additional_images',
-      shopeeLink: 'product_link',
-      isActive: 'is_available'
+      thumbnailUrl: 'thumbnail_url',
+      detailImageUrls: 'detail_image_urls',
+      shopeeLink: 'shopee_link',
+      isActive: 'is_active'
     };
     
     Object.entries(updates).forEach(([key, value]) => {
