@@ -68,6 +68,9 @@ console.log('Constants module loaded:', {
   VITE_AI_API_URL: import.meta.env.VITE_AI_API_URL,
 });
 
+// Global landing URL to redirect after auth
+export const LANDING_URL = 'https://noorai-ashy.vercel.app';
+
 // File Upload
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const ACCEPTED_IMAGE_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic'];

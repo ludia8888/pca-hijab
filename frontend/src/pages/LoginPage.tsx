@@ -7,6 +7,7 @@ import { PageLayout } from '@/components/layout';
 import { Button, Input, Card, Text } from '@/components/ui';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
+import { LANDING_URL } from '@/utils/constants';
 
 interface LoginFormData {
   email: string;
@@ -28,14 +29,15 @@ const LoginPage = (): JSX.Element => {
 
   // Get redirect URL from location state or default to home page
   const locationState = location.state as { from?: { pathname?: string } } | null;
-  const from = locationState?.from?.pathname || '/';
+  const from = LANDING_URL; // 로그인 성공 시 무조건 외부 랜딩 URL로 이동
 
   // If already authenticated, redirect
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      // 인증 상태면 지정된 랜딩 URL로 강제 이동
+      window.location.assign(LANDING_URL);
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated]);
 
   // Track page visit
   useEffect(() => {
@@ -72,7 +74,8 @@ const LoginPage = (): JSX.Element => {
       });
 
       toast.success('Signed in successfully!');
-      navigate(from, { replace: true });
+      // 로그인 성공 후 무조건 지정된 랜딩 URL로 이동
+      window.location.assign(LANDING_URL);
     } catch (error: unknown) {
       trackEvent('login_failed', {
         email: data.email,

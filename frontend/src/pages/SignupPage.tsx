@@ -7,7 +7,7 @@ import { PageLayout } from '@/components/layout';
 import { Button, Input, Card, Text, ConfirmModal } from '@/components/ui';
 import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
-import { ROUTES } from '@/utils/constants';
+import { ROUTES, LANDING_URL } from '@/utils/constants';
 
 interface SignupFormData {
   fullName: string;
@@ -71,9 +71,10 @@ const SignupPage = (): JSX.Element => {
   // If already authenticated, redirect to landing page
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/landing', { replace: true });
+      // 인증 상태면 지정된 랜딩 URL로 강제 이동
+      window.location.assign(LANDING_URL);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated]);
 
   // Track page visit
   useEffect(() => {
@@ -110,7 +111,8 @@ const SignupPage = (): JSX.Element => {
       });
 
       toast.success('Sign-up complete! Please check your email.');
-      navigate('/landing');
+      // 회원가입 성공 후 무조건 지정된 랜딩 URL로 이동
+      window.location.assign(LANDING_URL);
     } catch (error: unknown) {
       trackEvent('signup_failed', {
         email: data.email,
