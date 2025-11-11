@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Package, Search, X, Filter, Crown } from 'lucide-react';
 import { ProductCard } from '@/components/products';
@@ -30,8 +30,7 @@ const ProductsCatalogPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedColors, setSelectedColors] = useState<PersonalColorType[]>([]);
-  const [showColorFilter, setShowColorFilter] = useState(false);
-  const colorFilterRef = useRef<HTMLDivElement>(null);
+  // Personal color filter is now presented as inline chips (no dropdown)
 
   // Tab options
   const tabs: { id: TabType; label: string; icon?: React.ReactNode }[] = [
@@ -49,19 +48,7 @@ const ProductsCatalogPage: React.FC = () => {
 
   const personalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
 
-  // Handle click outside to close color filter
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (colorFilterRef.current && !colorFilterRef.current.contains(event.target as Node)) {
-        setShowColorFilter(false);
-      }
-    };
-
-    if (showColorFilter) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showColorFilter]);
+  // No-op: dropdown removed
 
   // Fetch products
   const { data: products = [], isLoading, error } = useQuery({
@@ -207,45 +194,33 @@ const ProductsCatalogPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Color Filter Button */}
-              <div className="relative" ref={colorFilterRef}>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowColorFilter(!showColorFilter)}
-                  icon={<Filter className="w-4 h-4" />}
-                >
-                  Personal Color {selectedColors.length > 0 && `(${selectedColors.length})`}
-                </Button>
-
-                {/* Color Filter Dropdown */}
-                {showColorFilter && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-20">
-                    <Text variant="body-sm" weight="semibold" color="gray" mb="3">Personal Color</Text>
-                    <div className="space-y-2 mb-4">
-                      {personalColors.map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => handleColorToggle(color)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            selectedColors.includes(color)
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {PERSONAL_COLOR_LABELS[color]}
-                        </button>
-                      ))}
-                    </div>
-                    {selectedColors.length > 0 && (
-                      <button
-                        onClick={() => setSelectedColors([])}
-                        className="text-sm text-purple-600 hover:text-purple-700"
-                      >
-                        Clear filters
-                      </button>
-                    )}
-                  </div>
-                )}
+              {/* Personal Color Chips (inline, scrollable) */}
+              <div className="sm:min-w-[320px]">
+                <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                  <Filter className="w-4 h-4" />
+                  <span>Personal Color</span>
+                  {selectedColors.length > 0 && (
+                    <button
+                      onClick={() => setSelectedColors([])}
+                      className="ml-auto text-purple-600 hover:text-purple-700"
+                    >Clear</button>
+                  )}
+                </div>
+                <div className="flex overflow-x-auto whitespace-nowrap gap-2 pr-1">
+                  {personalColors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleColorToggle(color)}
+                      className={`flex-none px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        selectedColors.includes(color)
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {PERSONAL_COLOR_LABELS[color]}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
