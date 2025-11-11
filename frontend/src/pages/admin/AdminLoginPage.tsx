@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button, Input, Card } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { trackEvent, trackError, trackEngagement } from '@/utils/analytics';
 import { Lock } from 'lucide-react';
+import { AdminAPI } from '@/services/api/admin';
 
 const ADMIN_ROLES = ['admin', 'content_manager'];
 
@@ -23,11 +24,12 @@ const AdminLoginPage = (): JSX.Element => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const hasAdminRole =
-    isAuthenticated && user && ADMIN_ROLES.includes(user.role);
+  const hasAdminRole = isAuthenticated && user && ADMIN_ROLES.includes(user.role);
+  const navigatedRef = useRef(false);
 
   useEffect(() => {
-    if (hasAdminRole) {
+    if (hasAdminRole && !navigatedRef.current) {
+      navigatedRef.current = true;
       navigate('/admin/dashboard', { replace: true });
     } else if (isAuthenticated && user && !hasAdminRole) {
       setError('You do not have admin permissions.');
@@ -54,6 +56,8 @@ const AdminLoginPage = (): JSX.Element => {
 
     try {
       await adminLogin(email, password);
+      // Ensure server recognizes admin session (non-blocking)
+      try { await AdminAPI.verify(); } catch {}
       const currentUser = useAuthStore.getState().user;
 
       if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {
@@ -70,7 +74,7 @@ const AdminLoginPage = (): JSX.Element => {
         user_flow_step: 'admin_login_successful',
         role: currentUser.role
       });
-      navigate('/admin/dashboard');
+      // Redirect handled by effect to avoid double navigation
     } catch (err) {
       const message =
         err instanceof Error

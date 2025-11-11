@@ -5,30 +5,6 @@ import type { Product, ProductFormData, ImageUploadResponse, ProductCategory, Pe
 console.log('[Admin API] Module loading...');
 
 export const ProductAPI = {
-  // API Key verification
-  verify: async () => {
-    console.log('[Admin API] Verifying API key...');
-    const response = await apiClient.get('/admin/verify');
-    return response.data;
-  },
-
-  // Verify API key (for login)
-  verifyApiKey: async (apiKey: string) => {
-    console.log('[Admin API] Verifying API key for login...');
-    try {
-      const response = await apiClient.get('/admin/verify', {
-        headers: {
-          'x-api-key': apiKey
-        }
-      });
-      console.log('[Admin API] API key verification response:', response.data);
-      return response.data.success;
-    } catch (error) {
-      console.error('[Admin API] API key verification failed:', error);
-      return false;
-    }
-  },
-
   // Product management
   products: {
     // Get all products with optional filters
@@ -106,14 +82,10 @@ export const ProductAPI = {
   },
 
   // Recommendation methods (for backward compatibility)
-  getRecommendation: async (apiKey: string, id: string) => {
+  getRecommendation: async (id: string) => {
     console.log('[Admin API] Getting recommendation:', id);
     try {
-      const response = await apiClient.get(`/admin/recommendations/${id}`, {
-        headers: {
-          'x-api-key': apiKey
-        }
-      });
+      const response = await apiClient.get(`/admin/recommendations/${id}`);
       return response.data.data;
     } catch (error) {
       console.error('[Admin API] Failed to get recommendation:', error);
@@ -121,16 +93,11 @@ export const ProductAPI = {
     }
   },
 
-  updateRecommendationStatus: async (apiKey: string, id: string, status: 'pending' | 'processing' | 'completed') => {
+  updateRecommendationStatus: async (id: string, status: 'pending' | 'processing' | 'completed') => {
     console.log('[Admin API] Updating recommendation status:', id, status);
     try {
       const response = await apiClient.put(`/admin/recommendations/${id}/status`, 
-        { status },
-        {
-          headers: {
-            'x-api-key': apiKey
-          }
-        }
+        { status }
       );
       return response.data.data;
     } catch (error) {
@@ -204,6 +171,13 @@ export const ProductAPI = {
   getProducts: async () => {
     return ProductAPI.products.getAll();
   }
+};
+
+export const AdminAPI = {
+  verify: async (): Promise<{ success: boolean; data: { admin: unknown } }> => {
+    const response = await apiClient.get('/admin/verify');
+    return response.data;
+  },
 };
 
 // Log successful module load
