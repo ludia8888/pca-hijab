@@ -254,7 +254,8 @@ const ProductsCatalogPage: React.FC = () => {
         {/* Category Tabs */}
         <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex overflow-x-auto scrollbar-hide -mb-px">
+            {/* 모바일에서 탭 겹침 방지: 가로 스크롤 + 고정 폭 + 줄바꿈 금지 */}
+            <div className="flex overflow-x-auto whitespace-nowrap scrollbar-hide -mb-px gap-2 pr-2 py-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -267,7 +268,7 @@ const ProductsCatalogPage: React.FC = () => {
                       setActiveTab(tab.id);
                     }
                   }}
-                  className={`px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
+                  className={`flex-none min-w-[88px] px-4 py-3 text-sm leading-none font-medium border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
                     activeTab === tab.id
                       ? 'text-purple-600 border-purple-600'
                       : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
