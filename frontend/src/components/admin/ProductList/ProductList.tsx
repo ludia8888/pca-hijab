@@ -37,16 +37,16 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
       queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
       addToast({
         type: 'success',
-        title: 'Product deleted',
-        message: 'The product was removed successfully.'
+        title: '상품 삭제됨',
+        message: '상품이 성공적으로 삭제되었습니다.'
       });
       setDeleteConfirmId(null);
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: 'Deletion failed',
-        message: 'Something went wrong while deleting the product.'
+        title: '삭제 실패',
+        message: '상품 삭제 중 오류가 발생했습니다.'
       });
     }
   });
@@ -95,10 +95,10 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Product management</h2>
+        <h2 className="text-2xl font-bold">상품 관리</h2>
         <Button onClick={onCreateClick} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
-          Add product
+          상품 추가
         </Button>
       </div>
 
@@ -110,7 +110,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by product name..."
+              placeholder="상품명으로 검색..."
               className="pl-10"
             />
           </div>
@@ -121,7 +121,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
             className="flex items-center gap-2"
           >
             <Filter className="w-4 h-4" />
-            Filters
+            필터
           </Button>
         </div>
 
@@ -175,24 +175,20 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
             </div>
 
             <div className="flex justify-end">
-              <Button size="sm" variant="ghost" onClick={clearFilters}>
-                Reset filters
-              </Button>
+              <Button size="sm" variant="ghost" onClick={clearFilters}>필터 초기화</Button>
             </div>
           </div>
         )}
       </Card>
 
       {/* Product Count */}
-      <div className="text-sm text-gray-600">
-        Total {filteredProducts.length} products
-      </div>
+      <div className="text-sm text-gray-600">총 {filteredProducts.length}개 상품</div>
 
       {/* Product Grid */}
       {filteredProducts.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-gray-500 mb-4">No products have been added yet.</p>
-          <Button onClick={onCreateClick}>Add the first product</Button>
+          <p className="text-gray-500 mb-4">아직 추가된 상품이 없습니다.</p>
+          <Button onClick={onCreateClick}>첫 상품 추가</Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -207,7 +203,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                 />
                 {!product.isActive && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <span className="text-white font-medium">Inactive</span>
+                    <span className="text-white font-medium">비활성화</span>
                   </div>
                 )}
                 
@@ -224,14 +220,14 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                         className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-gray-50"
                       >
                         <Edit className="w-4 h-4" />
-                        Edit
+                        수정
                       </button>
                       <button
                         onClick={() => setDeleteConfirmId(product.id)}
                         className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-gray-50 text-red-600"
                       >
                         <Trash2 className="w-4 h-4" />
-                        Delete
+                        삭제
                       </button>
                     </div>
                   </div>
@@ -283,9 +279,9 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
         isOpen={!!deleteConfirmId}
         onClose={() => setDeleteConfirmId(null)}
         onConfirm={() => deleteConfirmId && deleteMutation.mutate(deleteConfirmId)}
-        title="Delete product"
-        message="Are you sure you want to delete this product? This action cannot be undone."
-        confirmText="Delete"
+        title="상품 삭제"
+        message="이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
         isLoading={deleteMutation.isPending}
       />
     </div>

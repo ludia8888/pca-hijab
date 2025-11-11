@@ -98,8 +98,8 @@ const AdminLoginPage = (): JSX.Element => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Access</h1>
-            <p className="text-gray-600 mt-2">Sign in with your admin account.</p>
+            <h1 className="text-2xl font-bold text-gray-900">관리자 로그인</h1>
+            <p className="text-gray-600 mt-2">관리자 계정으로 로그인하세요.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -133,14 +133,12 @@ const AdminLoginPage = (): JSX.Element => {
               disabled={!email || !password || isLoading}
               loading={isLoading}
             >
-              {isLoading ? 'Verifying...' : 'Sign in'}
+              {isLoading ? '확인 중...' : '로그인'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Need access? Contact your system administrator.
-            </p>
+            <p className="text-sm text-gray-500">접근 권한이 필요하신가요? 시스템 관리자에게 문의하세요.</p>
           </div>
         </Card>
       </div>

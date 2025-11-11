@@ -5,6 +5,7 @@ import { Button } from '@/components/ui';
 import { PageLayout } from '@/components/layout';
 import { ProductForm, ProductList, ContentForm, ContentList } from '@/components/admin';
 import { useAdminStore } from '@/store/useAdminStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import type { Product, Content } from '@/types/admin';
 
 type TabType = 'products' | 'contents';
@@ -12,15 +13,17 @@ type ViewMode = 'list' | 'create' | 'edit';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { logout } = useAdminStore();
+  const { clearProductState } = useAdminStore();
+  const logout = useAuthStore((state) => state.logout);
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/'); // Go to home instead of login page
+  const handleLogout = async () => {
+    await logout();
+    clearProductState();
+    navigate('/');
   };
 
   const handleCreateClick = () => {
@@ -60,7 +63,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center">
                 <Package className="w-8 h-8 text-purple-600 mr-3" />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">mynoor ai Admin</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
                   <p className="text-sm text-gray-500">Product & Content Management</p>
                 </div>
               </div>
