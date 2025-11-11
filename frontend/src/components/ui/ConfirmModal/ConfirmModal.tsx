@@ -9,6 +9,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   type = 'danger',
   title,
   message,
+  extra,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   confirmButtonClass,
@@ -119,6 +120,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   {message}
                 </p>
               </div>
+              {extra ? (
+                <div className="mt-4">
+                  {extra}
+                </div>
+              ) : null}
             </div>
 
             {/* Actions */}

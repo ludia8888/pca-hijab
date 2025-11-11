@@ -329,6 +329,19 @@ const SignupPage = (): JSX.Element => {
         message={
           'An account with this email already exists. Please sign in instead.'
         }
+        extra={
+          <div className="text-sm text-gray-600">
+            Forgot your password?{' '}
+            <Link
+              to="/forgot-password"
+              className="text-primary-600 hover:text-primary-700 hover:underline"
+              onClick={() => setShowAccountExistsModal(false)}
+            >
+              Reset it here
+            </Link>
+            .
+          </div>
+        }
         confirmText="Go to Login"
         cancelText="Close"
         onConfirm={() => {
