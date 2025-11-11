@@ -56,25 +56,13 @@ const AdminLoginPage = (): JSX.Element => {
 
     try {
       await adminLogin(email, password);
-      // Ensure server recognizes admin session (non-blocking)
-      try { await AdminAPI.verify(); } catch {}
-      const currentUser = useAuthStore.getState().user;
-
-      if (!currentUser || !ADMIN_ROLES.includes(currentUser.role)) {
-        trackEvent('admin_login_failed', {
-          failure_reason: 'insufficient_role',
-          email
-        });
-        await logout();
-        setError('This account does not have admin permissions.');
-        return;
-      }
-
+      // Navigate immediately after successful login to avoid flicker/loops
+      navigatedRef.current = true;
+      navigate('/admin/dashboard', { replace: true });
       trackEvent('admin_login_success', {
         user_flow_step: 'admin_login_successful',
-        role: currentUser.role
+        role: useAuthStore.getState().user?.role || 'unknown'
       });
-      // Redirect handled by effect to avoid double navigation
     } catch (err) {
       const message =
         err instanceof Error
