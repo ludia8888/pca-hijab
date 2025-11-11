@@ -134,6 +134,8 @@ export class PostgresDatabase {
   private schemaChecks = {
     verificationTokenExpiry: false,
     refreshTokenIdDefault: false,
+    userRoleColumn: false,
+    userLastLoginAtColumn: false,
   };
   // Test database connection
   async testConnection(): Promise<boolean> {
@@ -652,7 +654,9 @@ export class PostgresDatabase {
 
   // User methods
   async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+    // Ensure required user columns exist in case the database predates recent schema
     await this.ensureVerificationTokenExpiryColumn();
+    await this.ensureUserRoleAndLastLoginColumns();
 
     const query = `
       INSERT INTO users (
@@ -726,6 +730,7 @@ export class PostgresDatabase {
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
     await this.ensureVerificationTokenExpiryColumn();
+    await this.ensureUserRoleAndLastLoginColumns();
 
     const updateFields: string[] = [];
     const values: unknown[] = [];
@@ -1363,6 +1368,56 @@ export class PostgresDatabase {
     }
 
     this.schemaChecks.refreshTokenIdDefault = true;
+  }
+
+  // Ensure `users.role` and `users.last_login_at` columns exist
+  private async ensureUserRoleAndLastLoginColumns(): Promise<void> {
+    // role column
+    if (!this.schemaChecks.userRoleColumn) {
+      const roleCheck = await pool.query<{ exists: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1
+           FROM information_schema.columns
+           WHERE table_name = 'users'
+             AND column_name = 'role'
+         ) AS exists`
+      );
+      const hasRole = roleCheck.rows[0]?.exists === true;
+      if (!hasRole) {
+        console.warn('⚠️ [Database] users.role column missing. Applying runtime migration.');
+        await pool.query(`
+          ALTER TABLE users
+          ADD COLUMN IF NOT EXISTS role VARCHAR(32) NOT NULL DEFAULT 'user'
+        `);
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)
+        `);
+        console.info('✅ [Database] users.role column added');
+      }
+      this.schemaChecks.userRoleColumn = true;
+    }
+
+    // last_login_at column
+    if (!this.schemaChecks.userLastLoginAtColumn) {
+      const lastLoginCheck = await pool.query<{ exists: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1
+           FROM information_schema.columns
+           WHERE table_name = 'users'
+             AND column_name = 'last_login_at'
+         ) AS exists`
+      );
+      const hasLastLogin = lastLoginCheck.rows[0]?.exists === true;
+      if (!hasLastLogin) {
+        console.warn('⚠️ [Database] users.last_login_at column missing. Applying runtime migration.');
+        await pool.query(`
+          ALTER TABLE users
+          ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ
+        `);
+        console.info('✅ [Database] users.last_login_at column added');
+      }
+      this.schemaChecks.userLastLoginAtColumn = true;
+    }
   }
 }
 
