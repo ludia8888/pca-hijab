@@ -13,6 +13,10 @@ import App from './App.tsx'
 
 console.log('[MAIN] Imports complete');
 
+// 경로 플래그를 최상단에서 먼저 선언하여 TDZ(Temporal Dead Zone) 회피
+// - 아래에서 Service Worker 등록 조건 등에서 사용되므로 선행 선언 필수
+const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
 // Setup chunk error handler
 setupChunkErrorHandler();
 
@@ -41,8 +45,6 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('[MAIN] Unhandled promise rejection:', event.reason);
 });
 
-
-const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
 // On admin routes, aggressively disable Service Worker/caches to avoid stale bundles
 if (isAdminRoute && 'serviceWorker' in navigator) {
