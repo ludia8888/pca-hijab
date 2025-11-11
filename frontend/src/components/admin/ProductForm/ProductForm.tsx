@@ -20,10 +20,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
   const queryClient = useQueryClient();
   const { setUploadingImages, setUploadProgress } = useAdminStore();
   
-  // Format price in Malaysian Ringgit (MYR) using Intl.NumberFormat
-  const currencyFormatter = new Intl.NumberFormat('en-MY', {
+  // Format price in Indonesian Rupiah (IDR) using Intl.NumberFormat
+  const currencyFormatter = new Intl.NumberFormat('id-ID', {
     style: 'currency',
-    currency: 'MYR',
+    currency: 'IDR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
@@ -233,7 +233,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
                     setDisplayPrice(formatPrice(price));
                   }}
                   onBlur={() => setDisplayPrice(formatPrice(formData.price))}
-                  placeholder="RM 0"
+                  placeholder="Rp 0"
                   required
                 />
               </div>

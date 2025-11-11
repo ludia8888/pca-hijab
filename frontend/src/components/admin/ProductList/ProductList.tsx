@@ -295,7 +295,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
 
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-purple-600">
-                    RM {product.price.toLocaleString('en-MY')}
+                    Rp {product.price.toLocaleString('id-ID')}
                   </span>
                   {product.shopeeLink && (
                     <a
