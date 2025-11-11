@@ -6,6 +6,7 @@ import { Button, LoadingSpinner } from '@/components/ui';
 import { ArrowLeft, Calendar, Eye, Clock, Share2 } from 'lucide-react';
 import type { Content } from '@/types';
 import DOMPurify from 'dompurify';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const ContentDetailPage = (): JSX.Element => {
   const { slug } = useParams<{ slug: string }>();
@@ -173,7 +174,7 @@ const ContentDetailPage = (): JSX.Element => {
         {content.thumbnailUrl && (
           <div className="mb-8 rounded-lg overflow-hidden">
             <img
-              src={content.thumbnailUrl}
+              src={getImageUrl(content.thumbnailUrl)}
               alt={content.title}
               className="w-full h-auto object-cover"
             />
@@ -219,7 +220,7 @@ const ContentDetailPage = (): JSX.Element => {
                     {related.thumbnailUrl && (
                       <div className="w-24 h-24 flex-shrink-0">
                         <img
-                          src={related.thumbnailUrl}
+                          src={getImageUrl(related.thumbnailUrl)}
                           alt={related.title}
                           className="w-full h-full object-cover rounded"
                         />

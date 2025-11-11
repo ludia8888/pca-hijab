@@ -5,6 +5,7 @@ import { Heart, ShoppingBag } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Product } from '@/types';
+import { getImageUrl } from '@/utils/imageUrl';
 
 interface ProductCardProps {
   product: Product;
@@ -78,7 +79,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
           </div>
         ) : (
           <img
-            src={product.thumbnailUrl}
+            src={getImageUrl(product.thumbnailUrl)}
             alt={product.name}
             className="w-full h-full object-cover"
             onError={() => setImageError(true)}
