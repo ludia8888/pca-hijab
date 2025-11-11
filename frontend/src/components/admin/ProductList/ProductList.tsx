@@ -243,29 +243,25 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
-                {/* Selection checkbox */}
-                <label className="absolute top-2 left-2 bg-white/90 rounded-md px-2 py-1 text-xs cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(product.id)}
-                    onChange={() => toggleSelect(product.id)}
-                    className="mr-1 align-middle"
-                  />
-                  선택
-                </label>
-                {!product.isActive && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <span className="text-white font-medium">비활성화</span>
-                  </div>
-                )}
-                
-                {/* Action Menu */}
-                <div className="absolute top-2 right-2">
-                  <div className="relative group">
+
+                {/* Top overlay: 좌측 선택 체크박스, 우측 더보기 메뉴 - 겹침 방지 */}
+                <div className="absolute inset-x-0 top-0 p-2 flex items-start justify-between z-10 pointer-events-none">
+                  {/* Selection checkbox */}
+                  <label className="bg-white/90 rounded-md px-2 py-1 text-xs cursor-pointer select-none shadow-sm pointer-events-auto">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(product.id)}
+                      onChange={() => toggleSelect(product.id)}
+                      className="mr-1 align-middle"
+                    />
+                    선택
+                  </label>
+
+                  {/* Action Menu */}
+                  <div className="relative group pointer-events-auto">
                     <button className="p-2 bg-white rounded-full shadow-md hover:shadow-lg">
                       <MoreVertical className="w-4 h-4" />
                     </button>
-                    
                     <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                       <button
                         onClick={() => onEditClick(product)}
@@ -284,6 +280,12 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                     </div>
                   </div>
                 </div>
+
+                {!product.isActive && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-0">
+                    <span className="text-white font-medium">비활성화</span>
+                  </div>
+                )}
               </div>
 
               {/* Product Info */}
