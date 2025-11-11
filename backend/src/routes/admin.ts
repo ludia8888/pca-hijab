@@ -184,6 +184,12 @@ router.post('/products', async (req, res, next) => {
       console.error('[Admin API] Invalid price:', price, 'converted to:', numPrice);
       throw new AppError(400, 'Price must be a positive number');
     }
+    // PostgreSQL integer upper bound safeguard
+    const MAX_INT = 2147483647;
+    if (numPrice > MAX_INT) {
+      console.error('[Admin API] Price out of range (max int):', numPrice);
+      throw new AppError(400, `Price too large. Max allowed is ${MAX_INT}`);
+    }
     
     const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
     if (!validCategories.includes(category)) {
@@ -279,6 +285,17 @@ router.put('/products/:id', async (req, res, next) => {
     
     if (!product) {
       throw new AppError(404, 'Product not found');
+    }
+    // Validate price if provided
+    if (updates.price !== undefined) {
+      const up = Number(updates.price);
+      if (isNaN(up) || up <= 0) {
+        throw new AppError(400, 'Price must be a positive number');
+      }
+      const MAX_INT = 2147483647;
+      if (up > MAX_INT) {
+        throw new AppError(400, `Price too large. Max allowed is ${MAX_INT}`);
+      }
     }
 
     auditAdmin(req, 'product_update', {

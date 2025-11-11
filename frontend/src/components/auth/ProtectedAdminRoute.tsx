@@ -71,6 +71,7 @@ export const ProtectedAdminRoute = (): JSX.Element => {
             } as any);
           }
         })
+        .catch(() => { /* ignore */ })
         .finally(() => setChecking(false));
     }
   }, [isAuthenticated, isAdminUser, checking, setUser]);

@@ -228,7 +228,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
                   value={displayPrice}
                   onChange={(e) => {
                     const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                    const price = numericValue ? Number(numericValue) : 0;
+                    let price = numericValue ? Number(numericValue) : 0;
+                    const MAX_INT = 2147483647;
+                    if (price > MAX_INT) {
+                      price = MAX_INT;
+                      addToast({ type: 'warning', title: '가격이 너무 큽니다', message: `최대 허용값은 ${MAX_INT.toLocaleString('id-ID')} 입니다.` });
+                    }
                     setFormData(prev => ({ ...prev, price }));
                     setDisplayPrice(formatPrice(price));
                   }}
