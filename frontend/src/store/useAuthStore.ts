@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthAPI } from '@/services/api/auth';
 import { apiClient } from '@/services/api/client';
-import { apiClient } from '@/services/api/client';
 import { secureError } from '@/utils/secureLogging';
 
 type ApiErrorResponse = {

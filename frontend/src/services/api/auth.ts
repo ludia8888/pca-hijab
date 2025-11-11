@@ -134,14 +134,7 @@ export const AuthAPI = {
     return response.data;
   },
 
-  // Admin login (ENV-seeded credentials)
-  adminLogin: async (email: string, password: string): Promise<UserResponse> => {
-    const response = await apiClient.post<UserResponse>('/auth/admin-login', {
-      email: sanitizeEmail(email),
-      password
-    });
-    return response.data;
-  },
+  // (removed) duplicate adminLogin
 
   // Account reminder (username lookup)
   remindAccount: async (email: string): Promise<{ success: boolean; message: string }> => {

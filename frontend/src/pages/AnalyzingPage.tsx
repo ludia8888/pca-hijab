@@ -507,9 +507,8 @@ const AnalyzingPage = (): JSX.Element => {
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden" 
          style={{ 
-           width: '100vw',
-           height: '100vh',
-           height: '100dvh',
+            width: '100vw',
+            height: '100dvh',
            touchAction: 'none',
            overscrollBehavior: 'none',
            WebkitOverflowScrolling: 'touch',

@@ -153,9 +153,8 @@ const DontWorry: React.FC = () => {
     <main 
       className="fixed inset-0 w-screen h-screen overflow-hidden bg-white"
       style={{
-        width: '100vw',
-        height: '100vh',
-        height: '100dvh',
+          width: '100vw',
+          height: '100dvh',
         backgroundImage: `url(${backgroundImage_1x})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
