@@ -52,26 +52,27 @@ export const ProtectedAdminRoute = (): JSX.Element => {
     );
   }
 
-  // If authenticated but store lacks admin info, verify with server-side session
-  if (isAuthenticated && !isAdminUser && !checking) {
-    setChecking(true);
-    void AdminAPI.verify()
-      .then((res) => {
-        // If server confirms admin session, set minimal user to unlock route
-        if (res?.success && res?.data?.admin) {
-          const admin = res.data.admin as any;
-          setUser({
-            id: admin.userId ?? 'admin',
-            email: admin.email ?? 'admin@local',
-            fullName: 'Admin',
-            emailVerified: true,
-            role: admin.role ?? 'admin',
-            createdAt: new Date(),
-          } as any);
-        }
-      })
-      .finally(() => setChecking(false));
-  }
+  // If authenticated but store lacks admin info, verify with server-side session (effect to prevent repeated calls)
+  useEffect(() => {
+    if (isAuthenticated && !isAdminUser && !checking) {
+      setChecking(true);
+      void AdminAPI.verify()
+        .then((res) => {
+          if (res?.success && res?.data?.admin) {
+            const admin = res.data.admin as any;
+            setUser({
+              id: admin.userId ?? 'admin',
+              email: admin.email ?? 'admin@local',
+              fullName: 'Admin',
+              emailVerified: true,
+              role: admin.role ?? 'admin',
+              createdAt: new Date(),
+            } as any);
+          }
+        })
+        .finally(() => setChecking(false));
+    }
+  }, [isAuthenticated, isAdminUser, checking, setUser]);
 
   if (!isAdminUser) {
     // While checking, keep spinner to avoid flicker
