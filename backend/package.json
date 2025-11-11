@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "npm install --production=false && tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src",
@@ -16,7 +16,6 @@
     "security:check": "npm run audit:high && npm run lint && npm run typecheck",
     "security:report": "npm audit --json > security-audit-report.json && echo 'Security audit report saved to security-audit-report.json'",
     "seed": "ts-node src/scripts/seedMockData.ts",
-    "seed:via-api": "ts-node src/scripts/seed-via-api.ts",
     "seed:direct": "ts-node src/scripts/seed-products.ts && ts-node src/scripts/seed-contents.ts"
   },
   "keywords": [],
