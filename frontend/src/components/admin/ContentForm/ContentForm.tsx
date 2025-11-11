@@ -246,9 +246,8 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
                   label="URL slug"
                   value={formData.slug}
                   onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                  placeholder="url-friendly-slug"
-                  helperText="Used for the URL. Letters, numbers, and hyphens only."
-                  required
+                  placeholder="url-friendly-slug (optional; auto-generated from title)"
+                  helperText="If empty, it will be generated from the title."
                   fullWidth
                 />
               </div>

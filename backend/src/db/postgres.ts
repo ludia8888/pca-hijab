@@ -1463,10 +1463,10 @@ export class PostgresDatabase {
   }
 
   async updateContentStatus(contentId: string, status: ContentStatus): Promise<Content | undefined> {
+    // Use conservative update for broader DB compatibility (no published_at dependency)
     const query = `
       UPDATE contents 
-      SET status = $1, updated_at = NOW(), 
-          published_at = CASE WHEN $1 = 'published' AND published_at IS NULL THEN NOW() ELSE published_at END
+      SET status = $1, updated_at = NOW()
       WHERE id = $2
       RETURNING *
     `;

@@ -531,9 +531,19 @@ router.post('/contents', async (req, res, next) => {
     } = req.body;
     
     // Validation
-    if (!title || !slug || !thumbnailUrl || !content || !category) {
+    if (!title || !thumbnailUrl || !content || !category) {
       throw new AppError(400, 'Missing required fields');
     }
+
+    // Generate slug if missing/empty - basic normalization from title
+    const normalizedSlug = (slug && String(slug).trim().length > 0)
+      ? String(slug).trim()
+      : String(title)
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
     
     const validCategories: ContentCategory[] = ['beauty_tips', 'hijab_styling', 'color_guide', 'trend', 'tutorial'];
     if (!validCategories.includes(category)) {
@@ -551,7 +561,7 @@ router.post('/contents', async (req, res, next) => {
     const newContent = await db.createContent({
       title,
       subtitle,
-      slug,
+      slug: normalizedSlug,
       thumbnailUrl,
       content,
       excerpt,
