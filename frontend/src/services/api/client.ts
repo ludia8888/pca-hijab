@@ -40,6 +40,17 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Enable sending cookies
 });
 
+// Persisted admin access token support (for 3rd-party cookie blocked environments)
+try {
+  if (typeof window !== 'undefined') {
+    const savedAdminToken = localStorage.getItem('adminAccessToken');
+    if (savedAdminToken) {
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedAdminToken}`;
+      console.log('[API Client] Restored admin Authorization header from storage');
+    }
+  }
+} catch {}
+
 // Request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
