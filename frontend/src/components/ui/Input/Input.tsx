@@ -10,6 +10,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       helperText,
       size = 'md',
       fullWidth = false,
+      // 좌/우 아이콘(버튼 포함) 지원 - 하위 호환을 위해 prefix/suffix도 유지
+      leftIcon,
+      rightIcon,
       prefix,
       suffix,
       className,
@@ -23,6 +26,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const errorId = `${inputId}-error`;
     const helperId = `${inputId}-helper`;
 
+    // 좌/우 컨텐츠 병합 (leftIcon/rightIcon 우선, 없으면 prefix/suffix 사용)
+    const left = leftIcon ?? prefix;
+    const right = rightIcon ?? suffix;
+
     // Base styles
     const containerStyles = cn('relative', fullWidth && 'w-full');
 
@@ -34,9 +41,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       {
         'border-gray-300': !error,
         'border-error': error,
-        'pl-10': prefix,
-        'pr-10': suffix,
-        'px-3': !prefix && !suffix,
+        'pl-10': !!left,
+        'pr-10': !!right,
+        'px-3': !left && !right,
       },
     );
 
@@ -60,9 +67,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
 
         <div className="relative">
-          {prefix && (
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-              {prefix}
+          {/* 좌측 아이콘/버튼 래퍼 - 포커스 방해를 피하기 위해 absolute 위치 */}
+          {left && (
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+              {left}
             </span>
           )}
 
@@ -77,9 +85,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
-          {suffix && (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-              {suffix}
+          {/* 우측 아이콘/버튼 래퍼 - 비밀번호 보기 토글 등의 클릭을 지원 */}
+          {right && (
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+              {right}
             </span>
           )}
         </div>
