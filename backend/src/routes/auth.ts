@@ -471,7 +471,11 @@ router.post('/admin-login', loginLimiter, csrfProtection, loginValidation, handl
     res.json({
       success: true,
       message: 'Admin login successful',
-      data: { user: sanitizeUser(adminUser) }
+      data: { 
+        user: sanitizeUser(adminUser),
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken
+      }
     });
   } catch (error) {
     next(error);

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthAPI } from '@/services/api/auth';
+import { apiClient } from '@/services/api/client';
 import { secureError } from '@/utils/secureLogging';
 
 type ApiErrorResponse = {
@@ -105,7 +106,12 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await AuthAPI.adminLogin(email, password);
-          const { user } = response.data;
+          const { user, accessToken } = response.data;
+
+          // Attach Bearer token header for admin session (handles 3rd-party cookie blocking)
+          if (accessToken) {
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          }
 
           set({
             user,
@@ -157,6 +163,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           secureError('Logout error:', error);
         } finally {
+          try { delete apiClient.defaults.headers.common['Authorization']; } catch {}
           set({
             user: null,
             isAuthenticated: false,

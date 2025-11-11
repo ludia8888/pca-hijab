@@ -94,6 +94,15 @@ export const AuthAPI = {
     return response.data;
   },
 
+  // Admin login (ENV-based)
+  adminLogin: async (email: string, password: string): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/admin-login', {
+      email: sanitizeEmail(email),
+      password
+    });
+    return response.data;
+  },
+
   // Refresh access token
   refreshToken: async (): Promise<RefreshTokenResponse> => {
     const response = await apiClient.post<RefreshTokenResponse>('/auth/refresh');
