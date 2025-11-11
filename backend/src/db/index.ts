@@ -9,6 +9,14 @@ class InMemoryDatabase {
   private refreshTokens: Map<string, RefreshToken> = new Map();
   private products: Map<string, Product> = new Map();
   private contents: Map<string, Content> = new Map();
+  private adminActions: Array<{
+    id: string;
+    sessionId: string | null;
+    actionType: string;
+    actionDetails: unknown;
+    performedBy: string;
+    performedAt: Date;
+  }> = [];
 
   // Sessions
   async createSession(instagramId: string | null, userId?: string): Promise<Session> {
@@ -253,6 +261,30 @@ class InMemoryDatabase {
     return undefined;
   }
 
+  async addAdminAction(
+    sessionId: string | null,
+    actionType: string,
+    actionDetails: unknown,
+    performedBy: string = 'admin'
+  ): Promise<boolean> {
+    this.adminActions.unshift({
+      id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      sessionId,
+      actionType,
+      actionDetails,
+      performedBy,
+      performedAt: new Date()
+    });
+    return true;
+  }
+
+  async getAdminActions(sessionId?: string): Promise<unknown[]> {
+    if (!sessionId) {
+      return [...this.adminActions];
+    }
+    return this.adminActions.filter(action => action.sessionId === sessionId);
+  }
+
   // User methods - STUBBED for auth bypass
   async createUser(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     // Prevent duplicate emails (mimic DB unique constraint)
@@ -273,6 +305,8 @@ class InMemoryDatabase {
       verificationTokenExpires: data.verificationTokenExpires,
       resetPasswordToken: data.resetPasswordToken,
       resetPasswordExpires: data.resetPasswordExpires,
+      role: data.role ?? 'user',
+      lastLoginAt: data.lastLoginAt,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -312,6 +346,8 @@ class InMemoryDatabase {
       verificationTokenExpires: updates.verificationTokenExpires ?? existing.verificationTokenExpires,
       resetPasswordToken: updates.resetPasswordToken ?? existing.resetPasswordToken,
       resetPasswordExpires: updates.resetPasswordExpires ?? existing.resetPasswordExpires,
+      lastLoginAt: updates.lastLoginAt ?? existing.lastLoginAt,
+      role: updates.role ?? existing.role,
       updatedAt: new Date()
     };
     
@@ -507,6 +543,13 @@ interface Database {
   deleteContent?(contentId: string): Promise<boolean>;
   getAllContents?(filters?: { category?: ContentCategory; status?: ContentStatus }): Promise<Content[]>;
   updateContentStatus?(contentId: string, status: ContentStatus): Promise<Content | undefined>;
+  addAdminAction?(
+    sessionId: string | null,
+    actionType: string,
+    actionDetails: unknown,
+    performedBy?: string
+  ): Promise<boolean>;
+  getAdminActions?(sessionId?: string): Promise<unknown[]>;
 }
 
 // Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory
