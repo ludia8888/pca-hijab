@@ -5,6 +5,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 // Load environment variables FIRST before any other imports
 dotenv.config();
@@ -185,8 +186,26 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files for uploaded images
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Serve static files for uploaded images (robust path resolution)
+// In some deploys the process CWD is repo root, in others it's backend/dist
+// Try multiple candidates and use the first existing directory.
+const uploadDirCandidates = [
+  path.join(process.cwd(), 'uploads'), // repoRoot/uploads
+  path.join(process.cwd(), 'backend', 'uploads'), // repoRoot/backend/uploads
+  path.join(__dirname, '../uploads'), // backend/dist -> backend/uploads
+  path.join(__dirname, '../../uploads'), // backend/dist -> uploads
+];
+
+const resolvedUploadsDir = uploadDirCandidates.find((p) => {
+  try { return fs.existsSync(p); } catch { return false; }
+});
+
+if (resolvedUploadsDir) {
+  console.info('[Static] Serving uploads from:', resolvedUploadsDir);
+  app.use('/uploads', express.static(resolvedUploadsDir));
+} else {
+  console.warn('[Static] uploads directory not found in any candidate path:', uploadDirCandidates);
+}
 
 // Handle preflight requests for all routes
 app.options('*', (req: Request, res: Response) => {

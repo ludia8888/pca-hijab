@@ -38,7 +38,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
   const handleSaveToggle = (e: React.MouseEvent): void => {
     e.stopPropagation(); // Prevent card click
     if (!isAuthenticated) {
-      addToast({ type: 'error', title: '로그인이 필요합니다', message: '저장 기능은 로그인 후 이용 가능합니다.' });
+      addToast({ type: 'error', title: 'Sign-in required', message: 'Please sign in to use the save feature.' });
       navigate('/login');
       return;
     }

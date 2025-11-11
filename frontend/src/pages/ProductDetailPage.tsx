@@ -66,7 +66,7 @@ const ProductDetailPage = () => {
 
   const handleSave = () => {
     if (!isAuthenticated) {
-      addToast({ type: 'error', title: '로그인이 필요합니다', message: '저장 기능은 로그인 후 이용 가능합니다.' });
+      addToast({ type: 'error', title: 'Sign-in required', message: 'Please sign in to save products.' });
       navigate('/login');
       return;
     }

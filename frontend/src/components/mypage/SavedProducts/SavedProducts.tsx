@@ -102,12 +102,12 @@ export const SavedProducts = (): JSX.Element => {
       
       {!isAuthenticated ? (
         <div className="py-10 text-center">
-          <p className="text-gray-600 mb-3">로그인 후 저장한 상품을 볼 수 있습니다.</p>
+          <p className="text-gray-600 mb-3">Sign in to view your saved products.</p>
           <button
             onClick={() => navigate('/login')}
             className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
           >
-            로그인 하러가기
+            Sign in
           </button>
         </div>
       ) : loading ? (
