@@ -56,6 +56,8 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  // 관리자 전용 로그인 플래그: /admin 접근은 반드시 admin 로그인 화면을 거쳐야 함
+  isAdminSession: boolean;
   isLoading: boolean;
   error: string | null;
 
@@ -66,6 +68,7 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   setUser: (user: User | null) => void;
+  setAdminSession: (value: boolean) => void;
   clearError: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -75,6 +78,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false, // Start as not authenticated
+      isAdminSession: false,
       isLoading: false,
       error: null,
 
@@ -87,6 +91,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             user,
             isAuthenticated: true,
+            isAdminSession: false, // 일반 로그인은 관리자 세션 아님
             isLoading: false,
             error: null
           });
@@ -134,6 +139,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             user,
             isAuthenticated: true,
+            isAdminSession: true, // 관리자 전용 로그인 통과 플래그
             isLoading: false,
             error: null
           });
@@ -201,6 +207,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             user: null,
             isAuthenticated: false,
+            isAdminSession: false,
             error: null
           });
         }
@@ -221,6 +228,9 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user: User | null) => {
         set({ user, isAuthenticated: !!user });
+      },
+      setAdminSession: (value: boolean) => {
+        set({ isAdminSession: value });
       },
 
       clearError: () => {
@@ -269,6 +279,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         // Only persist minimal data - tokens are in HttpOnly cookies
         isAuthenticated: state.isAuthenticated
+        // isAdminSession은 보안상 세션 스코프로만 사용 (persist하지 않음)
       })
     }
   )

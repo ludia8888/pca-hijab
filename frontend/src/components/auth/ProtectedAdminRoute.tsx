@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AdminLoadingState } from '@/components/admin';
-import { AdminAPI } from '@/services/api/admin';
 
 const getPersistHelpers = () => {
   const persist = useAuthStore.persist;
@@ -18,6 +17,7 @@ export const ProtectedAdminRoute = (): JSX.Element => {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setUser = useAuthStore((state) => state.setUser);
+  const isAdminSession = useAuthStore((state) => state.isAdminSession);
   const [{ hydrated }, setHydrationState] = useState(() => ({
     hydrated: getPersistHelpers().hasHydrated,
   }));
@@ -53,32 +53,18 @@ export const ProtectedAdminRoute = (): JSX.Element => {
     );
   }
 
-  // If authenticated but store lacks admin info, verify with server-side session (effect to prevent repeated calls)
+  // 관리자 접근은 반드시 admin 로그인 화면을 통해 진입해야 함
+  // 일반 로그인 상태에서 URL로 직접 접근 시에도 /admin/login으로 강제 이동
   useEffect(() => {
-    if (isAuthenticated && !isAdminUser && !checking) {
-      setChecking(true);
-      void AdminAPI.verify()
-        .then((res) => {
-          if (res?.success && res?.data?.admin) {
-            const admin = res.data.admin as any;
-            setUser({
-              id: admin.userId ?? 'admin',
-              email: admin.email ?? 'admin@local',
-              fullName: 'Admin',
-              emailVerified: true,
-              role: admin.role ?? 'admin',
-              createdAt: new Date(),
-            } as any);
-          }
-        })
-        .catch(() => { /* ignore */ })
-        .finally(() => setChecking(false));
+    if (!isAdminSession) {
+      setChecking(false);
     }
-  }, [isAuthenticated, isAdminUser, checking, setUser]);
+  }, [isAdminSession]);
 
-  if (!isAdminUser) {
+  // 관리자 권한 + 관리자 전용 세션 플래그가 모두 필요
+  if (!(isAdminUser && isAdminSession)) {
     // While checking, keep spinner to avoid flicker
-    if (checking) {
+    if (checking && hydrated) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50">
           <AdminLoadingState />
