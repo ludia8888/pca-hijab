@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthAPI } from '@/services/api/auth';
+import { UserAPI } from '@/services/api/user';
+import { useAppStore } from '@/store';
 import { apiClient } from '@/services/api/client';
 import { secureError } from '@/utils/secureLogging';
 
@@ -88,6 +90,21 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null
           });
+
+          // After login, merge local saved/viewed with server and refresh from server
+          try {
+            const app = useAppStore.getState();
+            await UserAPI.mergeSavedProducts(app.savedProducts || []);
+            await UserAPI.mergeViewedProducts(app.viewedProducts || []);
+            const [serverSaved, serverViewed] = await Promise.all([
+              UserAPI.getSavedProducts(),
+              UserAPI.getViewedProducts()
+            ]);
+            app.setSavedProducts(serverSaved);
+            app.setViewedProducts(serverViewed);
+          } catch (e) {
+            console.warn('Post-login sync failed:', e);
+          }
         } catch (error: unknown) {
           const message = resolveErrorMessage(error, 'Login failed', {
             401: 'The email or password you entered is incorrect. Please try again.'
@@ -120,6 +137,21 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null
           });
+
+          // Post-login sync for admin as well
+          try {
+            const app = useAppStore.getState();
+            await UserAPI.mergeSavedProducts(app.savedProducts || []);
+            await UserAPI.mergeViewedProducts(app.viewedProducts || []);
+            const [serverSaved, serverViewed] = await Promise.all([
+              UserAPI.getSavedProducts(),
+              UserAPI.getViewedProducts()
+            ]);
+            app.setSavedProducts(serverSaved);
+            app.setViewedProducts(serverViewed);
+          } catch (e) {
+            console.warn('Post-admin-login sync failed:', e);
+          }
         } catch (error: unknown) {
           const message = resolveErrorMessage(error, 'Admin login failed', {
             401: 'Invalid admin credentials. Please check and try again.',
@@ -202,6 +234,16 @@ export const useAuthStore = create<AuthState>()(
             user: response.data.user,
             isAuthenticated: true
           });
+          // Refresh saved/viewed lists from server on successful auth recovery
+          try {
+            const app = useAppStore.getState();
+            const [serverSaved, serverViewed] = await Promise.all([
+              UserAPI.getSavedProducts(),
+              UserAPI.getViewedProducts()
+            ]);
+            app.setSavedProducts(serverSaved);
+            app.setViewedProducts(serverViewed);
+          } catch {}
         } catch {
           // Token might be expired, try to refresh
           try {

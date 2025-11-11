@@ -20,6 +20,7 @@ import { authRouter } from './routes/auth';
 import authStubRouter from './routes/auth.stub';
 import { productRouter } from './routes/products';
 import { contentRouter } from './routes/contents';
+import userRouter from './routes/user';
 import { errorHandler } from './middleware/errorHandler';
 import { getCSRFToken } from './middleware/csrf';
 import { db } from './db';
@@ -277,6 +278,7 @@ app.use('/api/sessions', sessionRouter);
 app.use('/api/recommendations', recommendationRouter);
 app.use('/api/products', productRouter);
 app.use('/api/contents', contentRouter);
+app.use('/api/users', userRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/debug', debugRouter);
 

@@ -17,6 +17,8 @@ class InMemoryDatabase {
     performedBy: string;
     performedAt: Date;
   }> = [];
+  private savedProducts: Map<string, Map<string, Date>> = new Map();
+  private viewedProducts: Map<string, Map<string, Date>> = new Map();
 
   // Sessions
   async createSession(instagramId: string | null, userId?: string): Promise<Session> {
@@ -34,6 +36,64 @@ class InMemoryDatabase {
 
   async getSession(sessionId: string): Promise<Session | undefined> {
     return this.sessions.get(sessionId);
+  }
+
+  // User saved/viewed products (in-memory)
+  async getUserSavedProducts(userId: string): Promise<Array<{ productId: string; savedAt: Date }>> {
+    const map = this.savedProducts.get(userId) || new Map();
+    return Array.from(map.entries())
+      .map(([productId, savedAt]) => ({ productId, savedAt }))
+      .sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+  }
+
+  async addUserSavedProduct(userId: string, productId: string, savedAt?: Date): Promise<boolean> {
+    const map = this.savedProducts.get(userId) || new Map();
+    map.set(productId, savedAt ?? new Date());
+    this.savedProducts.set(userId, map);
+    return true;
+  }
+
+  async removeUserSavedProduct(userId: string, productId: string): Promise<boolean> {
+    const map = this.savedProducts.get(userId) || new Map();
+    const existed = map.delete(productId);
+    this.savedProducts.set(userId, map);
+    return existed;
+  }
+
+  async mergeUserSavedProducts(userId: string, items: Array<{ productId: string; savedAt?: Date }>): Promise<number> {
+    const map = this.savedProducts.get(userId) || new Map();
+    for (const it of items) {
+      const prev = map.get(it.productId);
+      const ts = it.savedAt ?? new Date();
+      if (!prev || prev.getTime() < ts.getTime()) map.set(it.productId, ts);
+    }
+    this.savedProducts.set(userId, map);
+    return items.length;
+  }
+
+  async getUserViewedProducts(userId: string): Promise<Array<{ productId: string; viewedAt: Date }>> {
+    const map = this.viewedProducts.get(userId) || new Map();
+    return Array.from(map.entries())
+      .map(([productId, viewedAt]) => ({ productId, viewedAt }))
+      .sort((a, b) => b.viewedAt.getTime() - a.viewedAt.getTime());
+  }
+
+  async upsertUserViewedProduct(userId: string, productId: string, viewedAt?: Date): Promise<boolean> {
+    const map = this.viewedProducts.get(userId) || new Map();
+    map.set(productId, viewedAt ?? new Date());
+    this.viewedProducts.set(userId, map);
+    return true;
+  }
+
+  async mergeUserViewedProducts(userId: string, items: Array<{ productId: string; viewedAt?: Date }>): Promise<number> {
+    const map = this.viewedProducts.get(userId) || new Map();
+    for (const it of items) {
+      const prev = map.get(it.productId);
+      const ts = it.viewedAt ?? new Date();
+      if (!prev || prev.getTime() < ts.getTime()) map.set(it.productId, ts);
+    }
+    this.viewedProducts.set(userId, map);
+    return items.length;
   }
 
   async updateSession(sessionId: string, updates: Partial<Pick<Session, 'uploadedImageUrl' | 'analysisResult'>>): Promise<Session | undefined> {
@@ -550,6 +610,14 @@ interface Database {
     performedBy?: string
   ): Promise<boolean>;
   getAdminActions?(sessionId?: string): Promise<unknown[]>;
+  // Saved/viewed products
+  getUserSavedProducts?(userId: string): Promise<Array<{ productId: string; savedAt: Date }>>;
+  addUserSavedProduct?(userId: string, productId: string, savedAt?: Date): Promise<boolean>;
+  removeUserSavedProduct?(userId: string, productId: string): Promise<boolean>;
+  mergeUserSavedProducts?(userId: string, items: Array<{ productId: string; savedAt?: Date }>): Promise<number>;
+  getUserViewedProducts?(userId: string): Promise<Array<{ productId: string; viewedAt: Date }>>;
+  upsertUserViewedProduct?(userId: string, productId: string, viewedAt?: Date): Promise<boolean>;
+  mergeUserViewedProducts?(userId: string, items: Array<{ productId: string; viewedAt?: Date }>): Promise<number>;
 }
 
 // Use PostgreSQL if DATABASE_URL is set, otherwise use in-memory

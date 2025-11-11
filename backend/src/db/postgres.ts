@@ -26,6 +26,9 @@ interface UserRow extends QueryResultRow {
   reset_password_expires: Date | null;
   role: string;
   last_login_at: Date | null;
+  has_personal_color_diagnosis?: boolean | null;
+  personal_color_result?: unknown;
+  diagnosed_at?: Date | null;
   created_at: Date;
   updated_at: Date | null;
 }
@@ -137,6 +140,7 @@ export class PostgresDatabase {
     userRoleColumn: false,
     userLastLoginAtColumn: false,
     adminActionsTable: false,
+    userDiagnosisColumns: false,
   };
   // Test database connection
   async testConnection(): Promise<boolean> {
@@ -659,6 +663,7 @@ export class PostgresDatabase {
     // Ensure required user columns exist in case the database predates recent schema
     await this.ensureVerificationTokenExpiryColumn();
     await this.ensureUserRoleAndLastLoginColumns();
+    await this.ensureUserDiagnosisColumns();
 
     const query = `
       INSERT INTO users (
@@ -692,6 +697,7 @@ export class PostgresDatabase {
   }
 
   async getUserById(userId: string): Promise<User | undefined> {
+    await this.ensureUserDiagnosisColumns();
     const query = `SELECT * FROM users WHERE id = $1`;
     const result = await pool.query(query, [userId]);
     
@@ -703,6 +709,7 @@ export class PostgresDatabase {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    await this.ensureUserDiagnosisColumns();
     // 이메일 비교는 대소문자를 구분하지 않으며,
     // Gmail의 로컬파트 점(.) 유무 차이로 인한 불일치를 허용한다.
     //  - 기본: LOWER(email) = LOWER($1)
@@ -733,6 +740,7 @@ export class PostgresDatabase {
   async updateUser(userId: string, updates: Partial<User>): Promise<User | undefined> {
     await this.ensureVerificationTokenExpiryColumn();
     await this.ensureUserRoleAndLastLoginColumns();
+    await this.ensureUserDiagnosisColumns();
 
     const updateFields: string[] = [];
     const values: unknown[] = [];
@@ -782,6 +790,18 @@ export class PostgresDatabase {
       updateFields.push(`last_login_at = $${valueIndex++}`);
       values.push(updates.lastLoginAt);
     }
+    if (updates.hasPersonalColorDiagnosis !== undefined) {
+      updateFields.push(`has_personal_color_diagnosis = $${valueIndex++}`);
+      values.push(updates.hasPersonalColorDiagnosis);
+    }
+    if (updates.personalColorResult !== undefined) {
+      updateFields.push(`personal_color_result = $${valueIndex++}`);
+      values.push(JSON.stringify(updates.personalColorResult));
+    }
+    if (updates.diagnosedAt !== undefined) {
+      updateFields.push(`diagnosed_at = $${valueIndex++}`);
+      values.push(updates.diagnosedAt);
+    }
 
     if (updateFields.length === 0) {
       return this.getUserById(userId);
@@ -802,6 +822,108 @@ export class PostgresDatabase {
     }
     
     return this.mapUserRow(result.rows[0]);
+  }
+
+  // Saved/View history methods
+  private async ensureUserSavedViewedTables(): Promise<void> {
+    // Create supporting tables once per process
+    if ((this.schemaChecks as any).userSavedViewedTables) return;
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_saved_products (
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          product_id TEXT NOT NULL,
+          saved_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (user_id, product_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_saved_products_user ON user_saved_products(user_id);
+      `);
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_viewed_products (
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          product_id TEXT NOT NULL,
+          viewed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (user_id, product_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_viewed_products_user ON user_viewed_products(user_id);
+      `);
+
+      (this.schemaChecks as any).userSavedViewedTables = true;
+    } catch (e) {
+      console.error('Failed to ensure user saved/viewed tables:', e);
+    }
+  }
+
+  async getUserSavedProducts(userId: string): Promise<Array<{ productId: string; savedAt: Date }>> {
+    await this.ensureUserSavedViewedTables();
+    const q = `SELECT product_id, saved_at FROM user_saved_products WHERE user_id = $1 ORDER BY saved_at DESC`;
+    const result = await pool.query(q, [userId]);
+    return result.rows.map(r => ({ productId: r.product_id as string, savedAt: r.saved_at as Date }));
+  }
+
+  async addUserSavedProduct(userId: string, productId: string, savedAt?: Date): Promise<boolean> {
+    await this.ensureUserSavedViewedTables();
+    const q = `INSERT INTO user_saved_products (user_id, product_id, saved_at) VALUES ($1, $2, $3)
+               ON CONFLICT (user_id, product_id) DO UPDATE SET saved_at = EXCLUDED.saved_at`;
+    const res = await pool.query(q, [userId, productId, savedAt ?? new Date()]);
+    return res.rowCount !== null && res.rowCount > 0;
+  }
+
+  async removeUserSavedProduct(userId: string, productId: string): Promise<boolean> {
+    await this.ensureUserSavedViewedTables();
+    const q = `DELETE FROM user_saved_products WHERE user_id = $1 AND product_id = $2`;
+    const res = await pool.query(q, [userId, productId]);
+    return res.rowCount !== null && res.rowCount > 0;
+  }
+
+  async mergeUserSavedProducts(userId: string, items: Array<{ productId: string; savedAt?: Date }>): Promise<number> {
+    await this.ensureUserSavedViewedTables();
+    if (!items || items.length === 0) return 0;
+    const values: unknown[] = [];
+    const tuples: string[] = [];
+    let i = 1;
+    for (const it of items) {
+      values.push(userId, it.productId, it.savedAt ?? new Date());
+      tuples.push(`($${i++}, $${i++}, $${i++})`);
+    }
+    const q = `INSERT INTO user_saved_products (user_id, product_id, saved_at)
+               VALUES ${tuples.join(', ')}
+               ON CONFLICT (user_id, product_id) DO UPDATE SET saved_at = GREATEST(user_saved_products.saved_at, EXCLUDED.saved_at)`;
+    const res = await pool.query(q, values);
+    return res.rowCount ?? 0;
+  }
+
+  async getUserViewedProducts(userId: string): Promise<Array<{ productId: string; viewedAt: Date }>> {
+    await this.ensureUserSavedViewedTables();
+    const q = `SELECT product_id, viewed_at FROM user_viewed_products WHERE user_id = $1 ORDER BY viewed_at DESC LIMIT 100`;
+    const result = await pool.query(q, [userId]);
+    return result.rows.map(r => ({ productId: r.product_id as string, viewedAt: r.viewed_at as Date }));
+  }
+
+  async upsertUserViewedProduct(userId: string, productId: string, viewedAt?: Date): Promise<boolean> {
+    await this.ensureUserSavedViewedTables();
+    const q = `INSERT INTO user_viewed_products (user_id, product_id, viewed_at) VALUES ($1, $2, $3)
+               ON CONFLICT (user_id, product_id) DO UPDATE SET viewed_at = EXCLUDED.viewed_at`;
+    const res = await pool.query(q, [userId, productId, viewedAt ?? new Date()]);
+    return res.rowCount !== null && res.rowCount > 0;
+  }
+
+  async mergeUserViewedProducts(userId: string, items: Array<{ productId: string; viewedAt?: Date }>): Promise<number> {
+    await this.ensureUserSavedViewedTables();
+    if (!items || items.length === 0) return 0;
+    const values: unknown[] = [];
+    const tuples: string[] = [];
+    let i = 1;
+    for (const it of items) {
+      values.push(userId, it.productId, it.viewedAt ?? new Date());
+      tuples.push(`($${i++}, $${i++}, $${i++})`);
+    }
+    const q = `INSERT INTO user_viewed_products (user_id, product_id, viewed_at)
+               VALUES ${tuples.join(', ')}
+               ON CONFLICT (user_id, product_id) DO UPDATE SET viewed_at = GREATEST(user_viewed_products.viewed_at, EXCLUDED.viewed_at)`;
+    const res = await pool.query(q, values);
+    return res.rowCount ?? 0;
   }
 
   // Refresh token methods
@@ -964,6 +1086,17 @@ export class PostgresDatabase {
 
   // Helper method to map database row to User type
   private mapUserRow(row: UserRow): User {
+    // Decode personal_color_result if present
+    let personalColorResult: PersonalColorResult | undefined = undefined;
+    try {
+      const raw = (row as any).personal_color_result;
+      if (raw) {
+        personalColorResult = typeof raw === 'string' ? JSON.parse(raw) : (raw as PersonalColorResult);
+      }
+    } catch {
+      personalColorResult = undefined;
+    }
+
     return {
       id: row.id,
       email: row.email,
@@ -977,9 +1110,42 @@ export class PostgresDatabase {
       resetPasswordExpires: row.reset_password_expires ?? undefined,
       role: (row.role as User['role']) ?? 'user',
       lastLoginAt: row.last_login_at ?? undefined,
+      hasPersonalColorDiagnosis: (row as any).has_personal_color_diagnosis ?? undefined,
+      personalColorResult,
+      diagnosedAt: (row as any).diagnosed_at ?? undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at ?? undefined
     };
+  }
+
+  // Ensure user diagnosis columns exist (runtime migration)
+  private async ensureUserDiagnosisColumns(): Promise<void> {
+    if (this.schemaChecks.userDiagnosisColumns) return;
+    try {
+      const check = await pool.query<{ exists: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_name = 'users' AND column_name = 'has_personal_color_diagnosis'
+         ) AS exists`
+      );
+      const has = check.rows[0]?.exists === true;
+      if (!has) {
+        console.warn('⚠️ [Database] Adding personal color diagnosis columns to users table');
+        await pool.query(`
+          ALTER TABLE users
+          ADD COLUMN IF NOT EXISTS has_personal_color_diagnosis BOOLEAN DEFAULT FALSE,
+          ADD COLUMN IF NOT EXISTS personal_color_result JSONB,
+          ADD COLUMN IF NOT EXISTS diagnosed_at TIMESTAMPTZ
+        `);
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_users_has_personal_color_diagnosis
+          ON users(has_personal_color_diagnosis)
+        `);
+      }
+      this.schemaChecks.userDiagnosisColumns = true;
+    } catch (e) {
+      console.error('Failed to ensure user diagnosis columns:', e);
+    }
   }
 
   // Product methods

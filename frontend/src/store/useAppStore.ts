@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { PersonalColorResult, UserPreferences, ViewedProduct, SavedProduct } from '@/types';
+import { UserAPI } from '@/services/api/user';
+import { useAuthStore } from './useAuthStore';
 import { createInstagramSafeStorage, sessionRecoveryHelpers } from './instagramPersistence';
 
 export interface AppActions {
@@ -19,6 +21,8 @@ export interface AppActions {
   toggleSavedProduct: (productId: string) => void;
   clearViewedProducts: () => void;
   clearSavedProducts: () => void;
+  setViewedProducts: (items: ViewedProduct[]) => void;
+  setSavedProducts: (items: SavedProduct[]) => void;
   // UI state actions (for compatibility)
   setCurrentStep: (step: number) => void;
   setLoading: (loading: boolean) => void;
@@ -109,29 +113,47 @@ export const useAppStore = create<AppState & AppActions>()(
         },
         
         // Product tracking
-        viewedProducts: [],
-        savedProducts: [],
+      viewedProducts: [],
+      savedProducts: [],
         
         // 최근 본 상품 기록 (게스트 차단은 호출 측에서 수행)
         addViewedProduct: (productId) => set((state) => {
           // 중복 방지: 기존 항목 제거 후 맨 앞에 추가, 최대 10개 유지
           const filtered = state.viewedProducts.filter(p => p.productId !== productId);
           const newViewed: ViewedProduct = { productId, viewedAt: new Date().toISOString() };
+          // Fire-and-forget server sync if authenticated
+          try {
+            const { isAuthenticated } = useAuthStore.getState();
+            if (isAuthenticated) {
+              void UserAPI.upsertViewedProduct(productId, newViewed.viewedAt);
+            }
+          } catch {}
           return { viewedProducts: [newViewed, ...filtered].slice(0, 10) };
         }),
         
         toggleSavedProduct: (productId) => set((state) => {
           const exists = state.savedProducts.find(p => p.productId === productId);
           if (exists) {
+            // Fire-and-forget server sync
+            try {
+              const { isAuthenticated } = useAuthStore.getState();
+              if (isAuthenticated) { void UserAPI.removeSavedProduct(productId); }
+            } catch {}
             return { savedProducts: state.savedProducts.filter(p => p.productId !== productId) };
           } else {
             const newSaved: SavedProduct = { productId, savedAt: new Date().toISOString() };
+            try {
+              const { isAuthenticated } = useAuthStore.getState();
+              if (isAuthenticated) { void UserAPI.addSavedProduct(productId, newSaved.savedAt); }
+            } catch {}
             return { savedProducts: [newSaved, ...state.savedProducts] };
           }
         }),
         
         clearViewedProducts: () => set({ viewedProducts: [] }),
         clearSavedProducts: () => set({ savedProducts: [] }),
+        setViewedProducts: (items) => set({ viewedProducts: items }),
+        setSavedProducts: (items) => set({ savedProducts: items }),
         
         // UI state (for compatibility)
         currentStep: 0,
