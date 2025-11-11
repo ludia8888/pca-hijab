@@ -92,28 +92,8 @@ router.post('/signup', signupLimiter, csrfProtection, signupValidation, handleVa
     });
     console.log('✅ [SIGNUP] User created with ID:', user.id);
 
-    // Generate tokens
-    console.log('🔑 [SIGNUP] Generating JWT tokens...');
-    const tokens = generateTokens(user.id, user.role);
-    console.log('✅ [SIGNUP] JWT tokens generated');
-
-    // Create refresh token in database
-    await db.createRefreshToken({
-      userId: user.id,
-      token: tokens.refreshToken,
-      expiresAt: getRefreshTokenExpiryDate()
-    });
-
-    // Set cookies
-    res.cookie('accessToken', tokens.accessToken, {
-      ...cookieOptions,
-      maxAge: 15 * 60 * 1000 // 15 minutes
-    });
-    
-    res.cookie('refreshToken', tokens.refreshToken, {
-      ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    // SECURITY: 이메일 인증 전에는 액세스/리프레시 토큰을 발급하지 않습니다.
+    // 사용자는 이메일 인증 후 로그인 절차를 통해 토큰을 받게 됩니다.
 
     // Send verification email
     console.log('📨 [SIGNUP] Attempting to send verification email...');

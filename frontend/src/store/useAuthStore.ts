@@ -102,12 +102,9 @@ export const useAuthStore = create<AuthState>()(
       signup: async (email: string, password: string, fullName: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await AuthAPI.signup(email, password, fullName);
-          const { user } = response.data;
-          
+          await AuthAPI.signup(email, password, fullName);
+          // 이메일 인증 전에는 로그인 상태를 만들지 않습니다.
           set({
-            user,
-            isAuthenticated: true,
             isLoading: false,
             error: null
           });
