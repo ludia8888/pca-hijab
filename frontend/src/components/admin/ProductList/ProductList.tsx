@@ -96,10 +96,19 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">상품 관리</h2>
-        <Button onClick={onCreateClick} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          상품 추가
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            className="text-red-600 hover:text-red-700"
+            onClick={() => setDeleteConfirmId('ALL')}
+          >
+            전체 삭제
+          </Button>
+          <Button onClick={onCreateClick} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            상품 추가
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -243,7 +252,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
 
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-purple-600">
-                    Rp {product.price.toLocaleString('id-ID')}
+                    RM {product.price.toLocaleString('en-MY')}
                   </span>
                   {product.shopeeLink && (
                     <a
@@ -278,9 +287,23 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
       <ConfirmModal
         isOpen={!!deleteConfirmId}
         onClose={() => setDeleteConfirmId(null)}
-        onConfirm={() => deleteConfirmId && deleteMutation.mutate(deleteConfirmId)}
-        title="상품 삭제"
-        message="이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        onConfirm={async () => {
+          if (deleteConfirmId === 'ALL') {
+            try {
+              await ProductAPI.products.bulkDelete();
+              queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+              addToast({ type: 'success', title: '전체 삭제 완료', message: '모든 상품이 삭제되었습니다.' });
+            } catch {
+              addToast({ type: 'error', title: '삭제 실패', message: '상품 일괄 삭제 중 오류가 발생했습니다.' });
+            } finally {
+              setDeleteConfirmId(null);
+            }
+          } else if (deleteConfirmId) {
+            deleteMutation.mutate(deleteConfirmId);
+          }
+        }}
+        title={deleteConfirmId === 'ALL' ? '전체 삭제' : '상품 삭제'}
+        message={deleteConfirmId === 'ALL' ? '모든 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : '이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'}
         confirmText="삭제"
         isLoading={deleteMutation.isPending}
       />

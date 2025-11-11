@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -6,8 +6,27 @@ import { db } from '../db';
 import { authenticateAdmin } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import type { Product, ProductCategory, PersonalColorType, Content, ContentCategory, ContentStatus } from '../types';
+import { logAdminAction } from '../services/adminAuditService';
 
 const router = Router();
+
+const auditAdmin = (
+  req: Request,
+  actionType: string,
+  details: Record<string, unknown> = {},
+  sessionId?: string | null
+): void => {
+  if (!req.adminUser) {
+    return;
+  }
+
+  void logAdminAction(
+    actionType,
+    details,
+    req.adminUser,
+    sessionId ?? null
+  );
+};
 
 // Apply admin authentication to all routes
 router.use(authenticateAdmin);
@@ -45,11 +64,14 @@ const upload = multer({
   }
 });
 
-// GET /api/admin/verify - Verify admin API key
-router.get('/verify', (_req, res) => {
+// GET /api/admin/verify - Verify admin session
+router.get('/verify', (req, res) => {
   res.json({
     success: true,
-    message: 'API key is valid'
+    message: 'Admin session is valid',
+    data: {
+      admin: req.adminUser
+    }
   });
 });
 
@@ -197,6 +219,10 @@ router.post('/products', async (req, res, next) => {
     try {
       product = await db.createProduct(productData);
       console.log('[Admin API] Product created successfully:', product.id);
+      auditAdmin(req, 'product_create', {
+        productId: product.id,
+        name: product.name
+      });
     } catch (dbError) {
       console.error('[Admin API] Database error creating product:', dbError);
       if (dbError instanceof Error) {
@@ -254,6 +280,11 @@ router.put('/products/:id', async (req, res, next) => {
     if (!product) {
       throw new AppError(404, 'Product not found');
     }
+
+    auditAdmin(req, 'product_update', {
+      productId: product.id,
+      fields: Object.keys(updates ?? {})
+    });
     
     res.json({
       success: true,
@@ -277,10 +308,43 @@ router.delete('/products/:id', async (req, res, next) => {
       throw new AppError(404, 'Product not found');
     }
     
+    auditAdmin(req, 'product_delete', { productId: id });
+
     res.json({
       success: true,
       message: 'Product deleted successfully'
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/products/bulk-delete - Bulk delete products (ids optional; if omitted, delete all)
+router.post('/products/bulk-delete', async (req, res, next) => {
+  try {
+    const { ids } = req.body as { ids?: string[] };
+
+    if (ids && (!Array.isArray(ids) || ids.some(id => typeof id !== 'string'))) {
+      throw new AppError(400, 'Invalid ids payload');
+    }
+
+    if (ids && ids.length > 0) {
+      if (!db.deleteProduct) {
+        throw new AppError(500, 'Product functionality not available');
+      }
+      for (const id of ids) {
+        await db.deleteProduct(id);
+      }
+      auditAdmin(req, 'products_bulk_delete', { count: ids.length });
+      return res.json({ success: true, message: 'Selected products deleted' });
+    }
+
+    if (!db.deleteAllProducts) {
+      throw new AppError(500, 'Product functionality not available');
+    }
+    await db.deleteAllProducts();
+    auditAdmin(req, 'products_delete_all');
+    return res.json({ success: true, message: 'All products deleted' });
   } catch (error) {
     next(error);
   }
@@ -326,6 +390,10 @@ router.post('/upload/image', upload.single('image'), (req, res, next) => {
         size: req.file.size
       }
     });
+    auditAdmin(req, 'asset_upload_single', {
+      filename: req.file.filename,
+      size: req.file.size
+    });
   } catch (error) {
     next(error);
   }
@@ -348,6 +416,9 @@ router.post('/upload/images', upload.array('images', 10), (req, res, next) => {
     res.json({
       success: true,
       data: images
+    });
+    auditAdmin(req, 'asset_upload_bulk', {
+      fileCount: images.length
     });
   } catch (error) {
     next(error);
@@ -478,6 +549,10 @@ router.post('/contents', async (req, res, next) => {
       success: true,
       data: newContent
     });
+    auditAdmin(req, 'content_create', {
+      contentId: newContent.id,
+      slug: newContent.slug
+    });
   } catch (error) {
     next(error);
   }
@@ -514,6 +589,11 @@ router.put('/contents/:id', async (req, res, next) => {
       throw new AppError(404, 'Content not found');
     }
     
+    auditAdmin(req, 'content_update', {
+      contentId: updatedContent.id,
+      fields: Object.keys(updates)
+    });
+
     res.json({
       success: true,
       data: updatedContent
@@ -547,6 +627,11 @@ router.put('/contents/:id/status', async (req, res, next) => {
       throw new AppError(404, 'Content not found');
     }
     
+    auditAdmin(req, 'content_status_update', {
+      contentId: updatedContent.id,
+      status
+    });
+
     res.json({
       success: true,
       data: updatedContent
@@ -570,6 +655,8 @@ router.delete('/contents/:id', async (req, res, next) => {
       throw new AppError(404, 'Content not found');
     }
     
+    auditAdmin(req, 'content_delete', { contentId: id });
+
     res.json({
       success: true,
       message: 'Content deleted successfully'

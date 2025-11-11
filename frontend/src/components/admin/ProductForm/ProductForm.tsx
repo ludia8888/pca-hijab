@@ -20,9 +20,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
   const queryClient = useQueryClient();
   const { setUploadingImages, setUploadProgress } = useAdminStore();
   
-// Format price in Indonesian Rupiah
+  // Format price in Malaysian Ringgit (MYR)
   const formatPrice = (value: number): string => {
-    return value ? value.toLocaleString('id-ID') : '';
+    return value ? value.toLocaleString('en-MY') : '';
   };
   
 // Strip non-numeric characters from the formatted price
@@ -67,6 +67,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
     }
   });
 
+  // Remove strict link validation: accept any link
   // Product create/update mutation
   const productMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
@@ -159,15 +160,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
       return;
     }
     
-    // Validate Shopee link format if provided
-    if (formData.shopeeLink && !formData.shopeeLink.includes('shopee')) {
-        addToast({
-          type: 'error',
-          title: 'Invalid link',
-          message: 'Please provide a valid Shopee URL.'
-        });
-      return;
-    }
+    // 링크 유효성은 제한하지 않습니다(요청사항)
 
     // Log the data being sent
     console.log('[ProductForm] Submitting product data:', formData);
@@ -220,7 +213,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Price <span className="text-red-500">*</span>
+                가격 <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -241,12 +234,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
                     // Re-apply formatting on blur
                     setDisplayPrice(formatPrice(formData.price));
                   }}
-                  placeholder="Enter a price"
+                  placeholder="가격을 입력하세요"
                   required
                   className="pr-12"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                  Rp
+                  RM
                 </span>
               </div>
             </div>

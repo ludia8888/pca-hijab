@@ -41,6 +41,15 @@ export const ProductAPI = {
     delete: async (id: string) => {
       const response = await apiClient.delete<{ success: boolean; message: string }>(`/admin/products/${id}`);
       return response.data;
+    },
+
+    // Bulk delete products (delete all if ids omitted)
+    bulkDelete: async (ids?: string[]) => {
+      const response = await apiClient.post<{ success: boolean; message: string }>(
+        '/admin/products/bulk-delete',
+        ids && ids.length > 0 ? { ids } : {}
+      );
+      return response.data;
     }
   },
 
