@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Search, Filter, MoreVertical, ExternalLink } from 'lucide-react';
+import { Search, Filter, ExternalLink } from 'lucide-react';
 import { Button, Card, Input, LoadingSpinner, ConfirmModal } from '@/components/ui';
 import { useToast } from '@/components/ui';
 import { ProductAPI } from '@/services/api/admin';
@@ -235,7 +235,20 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${selectedIds.has(product.id) ? 'ring-2 ring-purple-500' : ''}`}>
+            <Card
+              key={product.id}
+              hover
+              role="button"
+              tabIndex={0}
+              onClick={() => onEditClick(product)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onEditClick(product);
+                }
+              }}
+              className={`overflow-hidden transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 ${selectedIds.has(product.id) ? 'ring-2 ring-purple-500' : ''}`}
+            >
               {/* Product Image */}
               <div className="relative aspect-square">
                 <img
@@ -244,10 +257,13 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                   className="w-full h-full object-cover"
                 />
 
-                {/* Top overlay: 좌측 선택 체크박스, 우측 더보기 메뉴 - 겹침 방지 */}
-                <div className="absolute inset-x-0 top-0 p-2 flex items-start justify-between z-10 pointer-events-none">
+                {/* Top overlay: 좌측 선택 체크박스만 유지 (카드 클릭으로 수정 진입) */}
+                <div className="absolute inset-x-0 top-0 p-2 flex items-start justify-start z-10 pointer-events-none">
                   {/* Selection checkbox */}
-                  <label className="bg-white/90 rounded-md px-2 py-1 text-xs cursor-pointer select-none shadow-sm pointer-events-auto">
+                  <label
+                    className="bg-white/90 rounded-md px-2 py-1 text-xs cursor-pointer select-none shadow-sm pointer-events-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedIds.has(product.id)}
@@ -256,29 +272,6 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                     />
                     선택
                   </label>
-
-                  {/* Action Menu */}
-                  <div className="relative group pointer-events-auto">
-                    <button className="p-2 bg-white rounded-full shadow-md hover:shadow-lg">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                      <button
-                        onClick={() => onEditClick(product)}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-gray-50"
-                      >
-                        <Edit className="w-4 h-4" />
-                        수정
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirmId(product.id)}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-gray-50 text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        삭제
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 {!product.isActive && (
@@ -304,6 +297,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                       href={product.shopeeLink}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 hover:underline"
                     >
                       <ExternalLink className="w-3 h-3" />
