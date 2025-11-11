@@ -54,8 +54,15 @@ jobs:
         if [ -f package.json ]; then
           echo "🔍 Running npm audit for ${{ matrix.directory }}..."
           
+          # Determine audit flags per directory (ignore dev deps for frontend)
+          if [ "${{ matrix.directory }}" = "frontend" ]; then
+            AUDIT_FLAGS="--omit=dev"
+          else
+            AUDIT_FLAGS=""
+          fi
+
           # Run audit and capture output
-          npm audit --audit-level=moderate --json > audit-report.json || AUDIT_EXIT_CODE=$?
+          npm audit --audit-level=moderate $AUDIT_FLAGS --json > audit-report.json || AUDIT_EXIT_CODE=$?
           
           # Display audit report
           echo "📊 Audit Report for ${{ matrix.directory }}:"

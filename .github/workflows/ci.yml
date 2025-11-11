@@ -157,8 +157,15 @@ jobs:
       run: |
         echo "🔍 Running quick security audit for ${{ matrix.component }}..."
         
+        # Ignore dev dependencies for frontend to avoid test-only false positives
+        if [ "${{ matrix.component }}" = "frontend" ]; then
+          AUDIT_FLAGS="--omit=dev"
+        else
+          AUDIT_FLAGS=""
+        fi
+        
         # Run audit for high and critical vulnerabilities only
-        if npm audit --audit-level=high --json > quick-audit.json; then
+        if npm audit --audit-level=high $AUDIT_FLAGS --json > quick-audit.json; then
           echo "✅ No high or critical vulnerabilities found in ${{ matrix.component }}"
         else
           echo "🚨 High or critical vulnerabilities found in ${{ matrix.component }}:"
