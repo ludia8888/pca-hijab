@@ -20,7 +20,7 @@ setupChunkErrorHandler();
 sessionStorage.removeItem('chunk_reload_count');
 
 // Register service worker for better caching (production only)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if ('serviceWorker' in navigator && import.meta.env.PROD && !isAdminRoute) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {

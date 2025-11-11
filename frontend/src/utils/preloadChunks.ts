@@ -14,8 +14,9 @@ interface PreloadOptions {
 export const preloadResource = (href: string, options: PreloadOptions = {}): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if already preloaded
-    const existing = document.querySelector(`link[href="${href}"]`);
-    if (existing) {
+    const existingLink = document.querySelector(`link[href="${href}"]`);
+    const existingScript = document.querySelector(`script[src="${href}"]`);
+    if (existingLink || existingScript) {
       resolve();
       return;
     }
@@ -57,7 +58,13 @@ const getChunkUrls = (): string[] => {
 
   scripts.forEach(script => {
     const src = script.getAttribute('src');
-    if (src && src.includes('assets/') && src.endsWith('.js')) {
+    if (
+      src &&
+      src.includes('assets/') &&
+      src.endsWith('.js') &&
+      // Skip main entry chunk which is already loaded
+      !src.includes('/index.')
+    ) {
       chunkUrls.push(src);
     }
   });

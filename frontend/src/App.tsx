@@ -52,13 +52,16 @@ function App(): JSX.Element {
       window.addEventListener('load', handleLoadProd);
     }
     
-    // Preload critical chunks after initial render
-    setTimeout(() => {
-      console.log('[APP] Starting critical chunks preload...');
-      preloadCriticalChunks().catch(error => {
-        console.warn('[APP] Chunk preloading failed:', error);
-      });
-    }, 100); // Small delay to let the initial render complete
+    // Preload critical chunks after initial render (skip on admin routes)
+    const isAdminRoute = window.location.pathname.startsWith('/admin');
+    if (!isAdminRoute) {
+      setTimeout(() => {
+        console.log('[APP] Starting critical chunks preload...');
+        preloadCriticalChunks().catch(error => {
+          console.warn('[APP] Chunk preloading failed:', error);
+        });
+      }, 100); // Small delay to let the initial render complete
+    }
 
     // Cleanup function to remove event listeners
     return () => {
