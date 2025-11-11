@@ -134,7 +134,16 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
     }));
   }, []);
 
-  // Handle form submit
+  // Build sanitized payload (with optional override)
+  const buildSanitizedData = useCallback((override?: Partial<ContentFormData>) => {
+    const payload: ContentFormData = { ...formData, ...(override || {}) } as ContentFormData;
+    return {
+      ...payload,
+      content: DOMPurify.sanitize(payload.content)
+    } as ContentFormData;
+  }, [formData]);
+
+  // Handle form submit (Enter key or default submit)
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
@@ -147,27 +156,20 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
         });
       return;
     }
-
-    // Sanitize HTML content
-    const sanitizedData = {
-      ...formData,
-      content: DOMPurify.sanitize(formData.content)
-    };
-
-    contentMutation.mutate(sanitizedData);
-  }, [formData, contentMutation, addToast]);
+    contentMutation.mutate(buildSanitizedData());
+  }, [formData, contentMutation, addToast, buildSanitizedData]);
 
   // Handle save as draft
   const handleSaveDraft = useCallback(() => {
-    setFormData(prev => ({ ...prev, status: 'draft' }));
-    handleSubmit(new Event('submit') as any);
-  }, [handleSubmit]);
+    // Avoid state race: submit with explicit override
+    contentMutation.mutate(buildSanitizedData({ status: 'draft' }));
+  }, [contentMutation, buildSanitizedData]);
 
   // Handle publish
   const handlePublish = useCallback(() => {
-    setFormData(prev => ({ ...prev, status: 'published' }));
-    handleSubmit(new Event('submit') as any);
-  }, [handleSubmit]);
+    // Avoid state race: submit with explicit override
+    contentMutation.mutate(buildSanitizedData({ status: 'published' }));
+  }, [contentMutation, buildSanitizedData]);
 
   return (
     <div className="max-w-7xl mx-auto">
