@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { AuthRequired, PersonalColorRequired } from '@/components/auth';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { Text, LoadingSpinner } from '@/components/ui';
+import { getImageUrl } from '@/utils/imageUrl';
 import { tokens } from '@/design-system';
 import type { Content, Product } from '@/types';
 
@@ -108,7 +109,7 @@ const HomePage = (): JSX.Element => {
                     onClick={() => handleContentClick(content)}
                   >
                     <img
-                      src={content.thumbnailUrl}
+                      src={getImageUrl(content.thumbnailUrl)}
                       alt={content.title}
                       className="w-full h-full object-cover"
                     />
@@ -170,14 +171,14 @@ const HomePage = (): JSX.Element => {
               </button>
 
               {/* Dots indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
                 {featuredContents.map((_, index) => (
                   <button
                     key={index}
                     onClick={(e) => { e.stopPropagation(); goToSlide(index); }}
                     className={`w-2 h-2 rounded-full transition-all ${
                       index === currentSlide 
-                        ? 'bg-white w-8' 
+                        ? 'bg-white w-4' 
                         : 'bg-white/50 hover:bg-white/70'
                     }`}
                   />
@@ -239,7 +240,7 @@ const HomePage = (): JSX.Element => {
                 >
                   <div className="aspect-square relative overflow-hidden bg-gray-100">
                     <img
-                      src={product.thumbnailUrl}
+                      src={getImageUrl(product.thumbnailUrl)}
                       alt={product.name}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
