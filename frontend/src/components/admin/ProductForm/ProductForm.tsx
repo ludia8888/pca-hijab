@@ -20,9 +20,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
   const queryClient = useQueryClient();
   const { setUploadingImages, setUploadProgress } = useAdminStore();
   
-  // Format price in Malaysian Ringgit (MYR)
+  // Format price in Malaysian Ringgit (MYR) using Intl.NumberFormat
+  const currencyFormatter = new Intl.NumberFormat('en-MY', {
+    style: 'currency',
+    currency: 'MYR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
   const formatPrice = (value: number): string => {
-    return value ? value.toLocaleString('en-MY') : '';
+    return value ? currencyFormatter.format(value) : '';
   };
   
 // Strip non-numeric characters from the formatted price
@@ -220,27 +227,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
                   type="text"
                   value={displayPrice}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    const numericValue = value.replace(/[^0-9]/g, '');
-                    
-                    // Allow only numeric characters
-                    if (numericValue === '' || /^\d+$/.test(numericValue)) {
-                      const price = numericValue ? Number(numericValue) : 0;
-                      setFormData(prev => ({ ...prev, price }));
-                      setDisplayPrice(formatPrice(price));
-                    }
+                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                    const price = numericValue ? Number(numericValue) : 0;
+                    setFormData(prev => ({ ...prev, price }));
+                    setDisplayPrice(formatPrice(price));
                   }}
-                  onBlur={() => {
-                    // Re-apply formatting on blur
-                    setDisplayPrice(formatPrice(formData.price));
-                  }}
-                  placeholder="가격을 입력하세요"
+                  onBlur={() => setDisplayPrice(formatPrice(formData.price))}
+                  placeholder="RM 0"
                   required
-                  className="pr-12"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                  RM
-                </span>
               </div>
             </div>
 

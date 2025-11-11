@@ -22,6 +22,10 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   // Fetch products
   const { data: products = [], isLoading, error } = useQuery({
@@ -72,6 +76,26 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
     setSearchTerm('');
   }, [setFilters]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -97,6 +121,14 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">상품 관리</h2>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            className="text-red-600 hover:text-red-700"
+            disabled={selectedIds.size === 0}
+            onClick={() => setBulkConfirmOpen(true)}
+          >
+            선택 삭제
+          </Button>
           <Button
             variant="ghost"
             className="text-red-600 hover:text-red-700"
@@ -202,7 +234,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card key={product.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${selectedIds.has(product.id) ? 'ring-2 ring-purple-500' : ''}`}>
               {/* Product Image */}
               <div className="relative aspect-square">
                 <img
@@ -210,6 +242,16 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
+                {/* Selection checkbox */}
+                <label className="absolute top-2 left-2 bg-white/90 rounded-md px-2 py-1 text-xs cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(product.id)}
+                    onChange={() => toggleSelect(product.id)}
+                    className="mr-1 align-middle"
+                  />
+                  선택
+                </label>
                 {!product.isActive && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <span className="text-white font-medium">비활성화</span>
@@ -306,6 +348,27 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
         message={deleteConfirmId === 'ALL' ? '모든 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : '이 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'}
         confirmText="삭제"
         isLoading={deleteMutation.isPending}
+      />
+
+      {/* Bulk selected delete */}
+      <ConfirmModal
+        isOpen={bulkConfirmOpen}
+        onClose={() => setBulkConfirmOpen(false)}
+        onConfirm={async () => {
+          try {
+            await ProductAPI.products.bulkDelete(Array.from(selectedIds));
+            queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+            addToast({ type: 'success', title: '선택 삭제 완료', message: `${selectedIds.size}개 상품이 삭제되었습니다.` });
+            clearSelection();
+          } catch {
+            addToast({ type: 'error', title: '삭제 실패', message: '선택한 상품 삭제 중 오류가 발생했습니다.' });
+          } finally {
+            setBulkConfirmOpen(false);
+          }
+        }}
+        title="선택 삭제"
+        message={`선택한 ${selectedIds.size}개 상품을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="삭제"
       />
     </div>
   );
