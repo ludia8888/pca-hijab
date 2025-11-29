@@ -4,6 +4,7 @@ dotenv.config();
 import { db } from '../db';
 import type { Product, Content, ProductCategory, ContentCategory, ContentStatus, PersonalColorType } from '../types';
 
+const PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   // Premium Hijabs
   {
@@ -11,11 +12,11 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Lightweight and breathable chiffon hijab with subtle shimmer. Perfect for warm undertones and special occasions. Features premium quality fabric that drapes beautifully.',
     category: 'hijab' as ProductCategory,
     price: 89000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1590038767624-dac5740a997b?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1590038767624-dac5740a997b?w=800&q=80',
-      'https://images.unsplash.com/photo-1597308680537-7e0a0d64d6e1?w=800&q=80',
-      'https://images.unsplash.com/photo-1554811987-e9cf588e2124?w=800&q=80'
+      PLACEHOLDER_IMAGE,
+      PLACEHOLDER_IMAGE,
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'autumn_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Premium-Chiffon-Hijab-Rose-Gold-i.123456789.987654321',
@@ -26,10 +27,10 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Luxurious 100% silk square hijab with elegant drape. Perfect for formal occasions and professional settings. Cool-toned navy complements winter and summer types.',
     category: 'hijab' as ProductCategory,
     price: 135000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1552874869-5c39ec9288dc?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1552874869-5c39ec9288dc?w=800&q=80',
-      'https://images.unsplash.com/photo-1586083702768-190ae093d34d?w=800&q=80'
+      PLACEHOLDER_IMAGE,
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['winter_cool', 'summer_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Silk-Square-Hijab-Navy-Blue-i.123456789.987654322',
@@ -40,10 +41,10 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Soft and comfortable cotton hijab for daily wear. The muted dusty pink shade is perfect for spring types. Easy to style and maintain.',
     category: 'hijab' as ProductCategory,
     price: 65000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=800&q=80',
-      'https://images.unsplash.com/photo-1603924812553-0dceb5cf7c04?w=800&q=80'
+      PLACEHOLDER_IMAGE,
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Cotton-Everyday-Hijab-Dusty-Pink-i.123456789.987654323',
@@ -54,9 +55,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Stretchable jersey material perfect for active lifestyle. Moisture-wicking, quick-dry, and stays in place during activities. Universal black suits all color types.',
     category: 'hijab' as ProductCategory,
     price: 55000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1586083702768-190ae093d34d?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1586083702768-190ae093d34d?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'summer_cool', 'autumn_warm', 'winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Jersey-Sport-Hijab-Black-i.123456789.987654324',
@@ -67,9 +68,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Glossy satin hijab with rich color depth. The jewel-toned emerald is ideal for winter types and creates a luxurious look for special events.',
     category: 'hijab' as ProductCategory,
     price: 145000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['winter_cool', 'autumn_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Satin-Luxury-Hijab-Emerald-Green-i.123456789.987654325',
@@ -82,9 +83,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Elegant pearl hijab pins with gold-plated base. Set of 5 decorative pins perfect for securing and beautifying your hijab.',
     category: 'hijab' as ProductCategory,
     price: 35000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'summer_cool', 'autumn_warm', 'winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Pearl-Hijab-Pin-Set-i.123456789.987654326',
@@ -95,9 +96,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Strong magnetic hijab clips that hold fabric securely without pins. Rose gold finish complements warm undertones.',
     category: 'hijab' as ProductCategory,
     price: 45000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94901144?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1590736969955-71cc94901144?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'autumn_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Magnetic-Hijab-Clips-Rose-Gold-i.123456789.987654327',
@@ -110,9 +111,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Monthly disposable colored contact lenses in natural hazel. Perfect for warm-toned individuals looking to enhance their eye color.',
     category: 'lens' as ProductCategory,
     price: 150000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'autumn_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Natural-Hazel-Contact-Lenses-i.123456789.987654328',
@@ -123,9 +124,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Subtle gray contact lenses that complement cool undertones. Creates a sophisticated look for winter and summer types.',
     category: 'lens' as ProductCategory,
     price: 155000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['winter_cool', 'summer_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Cool-Gray-Contact-Lenses-i.123456789.987654329',
@@ -138,9 +139,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Long-lasting matte lipstick in a vibrant coral shade. Perfect for spring types with warm undertones. Moisturizing formula prevents drying.',
     category: 'lip' as ProductCategory,
     price: 75000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Matte-Lipstick-Coral-Crush-i.123456789.987654330',
@@ -151,9 +152,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Lightweight velvet lip tint in deep berry shade. Ideal for winter types who want a bold lip color with comfortable wear.',
     category: 'lip' as ProductCategory,
     price: 65000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Velvet-Lip-Tint-Berry-Kiss-i.123456789.987654331',
@@ -164,9 +165,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Nourishing lip oil with subtle rose tint. Perfect for summer types who prefer a natural, glossy finish.',
     category: 'lip' as ProductCategory,
     price: 55000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1560207434-b14b8496bf6f?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1560207434-b14b8496bf6f?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['summer_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Glossy-Lip-Oil-Rose-Petal-i.123456789.987654332',
@@ -177,9 +178,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Creamy lipstick in warm terracotta shade. Perfect autumn color with comfortable wear and buildable coverage.',
     category: 'lip' as ProductCategory,
     price: 70000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['autumn_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Cream-Lipstick-Autumn-Spice-i.123456789.987654333',
@@ -192,9 +193,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: '12-shade eyeshadow palette with warm peach, coral, and golden tones. Perfect for creating fresh spring looks.',
     category: 'eyeshadow' as ProductCategory,
     price: 185000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Spring-Garden-Eyeshadow-Palette-i.123456789.987654334',
@@ -205,9 +206,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: '9-shade palette featuring soft pastels and cool-toned neutrals. Ideal for creating subtle summer eye looks.',
     category: 'eyeshadow' as ProductCategory,
     price: 165000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1631730486784-74b517e72b75?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1631730486784-74b517e72b75?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['summer_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Summer-Breeze-Eyeshadow-Palette-i.123456789.987654335',
@@ -218,9 +219,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: '15-shade palette with rich browns, burnt oranges, and deep reds. Perfect for creating warm, dramatic eye looks.',
     category: 'eyeshadow' as ProductCategory,
     price: 195000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1609207825181-52d3214556dd?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1609207825181-52d3214556dd?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['autumn_warm'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Autumn-Sunset-Eyeshadow-Palette-i.123456789.987654336',
@@ -231,9 +232,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: '12-shade palette featuring jewel tones and cool metallics. Creates striking looks for winter color types.',
     category: 'eyeshadow' as ProductCategory,
     price: 175000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Winter-Nights-Eyeshadow-Palette-i.123456789.987654337',
@@ -244,9 +245,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Versatile 8-shade nude palette with matte and shimmer finishes. Suitable for all personal color types.',
     category: 'eyeshadow' as ProductCategory,
     price: 145000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1503236823255-94609f598e71?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1503236823255-94609f598e71?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'summer_cool', 'autumn_warm', 'winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Universal-Nude-Eyeshadow-Palette-i.123456789.987654338',
@@ -257,9 +258,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Set of 4 glitter toppers in gold, rose gold, silver, and bronze. Perfect for adding sparkle to any eye look.',
     category: 'eyeshadow' as ProductCategory,
     price: 95000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1631730486572-226d1f595b68?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1631730486572-226d1f595b68?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['spring_warm', 'summer_cool', 'autumn_warm', 'winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Glitter-Topper-Set-All-Seasons-i.123456789.987654339',
@@ -270,9 +271,9 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
     description: 'Two-shade compact with matte and shimmer mauve tones. Perfect for quick, elegant eye looks for cool-toned individuals.',
     category: 'eyeshadow' as ProductCategory,
     price: 85000,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1583241800879-6bb7d116fd36?w=400&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
-      'https://images.unsplash.com/photo-1583241800879-6bb7d116fd36?w=800&q=80'
+      PLACEHOLDER_IMAGE
     ],
     personalColors: ['summer_cool', 'winter_cool'] as PersonalColorType[],
     shopeeLink: 'https://shopee.co.id/Monochrome-Eyeshadow-Duo-Mauve-i.123456789.987654340',
@@ -280,12 +281,18 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   }
 ];
 
+const safeMockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = mockProducts.map((p) => ({
+  ...p,
+  thumbnailUrl: PLACEHOLDER_IMAGE,
+  detailImageUrls: (p.detailImageUrls || []).map(() => PLACEHOLDER_IMAGE)
+}));
+
 const mockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>[] = [
   {
     title: 'The Complete Guide to Personal Color Analysis for Hijabis',
     subtitle: 'Discover your perfect hijab colors based on your skin tone',
     slug: 'complete-guide-personal-color-analysis-hijabis',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1590038767624-dac5740a997b?w=800&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     content: `
       <article class="prose prose-lg max-w-none">
         <h1>The Complete Guide to Personal Color Analysis for Hijabis</h1>
@@ -422,7 +429,7 @@ const mockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'
     title: '10 Hijab Styling Techniques Every Woman Should Know',
     subtitle: 'Master these essential hijab styles for any occasion',
     slug: '10-hijab-styling-techniques',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1554811987-e9cf588e2124?w=800&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     content: `
       <article class="prose prose-lg max-w-none">
         <h1>10 Hijab Styling Techniques Every Woman Should Know</h1>
@@ -617,7 +624,7 @@ const mockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'
     title: 'Skincare Routine for Hijabis: Preventing Acne and Maintaining Healthy Skin',
     subtitle: 'Expert tips for skincare under the hijab',
     slug: 'skincare-routine-hijabis',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     content: `
       <article class="prose prose-lg max-w-none">
         <h1>Skincare Routine for Hijabis: Preventing Acne and Maintaining Healthy Skin</h1>
@@ -740,7 +747,7 @@ const mockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'
     title: 'Trending Hijab Colors for 2024: What\'s Hot This Season',
     subtitle: 'Stay stylish with the latest hijab color trends',
     slug: 'trending-hijab-colors-2024',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1597308680537-7e0a0d64d6e1?w=800&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     content: `
       <article class="prose prose-lg max-w-none">
         <h1>Trending Hijab Colors for 2024: What's Hot This Season</h1>
@@ -844,7 +851,7 @@ const mockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'
     title: 'Quick Hijab Tutorial: 5-Minute Styles for Busy Mornings',
     subtitle: 'Fast and fabulous hijab styles when you\'re short on time',
     slug: 'quick-hijab-tutorial-5-minute-styles',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1586716402203-79219bede43c?w=800&q=80',
+    thumbnailUrl: PLACEHOLDER_IMAGE,
     content: `
       <article class="prose prose-lg max-w-none">
         <h1>Quick Hijab Tutorial: 5-Minute Styles for Busy Mornings</h1>
@@ -992,6 +999,11 @@ const mockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'
   }
 ];
 
+const safeMockContents: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>[] = mockContents.map((c) => ({
+  ...c,
+  thumbnailUrl: PLACEHOLDER_IMAGE
+}));
+
 async function seedMockData() {
   try {
     console.log('🌱 Starting to seed mock data...');
@@ -1004,26 +1016,26 @@ async function seedMockData() {
 
     // Seed products
     console.log('\n📦 Seeding products...');
-    for (const product of mockProducts) {
+    for (const product of safeMockProducts) {
       const created = await db.createProduct(product);
       console.log(`✅ Created product: ${created.name}`);
     }
-    console.log(`✅ Successfully seeded ${mockProducts.length} products`);
+    console.log(`✅ Successfully seeded ${safeMockProducts.length} products`);
 
     // Seed contents
     console.log('\n📝 Seeding contents...');
-    for (const content of mockContents) {
+    for (const content of safeMockContents) {
       const created = await db.createContent(content);
       console.log(`✅ Created content: ${created.title}`);
     }
-    console.log(`✅ Successfully seeded ${mockContents.length} contents`);
+    console.log(`✅ Successfully seeded ${safeMockContents.length} contents`);
 
     console.log('\n🎉 Mock data seeding completed successfully!');
     
     // Display summary
     console.log('\n📊 Summary:');
-    console.log(`- Products created: ${mockProducts.length}`);
-    console.log(`- Contents created: ${mockContents.length}`);
+    console.log(`- Products created: ${safeMockProducts.length}`);
+    console.log(`- Contents created: ${safeMockContents.length}`);
     
     process.exit(0);
   } catch (error) {
