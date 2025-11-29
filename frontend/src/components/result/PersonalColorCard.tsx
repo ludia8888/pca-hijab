@@ -160,7 +160,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
           fontWeight: 700,
           lineHeight: '140%'
         }}>
-          {userName ? `${userName}'s` : 'Your'} Color Palette
+          Your Color Palette
         </span>
       </div>
     </div>
