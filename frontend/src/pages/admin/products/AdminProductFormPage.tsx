@@ -17,7 +17,7 @@ const AdminProductFormPage: React.FC = () => {
 
   return (
     <PageLayout
-      header={<Header title={id ? 'Edit Product' : 'New Product'} showBack onBack={() => navigate('/admin/products')} />}
+      header={<Header title={id ? '상품 수정' : '새 상품'} showBack onBack={() => navigate('/admin/products')} />}
     >
       <div className="max-w-3xl mx-auto py-6">
         <ProductForm
@@ -26,7 +26,7 @@ const AdminProductFormPage: React.FC = () => {
           onCancel={() => navigate('/admin/products', { replace: true })}
         />
         {isLoading && (
-          <div className="text-center text-gray-500 mt-4">Loading...</div>
+          <div className="text-center text-gray-500 mt-4">불러오는 중...</div>
         )}
       </div>
     </PageLayout>

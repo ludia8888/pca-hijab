@@ -60,16 +60,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
     onSuccess: (data) => {
       addToast({
         type: 'success',
-        title: 'Image uploaded',
-        message: 'The image was uploaded successfully.'
+        title: '이미지 업로드 완료',
+        message: '이미지를 업로드했습니다.'
       });
       return data;
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: 'Upload failed',
-        message: 'Something went wrong while uploading the image.'
+        title: '업로드 실패',
+        message: '이미지 업로드 중 문제가 발생했습니다.'
       });
     }
   });
@@ -88,16 +88,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
       queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
       addToast({
         type: 'success',
-        title: product ? 'Product updated' : 'Product created',
-        message: product ? 'The product was updated successfully.' : 'The product was created successfully.'
+        title: product ? '상품이 업데이트되었습니다.' : '상품이 생성되었습니다.',
+        message: product ? '상품이 성공적으로 수정되었습니다.' : '상품이 성공적으로 생성되었습니다.'
       });
       onSuccess?.();
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: 'Save failed',
-        message: 'Something went wrong while saving the product.'
+        title: '저장 실패',
+        message: '상품 저장 중 문제가 발생했습니다.'
       });
     }
   });
@@ -161,8 +161,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
     if (!formData.name || !formData.thumbnailUrl || formData.personalColors.length === 0) {
         addToast({
           type: 'error',
-          title: 'Missing information',
-          message: 'Please complete all required fields.'
+          title: '입력 누락',
+          message: '필수 항목을 모두 입력해 주세요.'
         });
       return;
     }
@@ -187,24 +187,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Basic information</h3>
+        <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
         
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Product name <span className="text-red-500">*</span>
+              상품명 <span className="text-red-500">*</span>
             </label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Enter the product name"
+              placeholder="상품명을 입력하세요"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category <span className="text-red-500">*</span>
+              카테고리 <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.category}
@@ -246,7 +246,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Shopee link
+                쇼피 링크
               </label>
               <div className="relative">
                 <Input
@@ -263,12 +263,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Product description
+              상품 설명
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe the product"
+              placeholder="상품 설명을 입력하세요"
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
@@ -279,7 +279,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
       {/* Personal Colors */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">
-          Recommended personal colors <span className="text-red-500">*</span>
+          추천 퍼스널 컬러 <span className="text-red-500">*</span>
         </h3>
         
         <div className="grid grid-cols-2 gap-3">
@@ -303,7 +303,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
       {/* Thumbnail Image */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">
-          Thumbnail image <span className="text-red-500">*</span>
+          썸네일 이미지 <span className="text-red-500">*</span>
         </h3>
         
         <div className="space-y-4">
@@ -311,7 +311,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
             <div className="relative inline-block">
               <img
                 src={thumbnailPreview}
-                alt="Thumbnail preview"
+                alt="썸네일 미리보기"
                 className="w-48 h-48 object-cover rounded-lg"
               />
               <button
@@ -328,7 +328,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
           ) : (
             <label className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-500">Upload image</span>
+              <span className="text-sm text-gray-500">이미지 업로드</span>
               <input
                 type="file"
                 accept="image/*"
@@ -342,14 +342,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
 
       {/* Detail Images */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Detail images</h3>
+        <h3 className="text-lg font-semibold mb-4">상세 이미지</h3>
         
         <div className="grid grid-cols-4 gap-4">
           {detailPreviews.map((preview, index) => (
             <div key={index} className="relative">
               <img
                 src={preview}
-                alt={`Detail ${index + 1}`}
+                alt={`상세 ${index + 1}`}
                 className="w-full h-32 object-cover rounded-lg"
               />
               <button
@@ -365,7 +365,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
           {detailPreviews.length < 10 && (
             <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
               <Plus className="w-6 h-6 text-gray-400 mb-1" />
-              <span className="text-xs text-gray-500">Add</span>
+              <span className="text-xs text-gray-500">추가</span>
               <input
                 type="file"
                 accept="image/*"
@@ -378,7 +378,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
         </div>
         
         {detailPreviews.length >= 10 && (
-          <p className="text-sm text-gray-500 mt-2">You can upload up to 10 images.</p>
+          <p className="text-sm text-gray-500 mt-2">최대 10장까지 업로드할 수 있습니다.</p>
         )}
       </Card>
 
@@ -391,7 +391,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
             onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
             className="mr-3"
           />
-          <span className="font-medium">Product active</span>
+          <span className="font-medium">상품 활성화</span>
         </label>
       </Card>
 
@@ -402,13 +402,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSuccess, on
           variant="ghost"
           onClick={onCancel}
         >
-          Cancel
+          취소
         </Button>
         <Button
           type="submit"
           disabled={productMutation.isPending || uploadImageMutation.isPending}
         >
-          {productMutation.isPending ? 'Saving...' : (product ? 'Update' : 'Create')}
+          {productMutation.isPending ? '저장 중...' : (product ? '업데이트' : '생성')}
         </Button>
       </div>
     </form>

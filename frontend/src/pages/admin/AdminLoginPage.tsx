@@ -34,7 +34,7 @@ const AdminLoginPage = (): JSX.Element => {
       navigatedRef.current = true;
       navigate('/admin/dashboard', { replace: true });
     } else if (isAuthenticated && user && !hasAdminRole) {
-      setError('You do not have admin permissions.');
+      setError('관리자 권한이 없습니다.');
     }
   }, [hasAdminRole, isAdminSession, isAuthenticated, navigate, user]);
 
@@ -69,7 +69,7 @@ const AdminLoginPage = (): JSX.Element => {
       const message =
         err instanceof Error
           ? err.message
-          : 'Sign-in failed. Please try again.';
+          : '로그인에 실패했습니다. 다시 시도하세요.';
       trackError('admin_login_error', message, 'admin_login');
       trackEvent('admin_login_failed', {
         failure_reason: 'invalid_credentials',
@@ -88,14 +88,14 @@ const AdminLoginPage = (): JSX.Element => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Sign-in</h1>
-            <p className="text-gray-600 mt-2">Sign in with your admin credentials.</p>
+            <h1 className="text-2xl font-bold text-gray-900">관리자 로그인</h1>
+            <p className="text-gray-600 mt-2">관리자 계정으로 로그인하세요.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               type="email"
-              label="Email"
+              label="이메일"
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -106,7 +106,7 @@ const AdminLoginPage = (): JSX.Element => {
 
             <Input
               type="password"
-              label="Password"
+              label="비밀번호"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -123,12 +123,12 @@ const AdminLoginPage = (): JSX.Element => {
               disabled={!email || !password || isLoading}
               loading={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? '로그인 중...' : '로그인'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">Need access? Please contact the system administrator.</p>
+            <p className="text-sm text-gray-500">접근 권한이 필요하면 시스템 관리자에게 문의하세요.</p>
           </div>
         </Card>
       </div>

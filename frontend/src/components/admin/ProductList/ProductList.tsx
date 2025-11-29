@@ -95,9 +95,9 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
   if (error) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-red-600 mb-4">Failed to load the product list.</p>
+        <p className="text-red-600 mb-4">상품 목록을 불러오지 못했습니다.</p>
         <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['admin', 'products'] })}>
-          Try again
+          다시 시도
         </Button>
       </Card>
     );
@@ -193,14 +193,14 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
         {showFilters && (
           <div className="mt-4 pt-4 border-t space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
               <div className="flex gap-2 flex-wrap">
                 <Button
                   size="sm"
                   variant={!filters.category ? 'default' : 'ghost'}
                   onClick={() => handleCategoryFilter(undefined)}
                 >
-                  All
+                  전체
                 </Button>
                 {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                   <Button
@@ -216,14 +216,14 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Personal color</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">퍼스널 컬러</label>
               <div className="flex gap-2 flex-wrap">
                 <Button
                   size="sm"
                   variant={!filters.personalColor ? 'default' : 'ghost'}
                   onClick={() => handlePersonalColorFilter(undefined)}
                 >
-                  All
+                  전체
                 </Button>
                 {Object.entries(PERSONAL_COLOR_LABELS).map(([value, label]) => (
                   <Button
@@ -323,7 +323,7 @@ export const ProductList: React.FC<ProductListProps> = ({ onCreateClick, onEditC
                       className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 hover:underline"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      link
+                      링크
                     </a>
                   )}
                 </div>

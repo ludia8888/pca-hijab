@@ -61,11 +61,11 @@ const AdminRecommendationDetail = (): JSX.Element => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Pending';
+        return '대기';
       case 'processing':
-        return 'In progress';
+        return '진행중';
       case 'completed':
-        return 'Completed';
+        return '완료';
       default:
         return status;
     }
@@ -85,13 +85,13 @@ const AdminRecommendationDetail = (): JSX.Element => {
     return (
       <PageLayout>
         <div className="text-center py-12">
-          <p className="text-gray-500">Recommendation not found</p>
+          <p className="text-gray-500">추천 데이터를 찾을 수 없습니다.</p>
           <Button
             variant="ghost"
             onClick={() => navigate('/admin/dashboard')}
             className="mt-4"
           >
-            Back to dashboard
+            대시보드로 돌아가기
           </Button>
         </div>
       </PageLayout>
@@ -109,7 +109,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to dashboard
+            대시보드로 돌아가기
           </Button>
         </div>
 
@@ -117,26 +117,26 @@ const AdminRecommendationDetail = (): JSX.Element => {
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Instagram className="w-5 h-5" />
-            User information
+            사용자 정보
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Instagram ID</p>
+              <p className="text-sm text-gray-600">인스타그램 ID</p>
               <p className="font-medium">@{recommendation.instagramId}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Session ID</p>
+              <p className="text-sm text-gray-600">세션 ID</p>
               <p className="font-mono text-sm">{recommendation.sessionId}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Created at</p>
+              <p className="text-sm text-gray-600">생성 시각</p>
               <p className="flex items-center gap-1">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 {new Date(recommendation.createdAt).toLocaleString()}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Status</p>
+              <p className="text-sm text-gray-600">상태</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(recommendation.status)}`}>
                   {getStatusText(recommendation.status)}
@@ -150,18 +150,18 @@ const AdminRecommendationDetail = (): JSX.Element => {
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Palette className="w-5 h-5" />
-            Personal color analysis
+            퍼스널 컬러 분석
           </h2>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Season</p>
+                <p className="text-sm text-gray-600">시즌</p>
                 <p className="font-medium capitalize">
                   {recommendation.personalColorResult.personal_color_en}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Tone</p>
+                <p className="text-sm text-gray-600">톤</p>
                 <p className="font-medium">
                   {recommendation.personalColorResult.tone_en}
                 </p>
@@ -170,7 +170,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
 
             {recommendation.personalColorResult.confidence && (
               <div>
-                <p className="text-sm text-gray-600">Confidence score</p>
+                <p className="text-sm text-gray-600">신뢰도</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
@@ -188,7 +188,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
             {/* Best Colors */}
             {recommendation.personalColorResult.bestColors && (
               <div>
-                <p className="text-sm text-gray-600 mb-2">Recommended colors</p>
+                <p className="text-sm text-gray-600 mb-2">추천 색상</p>
                 <div className="flex flex-wrap gap-2">
                   {recommendation.personalColorResult.bestColors.map((color, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -209,11 +209,11 @@ const AdminRecommendationDetail = (): JSX.Element => {
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Tag className="w-5 h-5" />
-            User preferences
+            사용자 선호
           </h2>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-600">Style preferences</p>
+              <p className="text-sm text-gray-600">스타일 선호</p>
               <div className="flex flex-wrap gap-2 mt-1">
                 {recommendation.userPreferences.style.map((style) => (
                   <span key={style} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
@@ -224,12 +224,12 @@ const AdminRecommendationDetail = (): JSX.Element => {
             </div>
 
             <div>
-              <p className="text-sm text-gray-600">Price range</p>
+              <p className="text-sm text-gray-600">가격대</p>
               <p className="font-medium">{recommendation.userPreferences.priceRange}</p>
             </div>
 
             <div>
-              <p className="text-sm text-gray-600">Preferred materials</p>
+              <p className="text-sm text-gray-600">선호 소재</p>
               <div className="flex flex-wrap gap-2 mt-1">
                 {recommendation.userPreferences.material.map((material) => (
                   <span key={material} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
@@ -240,7 +240,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
             </div>
 
             <div>
-              <p className="text-sm text-gray-600">Occasions</p>
+              <p className="text-sm text-gray-600">착용 상황</p>
               <div className="flex flex-wrap gap-2 mt-1">
                 {recommendation.userPreferences.occasion.map((occasion) => (
                   <span key={occasion} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
@@ -254,7 +254,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
               <div>
                 <p className="text-sm text-gray-600 flex items-center gap-1">
                   <FileText className="w-4 h-4" />
-                  Additional notes
+                  추가 메모
                 </p>
                 <p className="mt-1 p-3 bg-gray-50 rounded-md text-sm">
                   {recommendation.userPreferences.additionalNotes}
@@ -266,7 +266,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
 
         {/* Status Update Actions */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Update status</h2>
+          <h2 className="text-xl font-semibold mb-4">상태 변경</h2>
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -279,7 +279,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
                 className="w-4 h-4 text-yellow-600 focus:ring-yellow-500"
               />
               <span className={`font-medium ${recommendation.status === 'pending' ? 'text-yellow-600' : 'text-gray-600'}`}>
-                Pending
+                대기
               </span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -293,7 +293,7 @@ const AdminRecommendationDetail = (): JSX.Element => {
                 className="w-4 h-4 text-green-600 focus:ring-green-500"
               />
               <span className={`font-medium ${recommendation.status === 'completed' ? 'text-green-600' : 'text-gray-600'}`}>
-                Completed
+                완료
               </span>
             </label>
           </div>

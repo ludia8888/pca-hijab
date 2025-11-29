@@ -109,7 +109,7 @@ export const ContentList: React.FC<ContentListProps> = ({ onCreateClick, onEditC
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">Failed to load contents.</p>
+        <p className="text-red-500">콘텐츠를 불러오지 못했습니다.</p>
       </div>
     );
   }

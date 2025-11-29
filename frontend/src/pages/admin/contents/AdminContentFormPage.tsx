@@ -17,7 +17,7 @@ const AdminContentFormPage: React.FC = () => {
 
   return (
     <PageLayout
-      header={<Header title={id ? 'Edit Content' : 'New Content'} showBack onBack={() => navigate('/admin/contents')} />}
+      header={<Header title={id ? '콘텐츠 수정' : '새 콘텐츠'} showBack onBack={() => navigate('/admin/contents')} />}
     >
       <div className="max-w-3xl mx-auto py-6">
         <ContentForm
@@ -26,7 +26,7 @@ const AdminContentFormPage: React.FC = () => {
           onCancel={() => navigate('/admin/contents', { replace: true })}
         />
         {isLoading && (
-          <div className="text-center text-gray-500 mt-4">Loading...</div>
+          <div className="text-center text-gray-500 mt-4">불러오는 중...</div>
         )}
       </div>
     </PageLayout>

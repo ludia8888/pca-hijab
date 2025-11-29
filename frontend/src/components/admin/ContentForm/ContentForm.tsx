@@ -46,16 +46,16 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
     onSuccess: (data) => {
       addToast({
         type: 'success',
-        title: 'Image uploaded',
-        message: 'The image was uploaded successfully.'
+        title: '이미지 업로드 완료',
+        message: '이미지를 업로드했습니다.'
       });
       return data;
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: 'Upload failed',
-        message: 'Something went wrong while uploading the image.'
+        title: '업로드 실패',
+        message: '이미지 업로드 중 문제가 발생했습니다.'
       });
     }
   });
@@ -73,16 +73,16 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
       queryClient.invalidateQueries({ queryKey: ['admin', 'contents'] });
       addToast({
         type: 'success',
-        title: content ? 'Content updated' : 'Content created',
-        message: content ? 'The content item was updated successfully.' : 'The content item was created successfully.'
+        title: content ? '콘텐츠가 업데이트되었습니다.' : '콘텐츠가 생성되었습니다.',
+        message: content ? '콘텐츠가 성공적으로 수정되었습니다.' : '콘텐츠가 성공적으로 생성되었습니다.'
       });
       onSuccess?.();
     },
     onError: () => {
       addToast({
         type: 'error',
-        title: content ? 'Update failed' : 'Creation failed',
-        message: 'Something went wrong while saving the content.'
+        title: content ? '업데이트 실패' : '생성 실패',
+        message: '콘텐츠 저장 중 문제가 발생했습니다.'
       });
     }
   });
@@ -138,8 +138,8 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
     if (!formData.title || !formData.content || !formData.thumbnailUrl) {
         addToast({
           type: 'error',
-          title: 'Missing information',
-          message: 'Please complete all required fields.'
+          title: '입력 누락',
+          message: '필수 항목을 모두 입력해 주세요.'
         });
       return;
     }
@@ -170,10 +170,10 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
               onClick={onCancel}
               leftIcon={<ArrowLeft className="w-4 h-4" />}
             >
-              Back to list
+              목록으로 돌아가기
             </Button>
             <h2 className="text-2xl font-bold text-gray-900">
-              {content ? 'Edit content' : 'Create new content'}
+              {content ? '콘텐츠 수정' : '콘텐츠 생성'}
             </h2>
           </div>
           
@@ -184,7 +184,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
               onClick={() => setShowPreview(!showPreview)}
               leftIcon={<Eye className="w-4 h-4" />}
             >
-              {showPreview ? 'Back to editor' : 'Preview'}
+              {showPreview ? '에디터로 돌아가기' : '미리보기'}
             </Button>
             <Button
               type="button"
@@ -193,7 +193,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
               loading={contentMutation.isPending && formData.status === 'draft'}
               leftIcon={<Save className="w-4 h-4" />}
             >
-              Save draft
+              임시저장
             </Button>
             <Button
               type="button"
@@ -201,7 +201,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
               onClick={handlePublish}
               loading={contentMutation.isPending && formData.status === 'published'}
             >
-              {content?.status === 'published' ? 'Update' : 'Publish'}
+              {content?.status === 'published' ? '업데이트' : '발행'}
             </Button>
           </div>
         </div>
@@ -211,23 +211,23 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Basic information</h3>
+              <h3 className="text-lg font-semibold mb-4">기본 정보</h3>
               
               <div className="space-y-4">
                 <Input
-                  label="Title"
+                  label="제목"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter the content title"
+                  placeholder="콘텐츠 제목을 입력하세요"
                   required
                   fullWidth
                 />
 
                 <Input
-                  label="Subtitle"
+                  label="부제목"
                   value={formData.subtitle}
                   onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-                  placeholder="Enter a subtitle (optional)"
+                  placeholder="부제목을 입력하세요 (선택)"
                   fullWidth
                 />
               </div>
@@ -235,7 +235,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
 
             {/* Content Editor */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Body content</h3>
+              <h3 className="text-lg font-semibold mb-4">본문 작성</h3>
               
               {showPreview ? (
                 <div className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg min-h-[400px]">
@@ -245,42 +245,42 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
                 <ContentEditor
                   content={formData.content}
                   onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                  placeholder="Start writing your article..."
+                  placeholder="본문을 작성하세요..."
                 />
               )}
             </Card>
 
             {/* SEO */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Search optimization (SEO)</h3>
+              <h3 className="text-lg font-semibold mb-4">검색 최적화 (SEO)</h3>
               
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Summary / excerpt
+                    요약 / 발췌
                   </label>
                   <textarea
                     value={formData.excerpt}
                     onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
-                    placeholder="Write a short summary (shown in lists)"
+                    placeholder="리스트에 노출될 요약을 입력하세요"
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
 
                 <Input
-                  label="Meta description"
+                  label="메타 설명"
                   value={formData.metaDescription}
                   onChange={(e) => setFormData(prev => ({ ...prev, metaDescription: e.target.value }))}
-                  placeholder="Description shown in search results"
+                  placeholder="검색 결과에 노출될 설명을 입력하세요"
                   fullWidth
                 />
 
                 <Input
-                  label="Meta keywords"
+                  label="메타 키워드"
                   value={formData.metaKeywords}
                   onChange={(e) => setFormData(prev => ({ ...prev, metaKeywords: e.target.value }))}
-                  placeholder="Enter comma-separated keywords"
+                  placeholder="쉼표로 구분해 키워드를 입력하세요"
                   fullWidth
                 />
               </div>
@@ -291,14 +291,14 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
           <div className="space-y-6">
             {/* Thumbnail */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Thumbnail image</h3>
+              <h3 className="text-lg font-semibold mb-4">썸네일 이미지</h3>
               
               <div className="space-y-4">
                 {thumbnailPreview ? (
                   <div className="relative">
                     <img
                       src={thumbnailPreview}
-                      alt="Thumbnail preview"
+                      alt="썸네일 미리보기"
                       className="w-full h-48 object-cover rounded-lg"
                     />
                     <button
@@ -316,7 +316,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
                   <label className="block">
                     <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 transition-colors">
                       <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-600">Upload image</span>
+                      <span className="text-sm text-gray-600">이미지 업로드</span>
                     </div>
                     <input
                       type="file"
@@ -331,7 +331,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
 
             {/* Category */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Category</h3>
+              <h3 className="text-lg font-semibold mb-4">카테고리</h3>
               
               <select
                 value={formData.category}
@@ -346,7 +346,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
 
             {/* Tags */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Tags</h3>
+              <h3 className="text-lg font-semibold mb-4">태그</h3>
               
               <div className="space-y-4">
                 <div className="flex gap-2">
@@ -355,7 +355,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                    placeholder="Enter a tag"
+                    placeholder="태그를 입력하세요"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <Button
@@ -364,7 +364,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
                     onClick={handleAddTag}
                     size="sm"
                   >
-                    Add
+                    추가
                   </Button>
                 </div>
 
