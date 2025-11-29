@@ -100,7 +100,7 @@ export const PersonalColorCard: React.FC<PersonalColorCardProps> = ({ result, us
             className="text-[15px] md:text-[18px] lg:text-[20px] font-bold leading-[140%]"
             style={{ color: seasonKey === 'autumn' || seasonKey === 'winter' ? '#FFFFFF' : '#000000' }}
           >
-            {userName ? `${userName}'s` : 'Your'} Matching Result
+            Matching Result
           </span>
         </div>
 
