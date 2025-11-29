@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload, X, Save, Eye, ArrowLeft } from 'lucide-react';
 import { Button, Input, Card } from '@/components/ui';
@@ -25,7 +25,7 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
   const [formData, setFormData] = useState<ContentFormData>({
     title: content?.title || '',
     subtitle: content?.subtitle || '',
-    slug: content?.slug || '',
+    slug: content?.slug || '', // 서버에서 자동 생성하도록 비워둠
     thumbnailUrl: content?.thumbnailUrl || '',
     content: content?.content || '',
     excerpt: content?.excerpt || '',
@@ -39,19 +39,6 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
   const [thumbnailPreview, setThumbnailPreview] = useState<string>(content?.thumbnailUrl || '');
   const [tagInput, setTagInput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-
-  // Auto-generate slug from title
-  useEffect(() => {
-    if (!content && formData.title) {
-      const slug = formData.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
-      setFormData(prev => ({ ...prev, slug }));
-    }
-  }, [formData.title, content]);
 
   // Image upload mutation
   const uploadImageMutation = useMutation({
@@ -241,15 +228,6 @@ export const ContentForm: React.FC<ContentFormProps> = ({ content, onSuccess, on
                   value={formData.subtitle}
                   onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
                   placeholder="Enter a subtitle (optional)"
-                  fullWidth
-                />
-
-                <Input
-                  label="URL slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                  placeholder="url-friendly-slug (optional; auto-generated from title)"
-                  helperText="If empty, it will be generated from the title."
                   fullWidth
                 />
               </div>
