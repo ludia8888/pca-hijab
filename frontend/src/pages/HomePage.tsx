@@ -11,6 +11,8 @@ import { getImageUrl } from '@/utils/imageUrl';
 import { tokens } from '@/design-system';
 import type { Content, Product } from '@/types';
 
+const IMAGE_FALLBACK = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+
 const HomePage = (): JSX.Element => {
   const navigate = useNavigate();
   const {
@@ -114,8 +116,7 @@ const HomePage = (): JSX.Element => {
                       className="w-full h-full object-cover"
                       loading="lazy"
                       onError={(e) => {
-                        // Fallback to a neutral Unsplash image if thumbnail fails
-                        e.currentTarget.src = 'https://images.unsplash.com/photo-1520975922371-5e73c1bb0b9b?q=80&w=1200&auto=format&fit=crop';
+                        e.currentTarget.src = IMAGE_FALLBACK;
                         e.currentTarget.onerror = null;
                       }}
                     />
