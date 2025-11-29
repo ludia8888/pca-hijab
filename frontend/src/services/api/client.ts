@@ -149,8 +149,17 @@ apiClient.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        // 리프레시 성공: Authorization 헤더는 쿠키 우선 사용 위해 제거
-        try { delete apiClient.defaults.headers.common['Authorization']; } catch {}
+        // 리프레시 성공: 관리자 세션용 Bearer가 있으면 복원, 없으면 쿠키 기반으로 진행
+        try {
+          const adminToken = typeof window !== 'undefined'
+            ? localStorage.getItem('adminAccessToken')
+            : null;
+          if (adminToken) {
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${adminToken}`;
+          } else {
+            delete apiClient.defaults.headers.common['Authorization'];
+          }
+        } catch {}
 
         // 대기 중 요청들 깨우고 원 요청 재시도
         isRefreshing = false;
