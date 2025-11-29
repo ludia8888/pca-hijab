@@ -309,6 +309,18 @@ router.put('/products/:id', async (req, res, next) => {
         throw new AppError(400, 'Invalid personal colors');
       }
     }
+
+    // Validate price before hitting the database to avoid persisting bad data
+    if (updates.price !== undefined) {
+      const up = Number(updates.price);
+      if (isNaN(up) || up <= 0) {
+        throw new AppError(400, 'Price must be a positive number');
+      }
+      const MAX_INT = 2147483647;
+      if (up > MAX_INT) {
+        throw new AppError(400, `Price too large. Max allowed is ${MAX_INT}`);
+      }
+    }
     
     // Convert empty shopeeLink to empty string if needed
     if (updates.shopeeLink === null || updates.shopeeLink === undefined) {
@@ -322,17 +334,6 @@ router.put('/products/:id', async (req, res, next) => {
     
     if (!product) {
       throw new AppError(404, 'Product not found');
-    }
-    // Validate price if provided
-    if (updates.price !== undefined) {
-      const up = Number(updates.price);
-      if (isNaN(up) || up <= 0) {
-        throw new AppError(400, 'Price must be a positive number');
-      }
-      const MAX_INT = 2147483647;
-      if (up > MAX_INT) {
-        throw new AppError(400, `Price too large. Max allowed is ${MAX_INT}`);
-      }
     }
 
     auditAdmin(req, 'product_update', {
@@ -509,10 +510,11 @@ router.get('/contents/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     
-    if (!db.getContent) {
+    const getContentForAdmin = (db as any).getContentForAdmin || db.getContent;
+    if (!getContentForAdmin) {
       throw new AppError(500, 'Content functionality not available');
     }
-    const content = await db.getContent(id);
+    const content = await getContentForAdmin(id);
     
     if (!content) {
       throw new AppError(404, 'Content not found');
@@ -532,10 +534,11 @@ router.get('/contents/slug/:slug', async (req, res, next) => {
   try {
     const { slug } = req.params;
     
-    if (!db.getContentBySlug) {
+    const getContentBySlugForAdmin = (db as any).getContentBySlugForAdmin || db.getContentBySlug;
+    if (!getContentBySlugForAdmin) {
       throw new AppError(500, 'Content functionality not available');
     }
-    const content = await db.getContentBySlug(slug);
+    const content = await getContentBySlugForAdmin(slug);
     
     if (!content) {
       throw new AppError(404, 'Content not found');
@@ -753,7 +756,56 @@ router.delete('/contents/:id', async (req, res, next) => {
   }
 });
 
-export default router;
+// Recommendation management (admin-facing, aligns with frontend admin calls)
+router.get('/recommendations/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!db.getRecommendation) {
+      throw new AppError(500, 'Recommendation functionality not available');
+    }
+    const recommendation = await db.getRecommendation(id);
+    if (!recommendation) {
+      throw new AppError(404, 'Recommendation not found');
+    }
+    res.json({ success: true, data: recommendation });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/recommendations/:id/status', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status || !['pending', 'processing', 'completed'].includes(status)) {
+      throw new AppError(400, 'Invalid status value');
+    }
+
+    if (!db.updateRecommendationStatus) {
+      throw new AppError(500, 'Recommendation functionality not available');
+    }
+
+    const updated = await db.updateRecommendationStatus(id, status);
+    if (!updated) {
+      throw new AppError(404, 'Recommendation not found');
+    }
+
+    auditAdmin(req, 'recommendation_status_update', {
+      recommendationId: updated.id,
+      status
+    });
+
+    res.json({
+      success: true,
+      data: updated,
+      message: 'Status updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/admin/users - List registered users (sanitized)
 router.get('/users', async (req, res, next) => {
   try {
@@ -779,3 +831,5 @@ router.get('/users', async (req, res, next) => {
     res.json({ success: true, data: sanitized, pagination: { page: pageNum, limit: limitNum, count: sanitized.length } });
   } catch (error) { next(error); }
 });
+
+export default router;

@@ -263,6 +263,12 @@ class InMemoryDatabase {
     return content;
   }
 
+  // Admin-safe fetch: no view count mutation
+  async getContentForAdmin(contentId: string): Promise<Content | undefined> {
+    const content = this.contents.get(contentId);
+    return content ? { ...content } : undefined;
+  }
+
   async getContentBySlug(slug: string): Promise<Content | undefined> {
     const content = Array.from(this.contents.values()).find(c => c.slug === slug);
     if (content) {
@@ -272,6 +278,12 @@ class InMemoryDatabase {
       this.contents.set(content.id, content);
     }
     return content;
+  }
+
+  // Admin-safe slug fetch: no view count mutation
+  async getContentBySlugForAdmin(slug: string): Promise<Content | undefined> {
+    const content = Array.from(this.contents.values()).find(c => c.slug === slug);
+    return content ? { ...content } : undefined;
   }
 
   async updateContent(contentId: string, updates: Partial<Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>>): Promise<Content | undefined> {
@@ -620,6 +632,8 @@ interface Database {
   createContent?(data: Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>): Promise<Content>;
   getContent?(contentId: string): Promise<Content | undefined>;
   getContentBySlug?(slug: string): Promise<Content | undefined>;
+  getContentForAdmin?(contentId: string): Promise<Content | undefined>;
+  getContentBySlugForAdmin?(slug: string): Promise<Content | undefined>;
   updateContent?(contentId: string, updates: Partial<Omit<Content, 'id' | 'createdAt' | 'updatedAt' | 'viewCount'>>): Promise<Content | undefined>;
   deleteContent?(contentId: string): Promise<boolean>;
   getAllContents?(filters?: { category?: ContentCategory; status?: ContentStatus }): Promise<Content[]>;

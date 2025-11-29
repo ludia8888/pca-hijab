@@ -1385,6 +1385,12 @@ export class PostgresDatabase {
     return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
   }
 
+  // Admin-safe fetch without mutating view counts
+  async getContentForAdmin(contentId: string): Promise<Content | undefined> {
+    const result = await pool.query('SELECT * FROM contents WHERE id = $1', [contentId]);
+    return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
+  }
+
   async getContentBySlug(slug: string): Promise<Content | undefined> {
     // Increment view count and return
     const query = `
@@ -1394,6 +1400,12 @@ export class PostgresDatabase {
       RETURNING *
     `;
     const result = await pool.query(query, [slug]);
+    return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
+  }
+
+  // Admin-safe slug fetch without mutating view counts
+  async getContentBySlugForAdmin(slug: string): Promise<Content | undefined> {
+    const result = await pool.query('SELECT * FROM contents WHERE slug = $1', [slug]);
     return result.rows[0] ? this.mapContentRow(result.rows[0]) : undefined;
   }
 
@@ -1463,10 +1475,14 @@ export class PostgresDatabase {
   }
 
   async updateContentStatus(contentId: string, status: ContentStatus): Promise<Content | undefined> {
-    // Use conservative update for broader DB compatibility (no published_at dependency)
     const query = `
       UPDATE contents 
-      SET status = $1, updated_at = NOW()
+      SET status = $1,
+          updated_at = NOW(),
+          published_at = CASE
+            WHEN $1 = 'published' THEN COALESCE(published_at, NOW())
+            ELSE published_at
+          END
       WHERE id = $2
       RETURNING *
     `;

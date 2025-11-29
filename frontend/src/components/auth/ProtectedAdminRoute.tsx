@@ -61,8 +61,8 @@ export const ProtectedAdminRoute = (): JSX.Element => {
     }
   }, [isAdminSession]);
 
-  // 관리자 권한 + 관리자 전용 세션 플래그가 모두 필요
-  if (!(isAdminUser && isAdminSession)) {
+  // 관리자 권한만 충족하면 접근 허용 (백엔드와 동일한 롤 기준)
+  if (!isAdminUser) {
     // While checking, keep spinner to avoid flicker
     if (checking && hydrated) {
       return (
