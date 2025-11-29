@@ -1,1 +1,18 @@
+.DS_Store
+.gemini-clipboard/
+AGENTS.md
+Frame\ 3.svg
+image\ 1.png
+ai_api.log
+backend.log
+frontend.log
+backend/.env.example
+backend/src/db/add_user_roles_migration.sql
+backend/uploads/products/
+frontend/.env.production
+frontend/quick-audit.json
+ShowMeTheColor/src/ai_api.log
+ShowMeTheColor/src/api.log
+ShowMeTheColor/src/personal_color_analysis/__pycache__/
+ShowMeTheColor/venv/
 node_modules
