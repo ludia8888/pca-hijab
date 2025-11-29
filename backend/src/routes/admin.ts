@@ -28,6 +28,43 @@ const auditAdmin = (
   );
 };
 
+// 슬러그를 일관되게 정규화
+const normalizeSlug = (raw: string): string => {
+  return String(raw)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+};
+
+// 이미 존재하는 슬러그가 있을 경우 -1, -2 식으로 유니크 슬러그 생성
+const ensureUniqueSlug = async (baseSlug: string, excludeId?: string): Promise<string> => {
+  try {
+    if (!db.getAllContents) return baseSlug;
+    const contents = await db.getAllContents();
+    const existing = new Set(
+      contents
+        .filter(c => !excludeId || c.id !== excludeId)
+        .map(c => c.slug)
+        .filter(Boolean)
+    );
+
+    if (!existing.has(baseSlug)) return baseSlug;
+
+    let counter = 1;
+    let candidate = `${baseSlug}-${counter}`;
+    while (existing.has(candidate)) {
+      counter += 1;
+      candidate = `${baseSlug}-${counter}`;
+    }
+    return candidate;
+  } catch (error) {
+    console.warn('[Admin API] Failed to ensure unique slug, using base:', error);
+    return baseSlug;
+  }
+};
+
 // Apply admin authentication to all routes
 router.use(authenticateAdmin);
 
@@ -536,14 +573,11 @@ router.post('/contents', async (req, res, next) => {
     }
 
     // Generate slug if missing/empty - basic normalization from title
-    const normalizedSlug = (slug && String(slug).trim().length > 0)
+    const rawSlug = (slug && String(slug).trim().length > 0)
       ? String(slug).trim()
-      : String(title)
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .trim();
+      : title;
+    const baseSlug = normalizeSlug(rawSlug) || `content-${Date.now()}`;
+    const uniqueSlug = await ensureUniqueSlug(baseSlug);
     
     const validCategories: ContentCategory[] = ['beauty_tips', 'hijab_styling', 'color_guide', 'trend', 'tutorial'];
     if (!validCategories.includes(category)) {
@@ -561,7 +595,7 @@ router.post('/contents', async (req, res, next) => {
     const newContent = await db.createContent({
       title,
       subtitle,
-      slug: normalizedSlug,
+      slug: uniqueSlug,
       thumbnailUrl,
       content,
       excerpt,
@@ -589,7 +623,7 @@ router.post('/contents', async (req, res, next) => {
 router.put('/contents/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body };
     
     // Validate category if provided
     if (updates.category) {
@@ -605,6 +639,12 @@ router.put('/contents/:id', async (req, res, next) => {
       if (!validStatuses.includes(updates.status)) {
         throw new AppError(400, 'Invalid status');
       }
+    }
+
+    // Normalize and deduplicate slug if provided
+    if (typeof updates.slug === 'string') {
+      const normalized = normalizeSlug(updates.slug) || `content-${Date.now()}`;
+      updates.slug = await ensureUniqueSlug(normalized, id);
     }
     
     if (!db.updateContent) {
