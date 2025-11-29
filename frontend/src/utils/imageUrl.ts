@@ -3,10 +3,17 @@
  * Converts relative paths to absolute URLs using the API base URL
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 
+// Raw API base URL (may include /api depending on env)
+const RAW_API_BASE = import.meta.env.VITE_API_BASE_URL || 
   (import.meta.env.MODE === 'production' 
     ? 'https://pca-hijab-backend-unified.onrender.com'
     : 'http://localhost:5001');
+
+// Normalize: drop trailing slash
+const API_BASE = RAW_API_BASE.endsWith('/') ? RAW_API_BASE.slice(0, -1) : RAW_API_BASE;
+
+// For static uploads served at /uploads (not under /api), strip trailing /api if present
+const ORIGIN_BASE = API_BASE.replace(/\/api\/?$/, '');
 
 /**
  * Get the absolute URL for an image
@@ -29,7 +36,12 @@ export function getImageUrl(url: string | undefined | null): string {
   // For relative URLs, prepend the API base URL
   // Remove leading slash if exists to avoid double slashes
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${API_BASE}${cleanPath}`;
+
+  // Uploads are served at /uploads from origin (not /api/uploads)
+  const isUploadPath = cleanPath.startsWith('/uploads/');
+  const base = isUploadPath ? ORIGIN_BASE : API_BASE;
+
+  return `${base}${cleanPath}`;
 }
 
 /**
