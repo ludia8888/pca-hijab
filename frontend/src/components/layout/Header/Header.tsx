@@ -7,7 +7,7 @@ import { Button } from '@/components/ui';
 import { User, LogOut } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-import logoNoor from '@/assets/logo-noor.svg';
+import logoSignature from '@/assets/My Noor_시그니처.png';
 
 interface HeaderProps {
   title?: string;
@@ -93,8 +93,8 @@ export const Header = ({
               </h1>
             ) : (
               <img
-                src={logoNoor}
-                alt="Noor.AI logo"
+                src={logoSignature}
+                alt="MyNoor 시그니처 로고"
                 className="h-9 tablet:h-10 w-auto object-contain"
               />
             )}
