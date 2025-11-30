@@ -85,7 +85,6 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
   const renderSection = (
     category: ProductCategory,
     label: string,
-    icon: string,
     emptyMessage: string
   ): JSX.Element => {
     const items = recommendations[category] || [];
@@ -116,10 +115,10 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
 
   return (
     <div className="w-full flex flex-col gap-2 md:gap-3">
-      {renderSection('hijab', 'Recommended Hijabs', '🧕', '등록된 히잡 상품이 없습니다.')}
-      {renderSection('blush', 'Recommended Blushers', '🎨', '등록된 블러셔 상품이 없습니다.')}
-      {renderSection('lip', 'Recommended Lips', '💄', '등록된 립 상품이 없습니다.')}
-      {renderSection('lens', 'Recommended Lenses', '👁️', '등록된 렌즈 상품이 없습니다.')}
+      {renderSection('hijab', 'Recommended Hijabs', '등록된 히잡 상품이 없습니다.')}
+      {renderSection('blush', 'Recommended Blushers', '등록된 블러셔 상품이 없습니다.')}
+      {renderSection('lip', 'Recommended Lips', '등록된 립 상품이 없습니다.')}
+      {renderSection('lens', 'Recommended Lenses', '등록된 렌즈 상품이 없습니다.')}
     </div>
   );
 };
