@@ -53,15 +53,27 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
   React.useEffect(() => {
     const load = async (): Promise<void> => {
       const pcType = mapPersonalColor(personalColorEn);
-      if (!pcType) {
-        setLoading(false);
-        return;
-      }
       try {
         const results = await Promise.all(
           CATEGORY_SECTIONS.map(async (cat) => {
-            const res = await ProductAPI.getProducts({ category: cat.id, personalColor: pcType });
-            return [cat.id, res.data || []] as const;
+            // 1) 시도: 개인색 + 카테고리
+            let items: Product[] = [];
+            try {
+              const res = await ProductAPI.getProducts(pcType ? { category: cat.id, personalColor: pcType } : { category: cat.id });
+              items = res.data || [];
+            } catch (e) {
+              items = [];
+            }
+            // 2) 개인색 필터로 0개면, 카테고리만으로 재시도
+            if (items.length === 0) {
+              try {
+                const resAll = await ProductAPI.getProducts({ category: cat.id });
+                items = resAll.data || [];
+              } catch (e) {
+                items = [];
+              }
+            }
+            return [cat.id, items] as const;
           })
         );
         const next: Record<ProductCategory, Product[]> = {
@@ -96,17 +108,20 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
     <>
       {CATEGORY_SECTIONS.map((section) => {
         const items = recommendations[section.id] || [];
-        if (items.length === 0) return null;
         return (
           <div key={section.id} className="bg-white rounded-xl shadow-lg overflow-hidden p-3 mb-4">
             <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
               <span className="text-base">{section.icon}</span> {section.label}
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {items.slice(0, 6).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {items.length === 0 ? (
+              <p className="text-sm text-gray-500 px-1 py-4">등록된 {section.label.toLowerCase()}이 없습니다.</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {items.slice(0, 6).map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
