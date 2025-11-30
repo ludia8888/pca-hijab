@@ -34,6 +34,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }).format(price);
   };
 
+  const FALLBACK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+  const primaryImage = getImageUrl(product.thumbnailUrl || product.detailImageUrls?.[0]);
+  const buildFallback = (): string => {
+    const altImage = product.detailImageUrls?.find(Boolean);
+    if (altImage) return getImageUrl(altImage);
+    return FALLBACK_IMAGE;
+  };
+
   const handleCardClick = () => {
     navigate(`/products/${product.id}`);
   };
@@ -46,10 +54,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product Image */}
       <div className="aspect-square w-full overflow-hidden bg-gray-50">
         <img
-          src={getImageUrl(product.thumbnailUrl)}
+          src={primaryImage || FALLBACK_IMAGE}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
+          onError={(e) => {
+            const nextSrc = buildFallback();
+            if (e.currentTarget.src !== nextSrc) {
+              e.currentTarget.src = nextSrc;
+            } else {
+              e.currentTarget.src = FALLBACK_IMAGE;
+            }
+          }}
         />
       </div>
 

@@ -65,6 +65,14 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
     };
     return emojiMap[category] || '🛍️';
   };
+
+  const FALLBACK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+  const primaryImage = getImageUrl(product.thumbnailUrl || product.detailImageUrls?.[0]);
+  const buildFallback = (): string => {
+    const altImage = product.detailImageUrls?.find(Boolean);
+    if (altImage) return getImageUrl(altImage);
+    return FALLBACK_IMAGE;
+  };
   
   return (
     <div 
@@ -79,10 +87,17 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
           </div>
         ) : (
           <img
-            src={getImageUrl(product.thumbnailUrl)}
+            src={primaryImage || FALLBACK_IMAGE}
             alt={product.name}
             className="w-full h-full object-cover"
-            onError={() => setImageError(true)}
+            onError={(e) => {
+              const nextSrc = buildFallback();
+              if (e.currentTarget.src !== nextSrc) {
+                e.currentTarget.src = nextSrc;
+              } else {
+                setImageError(true);
+              }
+            }}
           />
         )}
         
