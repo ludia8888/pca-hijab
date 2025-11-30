@@ -157,7 +157,7 @@ const ProductsCatalogPage: React.FC = () => {
   }
 
   return (
-    <PageLayout>
+    <PageLayout showDefaultHeader>
       <div className="min-h-screen bg-gray-50">
         {/* Common header area can be used for spacing if needed */}
         <div className="max-w-7xl mx-auto px-4 py-6" />
