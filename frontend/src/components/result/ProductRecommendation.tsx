@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import type { Product, ProductCategory, PersonalColorType } from '@/types';
 import { ProductAPI } from '@/services/api/products';
 import { ProductCard } from '@/components/products';
+import { LoadingDots } from '@/components/ui/LoadingDots';
 
 interface ProductRecommendationProps {
   personalColorEn: string;
