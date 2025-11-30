@@ -35,15 +35,15 @@ const ProductsCatalogPage: React.FC = () => {
   // Tab options
   const tabs: { id: TabType; label: string; icon?: React.ReactNode }[] = [
     { id: 'all', label: 'All' },
-    { 
-      id: 'recommended', 
+    {
+      id: 'recommended',
       label: 'Recommended',
       icon: <Crown className="w-4 h-4" />
     },
     { id: 'hijab', label: 'Hijabs' },
-    { id: 'lens', label: 'Lenses' },
+    { id: 'blush', label: 'Blushers' },
     { id: 'lip', label: 'Lips' },
-    { id: 'eyeshadow', label: 'Eyeshadow' }
+    { id: 'lens', label: 'Lenses' }
   ];
 
   const personalColors: PersonalColorType[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];

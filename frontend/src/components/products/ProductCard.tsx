@@ -8,7 +8,7 @@ const PRODUCT_CATEGORY_LABELS = {
   hijab: 'Hijab',
   lens: 'Contact lens',
   lip: 'Lip',
-  eyeshadow: 'Eyeshadow'
+  blush: 'Blusher'
 } as const;
 
 const PERSONAL_COLOR_LABELS = {
