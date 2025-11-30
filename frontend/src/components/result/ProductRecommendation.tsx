@@ -8,20 +8,6 @@ interface ProductRecommendationProps {
   personalColorEn: string;
 }
 
-type CategorySection = {
-  id: ProductCategory;
-  label: string;
-  icon: string;
-  emptyMessage: string;
-};
-
-const CATEGORY_SECTIONS: CategorySection[] = [
-  { id: 'hijab', label: 'Recommended Hijabs', icon: '🧕', emptyMessage: '등록된 히잡 상품이 없습니다.' },
-  { id: 'blush', label: 'Recommended Blushers', icon: '🎨', emptyMessage: '등록된 블러셔 상품이 없습니다.' },
-  { id: 'lip', label: 'Recommended Lips', icon: '💄', emptyMessage: '등록된 립 상품이 없습니다.' },
-  { id: 'lens', label: 'Recommended Lenses', icon: '👁️', emptyMessage: '등록된 렌즈 상품이 없습니다.' },
-];
-
 const mapPersonalColor = (personalColorEn: string): PersonalColorType | null => {
   const colorMapping: Record<string, PersonalColorType> = {
     spring: 'spring_warm',
@@ -96,37 +82,44 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
     void load();
   }, [personalColorEn]);
 
-  if (loading) {
+  const renderSection = (
+    category: ProductCategory,
+    label: string,
+    emptyMessage: string
+  ): JSX.Element => {
+    const items = recommendations[category] || [];
     return (
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-4 mb-4 flex items-center gap-2 text-gray-600">
-        <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-        <span>Loading recommendations...</span>
+      <div className="w-full max-w-[402px] md:max-w-[600px] lg:max-w-[768px] mx-auto py-4 md:py-6 lg:py-8">
+        <div className="bg-white rounded-2xl p-4 md:p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">
+            {label}
+          </h3>
+          {loading ? (
+            <div className="flex items-center gap-2 text-gray-600 py-4">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+              <span>Loading recommendations...</span>
+            </div>
+          ) : items.length === 0 ? (
+            <p className="text-sm text-gray-500 px-1 py-4">{emptyMessage}</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {items.slice(0, 6).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
-  }
+  };
 
   return (
-    <>
-      {CATEGORY_SECTIONS.map((section) => {
-        const items = recommendations[section.id] || [];
-        return (
-          <div key={section.id} className="bg-white rounded-xl shadow-lg overflow-hidden p-3 mb-4">
-            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1">
-              <span className="text-base">{section.icon}</span> {section.label}
-            </h3>
-            {items.length === 0 ? (
-              <p className="text-sm text-gray-500 px-1 py-4">{section.emptyMessage}</p>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {items.slice(0, 6).map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </>
+    <div className="w-full flex flex-col gap-2 md:gap-3">
+      {renderSection('hijab', 'Recommended Hijabs', '등록된 히잡 상품이 없습니다.')}
+      {renderSection('blush', 'Recommended Blushers', '등록된 블러셔 상품이 없습니다.')}
+      {renderSection('lip', 'Recommended Lips', '등록된 립 상품이 없습니다.')}
+      {renderSection('lens', 'Recommended Lenses', '등록된 렌즈 상품이 없습니다.')}
+    </div>
   );
 };
 
