@@ -96,12 +96,6 @@ export const PersonalColorSection = (): JSX.Element => {
           <p className="text-sm text-gray-600">
             {seasonInfo.description}
           </p>
-          {analysisResult.confidence && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              AI confidence {Math.round(analysisResult.confidence * 100)}%
-            </div>
-          )}
         </div>
         
         {/* Season emoji */}
