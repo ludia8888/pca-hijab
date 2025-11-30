@@ -3,7 +3,6 @@ import { Loader2 } from 'lucide-react';
 import type { Product, ProductCategory, PersonalColorType } from '@/types';
 import { ProductAPI } from '@/services/api/products';
 import { ProductCard } from '@/components/products';
-import { LoadingDots } from '@/components/ui/LoadingDots';
 
 interface ProductRecommendationProps {
   personalColorEn: string;
@@ -43,25 +42,23 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
       const pcType = mapPersonalColor(personalColorEn);
       try {
         const results = await Promise.all(
-          CATEGORY_SECTIONS.map(async (cat) => {
-            // 1) 시도: 개인색 + 카테고리
+          (['hijab', 'blush', 'lip', 'lens'] as ProductCategory[]).map(async (cat) => {
             let items: Product[] = [];
             try {
-              const res = await ProductAPI.getProducts(pcType ? { category: cat.id, personalColor: pcType } : { category: cat.id });
+              const res = await ProductAPI.getProducts(pcType ? { category: cat, personalColor: pcType } : { category: cat });
               items = res.data || [];
             } catch (e) {
               items = [];
             }
-            // 2) 개인색 필터로 0개면, 카테고리만으로 재시도
             if (items.length === 0) {
               try {
-                const resAll = await ProductAPI.getProducts({ category: cat.id });
+                const resAll = await ProductAPI.getProducts({ category: cat });
                 items = resAll.data || [];
               } catch (e) {
                 items = [];
               }
             }
-            return [cat.id, items] as const;
+            return [cat, items] as const;
           })
         );
         const next: Record<ProductCategory, Product[]> = {
