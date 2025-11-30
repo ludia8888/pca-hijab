@@ -38,6 +38,14 @@ const normalizeSlug = (raw: string): string => {
     .trim();
 };
 
+// Product category를 일관되게 소문자/trim 처리하며 유효성을 동시에 확인
+const normalizeProductCategory = (raw: unknown): ProductCategory | null => {
+  const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'blush'];
+  if (!raw) return null;
+  const normalized = String(raw).trim().toLowerCase() as ProductCategory;
+  return validCategories.includes(normalized) ? normalized : null;
+};
+
 // 이미 존재하는 슬러그가 있을 경우 -1, -2 식으로 유니크 슬러그 생성
 const ensureUniqueSlug = async (baseSlug: string, excludeId?: string): Promise<string> => {
   try {
@@ -203,10 +211,11 @@ router.post('/products', async (req, res, next) => {
     });
     
     // Validation
+    const normalizedCategory = normalizeProductCategory(category);
     if (!name || !category || price === undefined || price === null || !thumbnailUrl || !personalColors) {
       console.error('[Admin API] Missing required fields:', {
         name: !!name,
-        category: !!category,
+        category: !!normalizedCategory,
         price: price,
         price_type: typeof price,
         thumbnailUrl: !!thumbnailUrl,
@@ -228,8 +237,7 @@ router.post('/products', async (req, res, next) => {
       throw new AppError(400, `Price too large. Max allowed is ${MAX_INT}`);
     }
     
-    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'blush'];
-    if (!validCategories.includes(category)) {
+    if (!normalizedCategory) {
       console.error('[Admin API] Invalid category:', category);
       throw new AppError(400, `Invalid category: ${category}`);
     }
@@ -246,7 +254,7 @@ router.post('/products', async (req, res, next) => {
     
     const productData = {
       name,
-      category,
+      category: normalizedCategory,
       price: numPrice, // Use validated price
       thumbnailUrl,
       detailImageUrls: detailImageUrls || [],
@@ -295,11 +303,12 @@ router.put('/products/:id', async (req, res, next) => {
     
     // Validate category if provided
     if (updates.category) {
-      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'blush'];
-      if (!validCategories.includes(updates.category)) {
+      const normalizedCategory = normalizeProductCategory(updates.category);
+      if (!normalizedCategory) {
         console.error('[Admin API] Invalid category in update:', updates.category);
         throw new AppError(400, `Invalid category: ${updates.category}`);
       }
+      updates.category = normalizedCategory;
     }
     
     // Validate personal colors if provided
