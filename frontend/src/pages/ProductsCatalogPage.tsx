@@ -157,17 +157,10 @@ const ProductsCatalogPage: React.FC = () => {
   }
 
   return (
-    <PageLayout noPadding>
+    <PageLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <Text variant="h1" color="gray" mb="2">Product Catalog</Text>
-            <Text color="gray">
-              Find hijabs and beauty products that complement your personal color.
-            </Text>
-          </div>
-        </div>
+        {/* Common header area can be used for spacing if needed */}
+        <div className="max-w-7xl mx-auto px-4 py-6" />
 
         {/* Search and Filter Bar */}
         <div className="bg-white border-b sticky top-0 z-10">
