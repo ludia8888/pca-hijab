@@ -9,8 +9,7 @@ import { toast } from 'react-hot-toast';
 import { 
   PersonalColorCard, 
   ColorPaletteSection, 
-  ProductCarousel, 
-  HijabCarousel,
+  ProductRecommendation, 
   QRSection,
   SEASON_DATA
 } from '@/components/result';
@@ -163,15 +162,8 @@ const ResultPageV2 = (): JSX.Element => {
           <ColorPaletteSection seasonKey={seasonKey} />
         </div>
 
-        {/* Section 3: Hijab Carousel */}
-        <div className="w-full max-w-[402px] md:max-w-[600px] lg:max-w-[768px] mx-auto py-4 md:py-6 lg:py-8">
-          <HijabCarousel personalColor={result.personal_color_en} />
-        </div>
-
-        {/* Section 4: Product Carousel */}
-        <div className="w-full max-w-[402px] md:max-w-[600px] lg:max-w-[768px] mx-auto py-4 md:py-6 lg:py-8">
-          <ProductCarousel personalColor={result.personal_color_en} />
-        </div>
+        {/* Section 3: Product Recommendations */}
+        <ProductRecommendation personalColorEn={result.personal_color_en} />
 
         {/* Section 4: QR Code & Actions - Commented out */}
         {/* <div className="w-full py-4 md:py-6 lg:py-8 md:px-8 lg:px-12">
