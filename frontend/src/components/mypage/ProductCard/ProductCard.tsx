@@ -80,7 +80,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
       onClick={handleCardClick}
     >
       {/* Image */}
-      <div className="aspect-square relative overflow-hidden bg-gray-100">
+      <div className="aspect-square overflow-hidden bg-gray-100">
         {imageError ? (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             <ShoppingBag className="w-12 h-12" />
@@ -100,29 +100,28 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
             }}
           />
         )}
-        
-        {/* Save button */}
-        <button
-          onClick={handleSaveToggle}
-          className={`absolute top-2 right-2 p-2 rounded-full shadow-md transition-all ${
-            isSaved 
-              ? 'bg-purple-600 text-white' 
-              : 'bg-white text-gray-600 hover:bg-gray-50'
-          }`}
-          aria-label={isSaved ? 'Remove from saved' : 'Save product'}
-        >
-          <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-        </button>
-        
-        {/* Category badge */}
-        <div className="absolute top-2 left-2 px-2 py-1 bg-white rounded-full shadow-sm text-xs font-medium flex items-center gap-1">
-          <span>{getCategoryEmoji(product.category)}</span>
-          <span className="capitalize">{product.category}</span>
-        </div>
       </div>
       
       {/* Content */}
       <div className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-700 gap-1">
+            <span>{getCategoryEmoji(product.category)}</span>
+            <span className="capitalize">{product.category}</span>
+          </div>
+          <button
+            onClick={handleSaveToggle}
+            className={`p-2 rounded-full border text-sm transition-all ${
+              isSaved 
+                ? 'bg-purple-50 text-purple-600 border-purple-200' 
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            }`}
+            aria-label={isSaved ? 'Remove from saved' : 'Save product'}
+          >
+            <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+          </button>
+        </div>
+
         <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">
           {product.name}
         </h3>
