@@ -12,13 +12,14 @@ type CategorySection = {
   id: ProductCategory;
   label: string;
   icon: string;
+  emptyMessage: string;
 };
 
 const CATEGORY_SECTIONS: CategorySection[] = [
-  { id: 'hijab', label: 'Recommended Hijabs', icon: '🧕' },
-  { id: 'blush', label: 'Recommended Blushers', icon: '🎨' },
-  { id: 'lip', label: 'Recommended Lips', icon: '💄' },
-  { id: 'lens', label: 'Recommended Lenses', icon: '👁️' },
+  { id: 'hijab', label: 'Recommended Hijabs', icon: '🧕', emptyMessage: '등록된 히잡 상품이 없습니다.' },
+  { id: 'blush', label: 'Recommended Blushers', icon: '🎨', emptyMessage: '등록된 블러셔 상품이 없습니다.' },
+  { id: 'lip', label: 'Recommended Lips', icon: '💄', emptyMessage: '등록된 립 상품이 없습니다.' },
+  { id: 'lens', label: 'Recommended Lenses', icon: '👁️', emptyMessage: '등록된 렌즈 상품이 없습니다.' },
 ];
 
 const mapPersonalColor = (personalColorEn: string): PersonalColorType | null => {
@@ -114,7 +115,7 @@ export const ProductRecommendation: React.FC<ProductRecommendationProps> = ({ pe
               <span className="text-base">{section.icon}</span> {section.label}
             </h3>
             {items.length === 0 ? (
-              <p className="text-sm text-gray-500 px-1 py-4">등록된 {section.label.toLowerCase()}이 없습니다.</p>
+              <p className="text-sm text-gray-500 px-1 py-4">{section.emptyMessage}</p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {items.slice(0, 6).map((product) => (
