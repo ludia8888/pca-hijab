@@ -190,8 +190,8 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   // Eyeshadow Palettes
   {
     name: 'Spring Garden Eyeshadow Palette',
-    description: '12-shade eyeshadow palette with warm peach, coral, and golden tones. Perfect for creating fresh spring looks.',
-    category: 'eyeshadow' as ProductCategory,
+    description: '12-shade blush palette with warm peach, coral, and golden tones. Perfect for creating fresh spring looks.',
+    category: 'blush' as ProductCategory,
     price: 185000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
@@ -204,7 +204,7 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     name: 'Summer Breeze Eyeshadow Palette',
     description: '9-shade palette featuring soft pastels and cool-toned neutrals. Ideal for creating subtle summer eye looks.',
-    category: 'eyeshadow' as ProductCategory,
+    category: 'blush' as ProductCategory,
     price: 165000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
@@ -217,7 +217,7 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     name: 'Autumn Sunset Eyeshadow Palette',
     description: '15-shade palette with rich browns, burnt oranges, and deep reds. Perfect for creating warm, dramatic eye looks.',
-    category: 'eyeshadow' as ProductCategory,
+    category: 'blush' as ProductCategory,
     price: 195000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
@@ -230,7 +230,7 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     name: 'Winter Nights Eyeshadow Palette',
     description: '12-shade palette featuring jewel tones and cool metallics. Creates striking looks for winter color types.',
-    category: 'eyeshadow' as ProductCategory,
+    category: 'blush' as ProductCategory,
     price: 175000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
@@ -243,7 +243,7 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     name: 'Universal Nude Eyeshadow Palette',
     description: 'Versatile 8-shade nude palette with matte and shimmer finishes. Suitable for all personal color types.',
-    category: 'eyeshadow' as ProductCategory,
+    category: 'blush' as ProductCategory,
     price: 145000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
@@ -256,7 +256,7 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     name: 'Glitter Topper Set - All Seasons',
     description: 'Set of 4 glitter toppers in gold, rose gold, silver, and bronze. Perfect for adding sparkle to any eye look.',
-    category: 'eyeshadow' as ProductCategory,
+    category: 'blush' as ProductCategory,
     price: 95000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [
@@ -269,7 +269,7 @@ const mockProducts: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     name: 'Monochrome Eyeshadow Duo - Mauve',
     description: 'Two-shade compact with matte and shimmer mauve tones. Perfect for quick, elegant eye looks for cool-toned individuals.',
-    category: 'eyeshadow' as ProductCategory,
+    category: 'blush' as ProductCategory,
     price: 85000,
     thumbnailUrl: PLACEHOLDER_IMAGE,
     detailImageUrls: [

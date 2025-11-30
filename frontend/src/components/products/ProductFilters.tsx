@@ -25,7 +25,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
 }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const categories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+  const categories: ProductCategory[] = ['hijab', 'blush', 'lip', 'lens'];
   const personalColors: PersonalColor[] = ['spring_warm', 'autumn_warm', 'summer_cool', 'winter_cool'];
 
   const hasActiveFilters = selectedCategories.length > 0 || selectedColors.length > 0 || searchTerm.length > 0;

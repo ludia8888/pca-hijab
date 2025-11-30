@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS products (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    category VARCHAR(50) NOT NULL CHECK (category IN ('hijab', 'lens', 'lip', 'eyeshadow')),
+    category VARCHAR(50) NOT NULL CHECK (category IN ('hijab', 'lens', 'lip', 'blush')),
     price INTEGER NOT NULL,
     thumbnail_url TEXT NOT NULL,
     detail_image_urls TEXT[] DEFAULT '{}',

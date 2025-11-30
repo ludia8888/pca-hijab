@@ -127,7 +127,7 @@ export interface SavedProduct {
 }
 
 // Product Types (for regular users)
-export type ProductCategory = 'hijab' | 'lens' | 'lip' | 'eyeshadow';
+export type ProductCategory = 'hijab' | 'lens' | 'lip' | 'blush';
 export type PersonalColorType = 'spring_warm' | 'autumn_warm' | 'summer_cool' | 'winter_cool';
 
 export interface Product {
@@ -150,7 +150,7 @@ export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   hijab: 'Hijab',
   lens: 'Contact Lens',
   lip: 'Lipstick',
-  eyeshadow: 'Eyeshadow'
+  blush: 'Blusher'
 };
 
 // Personal color labels for UI

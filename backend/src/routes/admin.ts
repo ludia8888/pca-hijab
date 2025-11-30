@@ -228,7 +228,7 @@ router.post('/products', async (req, res, next) => {
       throw new AppError(400, `Price too large. Max allowed is ${MAX_INT}`);
     }
     
-    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+    const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'blush'];
     if (!validCategories.includes(category)) {
       console.error('[Admin API] Invalid category:', category);
       throw new AppError(400, `Invalid category: ${category}`);
@@ -295,7 +295,7 @@ router.put('/products/:id', async (req, res, next) => {
     
     // Validate category if provided
     if (updates.category) {
-      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'eyeshadow'];
+      const validCategories: ProductCategory[] = ['hijab', 'lens', 'lip', 'blush'];
       if (!validCategories.includes(updates.category)) {
         console.error('[Admin API] Invalid category in update:', updates.category);
         throw new AppError(400, `Invalid category: ${updates.category}`);

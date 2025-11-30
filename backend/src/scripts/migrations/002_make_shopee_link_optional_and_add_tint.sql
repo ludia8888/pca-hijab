@@ -18,7 +18,7 @@ ALTER TABLE products
 -- Add the new category constraint including 'tint'
 ALTER TABLE products 
   ADD CONSTRAINT products_category_check 
-  CHECK (category IN ('hijab', 'lens', 'lip', 'eyeshadow', 'tint'));
+  CHECK (category IN ('hijab', 'lens', 'lip', 'blush', 'tint'));
 
 -- Add comment to document the change
 COMMENT ON COLUMN products.shopee_link IS 'Optional Shopee product link. Can be empty string or NULL.';

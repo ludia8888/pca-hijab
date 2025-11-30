@@ -61,7 +61,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps): JSX.
       hijab: '🧕',
       lens: '👁️',
       lip: '💄',
-      eyeshadow: '👁️‍🗨️'
+      blush: '🎨'
     };
     return emojiMap[category] || '🛍️';
   };

@@ -168,7 +168,7 @@ const mockProducts: ProductFormData[] = [
   // Eyeshadow Products
   {
     name: "9-Color Palette - Warm Sunset",
-    category: "eyeshadow",
+    category: "blush",
     price: 185000,
     description: "Eyeshadow palette dengan 9 warna warm tone. Kombinasi matte dan shimmer untuk berbagai look.",
     thumbnailUrl: PLACEHOLDER_IMAGE,
@@ -181,7 +181,7 @@ const mockProducts: ProductFormData[] = [
   },
   {
     name: "Duo Chrome Shadow - Aurora Pink",
-    category: "eyeshadow",
+    category: "blush",
     price: 75000,
     description: "Eyeshadow duo chrome dengan efek color shifting. Aurora pink untuk tampilan dreamy.",
     thumbnailUrl: PLACEHOLDER_IMAGE,
@@ -194,7 +194,7 @@ const mockProducts: ProductFormData[] = [
   },
   {
     name: "Matte Quad Palette - Cool Mauve",
-    category: "eyeshadow",
+    category: "blush",
     price: 145000,
     description: "Quad palette dengan 4 warna matte cool tone. Perfect untuk daily makeup yang elegant.",
     thumbnailUrl: PLACEHOLDER_IMAGE,
@@ -207,7 +207,7 @@ const mockProducts: ProductFormData[] = [
   },
   {
     name: "Glitter Topper - Ice Crystal",
-    category: "eyeshadow",
+    category: "blush",
     price: 65000,
     description: "Glitter topper dengan partikel halus. Ice crystal untuk efek glamour yang stunning.",
     thumbnailUrl: PLACEHOLDER_IMAGE,
