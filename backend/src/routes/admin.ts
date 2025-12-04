@@ -518,14 +518,17 @@ router.get('/contents', async (req, res, next) => {
 router.get('/contents/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const getContentForAdmin = (db as any).getContentForAdmin || db.getContent;
-    if (!getContentForAdmin) {
-      throw new AppError(500, 'Content functionality not available');
-    }
-    const content = await getContentForAdmin(id);
-    
+
+    // 클래스 메서드를 분리 호출하면 this 컨텍스트가 사라지므로 call로 안전하게 실행
+    const content = (db as any).getContentForAdmin
+      ? await (db as any).getContentForAdmin.call(db, id)
+      : db.getContent
+        ? await db.getContent(id)
+        : undefined;
     if (!content) {
+      if (!(db as any).getContentForAdmin && !db.getContent) {
+        throw new AppError(500, 'Content functionality not available');
+      }
       throw new AppError(404, 'Content not found');
     }
     
@@ -542,14 +545,17 @@ router.get('/contents/:id', async (req, res, next) => {
 router.get('/contents/slug/:slug', async (req, res, next) => {
   try {
     const { slug } = req.params;
-    
-    const getContentBySlugForAdmin = (db as any).getContentBySlugForAdmin || db.getContentBySlug;
-    if (!getContentBySlugForAdmin) {
-      throw new AppError(500, 'Content functionality not available');
-    }
-    const content = await getContentBySlugForAdmin(slug);
-    
+
+    // 동일 이유로 call 사용: this 컨텍스트 보존
+    const content = (db as any).getContentBySlugForAdmin
+      ? await (db as any).getContentBySlugForAdmin.call(db, slug)
+      : db.getContentBySlug
+        ? await db.getContentBySlug(slug)
+        : undefined;
     if (!content) {
+      if (!(db as any).getContentBySlugForAdmin && !db.getContentBySlug) {
+        throw new AppError(500, 'Content functionality not available');
+      }
       throw new AppError(404, 'Content not found');
     }
     
